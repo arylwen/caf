@@ -1,0 +1,66 @@
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF) | task_id=TG-90-runtime-wiring | capability=runtime_wiring | instance=codex-saas | trace_anchor=pattern_obligation_id:O-TBP-COMPOSE-01-compose-candidate
+name: codex-saas
+services:
+  cp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cp
+    env_file:
+      - ../.env
+    ports:
+      - "${CP_PORT:-7000}:7000"
+    networks:
+      - candidate
+  ap:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ap
+    env_file:
+      - ../.env
+    environment:
+      CP_POLICY_URL: "http://cp:7000/policy/evaluate"
+      DATABASE_URL: "${DATABASE_URL:-postgresql://codex:codex@postgres:5432/codex}"
+    depends_on:
+      - cp
+      - postgres
+    ports:
+      - "${AP_PORT:-8000}:8000"
+    networks:
+      - candidate
+  ui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ui
+    env_file:
+      - ../.env
+    depends_on:
+      - ap
+    ports:
+      - "${UI_PORT:-8080}:80"
+    networks:
+      - candidate
+  postgres:
+    image: postgres:16-alpine
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-codex}"
+      POSTGRES_USER: "${POSTGRES_USER:-codex}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-codex}"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - candidate
+
+volumes:
+  postgres_data:
+
+networks:
+  candidate:
+    driver: bridge
+
+x-caf-role-bindings:
+  ui_nginx_proxy_conf: docker/nginx.ui.conf
+  ui_proxy_api_path: /api

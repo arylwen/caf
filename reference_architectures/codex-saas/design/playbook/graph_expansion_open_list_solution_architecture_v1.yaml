@@ -1,0 +1,213 @@
+schema_version: caf_graph_expansion_open_list_v1
+profile: solution_architecture
+generated_at: "2026-03-06T02:34:08.200Z"
+config:
+  enabled: true
+  max_hops: 2
+  reserve_slots: 4
+  oversample_factor: 4
+  open_list_target: 16
+  relation_kinds:
+    - depends_on
+    - refines
+    - complements
+    - alternative_to
+  include_namespaces:
+    - caf_v1
+    - core_v1
+    - external_v1
+  deny_namespaces:
+    []
+seeds:
+  - CAF-AI-01
+  - CAF-EDGE-01
+  - CAF-IAM-01
+  - CAF-IAM-02
+  - CAF-MTEN-01
+  - CAF-MTEN-AGOBS-01
+  - CAF-MTEN-ANTI-01
+  - CAF-PLANE-01
+  - CAF-TCTX-01
+  - CAF-XPLANE-01
+  - CTX-01
+  - OBS-01
+  - POL-01
+  - PST-01
+  - VAL-01
+candidates:
+  -
+    id: EXT-ANTI_CORRUPTION_LAYER
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-ANTI_CORRUPTION_LAYER
+  -
+    id: EXT-API_COMPOSITION_AGGREGATOR
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-API_COMPOSITION_AGGREGATOR
+  -
+    id: EXT-API_GATEWAY
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-API_GATEWAY
+  -
+    id: EXT-AUDITABILITY
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-AUDITABILITY
+  -
+    id: EXT-BACKEND_FOR_FRONTEND_BFF
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-BACKEND_FOR_FRONTEND_BFF
+  -
+    id: EXT-BACKUP_PITR
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-BACKUP_PITR
+  -
+    id: EXT-BLUE_GREEN_DEPLOY
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-BLUE_GREEN_DEPLOY
+  -
+    id: EXT-BULKHEAD_ISOLATION
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-BULKHEAD_ISOLATION
+  -
+    id: EXT-CACHE_ASIDE
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-CACHE_ASIDE
+  -
+    id: EXT-CANARY_RELEASE
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-CANARY_RELEASE
+  -
+    id: EXT-CHOREOGRAPHY
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-CHOREOGRAPHY
+  -
+    id: EXT-CHUNKING_METADATA_ENRICHMENT
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-CHUNKING_METADATA_ENRICHMENT
+  -
+    id: EXT-CIRCUIT_BREAKER
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-CIRCUIT_BREAKER
+  -
+    id: EXT-COMPETING_CONSUMERS
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-COMPETING_CONSUMERS
+  -
+    id: EXT-CONFIG_EXTERNALIZATION
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-CONFIG_EXTERNALIZATION
+  -
+    id: EXT-COST_ALLOCATION_CHARGEBACK
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-COST_ALLOCATION_CHARGEBACK

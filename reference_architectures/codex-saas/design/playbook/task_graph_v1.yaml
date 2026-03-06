@@ -1,0 +1,397 @@
+schema_version: phase8_task_graph_v1
+tasks:
+  - task_id: TG-00-CP-runtime-scaffold
+    title: Scaffold Control Plane runtime
+    required_capabilities: [plane_runtime_scaffolding]
+    inputs:
+      - path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+        required: true
+    definition_of_done:
+      - CP runtime scaffold aligns to api_service_http.
+      - CP governance boundary is explicit.
+      - Scaffold remains fail-closed.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Is CP runtime shape aligned to adopted pins?
+        - Are CP responsibilities separated from AP execution?
+        - Does scaffold preserve fail-closed governance posture?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-PLANE-CP-RUNTIME-SCAFFOLD
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-00-AP-runtime-scaffold
+    title: Scaffold Application Plane runtime
+    required_capabilities: [plane_runtime_scaffolding]
+    inputs:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        required: true
+    definition_of_done:
+      - AP runtime scaffold aligns to api_service_http.
+      - Ingress context and enforcement seams are explicit.
+      - Scaffold supports API/service/persistence tasks.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Is AP runtime shape aligned to adopted pins?
+        - Are context and policy seams explicit at ingress?
+        - Is scaffold compatible with downstream implementation tasks?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-PLANE-AP-RUNTIME-SCAFFOLD
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-00-contract-BND-CP-AP-01
+    title: Scaffold CP-AP material contract boundary
+    required_capabilities: [contract_scaffolding]
+    depends_on: [TG-00-CP-runtime-scaffold, TG-00-AP-runtime-scaffold]
+    inputs:
+      - path: reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml
+        required: true
+      - path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+        required: true
+    definition_of_done:
+      - Contract scaffolding exists for BND-CP-AP-01.
+      - Contract remains aligned to synchronous_http choice.
+      - Tenant and policy semantics remain explicit across boundary.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Is contract scaffolding grounded to declared boundary and heading?
+        - Is contract surface aligned to synchronous_http adoption?
+        - Are tenant and policy semantics explicit at boundary?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-CONTRACT-BND-CP-AP-01-AP
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-CONTRACT-BND-CP-AP-01-CP
+        anchor_kind: plan_step_archetype
+      - pattern_id: contract_boundary_id:BND-CP-AP-01
+        anchor_kind: structural_validation
+      - pattern_id: contract_ref_path:reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+        anchor_kind: structural_validation
+      - pattern_id: contract_ref_section:Plane Integration Contract (CP-AP)
+        anchor_kind: structural_validation
+      - pattern_id: contract_surface:synchronous_http
+        anchor_kind: structural_validation
+
+  - task_id: TG-00-AP-policy-enforcement
+    title: Implement AP policy/auth/context enforcement
+    required_capabilities: [policy_enforcement]
+    depends_on: [TG-00-contract-BND-CP-AP-01]
+    inputs:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        required: true
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        required: true
+    definition_of_done:
+      - AP policy enforcement is pre-execution and fail-closed.
+      - Tenant context propagation is mandatory.
+      - Auth mode remains aligned to pinned mock profile.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Is policy enforcement done before side effects?
+        - Is tenant context mandatory and consistently propagated?
+        - Is auth mode alignment to pins preserved?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-CP-POLICY-SURFACE
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-AP-POLICY-ENFORCEMENT
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-TENANT-CONTEXT-PROPAGATION
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-AP-AUTH-MODE
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-30-service-facade-widget
+    title: Implement widget service facade
+    required_capabilities: [service_facade_implementation]
+    depends_on: [TG-00-AP-runtime-scaffold]
+    inputs:
+      - path: reference_architectures/codex-saas/design/playbook/domain_model_v1.yaml
+        required: true
+    definition_of_done:
+      - Widget service facade implements declared operations.
+      - Service logic is transport-agnostic.
+      - Tenant scoping is explicit in service behavior.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Are declared widget operations represented in service layer?
+        - Is service layer independent from transport concerns?
+        - Is tenant scoping explicit in service logic?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-AP-RESOURCE-WIDGET-SERVICE
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-20-api-boundary-widget
+    title: Implement widget API boundary
+    required_capabilities: [api_boundary_implementation]
+    depends_on: [TG-30-service-facade-widget]
+    inputs:
+      - path: reference_architectures/codex-saas/design/playbook/domain_model_v1.yaml
+        required: true
+      - path: architecture_library/phase_8/tbp/atoms/TBP-FASTAPI-01/tbp_manifest_v1.yaml
+        required: true
+    definition_of_done:
+      - API boundary routes declared widget operations to service facade.
+      - Boundary remains thin and avoids direct persistence access.
+      - Composition root wiring remains explicit.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Do API handlers delegate to service facade?
+        - Are boundary transport concerns separated from domain/persistence?
+        - Is composition root registration explicit and discoverable?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-AP-RESOURCE-WIDGET-API
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-FASTAPI-01-composition-root
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-40-persistence-widget
+    title: Implement widget persistence boundary
+    required_capabilities: [persistence_implementation]
+    depends_on: [TG-30-service-facade-widget]
+    inputs:
+      - path: reference_architectures/codex-saas/design/playbook/domain_model_v1.yaml
+        required: true
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        required: true
+    definition_of_done:
+      - Persistence boundary is repository-based and injectable.
+      - Rails align to postgres/sqlalchemy assumptions.
+      - Runtime does not hard-wire in-memory persistence.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Is persistence boundary injectable and not in-memory hard-wired?
+        - Are assumptions aligned to resolved DB/ORM rails?
+        - Is tenant-scoped persistence behavior explicit?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-AP-RESOURCE-WIDGET-PERSISTENCE
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-15-ui-shell
+    title: Scaffold UI shell and widget page
+    required_capabilities: [ui_frontend_scaffolding]
+    depends_on: [TG-00-AP-runtime-scaffold]
+    inputs:
+      - path: reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+        required: true
+      - path: architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml
+        required: true
+    definition_of_done:
+      - Minimal SPA shell exists with navigation and widget page.
+      - UI aligns to ui_requirements_v1 and separate UI service intent.
+      - UI API calls use stable local contract surface assumptions.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Does UI scaffold align to declared UI requirements?
+        - Is UI structure coherent for local candidate execution?
+        - Are UI API assumptions stable and same-origin friendly?
+    trace_anchors:
+      - pattern_id: architect_edit:ui_requirements_v1
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-source
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-90-runtime-wiring
+    title: Wire runtime and compose surfaces
+    required_capabilities: [runtime_wiring]
+    depends_on: [TG-00-CP-runtime-scaffold, TG-00-AP-runtime-scaffold]
+    inputs:
+      - path: reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml
+        required: true
+      - path: architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml
+        required: true
+      - path: architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml
+        required: true
+    definition_of_done:
+      - Compose-based runtime wiring is explicit for CP/AP/UI surfaces.
+      - Runtime configuration and credentials are externalized.
+      - Wiring remains local-first and fail-closed.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Are runtime configs externalized and free of embedded secrets?
+        - Are CP/AP/UI service roles explicit and coherent?
+        - Is compose wiring aligned to pinned local deployment posture?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-RUNTIME-WIRING
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-COMPOSE-01-compose-candidate
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-COMPOSE-01-dockerfile-cp
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-COMPOSE-01-dockerfile-ap
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-COMPOSE-01-env-file
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-COMPOSE-01-gitignore
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-build-container
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-nginx-proxy
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-compose-service
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-TBP-TBP-PG-01-postgres_persistence_wiring
+    title: Materialize postgres TBP wiring obligations
+    required_capabilities: [postgres_persistence_wiring]
+    depends_on: [TG-90-runtime-wiring]
+    inputs:
+      - path: reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml
+        required: true
+      - path: architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml
+        required: true
+    definition_of_done:
+      - PostgreSQL compose service wiring obligations are materialized.
+      - DATABASE_URL and POSTGRES env contract semantics are explicit.
+      - AP postgres adapter hook expectations are explicit.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Are postgres wiring and env contract obligations explicit?
+        - Are DB credentials/config assumptions externalized?
+        - Is AP adapter hook expectation aligned to persistence boundary?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:O-TBP-PG-01-compose-postgres-service
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-PG-01-env-contract
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:O-TBP-PG-01-app-adapter-hook
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-TBP-TBP-PY-01-python_package_markers_materialization
+    title: Materialize python package marker obligations
+    required_capabilities: [python_package_markers_materialization]
+    depends_on: [TG-00-AP-runtime-scaffold]
+    inputs:
+      - path: reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml
+        required: true
+      - path: architecture_library/phase_8/tbp/atoms/TBP-PY-01/tbp_manifest_v1.yaml
+        required: true
+    definition_of_done:
+      - Python package marker obligations are explicitly represented.
+      - Marker scope aligns to candidate package roots.
+      - Marker posture remains consistent with pinned Python runtime.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Are package marker obligations explicit and deterministic?
+        - Is marker scope limited to candidate package roots?
+        - Is marker posture consistent with Python runtime rails?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:O-TBP-PY-01-python-package-markers
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-90-unit-tests
+    title: Scaffold unit tests for candidate bar
+    required_capabilities: [unit_test_scaffolding]
+    depends_on: [TG-90-runtime-wiring]
+    inputs:
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        required: true
+    definition_of_done:
+      - Unit-test scaffolding exists for candidate implementation surfaces.
+      - Tests align to pinned runtime tooling.
+      - Tests are meaningful and non-tautological.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Are unit tests meaningful and behavior-focused?
+        - Is test tooling aligned to pinned runtime?
+        - Is test scaffolding ready for iterative build tasks?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-UNIT-TESTS
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-92-tech-writer-readme
+    title: Produce operator README
+    required_capabilities: [repo_documentation]
+    depends_on: [TG-90-runtime-wiring]
+    inputs:
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        required: true
+      - path: reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml
+        required: true
+      - path: reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml
+        required: true
+    definition_of_done:
+      - README covers local start/run/test workflow for compose posture.
+      - README documents environment variable contract surfaces.
+      - README includes postgres wiring expectations when applicable.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Is README practical for local operators?
+        - Does README align to pins and resolved TBPs?
+        - Are env and DB wiring expectations communicated clearly?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-REPO-README
+        anchor_kind: plan_step_archetype
+
+  - task_id: TG-95-VALIDATE-ADOPTED-PATTERNS
+    title: Validate all adopted pattern structural obligations
+    required_capabilities: [structural_validation]
+    depends_on: [TG-90-unit-tests]
+    inputs:
+      - path: reference_architectures/codex-saas/spec/playbook/system_spec_v1.md
+        required: true
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        required: true
+      - path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+        required: true
+      - path: reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml
+        required: true
+    definition_of_done:
+      - Structural alignment is validated for all adopted patterns.
+      - Validation is grounded to adopted decisions and pattern definitions.
+      - Drift from adopted pattern obligations is identified as blocker severity.
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Do planned implementation boundaries remain aligned to all adopted patterns?
+        - Are any adopted pattern definitions contradicted by planned tasks?
+        - Is there any drift between adopted decisions and execution obligations?
+    trace_anchors:
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-PLANE-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-TCTX-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-MTEN-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-AI-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-IAM-02
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-POL-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-OBS-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-VAL-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-EDGE-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-IAM-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-XPLANE-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-MTEN-ANTI-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CAF-MTEN-AGOBS-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-PST-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-CTX-01
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-EXT-BACKEND_FOR_FRONTEND_BFF
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-EXT-API_COMPOSITION_AGGREGATOR
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-EXT-API_GATEWAY
+        anchor_kind: plan_step_archetype
+      - pattern_id: pattern_obligation_id:OBL-PAT-EXT-AUDITABILITY
+        anchor_kind: plan_step_archetype

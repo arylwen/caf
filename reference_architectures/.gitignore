@@ -1,0 +1,11 @@
+# Public repo policy: keep only the canonical sample instance.
+#
+# NOTE: .gitignore does not remove files already tracked by git.
+# If other instances are currently tracked, remove them from the index
+# (e.g., git rm -r --cached reference_architectures/<name>) before publishing.
+
+*
+!.gitignore
+
+!codex-saas/
+!codex-saas/**

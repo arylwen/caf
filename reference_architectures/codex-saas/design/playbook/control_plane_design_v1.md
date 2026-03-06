@@ -1,0 +1,165 @@
+# Control Plane Design (v1)
+
+## Scope
+
+Control plane design for `codex-saas` in `implementation_scaffolding`, focused on governance, policy, safety, lifecycle, and CP↔AP contract boundaries.
+
+## Plane Integration Contract (CP ↔ AP)
+
+<!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_choices_v1 START -->
+## Plane Integration Contract questions (architect-edit)
+
+```yaml
+schema_version: plane_integration_contract_choices_v1
+choices:
+  cp_runtime_shape:
+    question_id: Q-CP-RUNTIME-SHAPE-01
+    question: Control Plane runtime shape
+    options:
+      - option_id: api_service_http
+        status: adopt
+        summary: Separately deployable CP HTTP API service.
+      - option_id: worker_service_events
+        status: defer
+        summary: Event-driven worker runtime.
+      - option_id: library_embedded
+        status: defer
+        summary: Embedded library runtime.
+      - option_id: custom
+        status: defer
+        summary: Custom runtime shape (document explicitly).
+  ap_runtime_shape:
+    question_id: Q-AP-RUNTIME-SHAPE-01
+    question: Application Plane runtime shape
+    options:
+      - option_id: api_service_http
+        status: adopt
+        summary: Separately deployable AP HTTP API service.
+      - option_id: worker_service_events
+        status: defer
+        summary: Event-driven worker runtime.
+      - option_id: library_embedded
+        status: defer
+        summary: Embedded library runtime.
+      - option_id: custom
+        status: defer
+        summary: Custom runtime shape (document explicitly).
+  cp_ap_contract_surface:
+    question_id: Q-CP-AP-SURFACE-01
+    question: Primary CP↔AP contract surface
+    options:
+      - option_id: synchronous_http
+        status: adopt
+        summary: Synchronous HTTP contract for governance and enforcement calls.
+      - option_id: async_events
+        status: defer
+        summary: Asynchronous event-only contract.
+      - option_id: mixed
+        status: defer
+        summary: Sync plus async mixed model.
+      - option_id: custom
+        status: defer
+        summary: Custom contract surface.
+```
+
+<!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_choices_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_open_questions_v1 START -->
+## Plane Integration Contract open questions (architect-edit)
+
+```yaml
+version: 1
+questions: {}
+```
+
+<!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_open_questions_v1 END -->
+
+<!-- DESIGNER_MANAGED_BLOCK: plane_integration_contract_v1 START -->
+## CP↔AP Contract Baseline (designer-managed)
+
+- CP exposes policy, tenant lifecycle, and safety rule endpoints consumed by AP.
+- AP sends context-rich enforcement requests carrying tenant, principal, and correlation metadata.
+- Contract is synchronous HTTP for this phase; event surfaces are deferred.
+- Rejection posture is fail-closed for missing/invalid tenant or policy context.
+<!-- DESIGNER_MANAGED_BLOCK: plane_integration_contract_v1 END -->
+
+## Governance Components
+
+- Policy authoring and versioning boundary
+- Safety gate definition and orchestration boundary
+- Tenant lifecycle and entitlement authority
+- Cross-plane observability/evidence normalization
+
+<!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 START -->
+## Decision resolutions (architect-edit)
+
+```yaml
+version: 1
+notes:
+  - Control-plane design applies adopted decisions from system spec decision_resolutions_v1.
+```
+<!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 START -->
+## Open questions (architect-edit)
+
+```yaml
+version: 1
+questions: {}
+```
+<!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: decision_trace_v1 START -->
+## Decision trace (CAF-managed)
+
+- Adopted pattern decisions consumed: CAF-PLANE-01, CAF-TCTX-01, CAF-MTEN-01, CAF-AI-01, CAF-IAM-02, POL-01, OBS-01, CAF-EDGE-01, CAF-IAM-01, CAF-XPLANE-01, CAF-MTEN-ANTI-01, CAF-MTEN-AGOBS-01, PST-01, CTX-01, VAL-01.
+- Source: reference_architectures/codex-saas/spec/playbook/system_spec_v1.md (ARCHITECT_EDIT_BLOCK: decision_resolutions_v1).
+- Influenced sections: Plane Integration Contract (CP ↔ AP), Governance Components, CP↔AP Contract Baseline.
+- Carried-forward unresolved pattern questions: 0 (none).
+<!-- CAF_MANAGED_BLOCK: decision_trace_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: planning_pattern_payload_v1 START -->
+
+## Planning pattern payload (CAF-managed)
+
+```yaml
+schema_version: planning_pattern_payload_v1
+generated_from:
+  retrieval_surface_path: architecture_library/patterns/retrieval_surface_v1/pattern_retrieval_surface_v1.jsonl
+  retrieval_profile: solution_architecture
+  selected_patterns_source: 'system_spec_v1.md:decision_resolutions_v1 (status: adopt)'
+  materialized_by: tools/caf/materialize_planning_pattern_payload_v1.mjs
+notes:
+  - 'Enrichment/promotions are deferred to planning (/caf plan). Reference:'
+  - reference_architectures/codex-saas/design/playbook/design_summary_v1.md
+  - reference_architectures/codex-saas/design/playbook/pattern_obligations_v1.yaml
+  - reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml
+selected_patterns:
+  caf:
+    - CAF-PLANE-01
+    - CAF-TCTX-01
+    - CAF-MTEN-01
+    - CAF-AI-01
+    - CAF-IAM-02
+    - CAF-EDGE-01
+    - CAF-IAM-01
+    - CAF-XPLANE-01
+    - CAF-MTEN-ANTI-01
+    - CAF-MTEN-AGOBS-01
+  core:
+    - POL-01
+    - OBS-01
+    - VAL-01
+    - CTX-01
+  external:
+    - EXT-API_COMPOSITION_AGGREGATOR
+    - EXT-API_GATEWAY
+    - EXT-AUDITABILITY
+promotions:
+  semantic_inputs: []
+  required_trace_anchors: []
+  required_role_bindings: []
+  plane_placements: []
+```
+
+<!-- CAF_MANAGED_BLOCK: planning_pattern_payload_v1 END -->

@@ -1,0 +1,210 @@
+schema_version: caf_graph_expansion_open_list_v1
+profile: arch_scaffolding
+generated_at: "2026-03-05T23:53:10.695Z"
+config:
+  enabled: true
+  max_hops: 2
+  reserve_slots: 4
+  oversample_factor: 4
+  open_list_target: 16
+  relation_kinds:
+    - depends_on
+    - refines
+    - complements
+    - alternative_to
+  include_namespaces:
+    - caf_v1
+    - core_v1
+  deny_namespaces:
+    - external_v1
+seeds:
+  - CAF-AI-01
+  - CAF-AIOBS-01
+  - CAF-EDGE-01
+  - CAF-IAM-02
+  - CAF-MTEN-01
+  - CAF-PLANE-01
+  - CAF-TCTX-01
+  - CTX-01
+  - OBS-01
+  - POL-01
+  - PST-01
+  - SVC-01
+  - VAL-01
+candidates:
+  -
+    id: CAF-IAM-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: depends_on
+    from_seed: CAF-IAM-02
+    path:
+      -
+        from: CAF-IAM-02
+        kind: depends_on
+        to: CAF-IAM-01
+  -
+    id: CAF-POL-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: depends_on
+    from_seed: CAF-AI-01
+    path:
+      -
+        from: CAF-AI-01
+        kind: depends_on
+        to: CAF-POL-01
+  -
+    id: CAF-POL-02
+    namespace: caf_v1
+    hop: 1
+    via_kind: depends_on
+    from_seed: CAF-AI-01
+    path:
+      -
+        from: CAF-AI-01
+        kind: depends_on
+        to: CAF-POL-02
+  -
+    id: CAF-XPLANE-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: depends_on
+    from_seed: CAF-PLANE-01
+    path:
+      -
+        from: CAF-PLANE-01
+        kind: depends_on
+        to: CAF-XPLANE-01
+  -
+    id: CFG-01
+    namespace: core_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: CFG-01
+  -
+    id: CMP-01
+    namespace: core_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: CMP-01
+  -
+    id: INT-01
+    namespace: core_v1
+    hop: 1
+    via_kind: complements
+    from_seed: PST-01
+    path:
+      -
+        from: PST-01
+        kind: complements
+        to: INT-01
+  -
+    id: CAF-AID-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CAF-AI-01
+    path:
+      -
+        from: CAF-AI-01
+        kind: complements
+        to: CAF-AID-01
+  -
+    id: CAF-COH-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: CAF-COH-01
+  -
+    id: CAF-COH-02
+    namespace: caf_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: CAF-COH-02
+  -
+    id: CAF-COMP-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: CAF-COMP-01
+  -
+    id: CAF-COMP-02
+    namespace: caf_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: CAF-COMP-02
+  -
+    id: CAF-MODEL-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CAF-IAM-02
+    path:
+      -
+        from: CAF-IAM-02
+        kind: complements
+        to: CAF-MODEL-01
+  -
+    id: CAF-MRAD-06
+    namespace: caf_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: CAF-MRAD-06
+  -
+    id: CAF-MTEN-AGOBS-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: CAF-MTEN-AGOBS-01
+  -
+    id: CAF-MTEN-ANTI-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: complements
+    from_seed: PST-01
+    path:
+      -
+        from: PST-01
+        kind: complements
+        to: CAF-MTEN-ANTI-01

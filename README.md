@@ -17,7 +17,7 @@ CAF is built for teams who want to answer stakeholder questions like:
 
 ```text
 git clone github.com/arylwen/caf
-/caf ask For cdx-saas, what architecture decisions did we make, and why?
+/caf ask For codex-saas, what architecture decisions did we make, and why?
 ```
 
 (For the full workflow to create new instances, see **Quickstart (generate an instance)** below.)
@@ -35,8 +35,8 @@ CAF is designed so your assistant can answer questions **without guessing**:
 
 Ask your assistant:
 
-- `/caf ask Summarize the main features of the cdx-saas reference architecture.`
-- `/caf ask Summarize the patterns selected for cdx-saas and the architectural intent (pins) that drove them.`
+- `/caf ask Summarize the main features of the codex-saas reference architecture.`
+- `/caf ask Summarize the patterns selected for codex-saas and the architectural intent (pins) that drove them.`
 
 ### 2. Work visibility (cost / size of change)
 

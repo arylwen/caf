@@ -1,0 +1,11 @@
+# Public repo policy: keep only the canonical sample companion repo.
+#
+# NOTE: .gitignore does not remove files already tracked by git.
+# If other instances are currently tracked, remove them from the index
+# (e.g., git rm -r --cached companion_repositories/<name>) before publishing.
+
+*
+!.gitignore
+
+!codex-saas/
+!codex-saas/**
