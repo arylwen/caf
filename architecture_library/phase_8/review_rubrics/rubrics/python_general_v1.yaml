@@ -17,6 +17,14 @@ checks:
     rule: "Imports resolve within the repo: no broken imports or circular import traps introduced by recent changes."
     evidence_hints:
       - "inspect import statements in touched files and their targets"
+  - check_id: RR-PY-CORR-01A
+    severity: blocker
+    category: correctness
+    rule: "Python package markers exist for candidate code packages referenced by dotted-module entrypoints (no missing __init__.py in code root/subpackages)."
+    evidence_hints:
+      - "verify code/__init__.py exists when Python code is under code/"
+      - "verify code/ap/__init__.py exists when code/ap exists"
+      - "verify code/cp/__init__.py exists when code/cp exists"
   - check_id: RR-PY-CORR-02
     severity: high
     category: correctness

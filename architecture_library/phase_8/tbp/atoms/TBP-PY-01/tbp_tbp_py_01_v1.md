@@ -6,25 +6,32 @@ APPLIES_WHEN: runtime.language == python
 EXTENDS_CORE_PATTERNS: CMP-01; CFG-01
 BINDS_MODULE_ROLES: app_composition_root; application_boundary; domain_core; infrastructure_adapters; config_registry; config_model; config_provider
 
+NOTE (CAF layout):
+- CAF's default Python code root is `code/` (see TBP manifest `layout.code_root`).
+- When a runnable entrypoint references a dotted module path (e.g., `code.ap.main:app`), all Python package directories in that path MUST be importable packages (have `__init__.py`).
+
 ROLE_BINDINGS:
-- app_composition_root: A top-level Python module that wires the service together and exposes the primary entry objects (e.g., ASGI app) and DI wiring (e.g., `app/main.py`).
-- application_boundary: A Python package holding boundary adapters (e.g., HTTP controllers), typically `app/api/`.
-- domain_core: A Python package holding domain logic (pure business rules), typically `app/domain/`. No framework imports here.
-- infrastructure_adapters: A Python package holding external-system adapters (DB, HTTP clients), typically `app/infrastructure/`.
-- config_registry: A repository-level dependency/config specification file (`pyproject.toml` or `requirements*.txt`) plus a config module/package (e.g., `app/config/`).
+- app_composition_root: A top-level Python module that wires the service together and exposes the primary entry objects (e.g., ASGI app) and DI wiring (e.g., `code/ap/main.py`).
+- application_boundary: A Python package holding boundary adapters (e.g., HTTP controllers), typically `code/ap/api/`.
+- domain_core: A Python package holding domain logic (pure business rules), typically `code/ap/domain/`. No framework imports here.
+- infrastructure_adapters: A Python package holding external-system adapters (DB, HTTP clients), typically `code/ap/infrastructure/`.
+- config_registry: A repository-level dependency/config specification file (`pyproject.toml` or `requirements*.txt`) plus a config module/package (e.g., `code/ap/config/`).
 - config_model: A strongly-typed config object (commonly a Pydantic BaseSettings model) representing runtime settings loaded from env.
 - config_provider: A single place responsible for loading config from env/.env and making it available to composition root and adapters.
 
 ADDS_EVIDENCE_HOOKS:
 - E-TBP-PY-01-01: `pyproject.toml` OR `requirements.txt` exists at repo root.
-- E-TBP-PY-01-02: Repository contains an importable Python package for the service (e.g., `app/__init__.py`).
-- E-TBP-PY-01-03: Presence of a composition-root module (e.g., `app/main.py`) that imports the boundary layer and wires dependencies.
+- E-TBP-PY-01-02: Repository contains an importable Python code-root package marker (e.g., `code/__init__.py`).
+- E-TBP-PY-01-03: Presence of a composition-root module (e.g., `code/ap/main.py`) that imports the boundary layer and wires dependencies.
 
 ADDS_STRUCTURAL_VALIDATIONS:
 - V-TBP-PY-01-01: Exactly one dependency specification exists at repo root (`pyproject.toml` OR `requirements.txt` OR `requirements.lock`); if multiple exist, the selected canonical file is declared in `config_registry` docs.
-- V-TBP-PY-01-02: Python packages used for application code contain `__init__.py` (no implicit namespace packages for core service code in v1).
+- V-TBP-PY-01-02: Python packages used for application code contain `__init__.py` (no implicit namespace packages for core service code in v1). In CAF layout, this includes `code/__init__.py` and any subpackages referenced by entrypoints (e.g., `code/ap/__init__.py` for `code.ap.*`).
 - V-TBP-PY-01-03: `domain_core` contains no imports from the chosen web framework TBP (e.g., no `fastapi`, `django`).
 - V-TBP-PY-01-04: Config is read via a config_provider (env-backed) rather than hard-coded literals for runtime endpoints/credentials.
+
+EXTENSION_OBLIGATIONS (script-owned):
+- O-TBP-PY-01-python-package-markers: Ensure Python package marker files exist for candidate code packages so module imports resolve deterministically.
 
 REQUIRES_TBPS: None
 CONFLICTS_WITH_TBPS: None

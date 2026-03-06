@@ -74,6 +74,12 @@ entries:
   worker_id: worker-observability-config
   role_kind: worker
   status: active
+
+- capability_id: python_package_markers_materialization
+  worker_id: worker-python-packaging
+  role_kind: worker
+  status: active
+  notes: Deterministically materialize __init__.py package markers for Python candidate code packages (TBP-PY-01).
 - capability_id: contract_scaffolding
   worker_id: worker-contract-scaffolder
   role_kind: worker

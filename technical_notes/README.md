@@ -3,3 +3,7 @@
 - TN-014 — Permission Checkpoint for Semantic Stages
 - TN-015 — Retrieval Context Blob Contract Boundary
 - TN-016 — Codex 5.3 Fail-Closed Exploits and Mitigations
+
+## Archived / dated notes
+
+Some one-off, date-stamped patch notes and audit artifacts are kept under `docs/dev/history/`.
