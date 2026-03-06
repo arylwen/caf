@@ -1,0 +1,140 @@
+pattern_id: CAF-MTEN-ISO-03
+name: Silo Tenants (Dedicated Infrastructure)
+summary: '**Silo Tenants: Intent** Provide maximal isolation by giving one tenant dedicated infrastructure boundaries.'
+intent: '**Silo Tenants'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  #### 5.2.3 Silo Tenants (Dedicated Infrastructure)
+
+  **Silo Tenants: Intent**  
+  Provide maximal isolation by giving one tenant dedicated infrastructure boundaries.
+
+  ##### **Silo Tenants: Applies When**
+
+  - Strong compliance requirements demand physical separation
+  - A tenant’s workload dominates shared environments
+  - Contractual SLAs require hard blast-radius containment
+  - Customer-managed keys or residency constraints require dedicated stacks
+
+  ##### **Silo Tenants: Forces & Trade-offs**
+
+  - optimizes + Strongest containment and compliance posture
+  - optimizes + Reduced reliance on application-layer filtering
+  - sacrifices − Highest operational overhead
+  - sacrifices − Requires automation to avoid “silo sprawl”
+  - sacrifices − Release management complexity increases
+
+  ##### **Silo Tenants: Normative Requirements**
+
+  - Silo tenancy MUST remain consistent with Canonical Tenant Model
+  - The same Tenant Context rules apply (no bypass)
+  - Operational access MUST be auditable and tenant-scoped
+  - Provisioning and upgrades MUST be automated
+  - Network and account boundaries MUST be explicit if used
+
+  ##### **Silo Tenants: Common Variants**
+   n- Dedicated DB cluster
+  - Dedicated compute cluster / namespace / node pool
+  - Separate cloud account/project per tenant
+  \
+    - Dedicated regional deployment for residency
+
+  ##### **Silo Tenants: Failure Modes**
+
+  - Silo sprawl causing operational collapse
+  - Divergent configurations across tenants leading to drift
+  - “Special” bypass tooling that breaks auditability
+
+  ##### **Silo Tenants: Safe Composition**
+
+  - Recommended with:
+    - deployment stamp automation
+    - strict policy-as-code
+    - centralized observability across silos
+    - hardened operator access workflows
+
+  ##### **Silo Tenants: Evolution Path**
+
+  - Most commonly introduced as an enterprise tier after pooled/hybrid maturity.
+  - Must be treated as a managed mode, not a custom fork.
+
+  ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 5.2.3 Silo Tenants (Dedicated Infrastructure)
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - "Applies When** - Strong compliance requirements demand physical separation - A tenant\u2019s workload dominates shared\
+    \ environments - Contractual SLAs require hard blast-radius containment - Customer-managed keys or residency constraints\
+    \ require dedicated stacks ##### **Silo Tenants"
+  - "Forces & Trade-offs** - optimizes + Strongest containment and compliance posture - optimizes + Reduced reliance on application-layer\
+    \ filtering - sacrifices \u2212 Highest operational overhead - sacrifices \u2212 Requires automation to avoid \u201Csilo\
+    \ sprawl\u201D - sacrifices \u2212 Release management complexity increases ##### **Silo Tenants"
+  - 'Normative Requirements** - Silo tenancy MUST remain consistent with Canonical Tenant Model - The same Tenant Context
+    rules apply (no bypass) - Operational access MUST be auditable and tenant-scoped - Provisioning and upgrades MUST be automated
+    - Network and account boundaries MUST be explicit if used ##### **Silo Tenants'
+  definition_of_done:
+  - 'Verify that normative Requirements** - Silo tenancy MUST remain consistent with Canonical Tenant Model - The same Tenant
+    Context rules apply (no bypass) - Operational access MUST be auditable and tenant-scoped - Provisioning and upgrades MUST
+    be automated - Network and account boundaries MUST be explicit if used ##### **Silo Tenants'
+  - Verify that - Must be treated as a managed mode, not a custom fork.
+  capabilities_needed:
+  - tenancy_context
+  - tenancy_isolation
+  - audit_retention
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  option_sets:
+  - option_set_id: tenancy.isolation.silo_tenants.variant
+    summary: Select the primary siloing approach for dedicated-tenant isolation.
+    options:
+    - option_id: dedicated_db
+      status: defer
+      summary: Dedicated database per tenant (shared compute may still be pooled).
+    - option_id: dedicated_cluster
+      status: defer
+      summary: Dedicated cluster/compute+data per tenant.
+    - option_id: dedicated_environment
+      status: defer
+      summary: Dedicated environment per tenant (network, observability, governance isolation).
+    - option_id: custom
+      status: defer
+      summary: Custom (describe silo boundary and what is dedicated).
+      notes: ''
+    default_option_id: dedicated_db
+  human_questions:
+  - question_key: silo_tenants_variant
+    question_id: Q-MTEN-ISO-SILO-01
+    question: If siloing tenants, what is the primary dedicated boundary?
+    description: Select one option; use 'custom' only if none fit.
+    option_set_id: tenancy.isolation.silo_tenants.variant
+    anchors:
+    - caf_pattern: CAF-MTEN-ISO-03
+  kind: decision_pattern

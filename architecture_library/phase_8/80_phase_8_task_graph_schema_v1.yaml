@@ -1,0 +1,136 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "contura://caf/schemas/phase8_task_graph/v1"
+title: "CAF Phase 8 Task Graph (v1)"
+type: object
+additionalProperties: false
+
+required:
+  - schema_version
+  - tasks
+
+properties:
+  schema_version:
+    type: string
+    const: "phase8_task_graph_v1"
+
+  tasks:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - task_id
+        - title
+        - required_capabilities
+        - inputs
+        - definition_of_done
+        - semantic_review
+        - trace_anchors
+      properties:
+        task_id:
+          type: string
+          minLength: 3
+        title:
+          type: string
+          minLength: 1
+
+        steps:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 1
+          description: |
+            Optional ordered implementation steps. These are human-readable and may include
+            algorithmic steps, but MUST NOT introduce new files beyond inputs/outputs.
+        depends_on:
+          type: array
+          minItems: 0
+          items:
+            type: string
+            minLength: 3
+          description: "Upstream task_ids that must complete before this task."
+        required_capabilities:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 3
+        inputs:
+          type: array
+          minItems: 0
+          items:
+            type: object
+            additionalProperties: false
+            required: [path, required]
+            properties:
+              path:
+                type: string
+                minLength: 1
+              required:
+                type: boolean
+        definition_of_done:
+          type: array
+          minItems: 3
+          items:
+            type: string
+            minLength: 1
+          description: |
+            Human-readable backlog-style completion criteria. These are semantic, not syntactic.
+            Planners MUST NOT encode file paths or "path exists" checks here.
+
+        semantic_review:
+          type: object
+          additionalProperties: false
+          required:
+            - review_questions
+            - severity_threshold
+          properties:
+            rubric_ids:
+              type: array
+              minItems: 0
+              items:
+                type: string
+                minLength: 1
+              description: |
+                Optional list of review rubric IDs (see `architecture_library/phase_8/review_rubrics/rubrics/`).
+                If omitted, reviewers may auto-select rubrics based on platform pins and adopted choice points.
+            review_questions:
+              type: array
+              minItems: 3
+              items:
+                type: string
+                minLength: 1
+              description: "Questions a code-review worker must answer about this task's implementation."
+            severity_threshold:
+              type: string
+              enum: ["blocker", "high", "medium", "low"]
+              description: "If review finds issues at or above this severity, it MUST emit a feedback packet."
+            focus_areas:
+              type: array
+              minItems: 0
+              items:
+                type: string
+                minLength: 1
+              description: "Optional tags (e.g., security, performance, correctness, architecture_alignment)."
+            constraints_notes:
+              type: string
+              description: "Optional extra context for reviewers and implementers; must remain semantic."
+        trace_anchors:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: false
+            required: [pattern_id, anchor_kind]
+            properties:
+              pattern_id:
+                type: string
+                minLength: 3
+              anchor_kind:
+                type: string
+                enum: ["plan_step_archetype", "module_role", "structural_validation"]
+              anchor_ref:
+                type: string
+                description: "Optional label or reference within the pattern."

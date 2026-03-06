@@ -1,0 +1,112 @@
+pattern_id: CAF-POL-S09
+name: Policy Enforcement Patterns
+summary: Policy enforcement is not optional.
+intent: Policy enforcement is not optional.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 9. Policy Enforcement Patterns
+
+
+  Policy enforcement is not optional.
+
+
+  Enforcement patterns include:
+
+
+  - Hard deny (block execution)
+
+  - Soft deny (require escalation or HITL)
+
+  - Constraint application (limit, redact, throttle)
+
+  - Context modification (scope narrowing)
+
+  - Lifecycle transition gating
+
+
+  Enforcement MUST:
+
+
+  - Be consistent across planes
+
+  - Be attributable to a policy version
+
+  - Emit enforcement evidence
+
+
+  ---'
+source_documents:
+- path: architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+  section_heading: 9. Policy Enforcement Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '- Hard deny (block execution) - Soft deny (require escalation or HITL) - Constraint application (limit, redact, throttle)
+    - Context modification (scope narrowing) - Lifecycle transition gating Enforcement MUST'
+  definition_of_done:
+  - Verify that - Hard deny (block execution) - Soft deny (require escalation or HITL) - Constraint application (limit, redact,
+    throttle) - Context modification (scope narrowing) - Lifecycle transition gating Enforcement MUST
+  capabilities_needed:
+  - policy_enforcement
+  - versioning_support
+  - compliance_evidence
+  - ai_safety_integration
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: policy.enforcement_pattern
+    description: How policy enforcement is applied in request/workflow execution paths.
+    options:
+    - option_id: inline_handler
+      summary: Enforce inline in the request handler/service method
+      enforcement_point: handler
+      failure_mode: deny
+    - option_id: middleware_filter
+      summary: Enforce in middleware/filter/interceptor
+      enforcement_point: middleware
+      failure_mode: deny
+    - option_id: sidecar_enforcer
+      summary: Enforce via sidecar (external decision+enforcement)
+      enforcement_point: sidecar
+      failure_mode: deny
+    - option_id: async_compensating
+      summary: Enforce asynchronously with compensating actions
+      enforcement_point: async
+      failure_mode: compensate
+    - option_id: custom
+      summary: Custom (fill details; prefer adopting a retrieved option when available)
+    default_option_id: inline_handler
+  human_questions:
+  - question_key: policy.enforcement_pattern
+    question_id: Q-POL-ENF-01
+    question: What policy enforcement pattern should be used?
+    description: Choose where enforcement occurs and how denials/violations are handled.
+    option_set_id: policy.enforcement_pattern
+    specialization_notes:
+    - Prefer inline/middleware enforcement for high-risk operations.
+    anchors:
+    - caf_pattern: CAF-POL-S09

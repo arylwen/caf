@@ -1,0 +1,121 @@
+pattern_id: CAF-AI-01
+name: AI Safety and Governance Separation Across Planes
+summary: Separate AI policy and governance (Control) from workflow execution (Application) and inference/compute (Data).
+intent: Make AI behavior auditable, enforceable, and reversible by placing governance in the Control Plane.
+context: AI-first SaaS where models/agents can amplify mistakes and introduce new failure modes.
+problem: If AI guardrails and policies are scattered across workflows, behavior becomes non-deterministic and cannot be proven
+  or rolled back reliably.
+forces_tradeoffs: Fast iteration on AI behavior vs enforceability, auditability, and safety; decentralized experimentation
+  vs centralized governance.
+solution_structure_behavior: CP defines AI policies, guardrails, and allowed tool/model configurations; AP executes AI workflows
+  subject to CP policy; DP performs inference/compute behind enforced access.
+consequences: Reduces unsafe autonomy and drift; may slow experimentation and requires explicit policy versioning and rollout/rollback
+  mechanisms.
+implementation_notes: Treat AI policies as first-class artifacts; integrate safety gates and observability hooks; avoid implicit
+  behavior changes.
+examples_known_uses: Policy-gated agent tool use; model/prompt version governance with audit attribution.
+related_patterns: |
+  depends_on: CAF-POL-01
+  depends_on: CAF-POL-02
+  depends_on: OBS-01
+  complements: CAF-AID-01
+  complements: CAF-POL-03
+extended_definition: |
+  This pattern makes AI/agent behavior **auditable, enforceable, and reversible** by separating governance intent (CP) from execution (AP) and compute/data (DP).
+
+  **Normative constraints**
+  - AI policies, allowed models, and tool permissions MUST be centrally governed by the Control Plane.
+  - Application Plane MUST treat AI outputs as untrusted input and MUST enforce safety/guardrail outcomes deterministically.
+  - Data Plane AI components (model serving, retrieval) MUST NOT bypass Control Plane policies.
+
+  **Responsibilities and boundaries**
+  - Control Plane: defines/versions allowed models, prompt templates, agent workflows, tool schemas, safety gates, and cost controls.
+  - Application Plane: executes AI workflows under CP policy; orchestrates retrieval/tool calls; enforces safety gate decisions (reject/redact/escalate); emits traces.
+  - Data Plane: performs inference/retrieval/embedding under AP/CP instructions; stores AI logs/traces when required.
+
+  **Evidence hooks**
+  - Design explicitly states which plane “decides what” (CP what is allowed; AP what was attempted/executed; DP what models/data were used).
+  - Governance artifacts are versioned and referenced from runtime telemetry (model/prompt/tool config lineage).
+  - AI traces include prompts, retrieved context identifiers, safety gate outcomes, and actions taken (as allowed by governance).
+
+  **Common failure modes**
+  - Guardrails implemented as scattered, unversioned workflow code.
+  - Uncontrolled model/tool selection at runtime.
+  - Inference/retrieval paths that cannot be attributed to tenant + principal + policy version.
+
+source_documents:
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Core Architectural Principles and Constraints/AI Safety and Governance
+  - AI-First and Agentic Behavior Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design includes AI/agent behaviors or governance requirements that require auditability and policy gating.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that AI governance policies are defined/owned in the Control Plane and consumed by runtime workflows.
+  - Verify that AI/agent execution is policy-gated and observable.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: ai_safety.governance_partitioning
+    description: How AI safety policy is governed and where enforcement happens across planes.
+    options:
+    - option_id: cp_governs_ap_enforces
+      summary: Control Plane governs policy; Application Plane enforces at runtime.
+      governance_plane: control
+      enforcement_plane: application
+      notes: ''
+    - option_id: cp_only
+      summary: Control Plane both governs and enforces (AP delegates decisions).
+      governance_plane: control
+      enforcement_plane: control
+      notes: ''
+    - option_id: shared_governance_shared_enforcement
+      summary: Governance and enforcement responsibilities are shared with explicit boundaries.
+      governance_plane: shared
+      enforcement_plane: shared
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      governance_plane: ''
+      enforcement_plane: ''
+      notes: ''
+    default_option_id: cp_governs_ap_enforces
+  human_questions:
+  - question_key: ai_safety_partitioning
+    question_id: Q-AI-PART-01
+    question: How are AI safety governance and enforcement partitioned across planes?
+    description: Select the governance/enforcement partitioning for AI safety controls.
+    option_set_id: ai_safety.governance_partitioning
+    specialization_notes:
+    - Warranted when the system has AI/agent behavior requiring safety gating or governance.
+    - Keep consistent with policy responsibility distribution decisions (CAF-POL-02).
+    anchors:
+    - caf_pattern: CAF-AI-01
+    - caf_pattern: CAF-POL-02
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AI-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-AI-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

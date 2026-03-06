@@ -1,0 +1,93 @@
+schema_version: top_patterns_v1
+generated_from_archive: caf_release_bundle_v1_1220.zip
+
+top_patterns:
+  # CAF: patterns commonly pinned/adopted in system specs
+  - pattern_id: CAF-AI-01
+    category: caf
+    source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AI-01.yaml
+  - pattern_id: CAF-AID-01
+    category: caf
+    source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AID-01.yaml
+  - pattern_id: CAF-PLANE-01
+    category: caf
+    source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-PLANE-01.yaml
+  - pattern_id: CAF-POL-01
+    category: caf
+    source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-01.yaml
+  - pattern_id: CAF-RES-ID-01
+    category: caf
+    source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-RES-ID-01.yaml
+  - pattern_id: CAF-TCTX-01
+    category: caf
+    source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-TCTX-01.yaml
+  - pattern_id: CAF-XPLANE-01
+    category: caf
+    source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-XPLANE-01.yaml
+
+  # CORE: all core_v1 pattern definitions present in the library
+  - pattern_id: CFG-01
+    category: core
+    source_path: architecture_library/patterns/core_v1/definitions_v1/CFG-01.yaml
+  - pattern_id: CMP-01
+    category: core
+    source_path: architecture_library/patterns/core_v1/definitions_v1/CMP-01.yaml
+  - pattern_id: CTX-01
+    category: core
+    source_path: architecture_library/patterns/core_v1/definitions_v1/CTX-01.yaml
+  - pattern_id: INT-01
+    category: core
+    source_path: architecture_library/patterns/core_v1/definitions_v1/INT-01.yaml
+  - pattern_id: OBS-01
+    category: core
+    source_path: architecture_library/patterns/core_v1/definitions_v1/OBS-01.yaml
+  - pattern_id: POL-01
+    category: core
+    source_path: architecture_library/patterns/core_v1/definitions_v1/POL-01.yaml
+  - pattern_id: PST-01
+    category: core
+    source_path: architecture_library/patterns/core_v1/definitions_v1/PST-01.yaml
+  - pattern_id: SVC-01
+    category: core
+    source_path: architecture_library/patterns/core_v1/definitions_v1/SVC-01.yaml
+  - pattern_id: VAL-01
+    category: core
+    source_path: architecture_library/patterns/core_v1/definitions_v1/VAL-01.yaml
+
+  # EXTERNAL: top boundary + reliability + operability patterns
+  - pattern_id: EXT-API_GATEWAY
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-api_gateway.yaml
+  - pattern_id: EXT-AUDITABILITY
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-auditability.yaml
+  - pattern_id: EXT-RATE_LIMITING_QUOTAS
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-rate_limiting_quotas.yaml
+  - pattern_id: EXT-TIMEOUT_DEADLINES
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-timeout_deadlines.yaml
+  - pattern_id: EXT-RETRY_W_BACKOFF_JITTER
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-retry_w_backoff_jitter.yaml
+  - pattern_id: EXT-CIRCUIT_BREAKER
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-circuit_breaker.yaml
+  - pattern_id: EXT-BULKHEAD_ISOLATION
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-bulkhead_isolation.yaml
+  - pattern_id: EXT-IDEMPOTENCY
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-idempotency.yaml
+  - pattern_id: EXT-OUTBOX_PATTERN
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-outbox_pattern.yaml
+  - pattern_id: EXT-DEAD_LETTER_QUEUE_DLQ
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-dead_letter_queue_dlq.yaml
+  - pattern_id: EXT-CONFIG_EXTERNALIZATION
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-config_externalization.yaml
+  - pattern_id: EXT-DISTRIBUTED_TRACING
+    category: external
+    source_path: architecture_library/patterns/external_v1/definitions_v1/ext-distributed_tracing.yaml

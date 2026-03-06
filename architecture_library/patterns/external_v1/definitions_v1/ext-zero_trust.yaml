@@ -1,0 +1,86 @@
+pattern_id: EXT-ZERO_TRUST
+name: Zero Trust
+summary: Verify identity/context; minimize trust in network
+intent: Assume the network is hostile; verify identity, device, and context for every request.
+context: Systems handling sensitive data and multiple services/identities across networks and environments.
+problem: Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+forces_tradeoffs: Security depth vs developer friction; least privilege vs operational agility; privacy vs usability.
+solution_structure_behavior: A security model that assumes no implicit trust based on network location. Every access request
+  is continuously verified using strong identity, device and context signals, and least-privilege policies. It typically includes
+  mTLS, conditional access, micro-segmentation, and continuous monitoring.
+consequences: Reduced blast radius and better compliance; requires governance, tooling, and ongoing hygiene.
+implementation_notes: Centralize identity, enforce least privilege, store secrets in a vault, keep services private by default,
+  and automate policy checks.
+examples_known_uses: Enterprise SaaS, healthcare/finance workloads, multi-tenant platforms.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A security model that assumes no implicit trust based on network location. Every access request is continuously
+  verified using strong identity, device and context signals, and least-privilege policies. It typically includes mTLS, conditional
+  access, micro-segmentation, and continuous monitoring.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-ZERO_TRUST
+  minimum_evidence:
+  - Systems handling sensitive data and multiple services/identities across networks and environments.
+  - Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+  definition_of_done:
+  - Verify that a security model that assumes no implicit trust based on network location.
+  capabilities_needed:
+  - identity_access
+  - zero_trust_posture
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: security.zero_trust_enforcement_scope
+    description: Scope and enforcement depth for zero-trust verification across the system boundary and internal hops.
+    options:
+    - option_id: edge_only
+      summary: Zero-trust controls primarily at ingress/edge; internal trust boundaries are coarser.
+      notes: ''
+    - option_id: every_hop
+      summary: Zero-trust verification at every hop (service-to-service), including identity and policy checks.
+      notes: ''
+    - option_id: critical_paths_only
+      summary: Zero-trust applied to critical paths and high-risk interactions; others use baseline controls.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: edge_only
+  human_questions:
+  - question_key: security_zero_trust_enforcement_scope
+    question_id: Q-EXT-ZT-01
+    question: What is the scope of zero-trust enforcement?
+    description: Select how deeply zero-trust verification is enforced across ingress and service-to-service calls.
+    option_set_id: security.zero_trust_enforcement_scope
+    specialization_notes:
+    - Warranted when threats include lateral movement and the system requires continuous verification rather than perimeter
+      trust.
+    anchors:
+    - caf_pattern: EXT-ZERO_TRUST
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-zero_trust.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-ZERO_TRUST
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

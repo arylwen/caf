@@ -1,0 +1,133 @@
+pattern_id: CAF-MTEN-VALU-04
+name: Lifecycle Validation
+summary: '**Is tenant creation deliberate and high-friction?**'
+intent: '**Is tenant creation deliberate and high-friction?**'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: '## 4. Lifecycle Validation
+
+
+  **Is tenant creation deliberate and high-friction?**
+
+
+  - PASS: Tenant creation requires explicit admin action.
+
+  - FAIL: Tenants are auto-created on first login.
+
+
+  **Are Tenant and AccountScope created atomically?**
+
+
+  - PASS: Both are provisioned in a single transaction.
+
+  - FAIL: Tenant exists without governance metadata.
+
+
+  **Is initial administrative identity explicitly bound at tenant creation?**
+
+
+  - PASS: Creator is recorded as initial admin.
+
+  - FAIL: Admin role is assigned later implicitly.
+
+
+  **Are lifecycle state transitions explicit and auditable?**
+
+
+  - PASS: State changes emit audit events.
+
+  - FAIL: State changes are inferred from data absence.
+
+
+  **Does suspension reliably prevent mutating actions?**
+
+
+  - PASS: Writes are blocked during suspension.
+
+  - FAIL: Suspended tenants can still modify data.
+
+
+  **Are agents halted or degraded safely during tenant suspension?**
+
+
+  - PASS: Agents are paused automatically.
+
+  - FAIL: Agents continue running during suspension.
+
+
+  **Is tenant termination irreversible at the logical level?**
+
+
+  - PASS: Access is permanently revoked.
+
+  - FAIL: Terminated tenants can be reactivated silently.
+
+
+  **Are all resources prevented from outliving their tenant?**
+
+
+  - PASS: Resources are deleted or archived with tenant.
+
+  - FAIL: Resources persist after tenant deletion.
+
+
+  **Are tenant migrations executed as explicit lifecycle workflows?**
+
+
+  - PASS: Migration jobs are tracked and auditable.
+
+  - FAIL: Data is moved manually without lifecycle tracking.
+
+
+  **Is Tenant Context preserved throughout migrations and rebalancing?**
+
+
+  - PASS: Migration steps enforce tenant context.
+
+  - FAIL: Migration scripts operate globally.
+
+
+  ---'
+source_documents:
+- path: architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+  section_heading: 4. Lifecycle Validation
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Tenant creation requires explicit admin action.
+  definition_of_done:
+  - 'Verify that ## 4.'
+  - Verify that lifecycle Validation **Is tenant creation deliberate and high-friction?** - PASS
+  capabilities_needed:
+  - tenancy_context
+  - identity_access
+  - tenant_lifecycle
+  - observability_audit
+  - agent_boundary
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

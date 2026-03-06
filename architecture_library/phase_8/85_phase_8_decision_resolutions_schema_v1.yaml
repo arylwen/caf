@@ -1,0 +1,82 @@
+schema_version: decision_resolutions_schema_v1
+title: Decision Resolutions Registry (v1)
+description: >
+  Canonical Layer 6 registry recording human resolution of CAF-proposed decision candidates.
+  This enables traceability across derivation hops (specs → design → plan → build).
+
+artifact:
+  kind: decision_resolutions_v1
+  canonical_path: reference_architectures/<name>/spec/playbook/decision_resolutions_v1.yaml
+
+# v1 schema (informal YAML schema, CAF-owned)
+schema:
+  type: object
+  additionalProperties: false
+  required: [schema_version, decisions]
+  properties:
+    schema_version:
+      type: string
+      enum: [decision_resolutions_v1]
+      description: Version tag for the instance artifact.
+    decisions:
+      type: array
+      description: >
+        Each entry resolves one previously emitted candidate (identified by evidence_hook_id).
+        Entries are advisory-to-binding depending on 'status'. Downstream hops MUST treat
+        only status=adopt as binding input; status=defer becomes open questions; status=reject
+        is recorded but must not drive design/planning.
+      items:
+        type: object
+        additionalProperties: false
+        required: [evidence_hook_id, pattern_id, status, anchors, rationale]
+        properties:
+          evidence_hook_id:
+            type: string
+            description: >
+              Must match an evidence hook id emitted by CAF in a prior artifact
+              (e.g., in system_spec_v1.md or application_spec_v1.md).
+          pattern_id:
+            type: string
+            description: CAF pattern id that the candidate referenced (e.g., CAF-MTEN-01).
+          status:
+            type: string
+            enum: [adopt, reject, defer]
+          anchors:
+            type: array
+            minItems: 1
+            description: >
+              Legitimacy anchors: each resolution MUST be justified by at least one anchor.
+              Allowed anchor types align with the Requirement Legitimacy Guardrail.
+            items:
+              type: object
+              additionalProperties: false
+              required: [anchor_type]
+              properties:
+                anchor_type:
+                  type: string
+                  enum: [design_decision_checklist_item, caf_pattern_requirement, tbp_requirement, guardrail_ref]
+                anchor_id:
+                  type: string
+                  description: Optional identifier for the anchor (if applicable).
+                anchor_path:
+                  type: string
+                  description: Optional path to the authoritative anchor source (if applicable).
+          rationale:
+            type: string
+            minLength: 1
+            description: >
+              Short justification for the resolution. SHOULD cite evidence from the originating
+              candidates and/or pinned inputs, but must not introduce new architecture choices.
+          resolved_values:
+            type: object
+            additionalProperties: true
+            description: >
+              Optional resolved values produced by the architect, used by downstream derivations.
+              Example: {"tenancy.isolation_posture": "logical_only"}.
+          downstream_implications:
+            type: array
+            description: >
+              Optional list of expected downstream impacts (for traceability and review).
+              Example: ["design: CP↔AP boundary contract required", "plan: add idempotency evidence hook"].
+            items:
+              type: string

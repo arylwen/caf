@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# CAF maintainer convention (opt-in via: git config core.hooksPath .githooks)
+# Rule: every patch commit should include a patch note file.
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  exit 0
+fi
+
+staged=$(git diff --cached --name-only)
+if echo "$staged" | grep -Eq '^docs/dev/patch_notes/patch_.*\.md$'; then
+  exit 0
+fi
+
+cat >&2 <<'EOF'
+CAF pre-commit: missing patch note.
+
+Rule: every patch commit should include a docs/dev/patch_notes/patch_*.md file.
+
+Create one:
+  node tools/caf-meta/new_patch_note_v1.mjs --slug <short_slug>
+
+Then stage it and commit.
+
+Bypass (not recommended): git commit --no-verify
+EOF
+
+exit 1

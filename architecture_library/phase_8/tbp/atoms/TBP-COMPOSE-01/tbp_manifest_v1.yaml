@@ -1,0 +1,101 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-COMPOSE-01
+
+binds_to:
+  - atom_path: deployment.mode
+    atom_value: docker_compose
+  - atom_path: deployment.mode
+    atom_value: podman_compose
+
+requires_tbps: []
+conflicts_with_tbps: []
+
+layout:
+  scaffold_directories:
+    - docker/
+
+  role_bindings:
+    compose_candidate:
+      path_template: docker/compose.candidate.yaml
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - "services:"
+        - "build:"
+        - "env_file:"
+
+    dockerfile_cp:
+      path_template: docker/Dockerfile.cp
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - "FROM"
+
+    dockerfile_ap:
+      path_template: docker/Dockerfile.ap
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - "FROM"
+
+    env_file:
+      path_template: .env
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - "CAF_CONTAINER_RUNTIME_CMD"
+
+    gitignore:
+      path_template: .gitignore
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - ".env"
+        - "*.local"
+
+extensions:
+  obligations:
+    - obligation_id: O-TBP-COMPOSE-01-compose-candidate
+      title: Materialize compose candidate wiring (CP/AP and adopted support services)
+      required_capability: runtime_wiring
+      role_binding_key: compose_candidate
+
+    - obligation_id: O-TBP-COMPOSE-01-dockerfile-cp
+      title: Materialize Control Plane Dockerfile for compose builds
+      required_capability: runtime_wiring
+      role_binding_key: dockerfile_cp
+
+    - obligation_id: O-TBP-COMPOSE-01-dockerfile-ap
+      title: Materialize Application Plane Dockerfile for compose builds
+      required_capability: runtime_wiring
+      role_binding_key: dockerfile_ap
+
+    - obligation_id: O-TBP-COMPOSE-01-env-file
+      title: Materialize local .env file for compose env_file wiring (non-secret defaults)
+      required_capability: runtime_wiring
+      role_binding_key: env_file
+
+    - obligation_id: O-TBP-COMPOSE-01-gitignore
+      title: Ensure .env and *.local are ignored in .gitignore
+      required_capability: runtime_wiring
+      role_binding_key: gitignore
+
+  gates:
+    - gate_id: G-COMPOSE-CONFIG-EXTERNALIZATION
+      title: Externalize configuration and secrets
+      gate_kind: coding_standard
+      required_capability: runtime_wiring
+      criteria:
+        - Runtime wiring externalizes configuration via environment variables or referenced env files; no secrets are embedded in versioned config.
+        - Service-to-service endpoints are expressed via internal DNS/service names and ports; avoid hardcoding host-specific addresses.
+      review_questions:
+        - Are any credentials embedded directly in runtime wiring configuration?
+      focus_areas: [security, portability]
+      severity_threshold_override: high
+
+    - gate_id: G-COMPOSE-SERVICE-ROLES
+      title: Service role clarity and minimal wiring
+      gate_kind: definition_of_done
+      required_capability: runtime_wiring
+      criteria:
+        - Runtime wiring includes explicit services for CP and AP (and DB/event runtime when adopted), with clear role names matching the plane contract.
+        - CP/AP services use compose builds (Dockerfile-based) so developers do not need local Python tooling.
+        - Port exposure and volumes are minimal and documented; local dev conveniences are isolated and optional.
+      review_questions:
+        - Do service names and roles align with the CP/AP plane boundary and the adopted integration contract?
+      focus_areas: [maintainability]

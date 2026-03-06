@@ -1,0 +1,32 @@
+# CAF project-local Codex defaults
+#
+# Usage (project-local):
+#   CODEX_HOME=$(pwd)/.codex codex
+#
+# Codex also supports user-level configuration at:
+#   ~/.codex/config.toml
+#
+# CAF runtime knobs are environment variables; in current CAF mode they are optional overrides (most runs should not require them).
+# See: .codex/runtime/runtime_environment.md
+
+developer_instructions = """
+CAF: command surface
+- Use /caf help for command discovery.
+- Use /caf arch <instance> for architecture + design.
+- Use /caf plan <instance> for planning outputs (obligations + task graph + backlog projection).
+
+CAF: safety
+- Do not run any git commands.
+
+CAF: runtime environment defaults
+- If CAF_PYTHON_CMD is not set, assume python3.
+- Container runtime + compose are environment-specific; for local_podmancompose_* profiles, the typical choice is:
+  - CAF_CONTAINER_RUNTIME_CMD=podman
+  - CAF_COMPOSE_CMD="podman compose"
+
+Windows / PowerShell
+- Set environment variables using $env:NAME = "value".
+- Do not use `set NAME=value` in PowerShell (it maps to Set-Variable). Some built-ins (notably $PID) are read-only.
+"""
+
+approval_policy = "never"

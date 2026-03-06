@@ -1,0 +1,50 @@
+schema_version: phase8_worker_capability_catalog_v1
+
+entries:
+  - capability_id: application_planning
+    worker_id: caf-application-architect
+    role_kind: application_architect
+    status: planned
+    notes: "Decompose architect-approved intent into plan contract artifacts (PSM/Task Graph/Traceability)."
+
+  - capability_id: candidate_orchestration
+    worker_id: caf-build-candidate
+    role_kind: manager
+    status: active
+    notes: "Execute validated tasks under derived rails; fail-closed on violations."
+
+  # Workers (specialists). Keep capability ids stable and implementation-agnostic.
+  - capability_id: domain_modeling
+    worker_id: worker-domain-modeler
+    role_kind: worker
+    status: planned
+
+  - capability_id: api_boundary_implementation
+    worker_id: worker-api-boundary
+    role_kind: worker
+    status: planned
+
+  - capability_id: service_facade_implementation
+    worker_id: worker-service-facade
+    role_kind: worker
+    status: planned
+
+  - capability_id: persistence_implementation
+    worker_id: worker-persistence
+    role_kind: worker
+    status: planned
+
+  - capability_id: policy_enforcement
+    worker_id: worker-policy
+    role_kind: worker
+    status: planned
+
+  - capability_id: observability_and_config
+    worker_id: worker-observability-config
+    role_kind: worker
+    status: planned
+
+  - capability_id: structural_validation
+    worker_id: caf-validate
+    role_kind: validator
+    status: active

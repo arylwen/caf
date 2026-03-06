@@ -1,0 +1,115 @@
+schema_version: technology_choice_rules_v1
+rules:
+  # Framework selection
+  - key: platform.framework
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+      generation_phase: implementation_scaffolding
+    allowed_values: [fastapi, django, drf]
+    required: true
+
+  - key: platform.framework
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+      generation_phase: architecture_scaffolding
+    allowed_values: [fastapi, django, drf]
+    required: false
+
+  - key: platform.framework
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+      generation_phase: solution_architecture
+    allowed_values: [fastapi, django, drf]
+    required: false
+
+  - key: platform.framework
+    when:
+      runtime_language: typescript
+      runtime_shape: api_service_http
+      generation_phase: implementation_scaffolding
+    allowed_values: [express, nestjs]
+    required: true
+
+  - key: platform.framework
+    when:
+      runtime_language: typescript
+      runtime_shape: api_service_http
+      generation_phase: architecture_scaffolding
+    allowed_values: [express, nestjs]
+    required: false
+
+  - key: platform.framework
+    when:
+      runtime_language: typescript
+      runtime_shape: api_service_http
+      generation_phase: solution_architecture
+    allowed_values: [express, nestjs]
+    required: false
+
+  # Persistence ORM selection
+  - key: platform.persistence_orm
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+    allowed_values: [none, sqlalchemy_orm, sqlalchemy_core, raw_sql]
+    required: false
+
+  # Auth mode selection
+  - key: platform.auth_mode
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+    allowed_values: [mock, api_key, jwt, oidc]
+    required: false
+
+  # Eventing backend selection
+  - key: platform.eventing_backend
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+    allowed_values: [mock_in_memory, queue_in_memory, rabbitmq, cloud_pubsub]
+    required: false
+
+  # Schema management strategy selection
+  # NOTE: "docker_init_sql" is intentionally not supported as a first-class option.
+  # For launch, we support:
+  #   - code_bootstrap (default)
+  #   - alembic_migrations (only when persistence_orm is ORM-backed, not raw_sql)
+  - key: platform.schema_management_strategy
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+      persistence_orm: sqlalchemy_orm
+    allowed_values: [code_bootstrap, alembic_migrations]
+    default_value: code_bootstrap
+    required: false
+
+  - key: platform.schema_management_strategy
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+      persistence_orm: sqlalchemy_core
+    allowed_values: [code_bootstrap, alembic_migrations]
+    default_value: code_bootstrap
+    required: false
+
+  - key: platform.schema_management_strategy
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+      persistence_orm: raw_sql
+    allowed_values: [code_bootstrap]
+    default_value: code_bootstrap
+    required: false
+
+  - key: platform.schema_management_strategy
+    when:
+      runtime_language: python
+      runtime_shape: api_service_http
+      persistence_orm: none
+    allowed_values: [code_bootstrap]
+    default_value: code_bootstrap
+    required: false

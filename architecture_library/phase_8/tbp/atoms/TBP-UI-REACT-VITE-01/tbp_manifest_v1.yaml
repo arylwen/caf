@@ -1,0 +1,97 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-UI-REACT-VITE-01
+binds_to:
+  - atom_path: ui.present
+    atom_value: true
+  - atom_path: ui.kind
+    atom_value: web_spa
+  - atom_path: ui.framework
+    atom_value: react
+  - atom_path: deployment.mode
+    atom_value: docker_compose
+  - atom_path: deployment.mode
+    atom_value: podman_compose
+requires_tbps:
+  - TBP-COMPOSE-01
+conflicts_with_tbps: []
+layout:
+  scaffold_directories:
+    - code/ui/
+    - docker/
+  role_bindings:
+    ui_package_json:
+      path_template: code/ui/package.json
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - vite
+        - react
+        - build
+    ui_vite_config:
+      path_template: code/ui/vite.config.js
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - proxy
+        - /api
+    ui_src_entrypoints:
+      path_template: code/ui/src/main.jsx
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - React
+        - App
+    ui_dockerfile:
+      path_template: docker/Dockerfile.ui
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - node
+        - npm
+        - nginx
+        - vite
+    ui_nginx_proxy_conf:
+      path_template: docker/nginx.ui.conf
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - proxy_pass
+        - ap:8000
+        - /api
+    ui_compose_service:
+      path_template: docker/compose.candidate.yaml
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - "ui:"
+        - Dockerfile.ui
+        - nginx.ui.conf
+        - /api
+extensions:
+  obligations:
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ui-source
+      title: Materialize React (Vite) SPA source scaffold for local candidate runs
+      required_capability: ui_frontend_scaffolding
+      role_binding_key: ui_package_json
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ui-build-container
+      title: Materialize UI build container (multi-stage) that compiles the SPA and serves it via nginx
+      required_capability: runtime_wiring
+      role_binding_key: ui_dockerfile
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ui-nginx-proxy
+      title: Materialize nginx proxy configuration so the UI can call the AP without CORS issues
+      required_capability: runtime_wiring
+      role_binding_key: ui_nginx_proxy_conf
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ui-compose-service
+      title: Materialize UI service wiring in compose using the declared Dockerfile and nginx proxy config
+      required_capability: runtime_wiring
+      role_binding_key: ui_compose_service
+  gates:
+    - gate_id: G-UI-BUILD-PIPELINE
+      title: React SPA must be built before serving
+      gate_kind: coding_standard
+      required_capability: ui_frontend_scaffolding
+      criteria:
+        - UI source uses JSX/React and is compiled into browser-runnable assets as part of the candidate run flow (no serving raw JSX directly to browsers).
+        - UI calls the Application Plane via a stable local contract surface (prefer same-origin via reverse proxy) without requiring ad-hoc CORS bypasses.
+      review_questions:
+        - Does the UI run end-to-end via the compose stack without manual build steps on the host?
+        - Are API calls made via a stable contract surface (e.g., /api/*) rather than hard-coded localhost ports in UI code?
+      focus_areas: [portability, correctness]
+      severity_threshold_override: high
+      notes: |
+        Implementation hint (non-normative): prefer a multi-stage Dockerfile that runs `npm ci` + `npm run build` in a Node image, then copies `dist/` into an nginx image.
+        For local same-origin behavior, configure nginx to serve the SPA and proxy `/api/*` to `http://ap:8000` (compose service DNS).

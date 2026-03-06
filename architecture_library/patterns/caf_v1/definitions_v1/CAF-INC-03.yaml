@@ -1,0 +1,57 @@
+pattern_id: CAF-INC-03
+name: Triage Playbook (Fast Path)
+summary: 1. **Identify tenant(s) impacted** (requires MT-CX-050/051 integrity) 2. **Determine class (A–F)** above 3. **Map to checklist IDs** and assign owners 4. **Containment first**, then root-cause fix 5. **Add/strengthen...
+intent: '1.'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 3. Triage Playbook (Fast Path)
+
+
+  1. **Identify tenant(s) impacted** (requires MT-CX-050/051 integrity)
+
+  2. **Determine class (A–F)** above
+
+  3. **Map to checklist IDs** and assign owners
+
+  4. **Containment first**, then root-cause fix
+
+  5. **Add/strengthen automated checks** so the same ID cannot regress'
+source_documents:
+- path: architecture_library/32_contura_multi_tenancy_incident_classification_v1.md
+  section_heading: 3. Triage Playbook (Fast Path)
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '**Identify tenant(s) impacted** (requires MT-CX-050/051 integrity) 2.'
+  definition_of_done:
+  - 'Verify that ## 3.'
+  - Verify that triage Playbook (Fast Path) 1.
+  capabilities_needed:
+  - ai_data_constraints
+  - incident_response
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: checklist

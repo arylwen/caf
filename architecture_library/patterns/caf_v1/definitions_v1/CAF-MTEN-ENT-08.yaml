@@ -1,0 +1,76 @@
+pattern_id: CAF-MTEN-ENT-08
+name: AI, Agents, and Enterprise Risk Profiles
+summary: AI-first systems amplify enterprise risk.
+intent: AI-first systems amplify enterprise risk.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  ### 6.8 AI, Agents, and Enterprise Risk Profiles
+
+  AI-first systems amplify enterprise risk.
+
+  Enterprise modes MAY require:
+
+  - Stricter agent budgets
+  - Reduced autonomy
+  - Mandatory human approval for certain actions
+  - Enhanced AI observability and evaluation
+  - Model or tool allowlists
+
+  Normative rules:
+
+  - Agent autonomy MUST be explicitly constrained by policy
+  - AI execution MUST remain tenant-scoped under all modes
+  - Safety gates MUST be mode-aware
+  - AI behavior MUST remain explainable and auditable
+
+  Enterprise AI is governed AI—not special AI.
+
+  ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 6.8 AI, Agents, and Enterprise Risk Profiles
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Enterprise modes MAY require
+  - "- Agent autonomy MUST be explicitly constrained by policy - AI execution MUST remain tenant-scoped under all modes -\
+    \ Safety gates MUST be mode-aware - AI behavior MUST remain explainable and auditable Enterprise AI is governed AI\u2014\
+    not special AI."
+  definition_of_done:
+  - "Verify that - Agent autonomy MUST be explicitly constrained by policy - AI execution MUST remain tenant-scoped under\
+    \ all modes - Safety gates MUST be mode-aware - AI behavior MUST remain explainable and auditable Enterprise AI is governed\
+    \ AI\u2014not special AI."
+  capabilities_needed:
+  - tenancy_context
+  - observability_audit
+  - agent_boundary
+  - enterprise_compliance
+  - policy_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

@@ -1,0 +1,104 @@
+pattern_id: EXT-MANAGED_CONTAINERS
+name: Managed Containers
+summary: Run containers w/ minimal ops (no K8s management)
+intent: Run containers w/ minimal ops (no K8s management)
+context: Services that must scale, deploy frequently, and run reliably with predictable
+  operational burden.
+problem: Manual server management and stateful designs hinder scaling, resilience,
+  and deployment velocity.
+forces_tradeoffs: Operational simplicity vs flexibility/control; portability vs managed
+  constraints; cost vs performance.
+solution_structure_behavior: A container runtime platform where the provider manages
+  orchestration, patching, and scaling mechanics so teams run containers without operating
+  a Kubernetes control plane. This offers faster time-to-production with fewer knobs,
+  trading off some portability and platform-level customization.
+consequences: Improved scale and reliability when done well; requires discipline around
+  state, networking, and observability.
+implementation_notes: Prefer statelessness, externalize state, standardize health
+  checks, and automate deployments and rollbacks.
+examples_known_uses: Domain microservices, async workers, and integration services.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A container runtime platform where the provider manages orchestration,
+  patching, and scaling mechanics so teams run containers without operating a Kubernetes
+  control plane. This offers faster time-to-production with fewer knobs, trading off
+  some portability and platform-level customization.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-MANAGED_CONTAINERS
+  minimum_evidence:
+  - Services that must scale, deploy frequently, and run reliably with predictable
+    operational burden.
+  - Manual server management and stateful designs hinder scaling, resilience, and
+    deployment velocity.
+  definition_of_done:
+  - Verify that a container runtime platform where the provider manages orchestration,
+    patching, and scaling mechanics so teams run containers without operating a Kubernetes
+    control plane.
+  capabilities_needed:
+  - observability_emit
+  - workflow_saga
+  - orchestration_kubernetes
+  - container_runtime
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific orchestration or deployment platform unless provided
+    by platform pins (technology atoms) / TBPs.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including
+    scope, required choices (option sets), and evidence anchors.
+  option_sets:
+  - option_set_id: ops.managed_containers_deployment_model
+    description: How container workloads are packaged and deployed on a managed container
+      runtime.
+    options:
+    - option_id: single_service_per_unit
+      summary: One service per deploy unit (task/service) with clear scaling and isolation.
+      notes: ''
+    - option_id: multi_service_with_sidecars
+      summary: Primary container plus sidecars (proxy/telemetry/policy) in the same
+        deploy unit.
+      notes: ''
+    - option_id: batch_and_services_mixed
+      summary: Mix long-running services with scheduled/batch tasks using the same
+        platform.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: batch_and_services_mixed
+  human_questions:
+  - question_key: ops_managed_containers_deployment_model
+    question_id: Q-EXT-MCON-01
+    question: How will workloads be deployed on managed containers?
+    description: Select the managed container deployment model (single service, sidecars,
+      mixed workloads).
+    option_set_id: ops.managed_containers_deployment_model
+    specialization_notes:
+    - Warranted when using a managed container runtime and deploy unit boundaries
+      must be explicit for scaling and security.
+    anchors:
+    - caf_pattern: EXT-MANAGED_CONTAINERS
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-managed_containers.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-MANAGED_CONTAINERS
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

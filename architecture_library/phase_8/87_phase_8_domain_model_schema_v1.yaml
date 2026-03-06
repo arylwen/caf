@@ -1,0 +1,159 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "contura://caf/schemas/domain_model/v1"
+title: "CAF Phase 8 Domain Model (v1)"
+type: object
+additionalProperties: false
+
+required:
+  - schema_version
+  - generated_from
+  - domain
+
+properties:
+  schema_version:
+    type: string
+    const: "domain_model_v1"
+    description: "Schema discriminator."
+
+  generated_at:
+    type: string
+    description: "ISO-8601 timestamp (optional)."
+
+  generated_from:
+    type: object
+    additionalProperties: false
+    required:
+      - inputs
+    properties:
+      inputs:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+        description: "Repo-local paths used to derive the domain model."
+
+  domain:
+    type: object
+    additionalProperties: false
+    required:
+      - summary
+      - bounded_contexts
+      - use_cases
+    properties:
+      summary:
+        type: string
+        minLength: 1
+      bounded_contexts:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          additionalProperties: false
+          required:
+            - context_id
+            - name
+            - description
+          properties:
+            context_id:
+              type: string
+              pattern: "^[A-Z][A-Z0-9_]*$"
+            name:
+              type: string
+              minLength: 1
+            description:
+              type: string
+              minLength: 1
+            aggregates:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required:
+                  - name
+                  - entities
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                  entities:
+                    type: array
+                    minItems: 1
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required:
+                        - name
+                        - fields
+                      properties:
+                        name:
+                          type: string
+                          minLength: 1
+                        fields:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            additionalProperties: false
+                            required:
+                              - name
+                              - type
+                              - required
+                            properties:
+                              name:
+                                type: string
+                                minLength: 1
+                              type:
+                                type: string
+                                minLength: 1
+                              required:
+                                type: boolean
+      use_cases:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          additionalProperties: false
+          required:
+            - use_case_id
+            - title
+            - intent
+          properties:
+            use_case_id:
+              type: string
+              pattern: "^UC-[A-Z0-9]{2,}$"
+            title:
+              type: string
+              minLength: 1
+            intent:
+              type: string
+              minLength: 1
+            primary_context_id:
+              type: string
+              pattern: "^[A-Z][A-Z0-9_]*$"
+            touches_entities:
+              type: array
+              items:
+                type: string
+                minLength: 1
+
+  api_candidates:
+    type: object
+    additionalProperties: false
+    properties:
+      resources:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              minLength: 1
+            operations:
+              type: array
+              items:
+                type: string
+                enum: ["list", "get", "create", "update", "delete"]

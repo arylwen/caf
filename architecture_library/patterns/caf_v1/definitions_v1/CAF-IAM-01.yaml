@@ -1,0 +1,116 @@
+pattern_id: CAF-IAM-01
+name: Identity Principal Taxonomy (Platform/Tenant/Service/Agent)
+summary: Define canonical principal types and treat identity as a platform concern with explicit governance.
+intent: Provide a shared identity vocabulary and prevent authority leakage and semantic drift in identity decisions.
+context: Multi-tenant systems where users, services, and agents perform operations that require attribution and policy.
+problem: Conflating identity types or treating identity as an implementation detail leads to inconsistent enforcement and
+  poor auditability.
+forces_tradeoffs: Centralized governance vs local implementation flexibility; strict identity typing vs integration friction.
+solution_structure_behavior: Define principal categories (platform user, tenant user, service, agent) with explicit attributes
+  and lifecycle governance in CP; downstream planes consume identity deterministically.
+consequences: Improves consistency and traceability; requires explicit principal modeling and propagation contracts.
+implementation_notes: Avoid vendor/protocol prescriptions; define minimal required attributes and propagation requirements.
+examples_known_uses: Differentiating admin control actions from tenant workflow actions; service-to-service auth with explicit
+  principals.
+related_patterns: |
+  complements: CAF-AID-01
+  complements: CAF-MTEN-01
+  complements: CAF-POL-02
+  complements: CAF-XPLANE-02
+  complements: CAF-ZT-01
+extended_definition: |
+  **Normative constraints**
+
+  - Identity is a **platform concern** (not an application-local detail): authority for identity primitives and trust relationships **MUST** be governed centrally and applied consistently across planes.
+  - The system **MUST** use a **bounded, platform-defined set of principal types** (e.g., platform users, tenant users, services, agents). Downstream components **MUST NOT** invent new principal categories with platform-wide meaning.
+  - Platform actors (operators/automation) **MUST** remain distinguishable from tenant actors; platform identities **MUST NOT** be used to execute tenant business workflows.
+  - Identity decisions **MUST** make tenant and trust boundaries explicit (who/what is acting, on whose behalf, under which tenant/scope).
+
+  **Canonical principal taxonomy (minimum)**
+
+  - **Platform users:** Contura operators/admins/automation governed by the Control Plane; platform-level actions only; always auditable as platform actors.
+  - **Tenant users:** end-users acting within a tenant’s business workflows.
+  - **Services:** backend components acting under a governed service identity.
+  - **Agents:** AI or automated workflows operating under bounded, reviewable authority.
+
+  **Evidence hooks**
+
+  - Specs/designs name the principal types the system recognizes and where each is issued/governed.
+  - Cross-plane interfaces and protected operations require explicit principal identifiers and scope (tenant + principal type).
+
+  **Common failure modes**
+
+  - Treating “user” as a single undifferentiated identity (mixing platform admin and tenant actor authority).
+  - Allowing ungoverned service/agent identities or ad-hoc principal categories that drift across teams.
+  - Using platform identities to perform tenant workflow actions (authority leakage).
+
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  sections:
+  - Identity Types and Principals
+  - Identity as a Platform Concern
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly states multi-tenancy or tenant isolation requirements.
+  - Spec/design explicitly distinguishes principal types or requires authn/authz and attribution across operations.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that principal identity and required context are propagated across boundaries and validated.
+  capabilities_needed:
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific identity provider, protocol, or token format.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.principal_taxonomy_scope
+    summary: Choose among bounded variants for `iam.principal_taxonomy_scope` (or use `custom`).
+    options:
+    - option_id: minimal_tenant_and_service
+      status: defer
+      summary: 'Minimal taxonomy: tenant user + service principals.'
+    - option_id: standard_platform_tenant_service
+      status: defer
+      summary: 'Standard taxonomy: platform user + tenant user + service principals.'
+    - option_id: full_including_agent
+      status: defer
+      summary: 'Full taxonomy: platform user + tenant user + service + agent principals.'
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: standard_platform_tenant_service
+  human_questions:
+  - question_key: auto_iam_principal_taxonomy_scope
+    question_id: Q-CAF-IAM-01-AUTO-01
+    question: Select an option for iam.principal_taxonomy_scope.
+    description: ''
+    option_set_id: iam.principal_taxonomy_scope
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-IAM-01
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-IAM-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

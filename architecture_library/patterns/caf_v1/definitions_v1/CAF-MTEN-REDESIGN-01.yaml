@@ -1,0 +1,60 @@
+pattern_id: CAF-MTEN-REDESIGN-01
+name: Redesign Trigger Indicators
+summary: 'The following signals indicate **impending or required redesign**:'
+intent: 'The following signals indicate **impending or required redesign**:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  refines: CAF-MTEN-01
+  complements: CTX-01
+  complements: POL-01
+  complements: PST-01
+extended_definition: |
+  ### 7.9 Redesign Trigger Indicators
+
+  The following signals indicate **impending or required redesign**:
+   n- “We can’t tell which tenant this belongs to”
+  - “We’ll special-case this customer”
+  - “This only works for now”
+  - “We’ll clean it up later”
+  - “It’s too risky to change” n- “We need a migration that touches everything”
+
+  These are not operational issues.
+  They are architectural warnings.
+
+  ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 7.9 Redesign Trigger Indicators
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '### 7.9 Redesign Trigger Indicators The following signals indicate **impending or required redesign**'
+  - "- \u201CWe can\u2019t tell which tenant this belongs to\u201D - \u201CWe\u2019ll special-case this customer\u201D - \u201C\
+    This only works for now\u201D - \u201CWe\u2019ll clean it up later\u201D - \u201CIt\u2019s too risky to change\u201D -\
+    \ \u201CWe need a migration that touches everything\u201D These are not operational issues."
+  definition_of_done:
+  - 'Verify that ### 7.9 Redesign Trigger Indicators The following signals indicate **impending or required redesign**'
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

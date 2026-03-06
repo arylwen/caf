@@ -1,0 +1,165 @@
+pattern_id: CFG-01
+name: Configuration Boundary
+summary: Centralize configuration definition, loading, and validation behind a configuration
+  boundary so runtime settings are explicit, validated, and injectable.
+intent: Centralize configuration definition, loading, and validation behind a configuration
+  boundary so runtime settings are explicit, validated, and injectable.
+context: This pattern applies whenever the system uses any environment-, file-, or
+  secret-derived configuration, which is expected for nearly all services.
+problem: Scattered configuration logic creates hidden runtime assumptions, environment
+  drift, and hard-to-debug failures.
+forces_tradeoffs: Centralization vs flexibility; strict validation vs rollout speed;
+  stable configuration model vs rapid change.
+solution_structure_behavior: 'Introduces module roles: config_registry; config_model;
+  config_provider
+
+
+  Allowed dependencies: domain_core must not depend on config_provider; application_boundary
+  may depend on config_model; app_composition_root binds config_provider to config_model;
+  infrastructure_adapters may implement config_provider.
+
+
+  Assembly contract: config_registry is owned by app_composition_root and is the sole
+  mechanism by which configuration is loaded and made available to the rest of the
+  system. config_model defines the set of required keys, defaults, and validation
+  rules in a stack-neutral way. config_provider is an adapter role that reads configuration
+  from approved sources and produces a validated config_model instance. No module
+  reads configuration directly from ambient process state.'
+consequences: A configuration boundary prevents scattered runtime assumptions, supports
+  fail-closed startup validation, and keeps configuration sources stack-specific while
+  the model and contract remain stack-independent.
+implementation_notes: See required evidence hooks, structural validations, and plan
+  step archetypes in this definition.
+examples_known_uses: Twelve-factor apps; services deployed to multiple environments;
+  workloads with secrets, URLs, and feature flags.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CAF-PLANE-02
+  complements: CTX-01
+  complements: PST-01
+extended_definition: |
+  # Configuration Boundary (CFG-01)
+
+  PATTERN_ID: CFG-01
+  NAME: Configuration Boundary
+  CATEGORY: assembly_composition
+  INTENT: Centralize configuration definition, loading, and validation behind a configuration boundary so runtime settings are explicit, validated, and injectable.
+  APPLIES_WHEN: This pattern applies whenever the system uses any environment-, file-, or secret-derived configuration, which is expected for nearly all services.
+  INTRODUCES_MODULE_ROLES: config_registry; config_model; config_provider
+  ALLOWED_DEPENDENCIES: domain_core must not depend on config_provider; application_boundary may depend on config_model; app_composition_root binds config_provider to config_model; infrastructure_adapters may implement config_provider.
+  \
+    ASSEMBLY_CONTRACT: config_registry is owned by app_composition_root and is the sole mechanism by which configuration is loaded and made available to the rest of the system. config_model defines the set of required keys, defaults, and validation rules in a stack-neutral way. config_provider is an adapter role that reads configuration from approved sources and produces a validated config_model instance. No module reads configuration directly from ambient process state.
+
+  REQUIRED_EVIDENCE_HOOKS:
+  \
+    - E-CFG-01-01: The plan lists the configuration keys and validation rules that are required by the designs (including any tenancy or identity-related configuration if implied).
+  - E-CFG-01-02: The module plan identifies config_model, config_provider, and config_registry roles and describes how other modules receive configuration.
+   nSTRUCTURAL_VALIDATIONS:
+  - V-CFG-01-01: The module plan states that only config_provider reads ambient configuration sources and all other modules obtain config via injection or registry lookup.
+  - V-CFG-01-02: PLAN.md includes a step that validates configuration at startup and fails closed when required keys are missing or invalid.
+
+  PLAN_STEP_ARCHETYPES:
+  \
+    - STEP_TITLE_TEMPLATE: Define configuration model and required keys
+    REQUIRED_CAPABILITIES: configuration_modeling
+    WRITE_SET: docs_architecture
+    DELIVERABLES: module_plan_section
+    EVIDENCE_REQUIRED: E-CFG-01-01
+    VALIDATIONS: V-CFG-01-02
+  - STEP_TITLE_TEMPLATE: Define configuration provider and registry wiring
+    REQUIRED_CAPABILITIES: configuration_wiring
+    WRITE_SET: app_core; infra_boundary
+    DELIVERABLES: config_provider_impl; config_registry_binding
+    EVIDENCE_REQUIRED: E-CFG-01-02
+    VALIDATIONS: V-CFG-01-01
+
+  JUSTIFICATION: A configuration boundary prevents scattered runtime assumptions, supports fail-closed startup validation, and keeps configuration sources stack-specific while the model and contract remain stack-independent.
+  VERSION: v1
+  VERSION_HISTORY:
+  - v1: Initial release.
+core:
+  category: assembly_composition
+  applies_when: This pattern applies whenever the system uses any environment-, file-,
+    or secret-derived configuration, which is expected for nearly all services.
+  introduces_module_roles: config_registry; config_model; config_provider
+  allowed_dependencies: domain_core must not depend on config_provider; application_boundary
+    may depend on config_model; app_composition_root binds config_provider to config_model;
+    infrastructure_adapters may implement config_provider.
+  assembly_contract: config_registry is owned by app_composition_root and is the sole
+    mechanism by which configuration is loaded and made available to the rest of the
+    system. config_model defines the set of required keys, defaults, and validation
+    rules in a stack-neutral way. config_provider is an adapter role that reads configuration
+    from approved sources and produces a validated config_model instance. No module
+    reads configuration directly from ambient process state.
+  required_evidence_hooks:
+  - 'E-CFG-01-01: The plan lists the configuration keys and validation rules that
+    are required by the designs (including any tenancy or identity-related configuration
+    if implied).'
+  - 'E-CFG-01-02: The module plan identifies config_model, config_provider, and config_registry
+    roles and describes how other modules receive configuration.'
+  structural_validations:
+  - 'V-CFG-01-01: The module plan states that only config_provider reads ambient configuration
+    sources and all other modules obtain config via injection or registry lookup.'
+  - 'V-CFG-01-02: PLAN.md includes a step that validates configuration at startup
+    and fails closed when required keys are missing or invalid.'
+  plan_step_archetypes:
+  - "- STEP_TITLE_TEMPLATE: Define configuration model and required keys\n  REQUIRED_CAPABILITIES:\
+    \ configuration_modeling\n  WRITE_SET: docs_architecture\n  DELIVERABLES: module_plan_section\n\
+    \  EVIDENCE_REQUIRED: E-CFG-01-01\n  VALIDATIONS: V-CFG-01-02"
+  - "- STEP_TITLE_TEMPLATE: Define configuration provider and registry wiring\n  REQUIRED_CAPABILITIES:\
+    \ configuration_wiring\n  WRITE_SET: app_core; infra_boundary\n  DELIVERABLES:\
+    \ config_provider_impl; config_registry_binding\n  EVIDENCE_REQUIRED: E-CFG-01-02\n\
+    \  VALIDATIONS: V-CFG-01-01\n\nJUSTIFICATION: A configuration boundary prevents\
+    \ scattered runtime assumptions, supports fail-closed startup validation, and\
+    \ keeps configuration sources stack-specific while the model and contract remain\
+    \ stack-independent.\nVERSION: v1"
+  justification: A configuration boundary prevents scattered runtime assumptions,
+    supports fail-closed startup validation, and keeps configuration sources stack-specific
+    while the model and contract remain stack-independent.
+  version: v1
+  version_history:
+  - 'v1: Initial release.'
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_cfg_01_v1.md
+caf:
+  layer: core
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: core_patterns_are_normative
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: core_pattern
+    anchor_id: CFG-01
+  minimum_evidence:
+  - This pattern applies whenever the system uses any environment-, file-, or secret-derived
+    configuration, which is expected for nearly all services.
+  definition_of_done:
+  - 'Verify that V-CFG-01-01: The module plan states that only config_provider reads
+    ambient configuration sources and all other modules obtain config via injection
+    or registry lookup.'
+  - 'Verify that V-CFG-01-02: PLAN.md includes a step that validates configuration
+    at startup and fails closed when required keys are missing or invalid.'
+  - 'Verify evidence hook is satisfied: E-CFG-01-01: The plan lists the configuration
+    keys and validation rules that are required by the designs (including any tenancy
+    or identity-related configuration if implied).'
+  - 'Verify evidence hook is satisfied: E-CFG-01-02: The module plan identifies config_model,
+    config_provider, and config_registry roles and describes how other modules receive
+    configuration.'
+  capabilities_needed:
+  - configuration_modeling
+  - configuration_wiring
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: core_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/core_v1/definitions_v1/CFG-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CFG-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

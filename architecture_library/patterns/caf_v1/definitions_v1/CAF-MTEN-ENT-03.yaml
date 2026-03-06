@@ -1,0 +1,111 @@
+pattern_id: CAF-MTEN-ENT-03
+name: Compliance Modes as Explicit Policy
+summary: Enterprise evolution is expressed via **Compliance Modes**.
+intent: Enterprise evolution is expressed via **Compliance Modes**.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  ### 6.3 Compliance Modes as Explicit Policy
+
+  Enterprise evolution is expressed via **Compliance Modes**.
+   nA Compliance Mode is:
+
+  - A named, explicit policy profile
+  - Associated with an AccountScope
+  - Evaluated at runtime
+  \
+    - Auditable and enforceable
+
+  Examples (non-exhaustive):
+
+  - `standard`
+  - `enterprise`
+  - `regulated`
+  - `high-isolation`
+  \
+    - `data-residency-eu`
+  - `customer-managed-keys`
+
+  Compliance Modes MUST be:
+
+  - Explicitly assigned
+  - Versioned
+  - Immutable per execution
+  - Observable in telemetry and audit logs
+
+  Implicit “enterprise behavior” is forbidden.
+
+  \
+    ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 6.3 Compliance Modes as Explicit Policy
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '- `standard` - `enterprise` - `regulated` - `high-isolation` - `data-residency-eu` - `customer-managed-keys` Compliance
+    Modes MUST be'
+  definition_of_done:
+  - Verify that - `standard` - `enterprise` - `regulated` - `high-isolation` - `data-residency-eu` - `customer-managed-keys`
+    Compliance Modes MUST be
+  capabilities_needed:
+  - tenancy_isolation
+  - observability_audit
+  - enterprise_compliance
+  - policy_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  option_sets:
+  - option_set_id: tenancy.compliance_mode
+    summary: Select the intended compliance/enterprise posture for the default tier.
+    options:
+    - option_id: standard
+      status: defer
+      summary: Standard SaaS posture (baseline controls, no special compliance tiers).
+    - option_id: enterprise
+      status: defer
+      summary: Enterprise posture (stronger isolation/governance, admin controls, audit).
+    - option_id: regulated
+      status: defer
+      summary: Regulated posture (explicit compliance requirements and evidence expectations).
+    - option_id: data_residency
+      status: defer
+      summary: Residency/Sovereignty posture (region/policy-driven data placement).
+    - option_id: custom
+      status: defer
+      summary: Custom (describe compliance mode and constraints).
+      notes: ''
+    default_option_id: standard
+  human_questions:
+  - question_key: tenancy_compliance_mode
+    question_id: Q-MTEN-ENT-CMODE-01
+    question: What compliance/enterprise posture should the default tier assume?
+    description: Select one option; use 'custom' only if none fit.
+    option_set_id: tenancy.compliance_mode
+    anchors:
+    - caf_pattern: CAF-MTEN-ENT-03
+  kind: decision_pattern

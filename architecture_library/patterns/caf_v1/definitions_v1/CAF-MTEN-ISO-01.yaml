@@ -1,0 +1,150 @@
+pattern_id: CAF-MTEN-ISO-01
+name: Pooled Everything (Logical Isolation Baseline)
+summary: Maximize operational efficiency by serving all tenants from shared infrastructure, enforcing isolation via tenant-aware
+  software and policy.
+intent: Maximize operational efficiency by serving all tenants from shared infrastructure, enforcing isolation via tenant-aware
+  software and policy.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  #### 5.2.1 Pooled Everything (Logical Isolation Baseline)
+
+  ##### **Pooled Everything Intent**  
+
+  \
+    Maximize operational efficiency by serving all tenants from shared infrastructure, enforcing isolation via tenant-aware software and policy.
+
+  ##### **Pooled Everything Applies When**
+
+  - Early-stage SaaS
+  - Many small tenants with low-to-moderate variance
+  - Fast onboarding is a priority
+  - Compliance requirements allow logical isolation
+
+  ##### **Pooled Everything: Forces & Trade-offs**
+
+  - optimizes +: Lowest marginal cost per tenant
+  - optimizes +: Simplest provisioning
+  - sacrifices −: Highest reliance on correctness (tenant scoping everywhere)
+  - sacrifices −: Larger blast radius if isolation fails
+  - sacrifices −: Requires strong tenant-aware observability to remain safe
+
+  ##### **Pooled Everything Normative Requirements**
+
+  - Every data access MUST be tenant-scoped (defense in depth preferred)
+  - Tenant Context MUST be explicit end-to-end
+  - Cross-tenant cache keys are forbidden
+  - Tenant-aware telemetry MUST exist from v1
+  - Safety gates MUST receive full Tenant Context for AI/tool execution paths
+
+  ##### **Pooled Everything: Common Variants**
+
+  - Shared DB + row-level tenant_id filtering
+  - Shared compute pool + tenant-aware throttles
+  - Shared object store with tenant-prefixed paths
+
+  ##### **Pooled Everything: Failure Modes**
+
+  - Missing tenant filter (cross-tenant data leak)
+  - Cache key collisions across tenants
+  - “Noisy neighbor” causing tenant-wide latency spikes
+  - Implicit tenant context via UI/session leading to ambiguity
+
+  ##### **Pooled Everything: Safe Composition**
+
+  - Strongly recommended with:
+    - Routing & Context hardening patterns (Section 5.3)
+    - Tenant-aware authorization patterns (Section 5.4)
+    - Per-tenant usage enforcement - rate limiting and quotas (Section 5.6)
+    - Tenant-scoped observability & safety enforcement - observability and safety gates (Section 5.7)
+
+  ##### **Pooled Everything: Evolution Path**
+
+  - Promote to hybrid isolation by carving out:
+    - specific tenants (tier-based isolation)
+    - specific workloads (high-risk compute isolation)
+    - specific data domains (DB-per-tenant or shard-per-cohort)
+
+  ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 5.2.1 Pooled Everything (Logical Isolation Baseline)
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '##### **Pooled Everything Applies When** - Early-stage SaaS - Many small tenants with low-to-moderate variance - Fast
+    onboarding is a priority - Compliance requirements allow logical isolation ##### **Pooled Everything'
+  - 'Requires strong tenant-aware observability to remain safe ##### **Pooled Everything Normative Requirements** - Every
+    data access MUST be tenant-scoped (defense in depth preferred) - Tenant Context MUST be explicit end-to-end - Cross-tenant
+    cache keys are forbidden - Tenant-aware telemetry MUST exist from v1 - Safety gates MUST receive full Tenant Context for
+    AI/tool execution paths ##### **Pooled Everything'
+  definition_of_done:
+  - 'Verify that requires strong tenant-aware observability to remain safe ##### **Pooled Everything Normative Requirements**
+    - Every data access MUST be tenant-scoped (defense in depth preferred) - Tenant Context MUST be explicit end-to-end -
+    Cross-tenant cache keys are forbidden - Tenant-aware telemetry MUST exist from v1 - Safety gates MUST receive full Tenant
+    Context for AI/tool execution paths ##### **Pooled Everything'
+  capabilities_needed:
+  - tenancy_context
+  - tenancy_isolation
+  - tenancy_routing
+  - session_binding
+  - observability_emit
+  - metering_usage
+  - quota_entitlements
+  - safety_gating
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  option_sets:
+  - option_set_id: tenancy.isolation.pooled_everything.variant
+    summary: Select the primary implementation variant for pooled-everything isolation.
+    options:
+    - option_id: shared_db_row_filter
+      status: defer
+      summary: Single shared database with tenant key + row-level filtering/policies.
+    - option_id: shared_object_store_prefix
+      status: defer
+      summary: Shared object storage with tenant-prefixed paths/namespaces.
+    - option_id: shared_compute_runtime
+      status: defer
+      summary: Shared compute/runtime with tenant-aware limits and context binding.
+    - option_id: combined_baseline
+      status: defer
+      summary: Combine shared DB + shared object store + shared compute (baseline SaaS pooling).
+    - option_id: custom
+      status: defer
+      summary: Custom (describe the pooled isolation mechanics).
+      notes: ''
+    default_option_id: combined_baseline
+  human_questions:
+  - question_key: pooled_isolation_variant
+    question_id: Q-MTEN-ISO-POOLED-01
+    question: If using pooled-everything, what is the primary isolation mechanism?
+    description: Pick the main isolation mechanism; you can combine others as needed in notes.
+    option_set_id: tenancy.isolation.pooled_everything.variant
+    anchors:
+    - caf_pattern: CAF-MTEN-ISO-01
+  kind: decision_pattern

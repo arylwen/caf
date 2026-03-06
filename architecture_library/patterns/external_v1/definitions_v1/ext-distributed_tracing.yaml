@@ -1,0 +1,78 @@
+pattern_id: EXT-DISTRIBUTED_TRACING
+name: Distributed Tracing
+summary: Correlate calls across services
+intent: Trace a request end-to-end across services using correlation/trace IDs.
+context: Microservices and async flows where debugging spans many components and failures are partial.
+problem: Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+forces_tradeoffs: Signal quality vs cost/volume; cardinality vs queryability; instrumentation effort vs MTTR reduction.
+solution_structure_behavior: An observability technique that tracks a request across multiple services using trace and span identifiers propagated through headers/context. It reveals end-to-end latency, hotspots, and failure points, but requires consistent instrumentation, sampling strategies, and centralized trace storage.
+consequences: Faster detection and lower MTTR; increased telemetry costs and governance requirements.
+implementation_notes: Standardize correlation IDs, structured logs, tracing, and SLOs; alert on user impact; sample intelligently.
+examples_known_uses: Production incident response, performance tuning, auditing critical flows.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: An observability technique that tracks a request across multiple services using trace and span identifiers propagated through headers/context. It reveals end-to-end latency, hotspots, and failure points, but requires consistent instrumentation, sampling strategies, and centralized trace storage.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-DISTRIBUTED_TRACING
+  minimum_evidence:
+  - Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+  definition_of_done:
+  - Verify that an observability technique that tracks a request across multiple services using trace and span identifiers propagated through headers/context.
+  capabilities_needed:
+  - policy_enforcement
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - "Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets), and evidence anchors."
+  option_sets:
+  - option_set_id: obs.trace_propagation_scope
+    description: "How broadly trace context is propagated and what parts of the system are traced."
+    default_option_id: edge_to_all_services
+    options:
+    - option_id: edge_to_all_services
+      summary: "Propagate trace context from ingress across all services and dependencies."
+      notes: ''
+    - option_id: internal_only
+      summary: "Trace context propagation and collection is internal-only (not end-to-end from ingress)."
+      notes: ''
+    - option_id: selective_critical_paths
+      summary: "Trace only critical paths with explicit allowlist of services/operations."
+      notes: ''
+    - option_id: custom
+      summary: "Custom (fill fields)."
+      notes: ''
+  human_questions:
+  - question_key: obs_trace_propagation_scope
+    question_id: Q-EXT-TRACE-01
+    question: "What is the distributed tracing propagation scope?"
+    description: "Select how broadly trace context is propagated and what parts of the system are traced."
+    option_set_id: obs.trace_propagation_scope
+    specialization_notes:
+    - "Use when diagnosing latency/failures across services requires correlated end-to-end telemetry."
+    anchors:
+    - caf_pattern: EXT-DISTRIBUTED_TRACING
+promotions:
+  semantic_inputs:
+    - source_path: "architecture_library/patterns/external_v1/definitions_v1/ext-distributed_tracing.yaml"
+      scope: "cross_cutting"
+  required_trace_anchors:
+    - pattern_id: "EXT-DISTRIBUTED_TRACING"
+      anchor_kind: "plan_step_archetype"
+      scope: "cross_cutting"

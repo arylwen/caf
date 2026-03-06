@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(test:*)",
+      "Bash(node:*)",
+      "Bash(echo:*)",
+      "Bash(head:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(rg:*)",
+      "Bash(Test-Path:*)",
+      "Bash(Get-ChildItem:*)",
+      "Bash(dir:*)",
+      "Bash(Get-Content:*)"
+    ]
+  }
+}

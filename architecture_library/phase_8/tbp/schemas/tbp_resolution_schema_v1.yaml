@@ -1,0 +1,52 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "CAF Phase 8 TBP Resolution (v1)"
+type: object
+additionalProperties: false
+required:
+  - schema_version
+  - instance_name
+  - derived_at
+  - generated_from
+  - resolution_atoms
+  - seed_tbps
+  - resolved_tbps
+  - conflicts_checked
+properties:
+  schema_version:
+    type: string
+    const: phase8_tbp_resolution_v1
+  instance_name:
+    type: string
+    minLength: 1
+  derived_at:
+    type: string
+    minLength: 1
+    description: "UTC ISO-8601 timestamp"
+  generated_from:
+    type: object
+    additionalProperties: false
+    required:
+      - profile_parameters_resolved
+    properties:
+      profile_parameters_resolved:
+        type: string
+        minLength: 1
+  resolution_atoms:
+    type: object
+    description: "Exact atom snapshot used for matching TBP manifests. Values are opaque strings."
+    additionalProperties:
+      type: string
+  seed_tbps:
+    type: array
+    items:
+      type: string
+      pattern: "^TBP-[A-Z0-9-]+$"
+  resolved_tbps:
+    type: array
+    items:
+      type: string
+      pattern: "^TBP-[A-Z0-9-]+$"
+  conflicts_checked:
+    type: boolean
+  notes:
+    type: string

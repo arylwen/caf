@@ -1,0 +1,79 @@
+pattern_id: CAF-MTEN-COST-04
+name: AccountScope as Enforcement Authority
+summary: 'AccountScope is the authoritative source for:'
+intent: 'AccountScope is the authoritative source for:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: '#### 5.6.5 AccountScope as Enforcement Authority
+
+
+  AccountScope is the authoritative source for:
+
+
+  - Entitlements
+
+  - Quotas
+
+  - Usage limits
+
+  - Plan constraints
+
+
+  Runtime systems MUST:
+
+
+  - Query AccountScope-derived policy
+
+  - Cache limits carefully with invalidation
+
+  - Respect updates immediately where feasible
+
+
+  Cost enforcement logic MUST NOT be duplicated across services.
+
+
+  ---'
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 5.6.5 AccountScope as Enforcement Authority
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '- Entitlements - Quotas - Usage limits - Plan constraints Runtime systems MUST'
+  - '- Query AccountScope-derived policy - Cache limits carefully with invalidation - Respect updates immediately where feasible
+    Cost enforcement logic MUST NOT be duplicated across services.'
+  definition_of_done:
+  - Verify that - Entitlements - Quotas - Usage limits - Plan constraints Runtime systems MUST
+  - Verify that - Query AccountScope-derived policy - Cache limits carefully with invalidation - Respect updates immediately
+    where feasible Cost enforcement logic MUST NOT be duplicated across services.
+  capabilities_needed:
+  - metering_usage
+  - quota_entitlements
+  - context_validation
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

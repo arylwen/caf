@@ -1,0 +1,93 @@
+pattern_id: EXT-WRITE_THROUGH_CACHE
+name: Write-Through Cache
+summary: Cache updated on writes
+intent: Cache updated on writes
+context: Systems needing low-latency reads, scalable storage, and fit-for-purpose data models.
+problem: One-size-fits-all persistence and modeling leads to slow reads, complex queries, and scaling bottlenecks.
+forces_tradeoffs: Duplication vs performance; consistency vs speed; operational burden vs specialization benefits.
+solution_structure_behavior: A caching strategy where writes go to the cache and the backing store in a single operation,
+  keeping cache entries fresh. It simplifies reads and consistency, but can add write latency and requires well-defined behavior
+  when either cache or store is unavailable.
+consequences: Better performance and clearer models; more data stores/projections to manage.
+implementation_notes: Start with simple caching/projections, measure hotspots, and introduce specialized stores/projections
+  incrementally.
+examples_known_uses: Read-heavy dashboards, search/catalog, reporting projections.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A caching strategy where writes go to the cache and the backing store in a single operation, keeping
+  cache entries fresh. It simplifies reads and consistency, but can add write latency and requires well-defined behavior when
+  either cache or store is unavailable.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-WRITE_THROUGH_CACHE
+  minimum_evidence:
+  - Systems needing low-latency reads, scalable storage, and fit-for-purpose data models.
+  - One-size-fits-all persistence and modeling leads to slow reads, complex queries, and scaling bottlenecks.
+  definition_of_done:
+  - Verify that a caching strategy where writes go to the cache and the backing store in a single operation, keeping cache
+    entries fresh.
+  capabilities_needed:
+  - cqrs_projections
+  - caching
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: caching.write_through_behavior
+    description: How writes update the cache relative to the backing store.
+    options:
+    - option_id: synchronous_cache_and_store
+      summary: Write cache and store synchronously; treat failure of either as a write failure.
+      notes: ''
+    - option_id: store_first_then_cache
+      summary: Write store first then refresh cache; tolerate cache failure and rely on read paths to warm.
+      notes: ''
+    - option_id: selective_write_through
+      summary: Use write-through only for hot keys/critical reads; others use cache-aside/TTL.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: synchronous_cache_and_store
+  human_questions:
+  - question_key: caching_write_through_behavior
+    question_id: Q-EXT-WTC-01
+    question: What write-through behavior should be used on writes?
+    description: Select synchronous cache+store writes, store-first then cache refresh, or selective write-through for hot
+      keys.
+    option_set_id: caching.write_through_behavior
+    specialization_notes:
+    - Use when you need cache freshness guarantees on reads and can trade write latency/complexity for read simplicity.
+    anchors:
+    - caf_pattern: EXT-WRITE_THROUGH_CACHE
+  conflict_semantics:
+    alternative_to:
+    - EXT-CACHE_ASIDE
+    - EXT-READ_THROUGH_CACHE
+    incompatible_with: []
+    default_alternative: false
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-write_through_cache.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-WRITE_THROUGH_CACHE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

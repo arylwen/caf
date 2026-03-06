@@ -1,0 +1,73 @@
+pattern_id: CAF-POL-S07
+name: Design-Time Policy (ADR Integration)
+summary: Policies originate from **architectural intent**.
+intent: Policies originate from **architectural intent**.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 7. Design-Time Policy (ADR Integration)
+
+
+  Policies originate from **architectural intent**.
+
+
+  All ADRs that affect behavior MUST:
+
+
+  - Declare which policies are introduced or modified
+
+  - Identify policy domains affected
+
+  - Define enforcement points
+
+  - Define required evidence
+
+
+  Design-time policy ensures violations are **not designed into the system**.
+
+
+  An ADR without policy impact analysis MAY be rejected.
+
+
+  ---'
+source_documents:
+- path: architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+  section_heading: 7. Design-Time Policy (ADR Integration)
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - All ADRs that affect behavior MUST
+  definition_of_done:
+  - Verify that all ADRs that affect behavior MUST
+  - Verify that - Declare which policies are introduced or modified - Identify policy domains affected - Define enforcement
+    points - Define required evidence Design-time policy ensures violations are **not designed into the system**.
+  capabilities_needed:
+  - policy_enforcement
+  - adr_integration
+  - compliance_evidence
+  - ai_safety_integration
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

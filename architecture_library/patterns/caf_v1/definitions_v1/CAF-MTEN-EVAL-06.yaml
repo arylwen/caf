@@ -1,0 +1,102 @@
+pattern_id: CAF-MTEN-EVAL-06
+name: Tenant Lifecycle Coverage
+summary: Tenant signup vs tenant provisioning are clearly distinguished. Initial tenant
+  creation workflow is described. Tenant suspension vs tenant quarantine is distinguished.
+  Tenant deletion and data destruction are addresse...
+intent: Tenant signup vs tenant provisioning are clearly distinguished.
+context: See extended_definition (source section) for applicability constraints and
+  assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required
+  structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities,
+  and side effects.
+implementation_notes: See extended_definition (source section) for implementation
+  guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: '## 6. Tenant Lifecycle Coverage
+
+
+  - [ ] Tenant signup vs tenant provisioning are clearly distinguished.
+
+  - [ ] Initial tenant creation workflow is described.
+
+  - [ ] Tenant suspension vs tenant quarantine is distinguished.
+
+  - [ ] Tenant deletion and data destruction are addressed.
+
+  - [ ] Migration patterns are included (e.g., pooled → hybrid → silo).
+
+  - [ ] Control Plane vs Application Plane responsibilities are clear.
+
+
+  ---'
+source_documents:
+- path: architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+  section_heading: 6. Tenant Lifecycle Coverage
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## 6.'
+  - Tenant Lifecycle Coverage - [ ] Tenant signup vs tenant provisioning are clearly
+    distinguished.
+  definition_of_done:
+  - 'Verify that ## 6.'
+  - Verify that tenant Lifecycle Coverage - [ ] Tenant signup vs tenant provisioning
+    are clearly distinguished.
+  capabilities_needed:
+  - plane_integrity
+  - tenant_lifecycle
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by
+    the spec/design.
+  kind: checklist
+  option_sets:
+  - option_set_id: tenancy.lifecycle_coverage_level
+    summary: Choose among bounded variants for `tenancy.lifecycle_coverage_level`
+      (or use `custom`).
+    options:
+    - option_id: minimal_create_read
+      status: defer
+      summary: 'Minimal tenant lifecycle: create + read/lookup only.'
+    - option_id: full_crud_lifecycle
+      status: defer
+      summary: 'Full tenant lifecycle: create/update/suspend/reactivate/delete (explicit
+        policies).'
+    - option_id: lifecycle_plus_billing
+      status: defer
+      summary: Lifecycle plus billing/entitlements and suspension/termination workflows.
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when
+        possible).
+      notes: ''
+    default_option_id: minimal_create_read
+  human_questions:
+  - question_id: Q-CAF-MTEN-EVAL-06-01
+    topic: tenancy.lifecycle_coverage_level
+    question: Which option best matches your intended choice for `tenancy.lifecycle_coverage_level`
+      and what constraints/rejection conditions apply?
+    status: open
+    answer: {}
+    option_set_id: tenancy.lifecycle_coverage_level

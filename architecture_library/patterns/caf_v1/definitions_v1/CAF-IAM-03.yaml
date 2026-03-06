@@ -1,0 +1,117 @@
+pattern_id: CAF-IAM-03
+name: Identity Auditability and Traceability
+summary: Make identity decisions and enforcement traceable via audit logs and telemetry that include principal attribution.
+intent: Support compliance and incident response by making identity enforcement provable.
+context: Systems where identity is used to authorize actions across planes and tenants.
+problem: Without attribution and audit trails, it is impossible to prove who/what performed an action or why it was allowed.
+forces_tradeoffs: Audit completeness vs storage/cost; privacy vs traceability; high-cardinality identities vs log volume.
+solution_structure_behavior: Emit audit events for identity-relevant actions (authn/authz decisions, principal lifecycle changes)
+  including tenant context, correlation IDs, and decision rationale where applicable.
+consequences: Improves compliance readiness; requires governance around retention, access, and PII handling.
+implementation_notes: Define mandatory audit fields; treat missing attribution as defect; ensure audit events are immutable.
+examples_known_uses: Audit logs for admin actions and agent tool usage; traces linking request to principal and policy decision.
+related_patterns: |
+  depends_on: OBS-01
+  refines: CAF-IAM-01
+  complements: CAF-POL-03
+  complements: CAF-ZT-01
+extended_definition: |
+  **Normative constraints**
+
+  - Identity and access controls are only meaningful if behavior is **observable, auditable, and traceable**.
+  - The system must be able to answer, at any time: **who acted**, under which identity and scope, **on whose behalf**, within which tenant, under which policy/delegation, and with what outcome.
+  - Every significant action **MUST** be attributable to a governed identity (principal type + identifier) and include tenant context where applicable.
+  - Actions performed by services or agents **MUST** retain linkage to their root identity (no anonymous security-relevant actions).
+
+  **Evidence hooks**
+
+  - Logs/traces for protected operations include: tenant_id, principal_type, principal_id, correlation/trace id, and policy/delegation identifiers (including policy version where applicable).
+  - Audit records are structured and queryable; identity attribution is consistent across planes.
+
+  **Common failure modes**
+
+  - “Anonymous” or weakly attributed actions (free-form usernames, missing principal types).
+  - Agent/service actions that cannot be tied back to an authorizing identity and delegation.
+  - Missing tenant context in telemetry, preventing reliable isolation/audit.
+
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  sections:
+  - Observability, Auditability, and Traceability for Identity
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: decision_pattern
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly distinguishes principal types or requires authn/authz and attribution across operations.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that principal identity and required context are propagated across boundaries and validated.
+  capabilities_needed:
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific identity provider, protocol, or token format.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.audit_event_capture_level
+    summary: Choose among bounded variants for `iam.audit_event_capture_level` (or use `custom`).
+    options:
+    - option_id: decision_only
+      status: defer
+      summary: Capture authn/authz decisions with correlation identifiers.
+    - option_id: decision_plus_policy_version
+      status: defer
+      summary: Capture decisions plus policy/version identifiers and principal/tenant identifiers.
+    - option_id: decision_plus_inputs_and_reason
+      status: defer
+      summary: Capture decisions plus key evaluation inputs and denial reasons (bounded; avoid sensitive spill).
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: decision_plus_policy_version
+  - option_set_id: iam.audit_retention_policy
+    summary: Choose among bounded variants for `iam.audit_retention_policy` (or use `custom`).
+    options:
+    - option_id: retention_30d_ops
+      status: defer
+      summary: Retain audit records for 30 days for operational troubleshooting; extend for incidents as needed.
+    - option_id: retention_90d_standard
+      status: defer
+      summary: Retain audit records for 90 days as standard baseline for investigations and compliance-lite needs.
+    - option_id: retention_1y_compliance
+      status: defer
+      summary: Retain audit records for 1 year (or per regulation); enforce access controls and immutability.
+    - option_id: custom
+      status: defer
+      summary: Custom retention/access policy (document constraints; include legal/regulatory drivers).
+      notes: ''
+    default_option_id: retention_90d_standard
+  human_questions:
+  - question_id: Q-CAF-IAM-03-01
+    topic: iam.audit_event_capture_level
+    question: Which option best matches your intended choice for `iam.audit_event_capture_level` and what constraints/rejection
+      conditions apply?
+    status: open
+    answer: {}
+    option_set_id: iam.audit_event_capture_level
+  - question_id: Q-CAF-IAM-03-02
+    topic: iam.audit_retention_policy
+    question: What is your intended choice for `iam.audit_retention_policy` (retention duration, access controls, immutability)
+      and what constraints apply?
+    status: open
+    answer: {}
+    option_set_id: iam.audit_retention_policy

@@ -1,0 +1,17 @@
+schema_version: v1
+kind: review_rubric
+rubric_id: RR-TBP-ROLE-BINDINGS-01
+title: TBP role_bindings compliance (manifest-driven) (v1)
+applies_when:
+  - condition: "true"  # safe to apply globally; tasks with no expectations trivially PASS
+checks:
+  - check_id: RR-TBP-RB-01
+    severity: high
+    category: correctness
+    rule: >
+      For the task's primary capability, all resolved TBP obligations that require that capability
+      are satisfied by materializing artifacts at the TBP manifest's role_bindings.path_template,
+      and each artifact contains all evidence_contains strings.
+    evidence_hints:
+      - "run node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance> --capability <capability>"
+      - "verify each returned path_template exists under companion repo root and contains evidence strings"

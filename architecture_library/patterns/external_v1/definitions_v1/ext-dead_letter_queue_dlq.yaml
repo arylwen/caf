@@ -1,0 +1,88 @@
+pattern_id: EXT-DEAD_LETTER_QUEUE_DLQ
+name: Dead Letter Queue (DLQ)
+summary: Isolate poison messages for triage/replay
+intent: Quarantine messages that repeatedly fail so they can be triaged and replayed safely.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: "A secondary queue that captures messages that repeatedly fail processing after retries or exceed\
+  \ a maximum age. It isolates \u2018poison\u2019 messages for inspection, alerting, and controlled replay, helping keep primary\
+  \ processing healthy and debuggable."
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A secondary queue that captures messages that repeatedly fail processing after retries or exceed a maximum age. It isolates ‘poison’ messages for inspection, alerting, and controlled replay, helping keep primary processing healthy and debuggable.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-DEAD_LETTER_QUEUE_DLQ
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a secondary queue that captures messages that repeatedly fail processing after retries or exceed a maximum
+    age.
+  capabilities_needed:
+  - eventing
+  - dead_letter_handling
+  - resilience_retry
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: async.dlq_handling_strategy
+    description: How dead-lettered messages are handled (manual triage, automated retry, quarantine).
+    options:
+    - option_id: manual_triage_and_replay
+      summary: Operators manually triage DLQ items and replay after fixes.
+      notes: ''
+    - option_id: automated_retry_then_dlq
+      summary: Automated retries with limits; unprocessable items go to DLQ for later handling.
+      notes: ''
+    - option_id: separate_quarantine_pipeline
+      summary: DLQ items routed to a quarantine pipeline with dedicated tooling/flows.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: manual_triage_and_replay
+  human_questions:
+  - question_key: async_dlq_handling_strategy
+    question_id: Q-EXT-DLQ-01
+    question: How are DLQ messages handled (manual, automated retry then DLQ, or quarantine pipeline)?
+    description: Select the DLQ handling strategy for failed messages/events.
+    option_set_id: async.dlq_handling_strategy
+    specialization_notes:
+    - Warranted when async processing exists and failures must be isolated without data loss.
+    anchors:
+    - caf_pattern: EXT-DEAD_LETTER_QUEUE_DLQ
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-dead_letter_queue_dlq.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-DEAD_LETTER_QUEUE_DLQ
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

@@ -1,0 +1,84 @@
+pattern_id: EXT-BACKEND_FOR_FRONTEND_BFF
+name: Backend-for-Frontend (BFF)
+summary: Client-specific API to simplify UI and reduce chatty calls
+intent: Provide a client-specific backend API that optimizes UX and reduces chatty calls.
+context: Multiple frontends (web, mobile, partners) with different needs; microservices backends; latency-sensitive UI flows.
+problem: Generic APIs force clients to orchestrate many calls, leading to high latency, duplicated logic, and fragile client behavior.
+forces_tradeoffs: Client tailoring vs proliferation of BFFs; faster UI iteration vs more backend surface area; simplicity vs consistency across clients.
+solution_structure_behavior: A thin backend tailored to a specific client (web, iOS, Android, partner) that shapes data and workflows to the UI’s needs. A BFF aggregates calls, reduces over/under-fetching, and isolates frontend teams from internal service boundaries and frequent backend changes.
+consequences: Improves perceived performance and reduces client complexity; adds another service to operate and secure.
+implementation_notes: Keep BFF thin (composition + shaping). Use caching where safe. Align ownership with the client team; version per client as needed.
+examples_known_uses: Mobile BFF aggregating session, profile, and content; web BFF providing page-level view models.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CAF-MRAD-04
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A thin backend tailored to a specific client (web, iOS, Android, partner) that shapes data and workflows to the UI’s needs. A BFF aggregates calls, reduces over/under-fetching, and isolates frontend teams from internal service boundaries and frequent backend changes.
+
+
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-BACKEND_FOR_FRONTEND_BFF
+  minimum_evidence:
+  - Multiple frontends (web, mobile, partners) with different needs
+  - Generic APIs force clients to orchestrate many calls, leading to high latency, duplicated logic, and fragile client behavior.
+  definition_of_done:
+  - Verify that improves perceived performance and reduces client complexity
+  capabilities_needed:
+  - workflow_saga
+  - backup_restore
+  - api_composition
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+
+  kind: decision_pattern
+  decision_prompts:
+  - "Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets), and evidence anchors."
+  option_sets:
+  - option_set_id: ui.bff_shape
+    description: "How BFF responsibilities are shaped across client types and how much aggregation/adaptation it performs."
+    default_option_id: thin_facade_only
+    options:
+    - option_id: single_bff_for_all_ui
+      summary: "Single BFF façade for all UI clients (web/mobile/etc.)."
+      notes: ''
+    - option_id: per_client_bff
+      summary: "Separate BFF per client type (e.g., web vs mobile) with tailored aggregation/adaptation."
+      notes: ''
+    - option_id: thin_facade_only
+      summary: "Thin BFF focused on auth/session/context and minor shaping; minimal aggregation."
+      notes: ''
+    - option_id: custom
+      summary: "Custom (fill fields)."
+      notes: ''
+  human_questions:
+  - question_key: ui_bff_shape
+    question_id: Q-EXT-BFF-01
+    question: "What is the BFF shape (single vs per-client) and responsibility level?"
+    description: "Select the BFF façade shape for UI boundary concerns and aggregation/adaptation responsibilities."
+    option_set_id: ui.bff_shape
+    specialization_notes:
+    - "Warranted when a SPA or client UI needs a stable façade, context handling, or aggregation of backend APIs."
+    anchors:
+    - caf_pattern: EXT-BACKEND_FOR_FRONTEND_BFF
+promotions:
+  semantic_inputs:
+    - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-backend_for_frontend_bff.yaml
+      scope: cross_cutting
+  required_trace_anchors:
+    - pattern_id: EXT-BACKEND_FOR_FRONTEND_BFF
+      anchor_kind: plan_step_archetype
+      scope: cross_cutting

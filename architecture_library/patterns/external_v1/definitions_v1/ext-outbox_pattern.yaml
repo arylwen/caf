@@ -1,0 +1,91 @@
+pattern_id: EXT-OUTBOX_PATTERN
+name: Outbox Pattern
+summary: Atomic DB write + event publish reliability
+intent: Reliably publish events when the source of truth is a database write.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: "A reliability pattern that records an outgoing event in an \u2018outbox\u2019 table within the\
+  \ same database transaction as the business update. A separate publisher then reads the outbox and publishes events to the\
+  \ broker, ensuring no lost messages and providing a replayable audit trail."
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CAF-MRAD-05
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A reliability pattern that records an outgoing event in an ‘outbox’ table within the same database transaction as the business update. A separate publisher then reads the outbox and publishes events to the broker, ensuring no lost messages and providing a replayable audit trail.
+
+
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-OUTBOX_PATTERN
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - "Verify that a reliability pattern that records an outgoing event in an \u2018outbox\u2019 table within the same database\
+    \ transaction as the business update."
+  capabilities_needed:
+  - observability_emit
+  - eventing
+  - resilience_retry
+  - outbox_support
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: async.outbox_publishing_mode
+    description: How outbox events are published (polling, CDC/log tailing, or direct publish with confirm).
+    options:
+    - option_id: polling_publisher
+      summary: A publisher polls the outbox table and publishes events reliably.
+      notes: ''
+    - option_id: cdc_or_log_tailing
+      summary: Use change-data-capture or log tailing to publish outbox events.
+      notes: ''
+    - option_id: app_direct_publish_with_confirm
+      summary: App publishes directly but records confirmation/deduplication for reliability.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: polling_publisher
+  human_questions:
+  - question_key: async_outbox_publishing_mode
+    question_id: Q-EXT-OUTBOX-01
+    question: How are outbox events published (polling, CDC/log tailing, or direct publish)?
+    description: Select the outbox publishing mode to ensure reliable event emission with transactional boundaries.
+    option_set_id: async.outbox_publishing_mode
+    specialization_notes:
+    - Use when transactional writes must be coupled to reliable event publication without double-send.
+    anchors:
+    - caf_pattern: EXT-OUTBOX_PATTERN
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-outbox_pattern.yaml
+    scope: per_resource
+  required_trace_anchors:
+  - pattern_id: EXT-OUTBOX_PATTERN
+    anchor_kind: plan_step_archetype
+    scope: per_resource

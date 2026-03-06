@@ -1,0 +1,27 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-EXPRESS-01
+binds_to:
+- atom_path: runtime.framework
+  atom_value: express
+requires_tbps:
+- TBP-TS-01
+conflicts_with_tbps: []
+layout:
+  code_root: code/
+  scaffold_directories:
+  - code/
+  - tests/
+  - infrastructure/
+  - docs/
+  - validation/
+  role_bindings:
+    ap_http_entrypoint:
+      path_template: ap/runtime/server.ts
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - express
+    ap_http_routes:
+      path_template: ap/api/routes.ts
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - router

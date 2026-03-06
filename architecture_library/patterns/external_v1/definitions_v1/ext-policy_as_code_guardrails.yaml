@@ -1,0 +1,88 @@
+pattern_id: EXT-POLICY_AS_CODE_GUARDRAILS
+name: Policy-as-Code / Guardrails
+summary: Prevent insecure deployments
+intent: Prevent insecure deployments
+context: Systems handling sensitive data and multiple services/identities across networks and environments.
+problem: Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+forces_tradeoffs: Security depth vs developer friction; least privilege vs operational agility; privacy vs usability.
+solution_structure_behavior: A governance approach that encodes security and compliance rules as versioned, testable code
+  enforced by automation (CI/CD, admission controllers). Guardrails prevent or flag risky configurations before they reach
+  production, improving consistency and reducing reliance on manual reviews.
+consequences: Reduced blast radius and better compliance; requires governance, tooling, and ongoing hygiene.
+implementation_notes: Centralize identity, enforce least privilege, store secrets in a vault, keep services private by default,
+  and automate policy checks.
+examples_known_uses: Enterprise SaaS, healthcare/finance workloads, multi-tenant platforms.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A governance approach that encodes security and compliance rules as versioned, testable code enforced
+  by automation (CI/CD, admission controllers). Guardrails prevent or flag risky configurations before they reach production,
+  improving consistency and reducing reliance on manual reviews.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-POLICY_AS_CODE_GUARDRAILS
+  minimum_evidence:
+  - Systems handling sensitive data and multiple services/identities across networks and environments.
+  - Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+  definition_of_done:
+  - Verify that guardrails prevent or flag risky configurations before they reach production, improving consistency and reducing
+    reliance on manual reviews.
+  capabilities_needed:
+  - policy_enforcement
+  - eventing
+  - backup_restore
+  - config_management
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: security.policy_as_code_enforcement_point
+    description: Where policy-as-code guardrails are evaluated and enforced across the delivery and runtime pipeline.
+    options:
+    - option_id: ci_cd_gates
+      summary: Enforce policies in CI/CD (build/release) gates before deployment.
+      notes: ''
+    - option_id: platform_admission
+      summary: Enforce policies at platform admission (deploy-time) to block non-compliant workloads/config.
+      notes: ''
+    - option_id: runtime_enforcement
+      summary: Enforce policies at runtime via sidecars/proxies/agents for continuous compliance.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: ci_cd_gates
+  human_questions:
+  - question_key: security_policy_as_code_enforcement_point
+    question_id: Q-EXT-PAC-01
+    question: Where are policy-as-code guardrails enforced?
+    description: Select the primary enforcement point(s) for policy-as-code guardrails across build, deploy, and runtime.
+    option_set_id: security.policy_as_code_enforcement_point
+    specialization_notes:
+    - Warranted when governance and compliance rules must be enforced consistently and auditable across teams and environments.
+    anchors:
+    - caf_pattern: EXT-POLICY_AS_CODE_GUARDRAILS
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-policy_as_code_guardrails.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-POLICY_AS_CODE_GUARDRAILS
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

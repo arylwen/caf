@@ -1,0 +1,18 @@
+schema_version: phase8_plane_binding_pattern_v1
+plane_id: CP
+layout:
+  scaffold_directories:
+  - code/CP/
+  role_bindings:
+    cp_plane_scaffold_readme:
+      path_template: README.md
+      artifact_class: markdown_docs
+    cp_entrypoint_stub:
+      path_template: control_plane.py
+      artifact_class: code_runnable_candidate
+extensions:
+  obligations:
+  - obligation_id: O-PBP-CP-01-minimum-entrypoint
+    title: CP plane must materialize at least one non-README file
+    required_capability: observability_and_config
+    role_binding_key: cp_entrypoint_stub

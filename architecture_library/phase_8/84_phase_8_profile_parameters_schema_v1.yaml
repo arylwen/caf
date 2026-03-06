@@ -1,0 +1,122 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: contura://caf/schemas/phase8_profile_parameters/v1
+title: CAF Phase 8 Profile Parameters (Architect UX Inputs) (v1)
+type: object
+additionalProperties: false
+description: >
+  Architect-authored Phase 8 inputs (UX). This file is intentionally minimal: it pins only the Phase 8
+  lifecycle knobs (evolution_stage, generation_phase) and the platform spine (infra_target, packaging,
+  runtime_language, database_engine) plus optional metadata. All other execution details are derived
+  into profile_parameters_resolved.yaml.
+required:
+  - schema_version
+  - instance_name
+  - lifecycle
+  - platform
+properties:
+  schema_version:
+    type: string
+    const: phase8_profile_parameters_v1
+    description: Schema identifier for Phase 8 Profile Parameters UX inputs.
+  instance_name:
+    type: string
+    description: Reference architecture instance name (must match folder name under reference_architectures/).
+    pattern: ^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$
+  created_at:
+    type: string
+    description: Optional ISO-8601 timestamp. If present, CAF carries it through exactly; if absent, CAF omits it.
+    format: date-time
+  lifecycle:
+    type: object
+    additionalProperties: false
+    required:
+      - evolution_stage
+      - generation_phase
+    properties:
+      evolution_stage:
+        type: string
+        description: System maturity / risk posture (slow-changing).
+        enum:
+          - stage_0_local_prototype
+          - stage_1_free_tier
+          - stage_2_early_adopters
+          - stage_3_growth
+          - stage_4_scale_up
+          - stage_5_enterprise
+      generation_phase:
+        type: string
+        description: Kind of work this run is doing (medium-changing).
+        enum:
+          - architecture_scaffolding
+          - implementation_scaffolding
+          - pre_production
+          - production_hardening
+  platform:
+    type: object
+    additionalProperties: false
+    required:
+      - infra_target
+      - packaging
+      - runtime_language
+      - database_engine
+    properties:
+      infra_target:
+        type: string
+        enum: [local, aws, awslocal, azure, gcp, heroku]
+        description: Target infrastructure context. Select one.
+      packaging:
+        type: string
+        enum: [podman_compose, docker_compose, kubernetes, serverless]
+        description: Packaging/deployment mode. Select one.
+      runtime_language:
+        type: string
+        enum: [python, typescript, csharp, node, go, java]
+        description: Primary runtime language for the candidate code. Select one.
+      database_engine:
+        type: string
+        enum: [postgres, mysql, sqlserver, sqlite, none]
+        description: Primary database engine. Select one.
+
+      framework:
+        type: string
+        description: Optional runtime framework choice (validated deterministically by CAF guardrails).
+      persistence_orm:
+        type: string
+        description: Optional persistence model choice (validated deterministically by CAF guardrails).
+      auth_mode:
+        type: string
+        description: Optional authentication mode (validated deterministically by CAF guardrails).
+      eventing_backend:
+        type: string
+        description: Optional eventing backend (validated deterministically by CAF guardrails).
+      schema_management_strategy:
+        type: string
+        enum: [code_bootstrap, alembic_migrations]
+        description: >
+          Optional schema management strategy.
+          - code_bootstrap: repositories/app bootstrap tables (default)
+          - alembic_migrations: generate migrations (requires ORM-backed persistence)
+
+  planes:
+    type: object
+    additionalProperties: false
+    description: Optional plane runtime shape pins. If omitted, CAF derives defaults deterministically.
+    properties:
+      cp:
+        type: object
+        additionalProperties: false
+        properties:
+          runtime_shape:
+            type: string
+            enum: [api_service_http, worker_service_events]
+      ap:
+        type: object
+        additionalProperties: false
+        properties:
+          runtime_shape:
+            type: string
+            enum: [api_service_http, worker_service_events]
+  meta:
+    type: object
+    description: Optional UX metadata (copied through exactly).
+    additionalProperties: true

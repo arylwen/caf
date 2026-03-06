@@ -1,0 +1,15 @@
+schema_version: v1
+kind: review_rubric_schema
+
+rubric:
+  rubric_id: string
+  title: string
+  applies_when:
+    - condition: string
+  checks:
+    - check_id: string
+      severity: blocker|high|medium|low
+      category: security|correctness|performance|testing|architecture|docs
+      rule: string
+      evidence_hints:
+        - string

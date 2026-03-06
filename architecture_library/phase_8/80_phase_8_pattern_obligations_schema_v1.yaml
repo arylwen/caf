@@ -1,0 +1,91 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "contura://caf/schemas/pattern_obligations/v1"
+title: "CAF Phase 8 Pattern Obligations (v1)"
+type: object
+additionalProperties: false
+
+required:
+  - schema_version
+  - generated_from
+  - obligations
+
+properties:
+  schema_version:
+    type: string
+    const: "pattern_obligations_v1"
+    description: "Schema discriminator."
+
+  generated_at:
+    type: string
+    description: "ISO-8601 timestamp (optional)."
+
+  generated_from:
+    type: object
+    additionalProperties: false
+    required:
+      - inputs
+    properties:
+      inputs:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+        description: "Repo-local paths used to compile obligations."
+
+  obligations:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - obligation_id
+        - obligation_kind
+        - plane_scope
+        - capability_id
+        - description
+        - sources
+        - selected_pattern_ids
+      properties:
+        obligation_id:
+          type: string
+          minLength: 1
+        obligation_kind:
+          type: string
+          enum:
+            - contract_scaffolding
+            - api_boundary
+            - persistence_boundary
+            - tenant_context
+            - auth
+            - other
+        plane_scope:
+          type: string
+          enum: [AP, CP, DP, ST, AI, cross_plane]
+        capability_id:
+          type: string
+          minLength: 1
+          description: "Semantic capability the Task Graph must cover."
+        description:
+          type: string
+          minLength: 1
+        sources:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: false
+            required: [path, anchor]
+            properties:
+              path:
+                type: string
+                minLength: 1
+              anchor:
+                type: string
+                minLength: 1
+        selected_pattern_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          description: "Verbatim pattern IDs in scope for this obligation. May be empty."

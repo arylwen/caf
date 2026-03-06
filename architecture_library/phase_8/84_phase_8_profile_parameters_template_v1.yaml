@@ -1,0 +1,75 @@
+# architecture_library/phase_8/84_phase_8_profile_parameters_template_v1.yaml
+#
+# Phase 8 Profile Parameters (UX inputs, minimal).
+#
+# Architects should edit ONLY the pinned UX knobs:
+# - lifecycle.evolution_stage
+# - lifecycle.generation_phase
+# - platform.infra_target
+# - platform.packaging
+# - platform.runtime_language
+# - platform.database_engine
+#
+# Everything else is derived by CAF into:
+# - reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml
+#
+schema_version: "phase8_profile_parameters_v1"
+instance_name: "{{instance_name}}"
+# created_at: "2026-01-10T12:34:56Z"  # optional ISO-8601 timestamp (copied through exactly if present)
+
+lifecycle:
+  # evolution_stage (allowed values):
+  # - stage_0_local_prototype
+  # - stage_1_free_tier
+  # - stage_2_early_adopters
+  # - stage_3_growth
+  # - stage_4_scale_up
+  # - stage_5_enterprise
+  evolution_stage: "stage_0_local_prototype"
+
+  # generation_phase (allowed values):
+  # - architecture_scaffolding
+  # - implementation_scaffolding
+  # - pre_production
+  # - production_hardening
+  generation_phase: "architecture_scaffolding"
+
+platform:
+  # infra_target (allowed values):
+  # - local
+  # - aws
+  # - awslocal
+  # - azure
+  # - gcp
+  # - heroku
+  infra_target: "local"
+
+  # packaging (allowed values):
+  # - podman_compose
+  # - docker_compose
+  # - kubernetes
+  # - serverless
+  packaging: "docker_compose"
+
+  # runtime_language (allowed values):
+  # - python
+  # - typescript
+  # - csharp
+  # - node
+  # - go
+  # - java
+  runtime_language: "python"
+
+  # database_engine (allowed values):
+  # - postgres
+  # - mysql
+  # - sqlserver
+  # - sqlite
+  # - none
+  database_engine: "postgres"
+
+meta:
+  # Optional metadata. If present, values MUST be non-empty (CAF rejects empty strings as placeholders).
+  # requested_by: "caf-saas-init"
+  # change_reason: "initial_instance_creation"
+  # notes: "Initialized by caf-saas-init."

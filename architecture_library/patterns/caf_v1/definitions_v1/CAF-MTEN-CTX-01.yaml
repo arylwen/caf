@@ -1,0 +1,125 @@
+pattern_id: CAF-MTEN-CTX-01
+name: Context Binding Patterns
+summary: Once tenant identity is identified, it MUST be **bound to execution context**.
+intent: Once tenant identity is identified, it MUST be **bound to execution context**.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: '#### 5.3.4 Context Binding Patterns
+
+
+  Once tenant identity is identified, it MUST be **bound to execution context**.
+
+
+  Binding patterns ensure:
+
+
+  - Tenant context is immutable for the duration of an operation
+
+  - Downstream systems cannot alter tenant identity
+
+
+  Canonical binding mechanisms include:
+
+
+  - Request-scoped context objects
+
+  - Thread-local or async-local storage
+
+  - Explicit context parameters in function calls
+
+  - Signed internal context tokens for async execution
+
+
+  ##### **Context Binding Patterns Normative Requirements**
+
+
+  - Tenant Context MUST be bound once and treated as read-only
+
+  - Late binding (e.g., resolving tenant inside business logic) is forbidden
+
+  - Default/global tenant context is forbidden
+
+
+  ---'
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 5.3.4 Context Binding Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '#### 5.3.4 Context Binding Patterns Once tenant identity is identified, it MUST be **bound to execution context**.'
+  - '- Request-scoped context objects - Thread-local or async-local storage - Explicit context parameters in function calls
+    - Signed internal context tokens for async execution ##### **Context Binding Patterns Normative Requirements** - Tenant
+    Context MUST be bound once and treated as read-only - Late binding (e.g., resolving tenant inside business logic) is forbidden
+    - Default/global tenant context is forbidden ---'
+  definition_of_done:
+  - 'Verify that #### 5.3.4 Context Binding Patterns Once tenant identity is identified, it MUST be **bound to execution context**.'
+  - Verify that binding patterns ensure
+  - 'Verify that - Request-scoped context objects - Thread-local or async-local storage - Explicit context parameters in function
+    calls - Signed internal context tokens for async execution ##### **Context Binding Patterns Normative Requirements** -
+    Tenant Context MUST be bound once and treated as read-only - Late binding (e.g., resolving tenant inside business logic)
+    is forbidden - Default/global tenant context is forbidden ---'
+  capabilities_needed:
+  - tenancy_context
+  - token_claims
+  - metering_usage
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  option_sets:
+  - option_set_id: tenant_context.binding_mechanism
+    summary: Select the primary mechanism by which tenant context is bound to ingress requests.
+    options:
+    - option_id: auth_claims
+      status: defer
+      summary: Tenant context embedded in verified auth claims (recommended when available).
+      carrier_kind: auth_claim
+    - option_id: path_segment
+      status: defer
+      summary: Tenant context in a URL path segment (e.g., /t/{tenant_id}/...).
+      carrier_kind: path_segment
+    - option_id: signed_gateway_header
+      status: defer
+      summary: Tenant context from a trusted gateway as a signed header (not client-controlled).
+      carrier_kind: signed_header
+    - option_id: explicit_session_binding
+      status: defer
+      summary: Explicit tenant selection bound to a server-managed session/context.
+      carrier_kind: session
+    - option_id: custom
+      status: defer
+      summary: Custom (describe the binding mechanism).
+      notes: ''
+    default_option_id: auth_claims
+  human_questions:
+  - question_key: tenant_context_binding_mechanism
+    question_id: Q-MTEN-CTX-BIND-01
+    question: What is the primary tenant context binding mechanism at ingress?
+    description: Select one option; use 'custom' only if none fit.
+    option_set_id: tenant_context.binding_mechanism
+    anchors:
+    - caf_pattern: CAF-MTEN-CTX-01
+  kind: decision_pattern

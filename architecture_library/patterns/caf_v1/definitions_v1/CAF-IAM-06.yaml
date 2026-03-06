@@ -1,0 +1,203 @@
+pattern_id: CAF-IAM-06
+name: Identity and Context Propagation
+summary: Identity and access enforcement across planes depends on the **reliable propagation of identity and execution context**.
+intent: Identity and access enforcement across planes depends on the **reliable propagation of identity and execution context**.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-01
+extended_definition: |
+  ## Identity and Context Propagation
+
+  Identity and access enforcement across planes depends on the **reliable propagation of identity and execution context**.
+
+  Identity context defines **who or what is acting**, **on whose behalf**, and **within which scope**.  
+  Propagation ensures that this context remains intact, explicit, and verifiable as requests move across planes.
+
+  ---
+
+  ### Explicit Context Establishment Pattern
+
+  Identity and execution context must be established explicitly at the earliest system entry point.
+
+  Under this pattern:
+
+  - Identity context is derived from authenticated input governed by the Control Plane
+  - Tenant context is bound at entry and remains immutable for the lifetime of the request
+  - Principal type and scope are explicitly identified
+  - No downstream system infers identity or tenant context implicitly
+
+  Context is established, not guessed.
+
+  ---
+
+  ### End-to-End Context Propagation Pattern
+   nOnce established, identity and context must propagate consistently across planes.
+
+  Under this pattern:
+
+  - Application Plane services propagate identity and tenant context to all downstream calls
+  - Data Plane operations receive identity and context explicitly
+  - Internal service-to-service calls preserve originating context
+  - Context propagation is uniform across synchronous and asynchronous workflows
+
+  Loss of context is treated as a correctness failure, not a best-effort condition.
+
+  ---
+
+  ### Context Integrity and Immutability Pattern
+
+  Identity and tenant context must not be modified or reinterpreted mid-flow.
+
+  Under this pattern:
+
+  - Downstream systems do not alter principal type, tenant identity, or scope
+  - Context enrichment is limited to adding non-authoritative metadata
+  - Any required change in identity or scope requires explicit re-establishment via governed workflows
+
+  Context integrity preserves auditability and prevents authority escalation.
+
+  ---
+
+  ### Delegated Context Usage Pattern
+
+  Downstream systems may **consume** identity context only within delegated boundaries.
+
+  Under this pattern:
+
+  - Context is used to enforce authorization and access constraints
+  \
+    - Context is not used to derive new authority or policy
+  - Context consumption is bounded by Control Plane governance
+  \
+    - No system assumes authority based solely on context possession
+
+  Possession of context does not imply ownership of authority.
+   n---
+
+  ### Observability and Traceability Pattern
+
+  Identity and context propagation must be observable.
+
+  Under this pattern:
+
+  - Logs, traces, and metrics include principal and tenant identifiers
+  - Context is preserved across retries, workflows, and background processing
+  - Identity context is available for audit and incident investigation
+  - Loss or corruption of context is detectable
+
+  Observability ensures that identity enforcement remains explainable.
+
+  ---
+
+  \
+    ### Asynchronous and Deferred Execution Pattern
+
+  Context propagation applies equally to asynchronous and deferred workflows.
+   nUnder this pattern:
+
+  - Identity and tenant context are explicitly attached to queued or deferred work
+  - Background processing executes under governed identity
+  - Context expiration or invalidation is respected
+  - No deferred execution occurs under anonymous or implicit identity
+
+  Asynchrony does not weaken identity guarantees.
+
+  ---
+
+  **Normative statement:**
+   n> Identity and execution context must be explicitly established, consistently propagated, and immutably preserved across all planes; no system may infer, modify, or fabricate identity context.
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Identity and Context Propagation
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '--- ### Explicit Context Establishment Pattern Identity and execution context must be established explicitly at the earliest
+    system entry point.'
+  - '--- ### End-to-End Context Propagation Pattern Once established, identity and context must propagate consistently across
+    planes.'
+  - '--- ### Context Integrity and Immutability Pattern Identity and tenant context must not be modified or reinterpreted
+    mid-flow.'
+  definition_of_done:
+  - 'Verify that --- ### Explicit Context Establishment Pattern Identity and execution context must be established explicitly
+    at the earliest system entry point.'
+  - 'Verify that --- ### End-to-End Context Propagation Pattern Once established, identity and context must propagate consistently
+    across planes.'
+  - 'Verify that --- ### Context Integrity and Immutability Pattern Identity and tenant context must not be modified or reinterpreted
+    mid-flow.'
+  - Verify that - Downstream systems do not alter principal type, tenant identity, or scope - Context enrichment is limited
+    to adding non-authoritative metadata - Any required change in identity or scope requires explicit re-establishment via
+    governed workflows Context integrity preserves auditability and prevents authority escalation.
+  - 'Verify that --- ### Observability and Traceability Pattern Identity and context propagation must be observable.'
+  - Verify that - Logs, traces, and metrics include principal and tenant identifiers - Context is preserved across retries,
+    workflows, and background processing - Identity context is available for audit and incident investigation - Loss or corruption
+    of context is detectable Observability ensures that identity enforcement remains explainable.
+  - Verify that --- **Normative statement:** > Identity and execution context must be explicitly established, consistently
+    propagated, and immutably preserved across all planes
+  capabilities_needed:
+  - authn
+  - authz_policy
+  - identity_model
+  - context_propagation
+  - audit_observability
+  - control_plane_governance
+  - data_plane_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.identity_context_propagation_mode
+    description: How identity + tenant context is carried across plane boundaries and verified at each hop.
+    options:
+    - option_id: auth_claims
+      summary: Verified auth claims (OIDC/JWT) carry identity + tenant context
+      carrier_kind: auth_claim
+      verification: signature+audience+issuer
+    - option_id: signed_gateway_header
+      summary: Trusted gateway injects a signed header (client cannot forge)
+      carrier_kind: signed_header
+      verification: gateway_signature
+    - option_id: delegation_token
+      summary: Explicit delegation token scoped to action + tenant + expiry
+      carrier_kind: delegation_token
+      verification: token_signature+scope_checks
+    - option_id: message_envelope
+      summary: Async message envelope carries signed identity context
+      carrier_kind: message_envelope
+      verification: signature+replay_protection
+    - option_id: custom
+      summary: Custom (fill details; prefer adopting a retrieved option when available)
+    default_option_id: auth_claims
+  human_questions:
+  - question_key: iam.identity_context_propagation_mode
+    question_id: Q-IAM-PROP-MODE-01
+    question: What identity/context propagation mode should be used across plane boundaries?
+    description: Choose the propagation mode and note any verification requirements and rejection conditions.
+    option_set_id: iam.identity_context_propagation_mode
+    specialization_notes:
+    - If multiple modes are used (e.g., sync vs async), record the rule and boundary.
+    anchors:
+    - caf_pattern: CAF-IAM-06

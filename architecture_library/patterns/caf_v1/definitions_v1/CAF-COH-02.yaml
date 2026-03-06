@@ -1,0 +1,108 @@
+pattern_id: CAF-COH-02
+name: Plane Responsibility Integrity
+summary: Control Plane defines intent and policy only Application Plane executes tenant
+  workflows only Data Plane enforces constraints but does not define governance No
+  document assigns cross-plane responsibilities implicitly
+intent: Control Plane defines intent and policy only Application Plane executes tenant
+  workflows only Data Plane enforces constraints but does not define governance No
+  document assigns cross-plane responsibilities implicitly
+context: See extended_definition (source section) for applicability constraints and
+  assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required
+  structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities,
+  and side effects.
+implementation_notes: See extended_definition (source section) for implementation
+  guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: '## 4. Plane Responsibility Integrity
+
+
+  - [ ] Control Plane defines intent and policy only
+
+  - [ ] Application Plane executes tenant workflows only
+
+  - [ ] Data Plane enforces constraints but does not define governance
+
+  - [ ] No document assigns cross-plane responsibilities implicitly
+
+
+  ---'
+source_documents:
+- path: architecture_library/45_contura_library_coherence_audit_checklist_v1.md
+  section_heading: 4. Plane Responsibility Integrity
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## 4.'
+  - Plane Responsibility Integrity - [ ] Control Plane defines intent and policy only
+    - [ ] Application Plane executes tenant workflows only - [ ] Data Plane enforces
+    constraints but does not define governance - [ ] No document assigns cross-plane
+    responsibilities implicitly ---
+  definition_of_done:
+  - 'Verify that ## 4.'
+  - Verify that plane Responsibility Integrity - [ ] Control Plane defines intent
+    and policy only - [ ] Application Plane executes tenant workflows only - [ ] Data
+    Plane enforces constraints but does not define governance - [ ] No document assigns
+    cross-plane responsibilities implicitly ---
+  capabilities_needed:
+  - authz_policy
+  - control_plane_governance
+  - data_plane_enforcement
+  - plane_integrity
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by
+    the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: planes.responsibility_integrity_mode
+    summary: Choose among bounded variants for `planes.responsibility_integrity_mode`
+      (or use `custom`).
+    options:
+    - option_id: strict_separation
+      status: defer
+      summary: Strict plane separation; violations are treated as errors and blocked.
+      notes: ''
+    - option_id: contracted_exceptions
+      status: defer
+      summary: Allow exceptions only when explicitly contracted and reviewed.
+      notes: ''
+    - option_id: allowlisted_shared_components
+      status: defer
+      summary: Allow a limited allowlist of shared components with clear ownership.
+      notes: ''
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when
+        possible).
+      notes: ''
+    default_option_id: strict_separation
+  human_questions:
+  - question_key: plane_responsibility_integrity_mode
+    question_id: Q-CAF-COH-02-01
+    question: How strictly should plane responsibility boundaries be enforced?
+    description: Choose strict separation, contracted exceptions, allowlisted shared components, or custom.
+    option_set_id: planes.responsibility_integrity_mode
+    anchors:
+    - caf_pattern: CAF-COH-02
+

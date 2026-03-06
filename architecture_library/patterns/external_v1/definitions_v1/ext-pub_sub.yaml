@@ -1,0 +1,87 @@
+pattern_id: EXT-PUB_SUB
+name: Pub/Sub
+summary: Fan-out events to multiple subscribers
+intent: Distribute events to multiple independent subscribers without tight coupling.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: A messaging pattern where publishers emit events to a topic and multiple subscribers receive
+  copies asynchronously. It enables fan-out and loose coupling, but requires handling delivery semantics (at-least-once),
+  ordering guarantees, schema evolution, and subscriber backpressure.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Domain event fan-out (billing, analytics, notifications); integration events for partners.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A messaging pattern where publishers emit events to a topic and multiple subscribers receive copies asynchronously.
+  It enables fan-out and loose coupling, but requires handling delivery semantics (at-least-once), ordering guarantees, schema
+  evolution, and subscriber backpressure.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-PUB_SUB
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a messaging pattern where publishers emit events to a topic and multiple subscribers receive copies asynchronously.
+  capabilities_needed:
+  - eventing
+  - resilience_retry
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: async.pubsub_delivery_semantics
+    description: Delivery semantics and operational discipline for publish/subscribe messaging.
+    options:
+    - option_id: at_least_once
+      summary: At-least-once delivery; requires idempotent consumers and retry/backoff handling.
+      notes: ''
+    - option_id: at_most_once
+      summary: At-most-once delivery; favors latency/simplicity over guaranteed processing.
+      notes: ''
+    - option_id: effectively_once
+      summary: Effectively-once via dedupe/idempotency + replay controls (no true exactly-once assumption).
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: at_least_once
+  human_questions:
+  - question_key: async_pubsub_delivery_semantics
+    question_id: Q-EXT-PS-01
+    question: What pub/sub delivery semantics will you assume operationally?
+    description: Select the delivery semantics and consumer discipline expected for pub/sub messaging.
+    option_set_id: async.pubsub_delivery_semantics
+    specialization_notes:
+    - Warranted when services communicate asynchronously via topics/streams and consumer correctness depends on delivery assumptions.
+    anchors:
+    - caf_pattern: EXT-PUB_SUB
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-pub_sub.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-PUB_SUB
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

@@ -1,0 +1,88 @@
+pattern_id: EXT-EDGE_GATEWAY
+name: Edge Gateway
+summary: Single global entry for TLS/WAF/DDoS & routing
+intent: Provide a single global entry point for traffic with consistent security and routing controls.
+context: Internet-facing systems; multi-region or multi-service backends; need WAF/DDoS/TLS termination and routing in one
+  place.
+problem: Without a unified edge, security policies and routing logic drift across services, increasing attack surface and
+  operational overhead.
+forces_tradeoffs: Central control vs team autonomy; added edge latency vs stronger protection; global consistency vs regional
+  customization.
+solution_structure_behavior: "A network-edge entry point (often a Layer 7 load balancer) that terminates TLS and applies perimeter\
+  \ controls such as WAF rules, DDoS protection, and request routing. It centralizes north-south traffic management (public\
+  \ \u2192 internal) and standardizes security headers, certificates, and routing policies across services."
+consequences: Improves posture and simplifies client entry, but can become a critical dependency requiring HA, careful config
+  management, and strong change controls.
+implementation_notes: Keep it policy/routing-only (no business logic). Use managed WAF/DDoS + CDN. Enforce standard headers,
+  TLS versions, and observability at the edge.
+examples_known_uses: CDN + WAF + DDoS protection fronting APIs and web apps; global traffic steering across regions.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A network-edge entry point (often a Layer 7 load balancer) that terminates TLS and applies perimeter controls such as WAF rules, DDoS protection, and request routing. It centralizes north-south traffic management (public → internal) and standardizes security headers, certificates, and routing policies across services.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-EDGE_GATEWAY
+  minimum_evidence:
+  - need WAF/DDoS/TLS termination and routing in one place.
+  definition_of_done:
+  - Verify that improves posture and simplifies client entry, but can become a critical dependency requiring HA, careful config
+    management, and strong change controls.
+  capabilities_needed:
+  - ingress_boundary
+  - backup_restore
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: ingress.edge_gateway_topology
+    description: How the edge boundary is structured and what responsibilities sit at the outermost ingress boundary.
+    options:
+    - option_id: edge_only_then_services
+      summary: Edge boundary does TLS/WAF/basic routing; services handle most application policies.
+      notes: ''
+    - option_id: edge_plus_api_gateway_tier
+      summary: 'Two-tier boundary: edge for network/WAF/TLS; API gateway for API policy enforcement.'
+      notes: ''
+    - option_id: in_cluster_ingress_as_edge
+      summary: In-cluster ingress acts as the effective edge boundary (still treated as ingress boundary).
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: edge_plus_api_gateway_tier
+  human_questions:
+  - question_key: ingress_edge_gateway_topology
+    question_id: Q-EXT-EDGE-GW-01
+    question: What is the edge gateway topology and responsibility split?
+    description: Select how the edge boundary is structured and which responsibilities it owns versus downstream components.
+    option_set_id: ingress.edge_gateway_topology
+    specialization_notes:
+    - Use when you need an explicit ingress boundary and want to clarify edge vs API gateway vs service responsibilities.
+    anchors:
+    - caf_pattern: EXT-EDGE_GATEWAY
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-edge_gateway.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-EDGE_GATEWAY
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

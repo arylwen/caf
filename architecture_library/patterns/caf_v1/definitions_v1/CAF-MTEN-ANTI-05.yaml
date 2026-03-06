@@ -1,0 +1,78 @@
+pattern_id: CAF-MTEN-ANTI-05
+name: Treating Enterprise as a Fork
+summary: Derived from architecture_library/21_contura_multi_tenancy_patterns_v1.md section '7.5 Treating Enterprise as a Fork'.
+intent: Derived from 7.5 Treating Enterprise as a Fork.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  ### 7.5 Treating Enterprise as a Fork
+
+  #### **Treating Enterprise as a Fork: Description**
+
+  Enterprise customers are supported via:
+
+  - Custom code paths
+  - Special-case deployments
+  - Manual overrides
+  - “Snowflake tenants”
+
+  #### **Treating Enterprise as a Fork: Why It Happens**
+
+  - Sales pressure
+  - Urgent deals
+  - Underestimating long-term cost
+
+  #### **Treating Enterprise as a Fork: Why It Fails**
+
+  - Operational collapse
+  - Inconsistent behavior
+  \
+    - Inability to scale support
+  - Permanent architectural debt
+
+  #### **Treating Enterprise as a Fork: Normative Rule**
+   n> Enterprise is a mode, not a fork.
+
+  If enterprise support requires breaking invariants, the base architecture is incomplete.
+   n---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 7.5 Treating Enterprise as a Fork
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - If enterprise support requires breaking invariants, the base architecture is incomplete.
+  definition_of_done:
+  - 'Verify that ### 7.5 Treating Enterprise as a Fork #### **Treating Enterprise as a Fork'
+  - Verify that description** Enterprise customers are supported via
+  capabilities_needed:
+  - tenancy_context
+  - enterprise_compliance
+  - anti_pattern_detection
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

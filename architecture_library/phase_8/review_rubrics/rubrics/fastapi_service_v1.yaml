@@ -1,0 +1,25 @@
+schema_version: v1
+kind: review_rubric
+rubric_id: RR-FASTAPI-SVC-01
+title: FastAPI service best practices (v1)
+applies_when:
+  - condition: "platform.runtime_language == python AND adopted.runtime.framework == fastapi"
+checks:
+  - check_id: RR-FA-CORR-01
+    severity: blocker
+    category: correctness
+    rule: "Router wiring is complete: API endpoints are reachable from the app entrypoint (include_router or equivalent)."
+    evidence_hints:
+      - "verify app factory / main registers routers"
+  - check_id: RR-FA-SEC-01
+    severity: high
+    category: security
+    rule: "Request validation is enforced via Pydantic models (or equivalent), not ad-hoc dict parsing in route handlers."
+    evidence_hints:
+      - "route signatures should use typed models"
+  - check_id: RR-FA-ARCH-01
+    severity: medium
+    category: architecture
+    rule: "Keep route handlers thin: delegate business logic to service layer; avoid large handlers doing persistence and policy inline."
+    evidence_hints:
+      - "handlers call services/facades"

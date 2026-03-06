@@ -1,0 +1,83 @@
+pattern_id: EXT-SLO_SLI_MONITORING
+name: SLO/SLI Monitoring
+summary: Alert on user-impacting metrics
+intent: Measure user-facing reliability and alert on meaningful error budget burn.
+context: Microservices and async flows where debugging spans many components and failures are partial.
+problem: Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+forces_tradeoffs: Signal quality vs cost/volume; cardinality vs queryability; instrumentation effort vs MTTR reduction.
+solution_structure_behavior: A reliability practice that defines Service Level Indicators (SLIs) to measure user-facing behavior
+  (latency, availability, correctness) and Service Level Objectives (SLOs) as targets. Alerting focuses on error budget burn
+  and user impact, reducing noisy alerts and guiding prioritization.
+consequences: Faster detection and lower MTTR; increased telemetry costs and governance requirements.
+implementation_notes: Standardize correlation IDs, structured logs, tracing, and SLOs; alert on user impact; sample intelligently.
+examples_known_uses: Production incident response, performance tuning, auditing critical flows.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A reliability practice that defines Service Level Indicators (SLIs) to measure user-facing behavior (latency,
+  availability, correctness) and Service Level Objectives (SLOs) as targets. Alerting focuses on error budget burn and user
+  impact, reducing noisy alerts and guiding prioritization.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-SLO_SLI_MONITORING
+  minimum_evidence:
+  - Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+  definition_of_done:
+  - Verify that a reliability practice that defines Service Level Indicators (SLIs) to measure user-facing behavior (latency,
+    availability, correctness) and Service Level Objectives (SLOs) as targets.
+  capabilities_needed:
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: obs.slo_coverage
+    description: Coverage model for SLOs/SLIs across user journeys, APIs, and critical dependencies.
+    options:
+    - option_id: top_user_journeys
+      summary: Define SLOs for top user journeys and critical endpoints first.
+      notes: ''
+    - option_id: all_public_apis
+      summary: Define SLOs for all public APIs/endpoints with standard error budgets.
+      notes: ''
+    - option_id: critical_dependencies
+      summary: Define SLOs around critical dependencies and internal system health indicators.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: top_user_journeys
+  human_questions:
+  - question_key: obs_slo_coverage
+    question_id: Q-EXT-SLO-01
+    question: What is the SLO/SLI coverage model?
+    description: Select how SLOs/SLIs are scoped and prioritized across journeys, APIs, and dependencies.
+    option_set_id: obs.slo_coverage
+    specialization_notes:
+    - Warranted when operational objectives must be explicit and used to drive alerting, rollbacks, and investment decisions.
+    anchors:
+    - caf_pattern: EXT-SLO_SLI_MONITORING
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-slo_sli_monitoring.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-SLO_SLI_MONITORING
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

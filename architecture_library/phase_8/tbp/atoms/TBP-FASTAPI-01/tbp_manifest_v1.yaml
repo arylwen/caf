@@ -1,0 +1,59 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-FASTAPI-01
+binds_to:
+- atom_path: runtime.framework
+  atom_value: fastapi
+- atom_path: plane.runtime_shape
+  atom_value: api_service_http
+requires_tbps:
+- TBP-PY-01
+- TBP-ASGI-01
+conflicts_with_tbps:
+- TBP-DJANGO-01
+- TBP-DRF-01
+layout:
+  role_bindings:
+    api_boundary:
+      path_template: code/ap/api/{resource_snake}_router.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - router
+      - APIRouter
+    composition_root:
+      path_template: code/ap/main.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - FastAPI
+      - include_router
+extensions:
+  obligations:
+  - obligation_id: O-TBP-FASTAPI-01-composition-root
+    title: Materialize FastAPI composition root
+    required_capability: api_boundary_implementation
+    role_binding_key: composition_root
+
+  gates:
+  - gate_id: G-FASTAPI-API-BOUNDARY-THIN
+    title: Keep API boundary thin
+    gate_kind: guardrail
+    required_capability: api_boundary_implementation
+    criteria:
+    - API boundary handlers delegate to the service facade; avoid direct persistence access at the boundary.
+    - Transport concerns remain in the boundary layer; domain/service layers remain transport-agnostic.
+    - Request context and the adopted tenancy carrier are propagated consistently into the service layer.
+    review_questions:
+    - Do route handlers import repositories/ORM directly?
+    - Is tenancy scope enforced at the boundary using the adopted carrier?
+    focus_areas: [separation_of_concerns, correctness]
+    severity_threshold_override: high
+
+  - gate_id: G-FASTAPI-COMPOSITION-ROOT-WIRING
+    title: Composition root wiring clarity
+    gate_kind: definition_of_done
+    required_capability: api_boundary_implementation
+    criteria:
+    - Composition root creates the FastAPI app and includes resource routers via explicit router registration.
+    - Cross-cutting middleware (authn/authz, logging, request-id) is wired at the composition root (or a dedicated boundary wiring module) and documented.
+    review_questions:
+    - Are routers registered explicitly and discoverably?
+    focus_areas: [maintainability, observability]

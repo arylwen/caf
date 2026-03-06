@@ -1,0 +1,57 @@
+version: v1
+status: active
+source_of_truth: architecture_library_filesystem
+notes:
+- This index is the canonical mapping from project phases to authoritative artifacts.
+- Tools MUST NOT infer phase membership from filename prefixes.
+phases:
+- id: 0
+  name: foundations_and_guardrails
+  authoritative_artifacts:
+  - path: 00_contura_architecture_library_taxonomy_v1.md
+  - path: 01_contura_architecture_how_to_read_this_library_v1.md
+  - path: 02_contura_document_output_standards_v2.md
+  - path: 03_contura_architecture_framework_v1.md
+  - path: 04_contura_architecture_glossary_v1.md
+  - path: 05_contura_saas_architecture_commitment_v1.md
+  - path: 06_contura_architecture_library_roadmap_v1.md
+- id: 5
+  name: executable_architecture_foundations
+  authoritative_artifacts:
+  - path: 60_executable_architecture_overview_v1.md
+  - path: 61_contura_multi_tenancy_validation_schema_v1.yaml
+  - path: 62_contura_multi_tenancy_validation_checks_v1.json
+  - path: 63_contura_multi_tenancy_policy_rules_v1.yaml
+- id: 6
+  name: parameterized_architecture_templates
+  authoritative_artifacts:
+  - path: 07_contura_parameterized_architecture_templates_v1.md
+- id: 7
+  name: reference_implementations
+  authoritative_artifacts:
+  - path: 70_contura_reference_implementation_structure_and_derivation_contract_v1.md
+- id: 8
+  name: implementation_profiles_and_companion_artifacts
+  authoritative_artifacts:
+  - path: phase_8/80_phase_8_agent_crew_model_v1.md
+  - path: phase_8/80_phase_8_worker_capability_catalog_schema_v1.yaml
+  - path: phase_8/80_phase_8_worker_capability_catalog_template_v1.yaml
+  - path: phase_8/80_phase_8_make_skill_request_schema_v1.yaml
+  - path: phase_8/80_phase_8_make_skill_request_template_v1.yaml
+  - path: phase_8/80_phase_8_make_skill_feedback_packet_block_v1.md
+  - path: phase_8/80_phase_8_caf_make_skill_spec_v1.md
+  - path: phase_8/81_phase_8_implementation_profile_template_v1.md
+  - path: phase_8/82_phase_8_directory_and_naming_conventions_v1.md
+  - path: phase_8/84_phase_8_profile_parameters_naming_and_placement_v1.md
+  - path: phase_8/84_phase_8_profile_parameters_schema_v1.yaml
+  - path: phase_8/84_phase_8_profile_parameters_template_v1.yaml
+  - path: phase_8/85_phase_8_lifecycle_model_v1.md
+  - path: phase_8/86_phase_8_approved_technology_atoms_schema_v1.yaml
+  - path: phase_8/89_phase_8_instance_evolution_policy_v1.md
+  - path: phase_8/90_phase_8_profile_derivation_policy_matrix_v1.yaml
+  - path: phase_8/91_phase_8_candidate_code_enforcement_bar_v1.md
+  - path: phase_8/profile_templates/
+  - path: phase_8/stack_profile_proposals/
+  - path: phase_8/100_phase_8_technology_binding_patterns_standard_v1.md
+  - path: phase_8/101_phase_8_plan_md_contract_v1.md
+  - path: phase_8/tbp/

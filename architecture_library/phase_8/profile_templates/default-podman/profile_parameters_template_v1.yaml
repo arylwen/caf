@@ -1,0 +1,35 @@
+# reference_architectures/{{instance_name}}/guardrails/profile_parameters.yaml
+schema_version: "phase8_profile_parameters_v1"
+instance_name: "{{instance_name}}"
+
+# NOTE: `created_at` is intentionally omitted.
+# CAF runs strict placeholder hygiene before derivations; placeholders in pinned inputs
+# must never be copied into instance files.
+
+lifecycle:
+  evolution_stage: "stage_0_local_prototype"
+  generation_phase: "architecture_scaffolding"
+
+platform:
+  infra_target: "local"
+  packaging: "podman_compose"
+  runtime_language: "python"
+  database_engine: "postgres"
+  framework: "fastapi"
+  persistence_orm: "sqlalchemy_orm"
+  schema_management_strategy: "code_bootstrap"
+  auth_mode: "mock"
+  eventing_backend: "mock_in_memory"
+
+# Optional: plane runtime shape pins.
+# If omitted, CAF derives defaults deterministically.
+planes:
+  cp:
+    runtime_shape: "api_service_http"
+  ap:
+    runtime_shape: "api_service_http"
+
+meta:
+  requested_by: "caf-saas-init"
+  change_reason: "initial_instance_creation"
+  notes: "Initialized by caf-saas-init."

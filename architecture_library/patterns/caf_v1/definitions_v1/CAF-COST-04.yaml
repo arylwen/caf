@@ -1,0 +1,86 @@
+pattern_id: CAF-COST-04
+name: Failure Modes & Anti-Patterns
+summary: 'The following are **architectural defects**:'
+intent: 'The following are **architectural defects**:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: |
+  ## 11. Failure Modes & Anti-Patterns
+
+  The following are **architectural defects**:
+
+  - Unbounded agent execution  
+  - Cost incurred without tenant attribution  
+  - Cost enforced only offline  
+  - Agents without budgets  
+  - Aggregated cost without identity or workflow attribution  
+  - Cost enforcement bypassing Safety Gates  
+
+  Detection of these conditions constitutes a governance incident.
+
+  ---
+source_documents:
+- path: architecture_library/12_contura_cost_governance_finops_v1.md
+  section_heading: 11. Failure Modes & Anti-Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## 11.'
+  - Failure Modes & Anti-Patterns The following are **architectural defects**
+  definition_of_done:
+  - 'Verify that ## 11.'
+  - Verify that failure Modes & Anti-Patterns The following are **architectural defects**
+  capabilities_needed:
+  - safety_gating
+  - cost_governance
+  - incident_response
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: cost_enforcement.budget_mode
+    description: How budgets/quotas are enforced when limits are reached.
+    options:
+    - option_id: hard_fail_closed
+      summary: 'Hard budget: reject requests when budget exhausted (fail-closed).'
+      mode: hard_fail_closed
+    - option_id: throttle
+      summary: 'Soft budget: throttle/slow down once budget is near/exceeded.'
+      mode: throttle
+    - option_id: tenant_quota
+      summary: Per-tenant quota/budget enforcement (tenant-specific limits).
+      mode: tenant_quota
+    - option_id: custom
+      summary: Custom (fill fields).
+      mode: ''
+    default_option_id: hard_fail_closed
+  human_questions:
+  - question_id: Q-CAF-COST-04-01
+    topic: cost_enforcement.budget_mode
+    question: Which budget enforcement mode will you adopt and what are the rejection/throttling behaviors?
+    status: open
+    option_set_id: cost_enforcement.budget_mode
+    answer: {}

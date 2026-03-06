@@ -1,0 +1,96 @@
+pattern_id: CAF-POL-S05
+name: Policy Types and Domains
+summary: Policy is classified by **domain**, not by regulation or feature.
+intent: Policy is classified by **domain**, not by regulation or feature.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 5. Policy Types and Domains
+
+
+  Policy is classified by **domain**, not by regulation or feature.
+
+
+  Canonical policy domains include:
+
+
+  - Identity and Access Policy
+
+  - Tenancy and Isolation Policy
+
+  - AI Safety and Autonomy Policy
+
+  - Compliance Invariant Policy
+
+  - Cost and Usage Policy
+
+  - Data Governance and Retention Policy
+
+  - Lifecycle and Change Policy
+
+
+  Each policy MUST declare:
+
+
+  - Domain
+
+  - Scope
+
+  - Required context
+
+  - Enforcement stage(s)
+
+  - Failure behavior
+
+
+  Policies MAY span multiple domains, but scope MUST remain explicit.
+
+
+  ---'
+source_documents:
+- path: architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+  section_heading: 5. Policy Types and Domains
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '- Identity and Access Policy - Tenancy and Isolation Policy - AI Safety and Autonomy Policy - Compliance Invariant Policy
+    - Cost and Usage Policy - Data Governance and Retention Policy - Lifecycle and Change Policy Each policy MUST declare'
+  - '- Domain - Scope - Required context - Enforcement stage(s) - Failure behavior Policies MAY span multiple domains, but
+    scope MUST remain explicit.'
+  definition_of_done:
+  - Verify that - Identity and Access Policy - Tenancy and Isolation Policy - AI Safety and Autonomy Policy - Compliance Invariant
+    Policy - Cost and Usage Policy - Data Governance and Retention Policy - Lifecycle and Change Policy Each policy MUST declare
+  - Verify that - Domain - Scope - Required context - Enforcement stage(s) - Failure behavior Policies MAY span multiple domains,
+    but scope MUST remain explicit.
+  capabilities_needed:
+  - safety_gating
+  - policy_enforcement
+  - identity_access
+  - compliance_evidence
+  - cost_governance
+  - ai_safety_integration
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

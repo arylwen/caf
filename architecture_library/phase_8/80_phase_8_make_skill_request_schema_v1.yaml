@@ -1,0 +1,242 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "contura://caf/schemas/phase8_make_skill_request/v1"
+title: "CAF Phase 8 Make Skill Request (v1)"
+type: object
+additionalProperties: false
+
+required:
+  - schema_version
+  - request_id
+  - created_at
+  - instance
+  - pins
+  - missing_capabilities
+  - requested_workers
+  - constraints
+  - task_signatures
+
+properties:
+  schema_version:
+    type: string
+    const: "phase8_make_skill_request_v1"
+
+  request_id:
+    type: string
+    minLength: 8
+    description: "Stable request identifier (suggest: BP-YYYYMMDD-... or make_skill_..._YYYYMMDD)."
+
+  created_at:
+    type: string
+    minLength: 10
+    description: "ISO-8601 timestamp or date string."
+
+  instance:
+    type: object
+    additionalProperties: false
+    required:
+      - instance_name
+      - reference_architecture_path
+      - companion_repo_target_path
+    properties:
+      instance_name:
+        type: string
+        minLength: 1
+      reference_architecture_path:
+        type: string
+        minLength: 1
+      companion_repo_target_path:
+        type: string
+        minLength: 1
+
+  pins:
+    type: object
+    additionalProperties: false
+    required:
+      - lifecycle_evolution_stage
+      - lifecycle_generation_phase
+      - platform_pins
+    properties:
+      lifecycle_evolution_stage:
+        type: string
+        minLength: 1
+      lifecycle_generation_phase:
+        type: string
+        minLength: 1
+      platform_pins:
+        type: string
+        minLength: 1
+
+  missing_capabilities:
+    type: array
+    minItems: 1
+    items:
+      type: string
+      minLength: 3
+    description: "Capability IDs required by the Task Graph that are not covered by the current worker capability catalog."
+
+  requested_workers:
+    description: "Requested worker agents (skills) that should be created or extended to cover missing capabilities."
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - proposed_worker_id
+        - role_kind
+        - capabilities
+      properties:
+        proposed_worker_id:
+          type: string
+          minLength: 3
+          description: "Suggested skill folder name under skills/<proposed_worker_id>/."
+        role_kind:
+          type: string
+          enum: ["application_architect", "manager", "worker", "validator"]
+        capabilities:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 3
+        rationale:
+          type: string
+          description: "Optional non-empty rationale. Must not introduce new architecture decisions."
+
+  constraints:
+    type: object
+    additionalProperties: false
+    required:
+      - allowed_artifact_classes
+      - allowed_write_paths
+      - forbidden_actions
+    properties:
+      allowed_artifact_classes:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      allowed_write_paths:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      forbidden_actions:
+        type: array
+        minItems: 0
+        items:
+          type: string
+          minLength: 1
+
+  task_signatures:
+    description: "Minimal task IO signatures associated with the missing capabilities. These are the scaffolding contract for new worker skills."
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - task_id
+        - title
+        - required_capabilities
+        - inputs
+        - definition_of_done
+        - semantic_review
+        - trace_anchors
+      properties:
+        task_id:
+          type: string
+          minLength: 3
+        title:
+          type: string
+          minLength: 1
+        required_capabilities:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 3
+        inputs:
+          type: array
+          minItems: 0
+          items:
+            type: object
+            additionalProperties: false
+            required: [path, required]
+            properties:
+              path:
+                type: string
+                minLength: 1
+              required:
+                type: boolean
+        definition_of_done:
+          type: array
+          minItems: 3
+          items:
+            type: string
+            minLength: 1
+        semantic_review:
+          type: object
+          additionalProperties: false
+          required: [review_questions, severity_threshold]
+          properties:
+            review_questions:
+              type: array
+              minItems: 3
+              items:
+                type: string
+                minLength: 1
+            severity_threshold:
+              type: string
+              enum: [blocker, high, medium, low]
+            focus_areas:
+              type: array
+              minItems: 0
+              items:
+                type: string
+                minLength: 1
+        trace_anchors:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: false
+            required: [pattern_id, anchor_kind]
+            properties:
+              pattern_id:
+                type: string
+                minLength: 3
+              anchor_kind:
+                type: string
+                enum: ["plan_step_archetype", "module_role", "structural_validation"]
+              anchor_ref:
+                type: string
+                description: "Optional reference identifier or label within the pattern/TBP." 
+
+  scaffolding_instructions:
+    type: object
+    additionalProperties: false
+    required:
+      - output_skill_root
+      - worker_skill_manifest
+      - create_runner_shims
+    properties:
+      output_skill_root:
+        type: string
+        const: "skills"
+      worker_skill_manifest:
+        type: object
+        additionalProperties: false
+        required: [required_sections]
+        properties:
+          required_sections:
+            type: array
+            minItems: 1
+            items:
+              type: string
+              minLength: 1
+      create_runner_shims:
+        type: boolean
+        description: "If true, the scaffolder may create thin runner aliases. Default false for UX simplicity."

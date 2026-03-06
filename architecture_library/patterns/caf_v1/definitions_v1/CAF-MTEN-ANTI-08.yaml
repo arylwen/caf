@@ -1,0 +1,110 @@
+pattern_id: CAF-MTEN-ANTI-08
+name: Assuming Network Isolation Is Sufficient
+summary: '**Assuming Network Isolation Is Sufficient: Description**'
+intent: '**Assuming Network Isolation Is Sufficient'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  ### 7.8 Assuming Network Isolation Is Sufficient
+
+  **Assuming Network Isolation Is Sufficient: Description**  
+
+  Relying on:
+
+  - VPCs
+  - Accounts
+  - Projects
+  - Clusters
+
+  …as the primary tenant boundary.
+
+  #### **Assuming Network Isolation Is Sufficient: Why It Happens**
+
+  - Cloud-provider defaults
+  - Security theater
+  - Misplaced trust in infrastructure isolation
+
+  #### **Assuming Network Isolation Is Sufficient: Why It Fails**
+
+  - Application-level bugs bypass network boundaries
+  - Agents and async execution cross boundaries
+  - Observability and audit gaps remain
+   n#### **Assuming Network Isolation Is Sufficient: Normative Rule**
+
+  > Network isolation supplements application isolation; it never replaces it.
+
+  Tenancy is enforced by **context, identity, and policy**, not topology.
+
+  ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 7.8 Assuming Network Isolation Is Sufficient
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '### 7.8 Assuming Network Isolation Is Sufficient **Assuming Network Isolation Is Sufficient'
+  - Description** Relying on
+  definition_of_done:
+  - Verify that it never replaces it.
+  capabilities_needed:
+  - tenancy_context
+  - audit_trail
+  - observability_emit
+  - identity_access
+  - tenancy_isolation
+  - agent_boundary
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  decision_prompts:
+  - Do not rely on network isolation as the primary tenant boundary; enforce tenancy via context, identity, and policy.
+  - Choose the enforcement layers required for tenant isolation and how network segmentation is used (supplemental only).
+  option_sets:
+  - option_set_id: tenancy.isolation_enforcement_layers
+    summary: Choose which layers enforce tenant isolation (network isolation must be supplemental, not primary).
+    options:
+    - option_id: app_level_context_identity_policy
+      summary: App-level enforcement—explicit tenant context + tenant-scoped identity + policy checks at every boundary.
+      notes: ''
+    - option_id: defense_in_depth_app_plus_network
+      summary: Defense-in-depth—app-level enforcement plus network segmentation (VPC/accounts/projects/clusters) as supplemental.
+      notes: ''
+    - option_id: network_only_timeboxed_migration
+      summary: Legacy/migration—network isolation currently primary; time-boxed plan to add app-level enforcement and audit.
+      notes: ''
+    - option_id: custom
+      summary: Custom (document constraints and deviations).
+      notes: ''
+    default_option_id: defense_in_depth_app_plus_network
+  human_questions:
+  - question_key: tenancy_isolation_enforcement_layers
+    question_id: Q-CAF-MTEN-ANTI-08-01
+    question: What enforcement layers will ensure tenant isolation beyond network segmentation?
+    description: Choose app-level enforcement, optionally with network defense-in-depth; do not rely on network isolation alone.
+    option_set_id: tenancy.isolation_enforcement_layers
+    anchors:
+    - caf_pattern: CAF-MTEN-ANTI-08

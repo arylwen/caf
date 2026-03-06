@@ -1,0 +1,181 @@
+pattern_id: CAF-POL-01
+name: Policy as a First-Class System Artifact
+summary: Represent policy as machine-evaluable, versioned, auditable artifacts rather than ad-hoc checks or configuration.
+intent: Make governance intent executable, deterministic, and provable.
+context: AI-first multi-tenant SaaS where implicit rules create unsafe, non-deterministic behavior.
+problem: Ad-hoc policy logic scattered across code leads to inconsistent enforcement, undetectable drift, and unprovable compliance.
+forces_tradeoffs: Flexibility of local checks vs central consistency and auditability; rapid change vs versioned rollout/rollback
+  discipline.
+solution_structure_behavior: Define policy artifacts with explicit scope, inputs, evaluation semantics, outcomes, version
+  identity, and audit attribution. Prohibit ambient/inferred context and unobserved evaluation.
+consequences: Improves determinism and compliance; requires policy lifecycle management and evaluation infrastructure.
+implementation_notes: Avoid conflating policy with configuration; enforce versioning and explicit inputs; require observability
+  for evaluation.
+examples_known_uses: Entitlement policies, agent tool-use policies, workflow execution constraints enforced consistently.
+related_patterns: |
+  depends_on: CAF-TCTX-01
+  depends_on: OBS-01
+  complements: CAF-AI-01
+  complements: CAF-AID-01
+  complements: CAF-EDGE-01
+  complements: CAF-MODEL-01
+  complements: CAF-MTEN-01
+  complements: CAF-POL-02
+  complements: CAF-RES-ID-01
+  complements: CAF-SAFE-DP-01
+  complements: CAF-XPLANE-02
+  complements: CAF-ZT-01
+extended_definition: |
+  **Normative constraints**
+
+  - Implicit rules are architectural defects: policy **MUST** be an explicit, first-class architectural component (not ad-hoc conditionals, scattered flags, or human-only interpretation).
+  - A policy is a **machine-evaluable artifact** with explicit structure and lifecycle. A policy **MUST** have:
+    - explicit scope (tenant / identity / agent / workflow / plane)
+    - explicit inputs (context, attributes, signals)
+    - deterministic evaluation semantics
+    - explicit outcomes (allow/deny/modify/escalate)
+    - versioned identity and audit attribution
+  \
+    - A policy **MUST NOT**:
+    - depend on ambient or inferred context
+    - change behavior without a version change
+    - execute implicitly/best-effort
+    - be evaluated without observability
+  - Policy artifacts **MUST** be addressable, versioned, deployable, testable, and auditable.
+
+  **Evidence hooks**
+
+  - Designs include a policy artifact model (IDs, versioning, lifecycle) and show where evaluation occurs.
+  - Specs/designs state which operations are policy-governed and how outcomes are enforced.
+
+  **Common failure modes**
+
+  - Hardcoding governance logic in application code or unversioned configuration.
+  \
+    - “Context inferred” evaluations that silently drift and cannot be replayed/audited.
+  - Policy evaluation without decision telemetry.
+
+
+source_documents:
+- path: architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+  sections:
+  - 2. Why Policy Must Be an Explicit Architectural Component
+  - 3. Policy as a First-Class System Artifact
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: core_patterns_are_normative
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly states multi-tenancy or tenant isolation requirements.
+  - Spec/design explicitly requires deterministic policy enforcement (not ad-hoc checks) for one or more operations.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that policy is represented as explicit, versioned artifacts and that evaluations emit decision telemetry.
+  capabilities_needed:
+  - policy_enforcement
+  - policy_decision_telemetry
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific policy language or rule engine unless provided by TBPs/technology profile.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: policy_gating.default_crud
+    description: Default CRUD policy gating shapes; resource-specific id field may vary.
+    options:
+    - option_id: gate_all_ops
+      summary: Gate all CRUD operations.
+      policy_gates:
+      - operation: list
+        gated: true
+        inputs_required:
+        - tenant_id
+        - principal_id
+      - operation: get
+        gated: true
+        inputs_required:
+        - tenant_id
+        - principal_id
+        - resource_id
+      - operation: create
+        gated: true
+        inputs_required:
+        - tenant_id
+        - principal_id
+      - operation: update
+        gated: true
+        inputs_required:
+        - tenant_id
+        - principal_id
+        - resource_id
+      - operation: delete
+        gated: true
+        inputs_required:
+        - tenant_id
+        - principal_id
+        - resource_id
+    - option_id: gate_write_only
+      summary: Gate write operations; list may be ungated; gate get.
+      policy_gates:
+      - operation: list
+        gated: false
+        inputs_required: []
+      - operation: get
+        gated: true
+        inputs_required:
+        - tenant_id
+        - principal_id
+        - resource_id
+      - operation: create
+        gated: true
+        inputs_required:
+        - tenant_id
+        - principal_id
+      - operation: update
+        gated: true
+        inputs_required:
+        - tenant_id
+        - principal_id
+        - resource_id
+      - operation: delete
+        gated: true
+        inputs_required:
+        - tenant_id
+        - principal_id
+        - resource_id
+    - option_id: custom
+      summary: Custom policy gates (fill fields).
+      policy_gates: []
+    default_option_id: gate_all_ops
+  human_questions:
+  - question_key: primary_resource_policy_gates
+    question_id: Q-AP-POLICY-POINTS-01
+    question: Which operations require policy gating (list/get/create/update/delete), and what decision inputs are required?
+    description: Select default policy gating posture for CRUD ops; specialize resource_id token to the actual resource id
+      field.
+    option_set_id: policy_gating.default_crud
+    specialization_notes:
+    - Specialize 'resource_id' to the resource id token (e.g., widget_id) when materializing inputs_required.
+    - Warranted when authorization/policy enforcement is in scope for the API boundary.
+    anchors:
+    - caf_pattern: CAF-POL-01
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-POL-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

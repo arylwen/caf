@@ -1,0 +1,9 @@
+schema_version: phase8_plane_binding_pattern_v1
+plane_id: AP
+layout:
+  scaffold_directories:
+  - code/AP/
+  role_bindings:
+    ap_plane_scaffold_readme:
+      path_template: README.md
+      artifact_class: markdown_docs

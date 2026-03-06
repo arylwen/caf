@@ -1,0 +1,178 @@
+pattern_id: CAF-IAM-08
+name: Agent Identity Patterns
+summary: Agents are **first-class principals** that execute autonomous or semi-autonomous workflows. They are governed by
+  the same identity and policy delegation principles as other principals, with additional constraints to p...
+intent: Agents are **first-class principals** that execute autonomous or semi-autonomous workflows.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-01
+extended_definition: |
+  ## Agent Identity Patterns
+
+  Agents are **first-class principals** that execute autonomous or semi-autonomous workflows.  
+  They are governed by the same identity and policy delegation principles as other principals, with additional constraints to prevent authority escalation.
+
+  This section defines the **Agent Identity pattern** as a reusable, Contura-wide pattern.  
+  Implementations may provide additional detail, but must not violate these constraints.
+
+  ---
+
+  ### Agent as a First-Class Principal
+
+  Under this pattern:
+
+  - An agent is an explicit principal type distinct from humans and services.
+  - Every agent action is attributable to a governed identity and scope.
+  - Agents must never operate anonymously or under implicit trust.
+
+  ---
+
+  ### Agent Identity Governance
+
+  Under this pattern:
+
+  - Agent identity definitions and allowable scopes are governed in the Control Plane.
+  - An agent’s permitted actions are bounded by policy intent and delegated enforcement boundaries.
+  - Agent identity must be auditable, including who configured the agent identity model and why.
+
+  ---
+
+  ### Default Identity Inheritance
+
+  Under this pattern:
+
+  - By default, an agent inherits the tenant context of its initiating principal.
+  - By default, an agent’s authorization scope is the initiating principal’\
+    s scope or a safe subset.
+  - Any deviation from default inheritance must be explicitly configured and governed.
+
+  Inheritance prevents agents from becoming a backdoor to broader authority.
+
+  ---
+
+  ### Dedicated Agent Identities
+
+  Under this pattern:
+
+  - Agents may run under dedicated agent identities when explicitly configured.
+  - Dedicated identities must be created and governed centrally.
+  - Dedicated identities must be least-privilege and transparently visible in audit signals.
+
+  Dedicated identities are permitted only when governance makes their scope explicit.
+
+  ---
+
+  ### Plane Responsibilities for Agent Identity
+
+  - **Control Plane**
+    - Defines agent identity types, allowable scopes, and delegation boundaries.
+    - Governs configuration and lifecycle of dedicated agent identities.
+  - **Application Plane**
+    - Instantiates and runs agents under an explicit governed identity.
+    - Ensures each agent action is authorized within delegated scope.
+    - Propagates tenant and principal context to all downstream calls.
+  - **Data Plane**
+    - Enforces data access according to the agent identity and tenant context.
+    - Must not accept direct end-user credentials from agents.
+
+  ---
+
+  ### Agent Prohibitions (Non-Negotiable)
+
+  Agents **MUST NOT**:
+
+  - change their identity or scope at runtime
+  - self-escalate privileges based on outcomes, “trust,” or inference
+  - reuse high-privilege credentials across tenants
+  - bypass identity enforcement, policy delegation, or safety gates
+  - originate control intent, lifecycle transitions, or governance decisions
+
+  ---
+
+  **Normative statement:**
+
+  > All agents operate as governed principals with explicit identity and scope; any agent capability beyond default inheritance requires explicit, auditable configuration under Control Plane governance.
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Agent Identity Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Implementations may provide additional detail, but must not violate these constraints.
+  - '- Agents must never operate anonymously or under implicit trust.'
+  - '- Agent identity must be auditable, including who configured the agent identity model and why.'
+  definition_of_done:
+  - Verify that implementations may provide additional detail, but must not violate these constraints.
+  - Verify that - Agents must never operate anonymously or under implicit trust.
+  - Verify that - Agent identity must be auditable, including who configured the agent identity model and why.
+  - Verify that - Any deviation from default inheritance must be explicitly configured and governed.
+  - Verify that - Dedicated identities must be created and governed centrally.
+  - Verify that - Dedicated identities must be least-privilege and transparently visible in audit signals.
+  - Verify that - Must not accept direct end-user credentials from agents.
+  - 'Verify that --- ### Agent Prohibitions (Non-Negotiable) Agents **MUST NOT**'
+  capabilities_needed:
+  - authz_policy
+  - identity_model
+  - audit_observability
+  - agent_identity
+  - control_plane_governance
+  - data_plane_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: agent.principal_representation
+    description: How agents are represented as principals for authorization, audit, and accountability.
+    options:
+    - option_id: service_account
+      summary: Agents run as a service account principal
+      principal_kind: service_account
+      subject_scope: system
+    - option_id: delegated_user
+      summary: Agents execute under delegated end-user authority (explicit delegation)
+      principal_kind: delegated_user
+      subject_scope: user
+    - option_id: per_agent_identity
+      summary: Each agent instance has its own identity (agent_id scoped)
+      principal_kind: agent_identity
+      subject_scope: agent
+    - option_id: per_run_identity
+      summary: Each workflow/run has its own identity (run_id scoped)
+      principal_kind: run_identity
+      subject_scope: run
+    - option_id: custom
+      summary: Custom (fill details; prefer adopting a retrieved option when available)
+    default_option_id: service_account
+  human_questions:
+  - question_key: agent.principal_representation
+    question_id: Q-IAM-AGENT-PRINC-01
+    question: How should agents be represented as principals?
+    description: Choose a representation that supports authorization + audit without ambiguity.
+    option_set_id: agent.principal_representation
+    specialization_notes:
+    - Prefer explicit delegation when acting on behalf of a user.
+    anchors:
+    - caf_pattern: CAF-IAM-08

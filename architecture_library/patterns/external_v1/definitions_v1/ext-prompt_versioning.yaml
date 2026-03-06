@@ -1,0 +1,62 @@
+pattern_id: EXT-PROMPT_VERSIONING
+name: Prompt Versioning
+summary: Prompts as artifacts w/ rollout & rollback
+intent: Treat prompts like deployable artifacts with rollout, rollback, and evaluation.
+context: LLM-powered apps needing reliability, safety, and change management across
+  prompts and retrieval components.
+problem: Model outputs can be unsafe or inconsistent; prompts and indexes change over
+  time without traceability.
+forces_tradeoffs: Safety vs helpfulness; latency/cost vs quality; rapid iteration
+  vs stability and auditability.
+solution_structure_behavior: 'A discipline of managing prompts like code: stored in
+  version control, reviewed, tested, and released through controlled rollouts. Versioning
+  enables rollback, experimentation, and auditability, and pairs well with offline
+  evals and production monitoring for prompt changes.'
+consequences: More trustworthy assistants; added evaluation, monitoring, and governance
+  work.
+implementation_notes: Version prompts, log inputs/outputs, implement guardrails, evaluate
+  regularly, and enforce ACL-aware retrieval.
+examples_known_uses: Enterprise assistants, copilots, automated document drafting
+  with citations.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: 'A discipline of managing prompts like code: stored in version
+  control, reviewed, tested, and released through controlled rollouts. Versioning
+  enables rollback, experimentation, and auditability, and pairs well with offline
+  evals and production monitoring for prompt changes.'
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-PROMPT_VERSIONING
+  minimum_evidence:
+  - LLM-powered apps needing reliability, safety, and change management across prompts
+    and retrieval components.
+  - Model outputs can be unsafe or inconsistent
+  definition_of_done:
+  - Verify that a discipline of managing prompts like code
+  capabilities_needed:
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: external_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-prompt_versioning.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-PROMPT_VERSIONING
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

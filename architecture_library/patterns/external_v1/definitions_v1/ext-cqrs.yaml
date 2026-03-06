@@ -1,0 +1,87 @@
+pattern_id: EXT-CQRS
+name: CQRS
+summary: Separate the read model from the write model
+intent: Optimize reads and writes independently by separating command and query models.
+context: Read-heavy systems; complex write invariants; need specialized read projections or different scaling characteristics.
+problem: 'A single data model is forced to serve conflicting needs: transactional integrity for writes and fast, denormalized
+  reads.'
+forces_tradeoffs: Simplicity vs scalability; strong consistency vs projection lag; duplication vs performance.
+solution_structure_behavior: Command Query Responsibility Segregation separates write operations (commands) from read operations
+  (queries), often using different models or data stores. This enables read scalability and optimized projections, but introduces
+  complexity around synchronization, consistency, and operational overhead.
+consequences: Faster reads and clearer write invariants; additional complexity (projections, eventual consistency, more storage).
+implementation_notes: Start small with one projection. Use events/outbox to build read models. Define consistency expectations
+  (staleness budgets).
+examples_known_uses: E-commerce catalog/search vs order writes; reporting dashboards backed by projections.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CAF-MRAD-03
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  Command Query Responsibility Segregation separates write operations (commands) from read operations (queries), often using different models or data stores. This enables read scalability and optimized projections, but introduces complexity around synchronization, consistency, and operational overhead.
+
+
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-CQRS
+  minimum_evidence:
+  - need specialized read projections or different scaling characteristics.
+  definition_of_done:
+  - Verify that command Query Responsibility Segregation separates write operations (commands) from read operations (queries),
+    often using different models or data stores.
+  capabilities_needed:
+  - eventing
+  - cqrs_projections
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: data.cqrs_scope
+    description: Scope and depth of CQRS separation between commands and queries.
+    options:
+    - option_id: selected_aggregates
+      summary: Apply CQRS for selected aggregates/commands; other areas remain single-model CRUD.
+      notes: ''
+    - option_id: systemwide_cqrs
+      summary: Adopt CQRS broadly with separated write models plus projections for most read paths.
+      notes: ''
+    - option_id: read_model_projections_only
+      summary: Keep a single write model but build explicit projections/read models for key queries.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: selected_aggregates
+  human_questions:
+  - question_key: data_cqrs_scope
+    question_id: Q-EXT-CQRS-01
+    question: What CQRS scope should we adopt?
+    description: Choose how broadly to separate command and query models (selected aggregates, broad CQRS, or projections-only).
+    option_set_id: data.cqrs_scope
+    specialization_notes:
+    - Use when reads and writes have conflicting scaling or modeling needs, and projection staleness is acceptable.
+    anchors:
+    - caf_pattern: EXT-CQRS
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-cqrs.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-CQRS
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

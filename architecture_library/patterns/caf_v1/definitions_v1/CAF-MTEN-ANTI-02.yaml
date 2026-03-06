@@ -1,0 +1,115 @@
+pattern_id: CAF-MTEN-ANTI-02
+name: Treating Workspaces (or Projects) as Tenants
+summary: Derived from architecture_library/21_contura_multi_tenancy_patterns_v1.md section '7.2 Treating Workspaces (or Projects)
+  as Tenants'.
+intent: Derived from 7.2 Treating Workspaces (or Projects) as Tenants.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  ### 7.2 Treating Workspaces (or Projects) as Tenants
+
+  #### **Treating Workspaces (or Projects) as Tenants: Description**  
+
+  Workspaces, projects, folders, or teams are treated as de facto tenants.
+
+  Symptoms:
+
+  \
+    - Workspaces have billing
+  - Workspaces own auth configuration
+  - Workspaces are used as isolation boundaries
+  - Users “\
+    switch tenants” by switching workspaces
+
+  #### **Treating Workspaces (or Projects) as Tenants: Why It Happens**
+
+  \
+    - UX-driven thinking
+  - Borrowing patterns from single-tenant tools
+  - Confusing organization with governance
+
+  #### **Treating Workspaces (or Projects) as Tenants: Why It Fails**
+
+  - Governance fragmentation
+  - Inconsistent isolation
+  - Inability to evolve enterprise features
+  - Redesign required to reintroduce real tenants
+
+  #### **Treating Workspaces (or Projects) as Tenants: Normative Rule**
+
+  > Workspaces are organizational constructs, not governance boundaries.
+
+  If a workspace behaves like a tenant, the tenant model is broken.
+
+  ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 7.2 Treating Workspaces (or Projects) as Tenants
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: decision_pattern
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - "- Workspaces have billing - Workspaces own auth configuration - Workspaces are used as isolation boundaries - Users \u201C\
+    switch tenants\u201D by switching workspaces #### **Treating Workspaces (or Projects) as Tenants"
+  definition_of_done:
+  - 'Verify that why It Fails** - Governance fragmentation - Inconsistent isolation - Inability to evolve enterprise features
+    - Redesign required to reintroduce real tenants #### **Treating Workspaces (or Projects) as Tenants'
+  capabilities_needed:
+  - tenancy_context
+  - identity_access
+  - tenancy_isolation
+  - enterprise_compliance
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  decision_prompts:
+  - Prevent treating workspaces/projects as tenants; keep the tenant model explicit, stable, and enforceable.
+  - Choose a modeling/enforcement approach so workspaces remain organizational constructs (not governance boundaries).
+  option_sets:
+  - option_set_id: tenancy.workspace_tenant_distinction
+    summary: Choose how the architecture prevents workspaces/projects from acting as tenants.
+    options:
+    - option_id: explicit_tenant_entity_required
+      summary: Require a distinct tenant entity; enforce tenant_id on auth/policy/billing boundaries; workspaces are org-only.
+      notes: ''
+    - option_id: workspace_within_tenant
+      summary: Model workspaces/projects strictly as subdivisions within a tenant; never used as isolation/billing boundary.
+      notes: ''
+    - option_id: legacy_workspace_as_tenant_timeboxed
+      summary: Legacy/migration—workspace currently behaves like a tenant; time-boxed plan to introduce real tenants.
+      notes: ''
+    - option_id: custom
+      summary: Custom (document constraints and deviations).
+      notes: ''
+    default_option_id: explicit_tenant_entity_required
+  human_questions:
+  - question_key: tenancy_workspace_tenant_distinction
+    question_id: Q-CAF-MTEN-ANTI-02-01
+    question: How will you prevent treating workspaces/projects as tenants and keep the tenant model explicit?
+    description: Choose a modeling/enforcement option that preserves tenants as governance boundaries.
+    option_set_id: tenancy.workspace_tenant_distinction
+    anchors:
+    - caf_pattern: CAF-MTEN-ANTI-02

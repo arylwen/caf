@@ -1,0 +1,103 @@
+pattern_id: EXT-SERVERLESS
+name: Serverless
+summary: Event-driven compute for glue and bursty workloads
+intent: Event-driven compute for glue and bursty workloads
+context: Services that must scale, deploy frequently, and run reliably with predictable
+  operational burden.
+problem: Manual server management and stateful designs hinder scaling, resilience,
+  and deployment velocity.
+forces_tradeoffs: Operational simplicity vs flexibility/control; portability vs managed
+  constraints; cost vs performance.
+solution_structure_behavior: A compute model (e.g., functions or managed runtimes)
+  where infrastructure provisioning and scaling are abstracted away and billing is
+  typically per-invocation/usage. It excels for event-driven ‘glue’ logic and spiky
+  workloads, but requires attention to cold starts, execution limits, and vendor-specific
+  integrations.
+consequences: Improved scale and reliability when done well; requires discipline around
+  state, networking, and observability.
+implementation_notes: Prefer statelessness, externalize state, standardize health
+  checks, and automate deployments and rollbacks.
+examples_known_uses: Domain microservices, async workers, and integration services.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A compute model (e.g., functions or managed runtimes) where infrastructure
+  provisioning and scaling are abstracted away and billing is typically per-invocation/usage.
+  It excels for event-driven ‘glue’ logic and spiky workloads, but requires attention
+  to cold starts, execution limits, and vendor-specific integrations.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-SERVERLESS
+  minimum_evidence:
+  - Services that must scale, deploy frequently, and run reliably with predictable
+    operational burden.
+  - Manual server management and stateful designs hinder scaling, resilience, and
+    deployment velocity.
+  definition_of_done:
+  - Verify that a compute model (e.g., functions or managed runtimes) where infrastructure
+    provisioning and scaling are abstracted away and billing is typically per-invocation/usage.
+  capabilities_needed:
+  - observability_emit
+  - eventing
+  - backup_restore
+  - serverless_runtime
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific orchestration or deployment platform unless provided
+    by platform pins (technology atoms) / TBPs.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including
+    scope, required choices (option sets), and evidence anchors.
+  option_sets:
+  - option_set_id: ops.serverless_execution_model
+    description: Serverless execution model and where state/workflows live.
+    options:
+    - option_id: functions_only
+      summary: Functions are the primary compute unit; externalize state and coordination.
+      notes: ''
+    - option_id: functions_plus_workflows
+      summary: Functions plus a workflow/state machine layer for orchestration and
+        retries.
+      notes: ''
+    - option_id: serverless_containers
+      summary: Serverless container revisions for longer-running workloads with managed
+        scaling.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: functions_plus_workflows
+  human_questions:
+  - question_key: ops_serverless_execution_model
+    question_id: Q-EXT-SVL-01
+    question: What serverless execution model will you use?
+    description: Select the serverless execution model (functions, workflows, serverless
+      containers) and where coordination lives.
+    option_set_id: ops.serverless_execution_model
+    specialization_notes:
+    - Warranted when operations favor managed scaling and reduced infrastructure ownership,
+      with explicit limits on execution/runtime.
+    anchors:
+    - caf_pattern: EXT-SERVERLESS
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-serverless.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-SERVERLESS
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

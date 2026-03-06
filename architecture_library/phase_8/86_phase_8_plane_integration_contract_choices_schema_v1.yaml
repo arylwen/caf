@@ -1,0 +1,88 @@
+schema_version: plane_integration_contract_choices_schema_v1
+title: Plane Integration Contract Choices (v1)
+description: >
+  Canonical schema for the architect-editable plane integration contract choice block.
+  This block is a planning precondition: `/caf plan` must be able to deterministically
+  read CP/AP runtime shapes and the primary CP↔AP contract surface.
+
+type: object
+required:
+  - schema_version
+  - choices
+additionalProperties: false
+properties:
+  schema_version:
+    type: string
+    enum: [plane_integration_contract_choices_v1]
+  choices:
+    type: object
+    required:
+      - cp_runtime_shape
+      - ap_runtime_shape
+      - cp_ap_contract_surface
+    additionalProperties: true
+    properties:
+      cp_runtime_shape:
+        $ref: '#/definitions/choice_block_runtime_shape'
+      ap_runtime_shape:
+        $ref: '#/definitions/choice_block_runtime_shape'
+      cp_ap_contract_surface:
+        $ref: '#/definitions/choice_block_contract_surface'
+
+definitions:
+  choice_block_runtime_shape:
+    type: object
+    required: [question_id, question, options]
+    additionalProperties: true
+    properties:
+      question_id:
+        type: string
+      question:
+        type: string
+      options:
+        type: array
+        minItems: 2
+        items:
+          type: object
+          required: [option_id, status]
+          additionalProperties: true
+          properties:
+            option_id:
+              type: string
+              enum:
+                - api_service_http
+                - worker_service_events
+                - library_embedded
+                - custom
+            status:
+              type: string
+              enum: [adopt, defer, reject]
+
+  choice_block_contract_surface:
+    type: object
+    required: [question_id, question, options]
+    additionalProperties: true
+    properties:
+      question_id:
+        type: string
+      question:
+        type: string
+      options:
+        type: array
+        minItems: 2
+        items:
+          type: object
+          required: [option_id, status]
+          additionalProperties: true
+          properties:
+            option_id:
+              type: string
+              enum:
+                - synchronous_http
+                - synchronous_api
+                - async_events
+                - mixed
+                - custom
+            status:
+              type: string
+              enum: [adopt, defer, reject]

@@ -1,0 +1,112 @@
+pattern_id: CAF-IAM-02
+name: Identity and Context Propagation
+summary: Propagate principal identity and required context deterministically across boundaries and planes.
+intent: Ensure downstream enforcement has complete, explicit inputs for deterministic policy evaluation.
+context: Distributed workflows crossing service boundaries where missing identity/context would otherwise be inferred.
+problem: Ambient or inferred identity/context yields inconsistent authz decisions and breaks auditability.
+forces_tradeoffs: Completeness vs payload size/latency; strict rejection vs degraded availability when context is partially
+  unavailable.
+solution_structure_behavior: Define required identity/context carriers; validate at ingress and internal boundaries; reject
+  when required fields are absent; ensure context includes tenant and principal attribution.
+consequences: Improves determinism; requires consistent middleware and contract enforcement.
+implementation_notes: Keep a minimal canonical context schema; version the schema; do not silently drop fields.
+examples_known_uses: Propagating tenant ID + principal ID across workflow steps; ensuring DP access calls include principal
+  and tenant context.
+related_patterns: |
+  depends_on: CAF-IAM-01
+  depends_on: OBS-01
+  complements: CAF-MODEL-01
+  complements: CAF-PLANE-01
+  complements: CAF-POL-02
+  complements: CAF-TCTX-01
+  complements: CAF-XPLANE-01
+  complements: CAF-ZT-01
+extended_definition: |
+  **Normative constraints**
+
+  - Identity and execution context **MUST** be established **explicitly at the earliest entry point** and then propagated end-to-end; context is established, **not guessed**.
+  - Tenant context **MUST** be bound at entry and remain **immutable** for the lifetime of a request; downstream systems **MUST NOT** infer tenant/identity context implicitly.
+  - Policy intent and delegation boundaries **MUST** be explicit: authoritative policy intent is owned by the Control Plane and enforcement authority is delegated explicitly.
+  - Across planes, calls **MUST** be authenticated and authorized (no implicit trust). Least privilege applies to every principal.
+  - Identity and tenant context **MUST** be present in critical telemetry (logs/traces) to support audit and investigation.
+
+  **Cross-plane responsibilities (identity)**
+
+  - **Control Plane:** governs identity primitives, trust relationships, tenant IdP integration patterns, and agent/service identity definitions and policies.
+  - **Application Plane:** validates tokens issued under CP governance; applies authorization to tenant workflows; propagates identity into logs/traces and downstream calls.
+  - **Data Plane:** enforces access at the data boundary (e.g., row/key scoping) and relies on AP/CP-established identity rather than re-authenticating end-users.
+
+  **Evidence hooks**
+
+  - Plane integration contracts specify required context fields (tenant_id, principal type/id, correlation/trace ids) and fail-closed behavior when missing.
+  - Designs show how policy versions are distributed/bound to evaluations across AP/DP.
+
+  **Common failure modes**
+
+  - Losing or mutating tenant/principal context across hops; reconstructing identity from ambient fields.
+  - Allowing downstream services to “reinterpret” policy intent or enforce without explicit delegation.
+  - Cross-plane calls without strong authz/authn (implicit trust).
+
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  sections:
+  - Identity and Context Propagation
+  - Policy Delegation and Enforcement Boundaries
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Identity, Access, and Zero Trust Across Planes
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly distinguishes principal types or requires authn/authz and attribution across operations.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that principal identity and required context are propagated across boundaries and validated.
+  capabilities_needed:
+  - request_context_propagation
+  - authorization_enforcement
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific identity provider, protocol, or token format.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.identity_context_propagation
+    summary: Choose among bounded variants for `iam.identity_context_propagation` (or use `custom`).
+    options:
+    - option_id: verified_token_claims
+      status: defer
+      summary: Propagate identity and tenant context via verified token claims at ingress.
+    - option_id: signed_gateway_header
+      status: defer
+      summary: Propagate identity context via a trusted gateway signed header (not client-controlled).
+    - option_id: mtls_client_cert_identity
+      status: defer
+      summary: Propagate service identity via mTLS client cert identity (service-to-service).
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: verified_token_claims
+  human_questions:
+  - question_id: Q-CAF-IAM-02-01
+    topic: iam.identity_context_propagation
+    question: Which option best matches your intended choice for `iam.identity_context_propagation` and what constraints/rejection
+      conditions apply?
+    status: open
+    answer: {}
+    option_set_id: iam.identity_context_propagation

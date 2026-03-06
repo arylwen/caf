@@ -1,0 +1,90 @@
+pattern_id: EXT-QUEUE_BASED_LOAD_LEVELING
+name: Queue-based Load Leveling
+summary: Buffer spikes; protect dependencies
+intent: Buffer load spikes by queueing work so downstream services process at a steady rate.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: A pattern that inserts a queue between producers and consumers to absorb traffic spikes and smooth
+  processing rates. It protects downstream dependencies by applying backpressure and enables asynchronous processing, but
+  requires managing queue growth, latency, and consumer capacity.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CAF-MRAD-02
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A pattern that inserts a queue between producers and consumers to absorb traffic spikes and smooth processing rates. It protects downstream dependencies by applying backpressure and enables asynchronous processing, but requires managing queue growth, latency, and consumer capacity.
+
+
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-QUEUE_BASED_LOAD_LEVELING
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a pattern that inserts a queue between producers and consumers to absorb traffic spikes and smooth processing
+    rates.
+  capabilities_needed:
+  - eventing
+  - resilience_retry
+  - load_leveling
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: async.queue_load_leveling_strategy
+    description: Strategy for buffering work and smoothing load using queues to protect downstream services.
+    options:
+    - option_id: buffering_queue
+      summary: Use a buffering queue to absorb bursts and smooth downstream processing rates.
+      notes: ''
+    - option_id: work_queue_with_concurrency_limits
+      summary: Use a work queue with explicit concurrency limits and backpressure.
+      notes: ''
+    - option_id: priority_queueing
+      summary: Use priority-based queueing to preserve SLOs for critical work.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: buffering_queue
+  human_questions:
+  - question_key: async_queue_load_leveling_strategy
+    question_id: Q-EXT-QLL-01
+    question: How will you use queues to level load?
+    description: Select the queue-based load leveling strategy used to buffer bursts and protect downstream dependencies.
+    option_set_id: async.queue_load_leveling_strategy
+    specialization_notes:
+    - Warranted when traffic is bursty and downstream services must be protected with buffering and controlled concurrency.
+    anchors:
+    - caf_pattern: EXT-QUEUE_BASED_LOAD_LEVELING
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-queue_based_load_leveling.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-QUEUE_BASED_LOAD_LEVELING
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

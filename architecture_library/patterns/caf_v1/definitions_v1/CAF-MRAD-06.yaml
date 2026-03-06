@@ -1,0 +1,86 @@
+pattern_id: CAF-MRAD-06
+name: Background Execution Constraint
+summary: Mobile clients must not be required to remain active for workflow completion.
+intent: Mobile clients must not be required to remain active for workflow completion.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: '### MRAD-6: Background Execution Constraint Pattern
+
+
+  Mobile clients must not be required to remain active for workflow completion.
+
+
+  Under this pattern:
+
+
+  - background work is represented as durable server-side jobs
+
+  - completion is observable via status retrieval and/or notifications
+
+  - client background limitations are assumed
+
+
+  ---'
+source_documents:
+- path: architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+  section_heading: 'MRAD-6: Background Execution Constraint Pattern'
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Background Execution Constraint Pattern Mobile clients must not be required to remain active for workflow completion.
+  definition_of_done:
+  - Verify that background Execution Constraint Pattern Mobile clients must not be required to remain active for workflow
+    completion.
+  capabilities_needed:
+  - background_execution_constraints
+  option_sets:
+  - option_set_id: mrad.background_completion_observation
+    summary: Choose how long-running background work completion is observed by clients.
+    options:
+    - option_id: status_polling
+      summary: Clients poll job/status endpoints until completion.
+      completion_observation: status_polling
+      notes: ''
+    - option_id: push_notifications
+      summary: Clients receive completion via notifications/callbacks.
+      completion_observation: push_notifications
+      notes: ''
+    - option_id: polling_plus_notifications
+      summary: Provide both status polling and push notifications.
+      completion_observation: polling_plus_notifications
+      notes: ''
+    default_option_id: polling_plus_notifications
+  human_questions:
+  - question_key: background_completion_observation
+    question_id: Q-CAF-MRAD-06-01
+    question: How is background workflow completion observed without requiring the client to remain active?
+    description: Choose polling, notifications, or both for completion observation.
+    option_set_id: mrad.background_completion_observation
+    anchors:
+    - caf_pattern: CAF-MRAD-06
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern

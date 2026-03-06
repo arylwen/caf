@@ -1,0 +1,74 @@
+pattern_id: CAF-MTEN-OBS-03
+name: Observability Across Execution Boundaries
+summary: 'Tenant-aware observability MUST span:'
+intent: 'Tenant-aware observability MUST span:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  refines: CAF-MTEN-01
+  complements: CTX-01
+  complements: POL-01
+  complements: PST-01
+extended_definition: |
+  #### 5.7.3 Observability Across Execution Boundaries
+
+  Tenant-aware observability MUST span:
+
+  - **Ingress**  
+    Authentication, routing, and tenant resolution
+
+  - **Application Execution**  
+    APIs, workflows, agents, background jobs
+
+  - **Data and Tool Access**  
+    Queries, retrieval, mutation, external integrations
+
+  - **Asynchronous Paths**  
+    Queues, schedulers, event handlers
+
+  Tenant context MUST be preserved across all boundaries so that execution can be reconstructed end-to-end.
+
+  ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 5.7.3 Observability Across Execution Boundaries
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '#### 5.7.3 Observability Across Execution Boundaries Tenant-aware observability MUST span'
+  - '- **Ingress** Authentication, routing, and tenant resolution - **Application Execution** APIs, workflows, agents, background
+    jobs - **Data and Tool Access** Queries, retrieval, mutation, external integrations - **Asynchronous Paths** Queues, schedulers,
+    event handlers Tenant context MUST be preserved across all boundaries so that execution can be reconstructed end-to-end.'
+  definition_of_done:
+  - 'Verify that #### 5.7.3 Observability Across Execution Boundaries Tenant-aware observability MUST span'
+  - Verify that - **Ingress** Authentication, routing, and tenant resolution - **Application Execution** APIs, workflows,
+    agents, background jobs - **Data and Tool Access** Queries, retrieval, mutation, external integrations - **Asynchronous
+    Paths** Queues, schedulers, event handlers Tenant context MUST be preserved across all boundaries so that execution can
+    be reconstructed end-to-end.
+  capabilities_needed:
+  - tenancy_context
+  - observability_emit
+  - identity_access
+  - agent_boundary
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

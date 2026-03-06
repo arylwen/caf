@@ -1,0 +1,108 @@
+pattern_id: CAF-DG-09
+name: Runtime Data Validation and Enforcement
+summary: Runtime data governance is mandatory.
+intent: Runtime data governance is mandatory.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 9. Runtime Data Validation and Enforcement
+
+
+  Runtime data governance is mandatory.
+
+
+  Systems MUST:
+
+
+  - Validate governance context before execution
+
+  - Validate quality invariants during execution
+
+  - Fail closed on missing or invalid context
+
+  - Emit structured enforcement signals
+
+
+  Validation MAY occur:
+
+
+  - Pre-execution
+
+  - Mid-execution
+
+  - Post-execution
+
+
+  Deferred or best-effort enforcement is forbidden.
+
+
+  ---'
+source_documents:
+- path: architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+  section_heading: 9. Runtime Data Validation and Enforcement
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Systems MUST
+  definition_of_done:
+  - Verify that systems MUST
+  - Verify that - Validate governance context before execution - Validate quality invariants during execution - Fail closed
+    on missing or invalid context - Emit structured enforcement signals Validation MAY occur
+  capabilities_needed:
+  - data_governance
+  - data_quality
+  - data_validation
+  - ai_data_constraints
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: data_validation.enforcement_mode
+    description: What happens when data fails validation at runtime.
+    options:
+    - option_id: strict_fail_closed
+      summary: Reject invalid data (fail-closed) at the earliest boundary.
+      mode: strict_fail_closed
+      invalid_handling: reject
+    - option_id: quarantine
+      summary: Accept but quarantine invalid data for review; downstream treats as untrusted.
+      mode: quarantine
+      invalid_handling: quarantine
+    - option_id: warn_and_tag
+      summary: Accept but tag/flag invalid data; consumers must gate on trust signals.
+      mode: warn_and_tag
+      invalid_handling: tag
+    - option_id: custom
+      summary: Custom (fill fields).
+      mode: ''
+      invalid_handling: ''
+    default_option_id: strict_fail_closed
+  human_questions:
+  - question_id: Q-CAF-DG-09-01
+    topic: data_validation.enforcement_mode
+    question: Which runtime validation enforcement mode will you adopt, and where is it enforced (ingress/service/storage)?
+    status: open
+    option_set_id: data_validation.enforcement_mode
+    answer: {}

@@ -1,0 +1,35 @@
+registry_version: pattern_anchor_registry_v1
+status: draft_normative_for_arch_doc_pipeline
+notes:
+  - 'Pattern anchors provide deterministic, referenceable IDs for CAF docs to cite in ADRs and architecture docs.'
+  - 'A pattern_id SHOULD map 1:1 to a single CAF library document or a single stable section within a document.'
+  - 'The architecture doc pipeline treats patterns as OPTIONAL: they must not appear unless explicitly declared by an ADR.'
+
+# If this registry grows, keep pattern_id stable. Prefer using the source filename (without extension)
+# as the pattern_id, to minimize drift.
+
+patterns:
+  - pattern_id: 20_contura_control_application_data_plane_pattern_guide_v1
+    title: Control / Application / Data Plane Pattern Guide
+    source_path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+    anchors: []
+
+  - pattern_id: 21_contura_channel_resilient_delivery_pattern_guide_v1
+    title: Channel-Resilient Delivery Pattern Guide
+    source_path: architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+    anchors: []
+
+  - pattern_id: 21_contura_multi_tenancy_patterns_v1
+    title: Multi-Tenancy Patterns
+    source_path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+    anchors: []
+
+  - pattern_id: 22_contura_identity_access_pattern_guide_v1
+    title: Identity & Access Pattern Guide
+    source_path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+    anchors: []
+
+  - pattern_id: 41_agent_identity_pattern_adr_v1
+    title: Agent Identity Pattern ADR
+    source_path: architecture_library/41_agent_identity_pattern_adr_v1.md
+    anchors: []

@@ -1,0 +1,336 @@
+# File: architecture_library/61_contura_multi_tenancy_validation_schema_v1.yaml
+schema:
+  id: contura.multi_tenancy.validation.schema.v1
+  name: "Contura Multi-Tenancy Validation Schema v1"
+  status: draft
+  intent: >
+    Machine-readable checklist schema for CI and agent validation of tenancy safety.
+    Items are normative unless marked as guidance. Use stable IDs for ADR/incident linkage.
+  versioning:
+    semantic: "1.0.0"
+    change_policy:
+      - "Do not renumber or reuse IDs."
+      - "Additive changes are MINOR; breaking changes are MAJOR."
+      - "Deprecate before removal; keep aliases."
+
+taxonomy:
+  severities:
+    - id: P0
+      meaning: "Cross-tenant exposure or action; immediate stop-ship; incident."
+    - id: P1
+      meaning: "High risk of cross-tenant exposure/action; must fix before release."
+    - id: P2
+      meaning: "Medium risk; fix planned; may allow with explicit waiver."
+    - id: P3
+      meaning: "Low risk / hygiene; fix opportunistically."
+
+  categories:
+    - id: CONTEXT_BINDING
+      name: "Tenant Context Binding"
+    - id: CONTEXT_PROPAGATION
+      name: "Context Propagation"
+    - id: AUTHZ_ACCESS
+      name: "Authorization & Access"
+    - id: IDENTITY_DELEGATION
+      name: "Identity & Delegation"
+    - id: OBS_AUDIT
+      name: "Observability & Audit"
+    - id: COST_SAFETY
+      name: "Cost & Safety"
+
+  evidence_types:
+    - id: CODE
+      meaning: "Static evidence from codebase (types, middleware, interceptors)."
+    - id: TEST
+      meaning: "Automated tests (unit/integration/e2e/property)."
+    - id: RUNTIME
+      meaning: "Runtime proof (logs, traces, metrics, dashboards)."
+    - id: REVIEW
+      meaning: "Human review artifact (ADR, design doc, checklist signoff)."
+    - id: CONFIG
+      meaning: "Configuration proof (gateway config, policy-as-code, IAM)."
+
+controls:
+  # These are *defaults* used by CI/agents to drive outcomes.
+  outcome_rules:
+    stop_ship:
+      - "Any failed item with severity=P0"
+      - "More than 2 failed items with severity=P1"
+    requires_waiver:
+      - "Any failed item with severity=P1"
+      - "More than 3 failed items with severity=P2"
+    warn_only:
+      - "Any failed item with severity=P3"
+
+checklists:
+  - id: MT-CX
+    name: "Did you bind tenant context?"
+    owner_role: "Architecture / Platform"
+    applies_to:
+      - "services"
+      - "agents"
+      - "jobs"
+      - "event_consumers"
+      - "integrations"
+    items:
+      - id: MT-CX-001
+        title: "Tenant Context established exactly once at ingress"
+        category: CONTEXT_BINDING
+        severity: P0
+        normative: true
+        intent: "Ensure tenant identity is introduced deterministically and not re-derived."
+        requires:
+          - "A single authoritative context resolver at boundaries."
+          - "No late-binding inside business logic."
+        forbidden:
+          - "Global current-tenant variables"
+          - "Implicit defaults"
+        evidence:
+          required:
+            - type: CODE
+              hints:
+                - "Ingress middleware / gateway filter that resolves tenant_id"
+                - "Context object constructed once and passed/attached"
+            - type: TEST
+              hints:
+                - "Test that missing tenant context fails closed"
+          optional:
+            - type: REVIEW
+              hints: ["ADR section describing ingress binding mechanism"]
+
+      - id: MT-CX-002
+        title: "Authoritative tenant identifier source (token/domain/explicit selection)"
+        category: CONTEXT_BINDING
+        severity: P0
+        normative: true
+        intent: "Prevent spoofing and ambiguity in tenant selection."
+        requires:
+          - "Exactly one source-of-truth wins per request."
+          - "Client-provided tenant_id must be verified against trusted claim."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Resolver enforces precedence and verifies claims"]
+            - type: TEST
+              hints: ["Spoof attempt test: header/body tenant_id != token claim -> reject"]
+
+      - id: MT-CX-003
+        title: "Fail closed when tenant context missing or ambiguous"
+        category: CONTEXT_BINDING
+        severity: P0
+        normative: true
+        intent: "Avoid accidental global access or cross-tenant fallbacks."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Guard in middleware/handler rejects missing/ambiguous context"]
+            - type: TEST
+              hints: ["No tenant context -> 4xx/deny; not default tenant"]
+
+      - id: MT-CX-010
+        title: "Tenant Context immutable for duration of operation"
+        category: CONTEXT_BINDING
+        severity: P1
+        normative: true
+        intent: "Prevent mid-flight substitution or widening of scope."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Context object is read-only / sealed / treated immutable"]
+          optional:
+            - type: TEST
+              hints: ["Attempt mutation in downstream layer fails/ignored"]
+
+      - id: MT-CX-020
+        title: "Tenant Context propagated to all downstream calls"
+        category: CONTEXT_PROPAGATION
+        severity: P0
+        normative: true
+        intent: "Avoid context loss between services."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["HTTP/gRPC client interceptors include tenant context"]
+            - type: TEST
+              hints: ["Integration test checks downstream receives tenant_id"]
+
+      - id: MT-CX-021
+        title: "Async boundaries preserve tenant context (jobs/events/agents)"
+        category: CONTEXT_PROPAGATION
+        severity: P0
+        normative: true
+        intent: "Prevent 'out-of-tenant' background execution."
+        requires:
+          - "Context envelope includes tenant_id + principal + policy snapshot/ref."
+          - "Consumer re-validates context at execution time."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Message schema includes tenant context; consumer validates"]
+            - type: TEST
+              hints: ["Event/job without tenant context -> reject"]
+          optional:
+            - type: RUNTIME
+              hints: ["Tracing shows tenant_id present on async spans"]
+
+      - id: MT-CX-030
+        title: "Every authorization check includes tenant scope"
+        category: AUTHZ_ACCESS
+        severity: P0
+        normative: true
+        intent: "Prevent cross-tenant access via role-only checks."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Authz function signature includes tenant_id and resource_id"]
+            - type: TEST
+              hints: ["Tenant A user cannot access Tenant B resource"]
+
+      - id: MT-CX-031
+        title: "Resource ownership validated against tenant context"
+        category: AUTHZ_ACCESS
+        severity: P0
+        normative: true
+        intent: "Defense-in-depth: even if IDs match, ownership must match."
+        evidence:
+          required:
+            - type: TEST
+              hints: ["Cross-tenant resource_id attempt fails even with valid token"]
+          optional:
+            - type: CODE
+              hints: ["DAL checks tenant_id predicate always included"]
+
+      - id: MT-CX-032
+        title: "Cache keys, queries, and tool calls are tenant-scoped"
+        category: AUTHZ_ACCESS
+        severity: P0
+        normative: true
+        intent: "Prevent leakage through shared caches/tools/retrieval."
+        evidence:
+          required:
+            - type: CODE
+              hints:
+                - "Cache key includes tenant_id"
+                - "Queries include tenant_id predicate"
+                - "AI retrieval filters by tenant_id"
+            - type: TEST
+              hints: ["Cache collision test: same key across tenants yields isolation"]
+
+      - id: MT-CX-040
+        title: "Acting principal explicit (user/agent/service/operator)"
+        category: IDENTITY_DELEGATION
+        severity: P1
+        normative: true
+        intent: "Ensure attributable actions and least privilege."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Context contains principal type and ID"]
+          optional:
+            - type: RUNTIME
+              hints: ["Logs/traces include principal fields"]
+
+      - id: MT-CX-041
+        title: "Agent delegated identity is clear and auditable"
+        category: IDENTITY_DELEGATION
+        severity: P0
+        normative: true
+        intent: "Prevent unbounded, unaudited agent authority."
+        requires:
+          - "Agent identity bound to tenant + delegation record."
+          - "Agent actions record delegation reference."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Agent execution envelope includes delegated_identity_ref"]
+            - type: TEST
+              hints: ["Agent cannot execute without delegated identity"]
+          optional:
+            - type: RUNTIME
+              hints: ["Audit events show agent + delegation linkage"]
+
+      - id: MT-CX-042
+        title: "Tokens/sessions scoped to exactly one tenant"
+        category: IDENTITY_DELEGATION
+        severity: P1
+        normative: true
+        intent: "Prevent multi-tenant sessions and accidental carryover."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Token contains tenant_id claim; switching mints new token"]
+          optional:
+            - type: TEST
+              hints: ["Switch tenant invalidates prior token/session"]
+
+      - id: MT-CX-050
+        title: "Tenant identifiers present in logs/metrics/traces"
+        category: OBS_AUDIT
+        severity: P1
+        normative: true
+        intent: "Enable investigation, containment, and accountability."
+        evidence:
+          required:
+            - type: RUNTIME
+              hints: ["Sample traces/logs show tenant_id field populated"]
+          optional:
+            - type: CODE
+              hints: ["Logger/tracer middleware enriches tenant_id"]
+
+      - id: MT-CX-051
+        title: "Tenant identifiers present in audit events"
+        category: OBS_AUDIT
+        severity: P0
+        normative: true
+        intent: "Audit without tenant scope is a compliance failure."
+        evidence:
+          required:
+            - type: RUNTIME
+              hints: ["Audit event schema includes tenant_id + principal + action + resource"]
+          optional:
+            - type: CODE
+              hints: ["Audit emitter requires tenant_id in API"]
+
+      - id: MT-CX-060
+        title: "Usage metered with tenant attribution"
+        category: COST_SAFETY
+        severity: P1
+        normative: true
+        intent: "Prevent unattributed spend and disputes."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Metering events include tenant_id and resource_type"]
+          optional:
+            - type: RUNTIME
+              hints: ["Usage dashboards filter by tenant_id"]
+
+      - id: MT-CX-061
+        title: "Entitlements enforced at execution time"
+        category: COST_SAFETY
+        severity: P1
+        normative: true
+        intent: "Prevent post-hoc-only governance for AI/agents."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Quota/budget checks at start and during long-running work"]
+          optional:
+            - type: TEST
+              hints: ["Budget exhausted -> execution denied/terminated"]
+
+      - id: MT-CX-062
+        title: "Bounded cost/side effects for agents and fan-out workflows"
+        category: COST_SAFETY
+        severity: P0
+        normative: true
+        intent: "Prevent runaway autonomous execution."
+        requires:
+          - "Agent has budget + stop conditions + interruptibility."
+          - "Tool fan-out limited by policy."
+        evidence:
+          required:
+            - type: CODE
+              hints: ["Agent loop checks budget; tool invocations enforce limits"]
+            - type: TEST
+              hints: ["Runaway loop scenario terminates within budget"]

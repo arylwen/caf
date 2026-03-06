@@ -1,0 +1,92 @@
+pattern_id: CAF-IAM-AUTH-03
+name: "Tenant-Context\u2013Aware Authorization"
+summary: All authorization in the Application Plane is evaluated in explicit tenant context.
+intent: All authorization in the Application Plane is evaluated in explicit tenant context.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-AUTH-01
+extended_definition: |
+  ### Tenant-Context–Aware Authorization Pattern
+
+  All authorization in the Application Plane is evaluated in explicit tenant context.
+
+  Under this pattern:
+
+  - Tenant context is mandatory for authorization decisions
+  \
+    - Roles, permissions, and entitlements are interpreted per tenant
+  - No authorization decision is made without tenant scoping
+  \
+    - Cross-tenant access requires explicit, governed allowance
+
+  This pattern prevents implicit cross-tenant access and leakage.
+   n---
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: "Tenant-Context\u2013Aware Authorization Pattern"
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '- Tenant context is mandatory for authorization decisions - Roles, permissions, and entitlements are interpreted per
+    tenant - No authorization decision is made without tenant scoping - Cross-tenant access requires explicit, governed allowance
+    This pattern prevents implicit cross-tenant access and leakage.'
+  definition_of_done:
+  - Verify that - Tenant context is mandatory for authorization decisions - Roles, permissions, and entitlements are interpreted
+    per tenant - No authorization decision is made without tenant scoping - Cross-tenant access requires explicit, governed
+    allowance This pattern prevents implicit cross-tenant access and leakage.
+  capabilities_needed:
+  - identity_authorization
+  - tenancy_context
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.tenant_aware_authorization_strategy
+    description: How tenant context participates in authorization evaluation.
+    options:
+    - option_id: tenant_bound_before_authz
+      summary: Bind tenant context first; all authz decisions require tenant context.
+      strategy: tenant_bound_before_authz
+      notes: ''
+    - option_id: dual_stage_authz
+      summary: Coarse authz pre-tenant, then tenant-aware authz post-binding.
+      strategy: dual_stage_authz
+      notes: ''
+    - option_id: tenant_scoped_policies_only
+      summary: Policies are authored and evaluated strictly within tenant scopes.
+      strategy: tenant_scoped_policies_only
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      strategy: ''
+      notes: ''
+    default_option_id: tenant_bound_before_authz
+  human_questions:
+  - question_id: Q-IAM-TENANT_AWARE_AUTHORIZATION_STRATEGY-01
+    question: Select an option for iam.tenant_aware_authorization_strategy and fill any required fields.
+    option_set_id: iam.tenant_aware_authorization_strategy
+    status: open
+    answer: {}

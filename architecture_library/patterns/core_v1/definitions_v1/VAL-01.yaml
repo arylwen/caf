@@ -1,0 +1,157 @@
+pattern_id: VAL-01
+name: Validation and Error Handling Boundary
+summary: Validate inputs at boundaries and map failures into stable error contracts
+  so invalid data and unhandled exceptions do not leak into or out of the core.
+intent: Validate inputs at boundaries and map failures into stable error contracts
+  so invalid data and unhandled exceptions do not leak into or out of the core.
+context: This pattern applies whenever the system accepts any external input (always)
+  and needs consistent error responses and logging.
+problem: Without a consistent validation and error handling strategy, modules return
+  inconsistent error semantics, allow invalid state transitions, and create unpredictable
+  client behavior and recovery paths.
+forces_tradeoffs: '- Strict validation at boundaries vs permissive handling with downstream
+  checks.
+
+  - Consistent error taxonomy vs rich bespoke error responses per module.
+
+  - Fail-fast vs collecting multiple validation errors for UX.'
+solution_structure_behavior: 'Introduces module roles: validation_boundary; error_mapper;
+  error_contract
+
+
+  Allowed dependencies: application_boundary may depend on validation_boundary and
+  error_mapper; domain_core must not depend on boundary-level error mapping; error_mapper
+  may depend on observability_boundary.
+
+
+  Assembly contract: All inbound requests are validated before invoking domain operations.
+  All outbound responses use error_contract for failures. Unhandled exceptions are
+  caught at the boundary and mapped through error_mapper; internal details are not
+  exposed.'
+consequences: This pattern makes boundary behavior deterministic, reduces security
+  risk from error leakage, and creates a stable contract for tests and validators.
+implementation_notes: See required evidence hooks, structural validations, and plan
+  step archetypes in this definition. Legacy pattern IDs from core inventory (ASM-*/BND-*/DAT-*)
+  are not yet published as core_v1 definitions; related_patterns point to canonical
+  implemented core IDs only.
+examples_known_uses: Typical in APIs that must enforce input constraints and return
+  consistent client-facing error responses across endpoints.
+related_patterns: |
+  complements: POL-01
+  complements: SVC-01
+extended_definition: |
+  # Validation and Error Handling Boundary (VAL-01)
+
+  PATTERN_ID: VAL-01
+  NAME: Validation and Error Handling Boundary
+  CATEGORY: boundaries
+  INTENT: Validate inputs at boundaries and map failures into stable error contracts so invalid data and unhandled exceptions do not leak into or out of the core.
+  APPLIES_WHEN: This pattern applies whenever the system accepts any external input (always) and needs consistent error responses and logging.
+  INTRODUCES_MODULE_ROLES: validation_boundary; error_mapper; error_contract
+  ALLOWED_DEPENDENCIES: application_boundary may depend on validation_boundary and error_mapper; domain_core must not depend on boundary-level error mapping; error_mapper may depend on observability_boundary.
+  ASSEMBLY_CONTRACT: All inbound requests are validated before invoking domain operations. All outbound responses use error_contract for failures. Unhandled exceptions are caught at the boundary and mapped through error_mapper; internal details are not exposed.
+   nREQUIRED_EVIDENCE_HOOKS:
+  - E-VAL-01-01: The spec or design lists input constraints for each operation and identifies where validation occurs.
+  - E-VAL-01-02: The design defines an error contract (error codes, messages, correlation id) and the mapping rule from internal failures to external responses.
+
+  STRUCTURAL_VALIDATIONS:
+  \
+    - V-VAL-01-01: Every operation in the PLAN has an explicit validation step or references a shared validation component.
+  - V-VAL-01-02: The module plan includes exactly one error mapping strategy at the boundary (no ad-hoc per-module error formats).
+   nPLAN_STEP_ARCHETYPES:
+  - STEP_TITLE_TEMPLATE: Define validation rules for an operation
+    REQUIRED_CAPABILITIES: validation_modeling
+    WRITE_SET: docs_architecture
+    DELIVERABLES: validation_rules
+    EVIDENCE_REQUIRED: E-VAL-01-01
+    VALIDATIONS: V-VAL-01-01
+  - STEP_TITLE_TEMPLATE: Define error contract and boundary error mapping
+    REQUIRED_CAPABILITIES: error_contract_design
+    WRITE_SET: docs_architecture
+    DELIVERABLES: error_contract
+    EVIDENCE_REQUIRED: E-VAL-01-02
+    VALIDATIONS: V-VAL-01-02
+
+  JUSTIFICATION: This pattern makes boundary behavior deterministic, reduces security risk from error leakage, and creates a stable contract for tests and validators.
+  VERSION: v1
+  VERSION_HISTORY:
+  - v1: Initial release.
+core:
+  category: boundaries
+  applies_when: This pattern applies whenever the system accepts any external input
+    (always) and needs consistent error responses and logging.
+  introduces_module_roles: validation_boundary; error_mapper; error_contract
+  allowed_dependencies: application_boundary may depend on validation_boundary and
+    error_mapper; domain_core must not depend on boundary-level error mapping; error_mapper
+    may depend on observability_boundary.
+  assembly_contract: All inbound requests are validated before invoking domain operations.
+    All outbound responses use error_contract for failures. Unhandled exceptions are
+    caught at the boundary and mapped through error_mapper; internal details are not
+    exposed.
+  required_evidence_hooks:
+  - 'E-VAL-01-01: The spec or design lists input constraints for each operation and
+    identifies where validation occurs.'
+  - 'E-VAL-01-02: The design defines an error contract (error codes, messages, correlation
+    id) and the mapping rule from internal failures to external responses.'
+  structural_validations:
+  - 'V-VAL-01-01: Every operation in the PLAN has an explicit validation step or references
+    a shared validation component.'
+  - 'V-VAL-01-02: The module plan includes exactly one error mapping strategy at the
+    boundary (no ad-hoc per-module error formats).'
+  plan_step_archetypes:
+  - "- STEP_TITLE_TEMPLATE: Define validation rules for an operation\n  REQUIRED_CAPABILITIES:\
+    \ validation_modeling\n  WRITE_SET: docs_architecture\n  DELIVERABLES: validation_rules\n\
+    \  EVIDENCE_REQUIRED: E-VAL-01-01\n  VALIDATIONS: V-VAL-01-01"
+  - "- STEP_TITLE_TEMPLATE: Define error contract and boundary error mapping\n  REQUIRED_CAPABILITIES:\
+    \ error_contract_design\n  WRITE_SET: docs_architecture\n  DELIVERABLES: error_contract\n\
+    \  EVIDENCE_REQUIRED: E-VAL-01-02\n  VALIDATIONS: V-VAL-01-02\n\nJUSTIFICATION:\
+    \ This pattern makes boundary behavior deterministic, reduces security risk from\
+    \ error leakage, and creates a stable contract for tests and validators.\nVERSION:\
+    \ v1"
+  justification: This pattern makes boundary behavior deterministic, reduces security
+    risk from error leakage, and creates a stable contract for tests and validators.
+  version: v1
+  version_history:
+  - 'v1: Initial release.'
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_val_01_v1.md
+caf:
+  layer: core
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: core_patterns_are_normative
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: core_pattern
+    anchor_id: VAL-01
+  minimum_evidence:
+  - This pattern applies whenever the system accepts any external input (always) and
+    needs consistent error responses and logging.
+  definition_of_done:
+  - 'Verify that V-VAL-01-01: Every operation in the PLAN has an explicit validation
+    step or references a shared validation component.'
+  - 'Verify that V-VAL-01-02: The module plan includes exactly one error mapping strategy
+    at the boundary (no ad-hoc per-module error formats).'
+  - 'Verify evidence hook is satisfied: E-VAL-01-01: The spec or design lists input
+    constraints for each operation and identifies where validation occurs.'
+  - 'Verify evidence hook is satisfied: E-VAL-01-02: The design defines an error contract
+    (error codes, messages, correlation id) and the mapping rule from internal failures
+    to external responses.'
+  capabilities_needed:
+  - validation_modeling
+  - error_contract_design
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: core_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/core_v1/definitions_v1/VAL-01.yaml
+    scope: per_resource
+  required_trace_anchors:
+  - pattern_id: VAL-01
+    anchor_kind: plan_step_archetype
+    scope: per_resource

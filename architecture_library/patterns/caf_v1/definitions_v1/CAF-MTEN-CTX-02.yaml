@@ -1,0 +1,117 @@
+pattern_id: CAF-MTEN-CTX-02
+name: Context Propagation Patterns
+summary: 'Tenant Context MUST propagate across:'
+intent: 'Tenant Context MUST propagate across:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  #### 5.3.5 Context Propagation Patterns
+
+  Tenant Context MUST propagate across:
+
+  - Service-to-service calls
+  - Background jobs
+  - Event streams
+  - Agent executions
+  - AI inference and tool invocation
+
+  Propagation mechanisms include:
+
+  - Auth tokens passed downstream
+  - Internal signed context headers
+  - Context envelopes for async messages
+  \
+    - Trace/span context augmentation
+
+  ##### **Context Propagation Patterns Normative Requirements**
+
+  - Tenant Context MUST NOT be dropped during propagation
+  - Services MUST reject requests missing required tenant context
+  - Async consumers MUST validate tenant context before execution
+
+  ##### **Context Propagation Patterns Failure Modes**
+
+  - Background jobs running “out of tenant”
+  - Event handlers defaulting to global context
+  - Agents executing without verified tenant binding
+
+  ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 5.3.5 Context Propagation Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '#### 5.3.5 Context Propagation Patterns Tenant Context MUST propagate across'
+  - "- Auth tokens passed downstream - Internal signed context headers - Context envelopes for async messages - Trace/span\
+    \ context augmentation ##### **Context Propagation Patterns Normative Requirements** - Tenant Context MUST NOT be dropped\
+    \ during propagation - Services MUST reject requests missing required tenant context - Async consumers MUST validate tenant\
+    \ context before execution ##### **Context Propagation Patterns Failure Modes** - Background jobs running \u201Cout of\
+    \ tenant\u201D - Event handlers defaulting to global context - Agents executing without verified tenant binding ---"
+  definition_of_done:
+  - 'Verify that #### 5.3.5 Context Propagation Patterns Tenant Context MUST propagate across'
+  - "Verify that - Auth tokens passed downstream - Internal signed context headers - Context envelopes for async messages\
+    \ - Trace/span context augmentation ##### **Context Propagation Patterns Normative Requirements** - Tenant Context MUST\
+    \ NOT be dropped during propagation - Services MUST reject requests missing required tenant context - Async consumers\
+    \ MUST validate tenant context before execution ##### **Context Propagation Patterns Failure Modes** - Background jobs\
+    \ running \u201Cout of tenant\u201D - Event handlers defaulting to global context - Agents executing without verified\
+    \ tenant binding ---"
+  capabilities_needed:
+  - tenancy_context
+  - token_claims
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  option_sets:
+  - option_set_id: tenant_context.propagation_mechanism
+    summary: Select the primary mechanism used to propagate tenant context across internal boundaries.
+    options:
+    - option_id: service_context_propagation
+      status: defer
+      summary: Service-to-service propagation via explicit context objects/headers.
+    - option_id: signed_internal_headers
+      status: defer
+      summary: Signed internal headers or tokens (not client-controlled).
+    - option_id: tenant_context_tokens
+      status: defer
+      summary: Tenant-context tokens carried and verified at each hop.
+    - option_id: explicit_workflow_context
+      status: defer
+      summary: Explicit workflow/context object persisted and referenced by ID.
+    - option_id: custom
+      status: defer
+      summary: Custom (describe propagation mechanism and verification).
+      notes: ''
+    default_option_id: service_context_propagation
+  human_questions:
+  - question_key: tenant_context_propagation_mechanism
+    question_id: Q-MTEN-CTX-PROP-01
+    question: What is the primary tenant context propagation mechanism across internal boundaries?
+    description: Select one option; use 'custom' only if none fit.
+    option_set_id: tenant_context.propagation_mechanism
+    anchors:
+    - caf_pattern: CAF-MTEN-CTX-02
+  kind: decision_pattern

@@ -1,0 +1,66 @@
+pattern_id: CAF-IAM-PROP-02
+name: No Transitive Authority
+summary: Delegated enforcement authority is not transitive.
+intent: Delegated enforcement authority is not transitive.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-PROP-01
+extended_definition: '### No Transitive Authority Pattern
+
+
+  Delegated enforcement authority is not transitive.
+
+
+  Under this pattern:
+
+
+  - Downstream systems may not re-delegate policy authority further
+
+  - Enforcement authority cannot be escalated or broadened
+
+  - Possession of policy context does not imply authority to delegate it
+
+
+  Authority does not propagate implicitly.
+
+
+  ---'
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: No Transitive Authority Pattern
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '### No Transitive Authority Pattern Delegated enforcement authority is not transitive.'
+  - Under this pattern
+  definition_of_done:
+  - 'Verify that ### No Transitive Authority Pattern Delegated enforcement authority is not transitive.'
+  capabilities_needed:
+  - policy_enforcement
+  - delegation_boundary
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

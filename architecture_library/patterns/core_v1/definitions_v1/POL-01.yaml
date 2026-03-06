@@ -1,0 +1,171 @@
+pattern_id: POL-01
+name: Policy Enforcement Boundary
+summary: Centralize authorization and policy enforcement at defined entry points so
+  protected operations cannot be invoked without a policy decision.
+intent: Centralize authorization and policy enforcement at defined entry points so
+  protected operations cannot be invoked without a policy decision.
+context: This pattern applies whenever the system has multiple users or tenants and
+  any operation is restricted by role, permission, or rule. The specific authentication
+  mechanism may remain unspecified; this pattern governs policy enforcement, not identity
+  proof.
+problem: Without explicit policy enforcement at a well-defined boundary, authorization/tenant
+  isolation rules become ad-hoc and scattered, increasing the risk of privilege escalation,
+  cross-tenant data access, and un-auditable decision logic.
+forces_tradeoffs: '- Centralized enforcement vs scattering checks ‘where convenient’.
+
+  - Policy expressiveness vs predictability/verifiability of rules.
+
+  - Early rejection (fail-fast) vs nuanced partial access behaviors.'
+solution_structure_behavior: 'Introduces module roles: policy_enforcement_point; policy_decision_provider;
+  protected_operations
+
+
+  Allowed dependencies: policy_enforcement_point may depend on request_context and
+  on policy_decision_provider; protected_operations must not implement policy decisions
+  directly; protected_operations must not expose an alternate entry path that bypasses
+  policy_enforcement_point.
+
+
+  Assembly contract: All externally reachable protected operations are invoked through
+  a policy_enforcement_point that evaluates a policy decision using request_context.
+  The enforcement mechanism is stack-independent (explicit calls, decorators, interceptors)
+  but the contract requires that bypass is structurally prevented by module boundaries
+  and call paths.'
+consequences: Central policy enforcement reduces security drift, supports deterministic
+  validation, and allows the authentication mechanism to remain a later binding while
+  still enforcing authorization contracts.
+implementation_notes: See required evidence hooks, structural validations, and plan
+  step archetypes in this definition. Legacy pattern IDs from core inventory (ASM-*/BND-*/DAT-*)
+  are not yet published as core_v1 definitions; related_patterns point to canonical
+  implemented core IDs only.
+examples_known_uses: Typical in multi-tenant SaaS where every request must pass authorization
+  and tenant scoping checks before data access or mutation.
+related_patterns:
+extended_definition: |
+  # Policy Enforcement Boundary (POL-01)
+
+  PATTERN_ID: POL-01
+  \
+    NAME: Policy Enforcement Boundary
+  CATEGORY: security_policy
+  INTENT: Centralize authorization and policy enforcement at defined entry points so protected operations cannot be invoked without a policy decision.
+  APPLIES_WHEN: This pattern applies whenever the system has multiple users or tenants and any operation is restricted by role, permission, or rule. The specific authentication mechanism may remain unspecified; this pattern governs policy enforcement, not identity proof.
+  INTRODUCES_MODULE_ROLES: policy_enforcement_point; policy_decision_provider; protected_operations
+  ALLOWED_DEPENDENCIES: policy_enforcement_point may depend on request_context and on policy_decision_provider; protected_operations must not implement policy decisions directly; protected_operations must not expose an alternate entry path that bypasses policy_enforcement_point.
+  \
+    ASSEMBLY_CONTRACT: All externally reachable protected operations are invoked through a policy_enforcement_point that evaluates a policy decision using request_context. The enforcement mechanism is stack-independent (explicit calls, decorators, interceptors) but the contract requires that bypass is structurally prevented by module boundaries and call paths.
+
+  REQUIRED_EVIDENCE_HOOKS:
+  - E-POL-01-01: The design enumerates protected operations and the policy intent for each (for example: admin-only; owner-only; tenant-scoped).
+  - E-POL-01-02: The module plan identifies where policy is enforced (which role acts as policy_enforcement_point) and how it is invoked for protected_operations.
+
+  STRUCTURAL_VALIDATIONS:
+  - V-POL-01-01: For every protected operation listed in the design, the plan shows an enforcement call path that includes policy_enforcement_point.
+  - V-POL-01-02: The plan contains no public entry path to protected_operations that bypasses policy_enforcement_point.
+
+  \
+    PLAN_STEP_ARCHETYPES:
+  - STEP_TITLE_TEMPLATE: Define protected operations and policy intent
+    REQUIRED_CAPABILITIES: policy_modeling
+    WRITE_SET: docs_architecture
+    DELIVERABLES: policy_matrix_section
+    EVIDENCE_REQUIRED: E-POL-01-01
+    VALIDATIONS: V-POL-01-01
+  - STEP_TITLE_TEMPLATE: Implement policy enforcement boundary hooks
+    REQUIRED_CAPABILITIES: policy_enforcement
+    WRITE_SET: app_boundary
+    DELIVERABLES: policy_enforcement_component
+    EVIDENCE_REQUIRED: E-POL-01-02
+    VALIDATIONS: V-POL-01-02
+
+  JUSTIFICATION: Central policy enforcement reduces security drift, supports deterministic validation, and allows the authentication mechanism to remain a later binding while still enforcing authorization contracts.
+  VERSION: v1
+  VERSION_HISTORY:
+  - v1: Initial release.
+core:
+  category: security_policy
+  applies_when: This pattern applies whenever the system has multiple users or tenants
+    and any operation is restricted by role, permission, or rule. The specific authentication
+    mechanism may remain unspecified; this pattern governs policy enforcement, not
+    identity proof.
+  introduces_module_roles: policy_enforcement_point; policy_decision_provider; protected_operations
+  allowed_dependencies: policy_enforcement_point may depend on request_context and
+    on policy_decision_provider; protected_operations must not implement policy decisions
+    directly; protected_operations must not expose an alternate entry path that bypasses
+    policy_enforcement_point.
+  assembly_contract: All externally reachable protected operations are invoked through
+    a policy_enforcement_point that evaluates a policy decision using request_context.
+    The enforcement mechanism is stack-independent (explicit calls, decorators, interceptors)
+    but the contract requires that bypass is structurally prevented by module boundaries
+    and call paths.
+  required_evidence_hooks:
+  - 'E-POL-01-01: The design enumerates protected operations and the policy intent
+    for each (for example: admin-only; owner-only; tenant-scoped).'
+  - 'E-POL-01-02: The module plan identifies where policy is enforced (which role
+    acts as policy_enforcement_point) and how it is invoked for protected_operations.'
+  structural_validations:
+  - 'V-POL-01-01: For every protected operation listed in the design, the plan shows
+    an enforcement call path that includes policy_enforcement_point.'
+  - 'V-POL-01-02: The plan contains no public entry path to protected_operations that
+    bypasses policy_enforcement_point.'
+  plan_step_archetypes:
+  - "- STEP_TITLE_TEMPLATE: Define protected operations and policy intent\n  REQUIRED_CAPABILITIES:\
+    \ policy_modeling\n  WRITE_SET: docs_architecture\n  DELIVERABLES: policy_matrix_section\n\
+    \  EVIDENCE_REQUIRED: E-POL-01-01\n  VALIDATIONS: V-POL-01-01"
+  - "- STEP_TITLE_TEMPLATE: Implement policy enforcement boundary hooks\n  REQUIRED_CAPABILITIES:\
+    \ policy_enforcement\n  WRITE_SET: app_boundary\n  DELIVERABLES: policy_enforcement_component\n\
+    \  EVIDENCE_REQUIRED: E-POL-01-02\n  VALIDATIONS: V-POL-01-02\n\nJUSTIFICATION:\
+    \ Central policy enforcement reduces security drift, supports deterministic validation,\
+    \ and allows the authentication mechanism to remain a later binding while still\
+    \ enforcing authorization contracts.\nVERSION: v1"
+  justification: Central policy enforcement reduces security drift, supports deterministic
+    validation, and allows the authentication mechanism to remain a later binding
+    while still enforcing authorization contracts.
+  version: v1
+  version_history:
+  - 'v1: Initial release.'
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_pol_01_v1.md
+caf:
+  layer: core
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: core_patterns_are_normative
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: core_pattern
+    anchor_id: POL-01
+  minimum_evidence:
+  - This pattern applies whenever the system has multiple users or tenants and any
+    operation is restricted by role, permission, or rule.
+  - The specific authentication mechanism may remain unspecified; this pattern governs
+    policy enforcement, not identity proof.
+  definition_of_done:
+  - 'Verify that V-POL-01-01: For every protected operation listed in the design,
+    the plan shows an enforcement call path that includes policy_enforcement_point.'
+  - 'Verify that V-POL-01-02: The plan contains no public entry path to protected_operations
+    that bypasses policy_enforcement_point.'
+  - 'Verify evidence hook is satisfied: E-POL-01-01: The design enumerates protected
+    operations and the policy intent for each (for example: admin-only; owner-only;
+    tenant-scoped).'
+  - 'Verify evidence hook is satisfied: E-POL-01-02: The module plan identifies where
+    policy is enforced (which role acts as policy_enforcement_point) and how it is
+    invoked for protected_operations.'
+  capabilities_needed:
+  - policy_modeling
+  - policy_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: core_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/core_v1/definitions_v1/POL-01.yaml
+    scope: per_resource
+  required_trace_anchors:
+  - pattern_id: POL-01
+    anchor_kind: plan_step_archetype
+    scope: per_resource

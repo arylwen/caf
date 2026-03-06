@@ -1,0 +1,120 @@
+pattern_id: CAF-MTEN-CTX-04
+name: Context Validation & Defense-in-Depth
+summary: Even with correct routing, systems MUST assume mistakes occur.
+intent: Even with correct routing, systems MUST assume mistakes occur.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: '#### 5.3.7 Context Validation & Defense-in-Depth
+
+
+  Even with correct routing, systems MUST assume mistakes occur.
+
+
+  Validation patterns include:
+
+
+  - Cross-checking tenant context against resource ownership
+
+  - Verifying data-layer tenant identifiers match context
+
+  - Rejecting mismatches aggressively
+
+  - Auditing violations as security events
+
+
+  ##### **Context Validation & Defense-in-Depth Example**
+
+
+  > A request scoped to Tenant A attempting to access a Resource owned by Tenant B MUST fail, even if identifiers match.
+
+
+  ##### **Context Validation & Defense-in-Depth Normative Requirements**
+
+
+  - Validation MUST exist at least at authorization and data access layers
+
+  - Violations MUST be logged with tenant-aware audit events
+
+
+  ---'
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 5.3.7 Context Validation & Defense-in-Depth
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '#### 5.3.7 Context Validation & Defense-in-Depth Even with correct routing, systems MUST assume mistakes occur.'
+  - '- Cross-checking tenant context against resource ownership - Verifying data-layer tenant identifiers match context -
+    Rejecting mismatches aggressively - Auditing violations as security events ##### **Context Validation & Defense-in-Depth
+    Example** > A request scoped to Tenant A attempting to access a Resource owned by Tenant B MUST fail, even if identifiers
+    match.'
+  - '##### **Context Validation & Defense-in-Depth Normative Requirements** - Validation MUST exist at least at authorization
+    and data access layers - Violations MUST be logged with tenant-aware audit events ---'
+  definition_of_done:
+  - 'Verify that #### 5.3.7 Context Validation & Defense-in-Depth Even with correct routing, systems MUST assume mistakes
+    occur.'
+  - 'Verify that - Cross-checking tenant context against resource ownership - Verifying data-layer tenant identifiers match
+    context - Rejecting mismatches aggressively - Auditing violations as security events ##### **Context Validation & Defense-in-Depth
+    Example** > A request scoped to Tenant A attempting to access a Resource owned by Tenant B MUST fail, even if identifiers
+    match.'
+  - 'Verify that ##### **Context Validation & Defense-in-Depth Normative Requirements** - Validation MUST exist at least at
+    authorization and data access layers - Violations MUST be logged with tenant-aware audit events ---'
+  capabilities_needed:
+  - tenancy_context
+  - tenancy_routing
+  - audit_retention
+  - context_validation
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: tenant_context.validation_strategy
+    description: How tenant context is validated and defended against spoofing.
+    options:
+    - option_id: single_strong_binding
+      summary: Single strong binding mechanism with strict rejection conditions.
+      strategy: single_strong_binding
+      notes: ''
+    - option_id: multi_factor_binding
+      summary: Multiple independent bindings (e.g., path + claim + signed header).
+      strategy: multi_factor_binding
+      notes: ''
+    - option_id: upstream_attestation
+      summary: Rely on upstream attestation (signed gateway header) plus verification.
+      strategy: upstream_attestation
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      strategy: ''
+      notes: ''
+    default_option_id: single_strong_binding
+  human_questions:
+  - question_id: Q-TENANT_CONTEXT-VALIDATION_STRATEGY-01
+    question: Select an option for tenant_context.validation_strategy and fill any required fields.
+    option_set_id: tenant_context.validation_strategy
+    status: open
+    answer: {}

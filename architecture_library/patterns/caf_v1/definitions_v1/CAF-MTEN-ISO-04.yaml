@@ -1,0 +1,142 @@
+pattern_id: CAF-MTEN-ISO-04
+name: Hybrid Isolation (Selective and Tiered)
+summary: "Allow a SaaS platform to start pooled, then selectively apply stronger isolation where justified\u2014without redesign."
+intent: "Allow a SaaS platform to start pooled, then selectively apply stronger isolation where justified\u2014without redesign."
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  #### 5.2.4 Hybrid Isolation (Selective and Tiered)
+
+  ##### **Hybrid Isolation Intent**  
+
+  Allow a SaaS platform to start pooled, then selectively apply stronger isolation where justified—without redesign.
+
+  ##### **Hybrid Isolation Applies When**
+
+  - Tenant variance grows (size, compliance, performance sensitivity)
+  - Enterprise tier emerges
+  - AI workloads introduce cost and risk asymmetry
+  - Data residency requirements expand
+
+  ##### **Hybrid Isolation: Forces & Trade-offs**
+
+  - optimizes + Enables pragmatic scaling and tiered offerings
+  - optimizes + Controls blast radius while preserving density
+  - sacrifices − Increases routing, lifecycle, and observability complexity
+  \
+    - sacrifices − Requires explicit placement and migration governance
+
+  ##### **Hybrid Isolation: Normative Requirements**
+   n- Isolation mode MUST be explicit metadata governed by Control Plane policy
+  - Tenant routing MUST be deterministic and verifiable
+  - Migrations MUST be first-class lifecycle workflows
+  - Observability MUST support comparing behavior across modes
+
+  ##### **Hybrid Isolation: Common Variants**
+
+  - Pooled baseline + carve-out whales
+  - Tiered pools (free vs paid vs enterprise)
+  - Dedicated data + pooled compute for most
+  - Regional pools + dedicated residency zones
+
+  ##### **Hybrid Isolation: Failure Modes**
+
+  - Implicit placement logic hidden in code
+  - Untracked carve-outs (“snowflake tenants”)
+  - Inconsistent security posture across tiers
+  - Operational confusion (support can’t tell where tenant lives)
+
+  ##### **Hybrid Isolation: Safe Composition**
+
+  - Requires strong:
+    - placement catalogs
+    - migration automation
+    - per-tenant telemetry and cost attribution
+    - policy-driven entitlements
+
+  ##### **Hybrid Isolation: Evolution Path**
+   n- Hybrid is not a final stage; it is an operating model.
+  - Over time, hybrid systems often converge on:
+    - fewer, more standardized isolation modes
+    - automated tenant promotion/demotion workflows
+    - clearer enterprise partitions (residency/compliance zones)
+
+  ---
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 5.2.4 Hybrid Isolation (Selective and Tiered)
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '##### **Hybrid Isolation Applies When** - Tenant variance grows (size, compliance, performance sensitivity) - Enterprise
+    tier emerges - AI workloads introduce cost and risk asymmetry - Data residency requirements expand ##### **Hybrid Isolation'
+  - "Forces & Trade-offs** - optimizes + Enables pragmatic scaling and tiered offerings - optimizes + Controls blast radius\
+    \ while preserving density - sacrifices \u2212 Increases routing, lifecycle, and observability complexity - sacrifices\
+    \ \u2212 Requires explicit placement and migration governance ##### **Hybrid Isolation"
+  - 'Normative Requirements** - Isolation mode MUST be explicit metadata governed by Control Plane policy - Tenant routing
+    MUST be deterministic and verifiable - Migrations MUST be first-class lifecycle workflows - Observability MUST support
+    comparing behavior across modes ##### **Hybrid Isolation'
+  definition_of_done:
+  - 'Verify that normative Requirements** - Isolation mode MUST be explicit metadata governed by Control Plane policy - Tenant
+    routing MUST be deterministic and verifiable - Migrations MUST be first-class lifecycle workflows - Observability MUST
+    support comparing behavior across modes ##### **Hybrid Isolation'
+  capabilities_needed:
+  - tenancy_context
+  - tenancy_isolation
+  - tenancy_routing
+  - observability_emit
+  - quota_entitlements
+  - tenant_migration
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  option_sets:
+  - option_set_id: tenancy.isolation.hybrid_tiered.variant
+    summary: Select the primary tiering strategy for hybrid isolation.
+    options:
+    - option_id: carve_out_whales
+      status: defer
+      summary: Carve out a subset of tenants (e.g., whales) into dedicated infra.
+    - option_id: workload_specific_isolation
+      status: defer
+      summary: Isolate specific workloads (e.g., data plane/inference) for selected tenants.
+    - option_id: residency_or_region_tiers
+      status: defer
+      summary: Tier isolation by residency/region requirements.
+    - option_id: custom
+      status: defer
+      summary: Custom (describe tiering triggers and isolation moves).
+      notes: ''
+    default_option_id: carve_out_whales
+  human_questions:
+  - question_key: hybrid_isolation_variant
+    question_id: Q-MTEN-ISO-HYBRID-01
+    question: If using hybrid isolation, what is the primary tiering strategy?
+    description: Select one option; use 'custom' only if none fit.
+    option_set_id: tenancy.isolation.hybrid_tiered.variant
+    anchors:
+    - caf_pattern: CAF-MTEN-ISO-04
+  kind: decision_pattern

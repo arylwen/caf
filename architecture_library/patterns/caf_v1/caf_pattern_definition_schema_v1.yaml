@@ -1,0 +1,354 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: CAF Pattern Definition Schema v1
+type: object
+additionalProperties: false
+required:
+- pattern_id
+- name
+- summary
+- intent
+- context
+- problem
+- forces_tradeoffs
+- solution_structure_behavior
+- consequences
+- implementation_notes
+- examples_known_uses
+- related_patterns
+- extended_definition
+- source_documents
+- caf
+properties:
+  pattern_id:
+    type: string
+    minLength: 1
+  name:
+    type: string
+    minLength: 1
+  summary:
+    type: string
+    minLength: 1
+  intent:
+    type: string
+    minLength: 1
+  context:
+    type: string
+    minLength: 1
+  problem:
+    type: string
+    minLength: 1
+  forces_tradeoffs:
+    type: string
+    minLength: 1
+  solution_structure_behavior:
+    type: string
+    minLength: 1
+  consequences:
+    type: string
+    minLength: 1
+  implementation_notes:
+    type: string
+    minLength: 1
+  examples_known_uses:
+    type: string
+    minLength: 1
+  related_patterns:
+    type: string
+    minLength: 1
+  extended_definition:
+    type: string
+    minLength: 1
+  source_documents:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required:
+      - path
+      - sections
+      properties:
+        path:
+          type: string
+          minLength: 1
+        sections:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 1
+  caf:
+    type: object
+    additionalProperties: false
+    required:
+    - layer
+    - verifiability
+    - plane
+    - default_anchor_policy
+    - allowed_anchor_types
+    - default_anchor
+    - minimum_evidence
+    - decision_prompts
+    - definition_of_done
+    - capabilities_needed
+    - forbidden_assumptions
+    properties:
+      layer:
+        type: string
+        enum:
+        - caf
+      verifiability:
+        type: string
+        enum:
+        - plan_ready
+        - overlay_candidate
+        - deferred_advisory
+      plane:
+        type: string
+        enum:
+        - application
+        - control
+        - both
+      default_anchor_policy:
+        type: string
+        enum:
+        - requires_explicit_design_decision
+      allowed_anchor_types:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          enum:
+          - checklist_item
+          - caf_pattern
+          - core_pattern
+          - tbp
+          - rail
+        uniqueItems: true
+      default_anchor:
+        type: object
+        additionalProperties: false
+        required:
+        - anchor_type
+        - anchor_id
+        properties:
+          anchor_type:
+            type: string
+            enum:
+            - checklist_item
+            - caf_pattern
+            - core_pattern
+            - tbp
+            - rail
+          anchor_id:
+            type: string
+            minLength: 1
+      minimum_evidence:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      decision_prompts:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      definition_of_done:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      capabilities_needed:
+        type: array
+        items:
+          type: string
+          minLength: 1
+      forbidden_assumptions:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      kind:
+        type: string
+        enum:
+        - decision_pattern
+        - standard
+        - process_contract
+        - checklist
+        description: 'CAF internal classification: decision patterns are cue-triggered;
+          others are always-on standards/contracts/checklists.'
+      option_sets:
+        type: array
+        items:
+          type: object
+          required:
+          - option_set_id
+          - description
+          - options
+          properties:
+            option_set_id:
+              type: string
+            description:
+              type: string
+            options:
+              type: array
+              items:
+                type: object
+                required:
+                - option_id
+                - summary
+                properties:
+                  option_id:
+                    type: string
+                  summary:
+                    type: string
+                additionalProperties: true
+              minItems: 1
+          additionalProperties: false
+        minItems: 1
+      human_decisions:
+        type: array
+        items:
+          type: object
+          required:
+          - decision_id
+          - topic
+          - description
+          - option_set_id
+          properties:
+            decision_id:
+              type: string
+            topic:
+              type: string
+            description:
+              type: string
+            option_set_id:
+              type: string
+            resolved_values_template:
+              type: object
+              additionalProperties: true
+            decision_checklist:
+              type: string
+            anchors:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+          additionalProperties: false
+        minItems: 1
+      human_questions:
+        type: array
+        items:
+          type: object
+          required:
+          - question_key
+          - question_id
+          - question
+          - description
+          - option_set_id
+          properties:
+            question_key:
+              type: string
+            question_id:
+              type: string
+            question:
+              type: string
+            description:
+              type: string
+            option_set_id:
+              type: string
+            specialization_notes:
+              type: array
+              items:
+                type: string
+            anchors:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+          additionalProperties: false
+        minItems: 1
+
+  promotions:
+    type: object
+    additionalProperties: false
+    required:
+    - semantic_inputs
+    - required_trace_anchors
+    properties:
+      semantic_inputs:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - source_path
+          - scope
+          properties:
+            source_path:
+              type: string
+              minLength: 1
+            scope:
+              type: string
+              enum: [global, cross_cutting, per_resource]
+      required_trace_anchors:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - pattern_id
+          - anchor_kind
+          - scope
+          properties:
+            pattern_id:
+              type: string
+              minLength: 1
+            anchor_kind:
+              type: string
+              enum: [plan_step_archetype]
+            scope:
+              type: string
+              enum: [global, cross_cutting, per_resource]
+      required_role_bindings:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - role_binding_key
+          - scope
+          properties:
+            role_binding_key:
+              type: string
+              minLength: 1
+            scope:
+              type: string
+              enum: [global, cross_cutting, per_resource]
+      plane_placements:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - plane_id
+          - role_binding_keys
+          properties:
+            plane_id:
+              type: string
+              minLength: 1
+            role_binding_keys:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                minLength: 1
+            anchors:
+              type: array
+              items:
+                type: string
+                minLength: 1

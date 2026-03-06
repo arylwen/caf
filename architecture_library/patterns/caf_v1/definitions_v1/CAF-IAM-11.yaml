@@ -1,0 +1,252 @@
+pattern_id: CAF-IAM-11
+name: Prohibited Identity and Access Anti-Patterns
+summary: This section enumerates **identity and access anti-patterns that are explicitly prohibited** in Contura-compliant
+  systems.
+intent: This section enumerates **identity and access anti-patterns that are explicitly prohibited** in Contura-compliant
+  systems.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-01
+extended_definition: |
+  ## Prohibited Identity and Access Anti-Patterns
+
+  This section enumerates **identity and access anti-patterns that are explicitly prohibited** in Contura-compliant systems.
+
+  These anti-patterns represent **authority leakage, semantic drift, or boundary erosion** between the Control, Application, and Data Planes.
+
+  The list is **normative but non-exhaustive**.  
+  Where a design approaches any of these patterns, it **MUST** be reviewed and explicitly justified via an ADR.
+
+  ---
+   n### Identity Authority Leakage
+
+  #### Application-Defined Identity Authority
+
+  Application Plane systems **MUST NOT** define, mint, or govern identity primitives that have platform-wide or cross-tenant meaning.
+
+  Examples of prohibited behavior include:
+
+  - Creating independent notions of tenants, users, roles, or plans outside the Control Plane
+  - Issuing long-lived identities or credentials without Control Plane governance
+  - Defining platform-level trust relationships inside application services
+
+  Identity authority is governed centrally; applications may only **consume and enforce** it.
+
+  \
+    ---
+
+  #### Data Plane Identity Ownership
+
+  Data Plane systems **MUST NOT** authenticate end-users or agents directly, nor define identity trust boundaries.
+
+  Examples include:
+
+  - Databases or analytics systems validating user credentials
+  \
+    - Data services inferring identity or tenant context from data contents
+  - Data Plane components acting as identity providers
+   nThe Data Plane enforces access based on identity and context established upstream.
+
+  ---
+
+  ### Policy and Authorization Drift
+
+  #### Application-Originated Global Policy
+
+  Application Plane systems **MUST NOT** originate or redefine policies with system-wide or cross-tenant scope.
+
+  Examples include:
+
+  - Application-defined feature entitlements that apply globally
+  - Local services deciding quota, rate, or safety limits beyond delegated scope
+  - Hard-coded authorization rules that bypass Control Plane policy intent
+
+  Applications enforce **delegated policy**, not invent it.
+
+  ---
+
+  #### Implicit Policy via Configuration or Data
+
+  Systems **MUST NOT** encode authorization or governance semantics implicitly via configuration values or data state.
+
+  Examples include:
+
+  - Feature flags whose meaning is defined locally rather than by Control Plane intent
+  - Data values that implicitly trigger lifecycle or access changes
+  - “Magic” configuration fields interpreted as policy by downstream services
+
+  Policy intent must be **explicit, governed, and observable**.
+
+  ---
+   n### Lifecycle and Control Confusion
+
+  #### Identity-Driven Lifecycle Transitions Outside the Control Plane
+
+  Identity or access events **MUST NOT** directly trigger tenant or system lifecycle transitions outside Control Plane orchestration.
+   nExamples include:
+
+  - Automatically suspending tenants based on application-local authorization failures
+  - Data-driven identity anomalies triggering platform shutdowns
+  - Services autonomously onboarding or offboarding tenants
+
+  Lifecycle authority resides exclusively in the Control Plane.
+
+  ---
+
+  #### Autonomous Agents with Escalating Identity
+
+  Agents **MUST NOT** self-select, escalate, or mutate their identity or permissions at runtime.
+
+  Examples include:
+
+  - Agents acquiring broader access based on inferred success or trust
+  - Agents reusing high-privilege credentials across tenants
+  \
+    - Agents bypassing Safety Gate or identity evaluation steps
+
+  All agent identities are explicitly governed and bounded by Control Plane policy.
+
+  ---
+
+  ### Cross-Plane Boundary Violations
+
+  #### Implicit Trust Between Planes
+
+  No plane **MAY** assume implicit trust based on network location, deployment topology, or service identity alone.
+
+  Examples include:
+   n- Treating Control Plane calls as inherently trusted without authentication
+  - Assuming Application Plane identity is valid without verification
+  - Allowing Data Plane access based on network adjacency
+
+  All cross-plane interactions **MUST** be explicitly authenticated and authorized.
+
+  ---
+
+  #### Blurred Governance and Enforcement Roles
+
+  Systems **MUST NOT** collapse governance and enforcement responsibilities into a single, ambiguous layer.
+
+  Examples include:
+
+  - Applications both defining and enforcing platform identity policy
+  - Data Plane components enforcing governance rules they did not receive explicitly
+  - Control Plane components executing tenant business authorization logic
+
+  Governance defines intent; enforcement applies it.
+
+  ---
+
+  ### Documentation and Evolution Anti-Patterns
+
+  #### Silent Divergence from Identity Patterns
+
+  Any deviation from established identity and access patterns **MUST NOT** occur silently.
+
+  Examples include:
+   n- Introducing new identity flows without ADRs
+  - Modifying trust boundaries without updating patterns
+  - Adding privileged service identities without documentation
+
+  All deviations require **explicit ADRs** and review.
+
+  ---
+
+  **Normative statement:**
+
+  > Any architecture exhibiting one or more of the above anti-patterns is **non-compliant** with Contura identity and access principles unless explicitly justified and approved through an ADR.
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Prohibited Identity and Access Anti-Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Where a design approaches any of these patterns, it **MUST** be reviewed and explicitly justified via an ADR.
+  - '--- ### Identity Authority Leakage #### Application-Defined Identity Authority Application Plane systems **MUST NOT**
+    define, mint, or govern identity primitives that have platform-wide or cross-tenant meaning.'
+  - '--- #### Data Plane Identity Ownership Data Plane systems **MUST NOT** authenticate end-users or agents directly, nor
+    define identity trust boundaries.'
+  definition_of_done:
+  - Verify that where a design approaches any of these patterns, it **MUST** be reviewed and explicitly justified via an ADR.
+  - 'Verify that --- ### Identity Authority Leakage #### Application-Defined Identity Authority Application Plane systems
+    **MUST NOT** define, mint, or govern identity primitives that have platform-wide or cross-tenant meaning.'
+  - 'Verify that --- #### Data Plane Identity Ownership Data Plane systems **MUST NOT** authenticate end-users or agents directly,
+    nor define identity trust boundaries.'
+  - 'Verify that --- ### Policy and Authorization Drift #### Application-Originated Global Policy Application Plane systems
+    **MUST NOT** originate or redefine policies with system-wide or cross-tenant scope.'
+  - 'Verify that --- #### Implicit Policy via Configuration or Data Systems **MUST NOT** encode authorization or governance
+    semantics implicitly via configuration values or data state.'
+  - "Verify that - Feature flags whose meaning is defined locally rather than by Control Plane intent - Data values that implicitly\
+    \ trigger lifecycle or access changes - \u201CMagic\u201D configuration fields interpreted as policy by downstream services\
+    \ Policy intent must be **explicit, governed, and observable**."
+  - 'Verify that --- ### Lifecycle and Control Confusion #### Identity-Driven Lifecycle Transitions Outside the Control Plane
+    Identity or access events **MUST NOT** directly trigger tenant or system lifecycle transitions outside Control Plane orchestration.'
+  - 'Verify that --- #### Autonomous Agents with Escalating Identity Agents **MUST NOT** self-select, escalate, or mutate
+    their identity or permissions at runtime.'
+  capabilities_needed:
+  - authn
+  - authz_policy
+  - identity_model
+  - agent_identity
+  - control_plane_governance
+  - data_plane_enforcement
+  - anti_pattern_detection
+  - drift_detection
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.antipattern_enforcement_mode
+    summary: Choose among bounded variants for `iam.antipattern_enforcement_mode` (or use `custom`).
+    options:
+    - option_id: hard_fail
+      status: defer
+      summary: Treat detected prohibited anti-patterns as hard failures (block).
+      notes: ''
+    - option_id: warn_only
+      status: defer
+      summary: Warn and record evidence, but do not block (temporary posture).
+      notes: ''
+    - option_id: phased_warn_then_fail
+      status: defer
+      summary: Warn for a defined window, then switch to hard-fail enforcement.
+      notes: ''
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: hard_fail
+  human_questions:
+  - question_key: auto_iam_antipattern_enforcement_mode
+    question_id: Q-CAF-IAM-11-AUTO-01
+    question: Select an option for iam.antipattern_enforcement_mode.
+    description: ''
+    option_set_id: iam.antipattern_enforcement_mode
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-IAM-11

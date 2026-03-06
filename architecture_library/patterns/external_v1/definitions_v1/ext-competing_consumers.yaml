@@ -1,0 +1,90 @@
+pattern_id: EXT-COMPETING_CONSUMERS
+name: Competing Consumers
+summary: Many workers pull from same queue to scale
+intent: Many workers pull from same queue to scale
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: A scalability pattern where multiple worker instances consume from the same queue, increasing
+  throughput by parallelizing work. Correctness relies on message visibility/locking, idempotent processing, and careful tuning
+  of concurrency and retry behavior.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A scalability pattern where multiple worker instances consume from the same queue, increasing throughput
+  by parallelizing work. Correctness relies on message visibility/locking, idempotent processing, and careful tuning of concurrency
+  and retry behavior.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-COMPETING_CONSUMERS
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a scalability pattern where multiple worker instances consume from the same queue, increasing throughput by
+    parallelizing work.
+  capabilities_needed:
+  - eventing
+  - resilience_retry
+  - idempotency_support
+  - competing_consumers
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: async.competing_consumers_scaling_model
+    description: Scaling model and partitioning approach for competing consumers processing from shared queues/topics.
+    options:
+    - option_id: auto_scale_by_depth
+      summary: Auto-scale consumers based on queue depth/lag within a fixed budget.
+      notes: ''
+    - option_id: fixed_concurrency_budget
+      summary: Fixed consumer concurrency budget with manual or scheduled adjustments.
+      notes: ''
+    - option_id: partitioned_consumers
+      summary: Partition by key (shards) to preserve ordering and scale horizontally.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: auto_scale_by_depth
+  human_questions:
+  - question_key: async_competing_consumers_scaling_model
+    question_id: Q-EXT-CC-01
+    question: How will competing consumers scale and partition work?
+    description: Select the scaling/partitioning model for competing consumers processing queued work.
+    option_set_id: async.competing_consumers_scaling_model
+    specialization_notes:
+    - Warranted when throughput and parallelism are required and work can be processed by multiple consumers safely.
+    anchors:
+    - caf_pattern: EXT-COMPETING_CONSUMERS
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-competing_consumers.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-COMPETING_CONSUMERS
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

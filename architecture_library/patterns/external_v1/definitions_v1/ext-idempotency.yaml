@@ -1,0 +1,91 @@
+pattern_id: EXT-IDEMPOTENCY
+name: Idempotency
+summary: Safe retries without duplicate side effects
+intent: Ensure safe retries by making repeated requests produce the same outcome.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: A property where repeating the same operation produces the same outcome, enabling safe retries
+  in distributed systems. Common approaches include idempotency keys, deduplication tables, and idempotent writes/updates,
+  especially for payments, provisioning, and message processing.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CAF-MRAD-01
+  complements: CAF-MRAD-05
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A property where repeating the same operation produces the same outcome, enabling safe retries in distributed systems. Common approaches include idempotency keys, deduplication tables, and idempotent writes/updates, especially for payments, provisioning, and message processing.
+
+
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-IDEMPOTENCY
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a property where repeating the same operation produces the same outcome, enabling safe retries in distributed
+    systems.
+  capabilities_needed:
+  - eventing
+  - resilience_retry
+  - idempotency_support
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: api.idempotency_key_strategy
+    description: How idempotency is achieved and what key carrier/strategy is used for deduplication.
+    options:
+    - option_id: client_provided_key
+      summary: Client provides an idempotency key per operation; server deduplicates by key.
+      notes: ''
+    - option_id: server_assigned_request_id
+      summary: Server assigns a request id; clients resubmit with server-issued token for safe retries.
+      notes: ''
+    - option_id: derived_from_payload
+      summary: Derive key from payload/command identity (requires careful collision/semantic handling).
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: client_provided_key
+  human_questions:
+  - question_key: api_idempotency_key_strategy
+    question_id: Q-EXT-IDEMP-01
+    question: What is the idempotency key strategy (client key, server token, or derived)?
+    description: Select how idempotency keys are created/carried to safely handle retries and duplicate submissions.
+    option_set_id: api.idempotency_key_strategy
+    specialization_notes:
+    - Use when requests can be retried or duplicated and the system must avoid double-processing.
+    anchors:
+    - caf_pattern: EXT-IDEMPOTENCY
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-idempotency.yaml
+    scope: per_resource
+  required_trace_anchors:
+  - pattern_id: EXT-IDEMPOTENCY
+    anchor_kind: plan_step_archetype
+    scope: per_resource

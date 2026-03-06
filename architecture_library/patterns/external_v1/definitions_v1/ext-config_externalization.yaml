@@ -1,0 +1,79 @@
+pattern_id: EXT-CONFIG_EXTERNALIZATION
+name: Config Externalization
+summary: Keep config outside binaries
+intent: Keep config outside binaries
+context: Teams shipping frequently with high availability requirements and multiple environments.
+problem: Risky deployments and environment drift lead to outages and slow delivery.
+forces_tradeoffs: Speed vs safety; cost of parallel environments vs reduced downtime; flexibility vs standardization.
+solution_structure_behavior: A practice of keeping configuration separate from application binaries (environment variables, config files, config services). It enables the same artifact to run across environments and supports runtime configuration changes, while requiring disciplined versioning, validation, and secure handling of sensitive values.
+consequences: Lower release risk and better repeatability; added pipeline and environment management overhead.
+implementation_notes: Automate builds, use IaC, bake artifacts once, promote through environments, and use progressive delivery with fast rollback.
+examples_known_uses: Zero-downtime deploys, regulated releases, multi-tenant SaaS releases.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A practice of keeping configuration separate from application binaries (environment variables, config files, config services). It enables the same artifact to run across environments and supports runtime configuration changes, while requiring disciplined versioning, validation, and secure handling of sensitive values.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-CONFIG_EXTERNALIZATION
+  minimum_evidence:
+  - Teams shipping frequently with high availability requirements and multiple environments.
+  - Risky deployments and environment drift lead to outages and slow delivery.
+  definition_of_done:
+  - Verify that lower release risk and better repeatability
+  capabilities_needed:
+  - backup_restore
+  - config_management
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - "Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets), and evidence anchors."
+  option_sets:
+  - option_set_id: ops.config_externalization_model
+    description: "How runtime configuration is externalized and delivered/updated."
+    default_option_id: runtime_injection
+    options:
+    - option_id: runtime_injection
+      summary: "Config injected at deploy/runtime (env/files) and updated via deployment workflow."
+      notes: ''
+    - option_id: config_service_pull
+      summary: "Services pull configuration from a config authority/service at runtime (with caching)."
+      notes: ''
+    - option_id: bootstrap_then_pull
+      summary: "Bootstrap minimal config at start, then pull dynamic config at runtime."
+      notes: ''
+    - option_id: custom
+      summary: "Custom (fill fields)."
+      notes: ''
+  human_questions:
+  - question_key: ops_config_externalization_model
+    question_id: Q-EXT-CONFIG-01
+    question: "How is configuration externalized (injection vs pull vs hybrid)?"
+    description: "Select the runtime configuration externalization/delivery model."
+    option_set_id: ops.config_externalization_model
+    specialization_notes:
+    - "Warranted when configuration changes must be decoupled from code deploys or need central governance."
+    anchors:
+    - caf_pattern: EXT-CONFIG_EXTERNALIZATION
+promotions:
+  semantic_inputs:
+    - source_path: "architecture_library/patterns/external_v1/definitions_v1/ext-config_externalization.yaml"
+      scope: "cross_cutting"
+  required_trace_anchors:
+    - pattern_id: "EXT-CONFIG_EXTERNALIZATION"
+      anchor_kind: "plan_step_archetype"
+      scope: "cross_cutting"

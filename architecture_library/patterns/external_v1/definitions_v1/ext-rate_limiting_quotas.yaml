@@ -1,0 +1,91 @@
+pattern_id: EXT-RATE_LIMITING_QUOTAS
+name: Rate Limiting / Quotas
+summary: Prevent abuse and runaway costs
+intent: Protect services and budgets by limiting request rates per client/tenant/key.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: Controls that cap request rate or total usage per identity, API key, tenant, or resource. Rate
+  limits protect availability and cost; quotas manage longer-term consumption. Effective designs define burst behavior, return
+  clear errors (e.g., 429), and provide monitoring and override processes.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: Controls that cap request rate or total usage per identity, API key, tenant, or resource. Rate limits
+  protect availability and cost; quotas manage longer-term consumption. Effective designs define burst behavior, return clear
+  errors (e.g., 429), and provide monitoring and override processes.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-RATE_LIMITING_QUOTAS
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that effective designs define burst behavior, return clear errors (e.g., 429), and provide monitoring and override
+    processes.
+  capabilities_needed:
+  - rate_limiting
+  - identity_access
+  - tenancy_context
+  - eventing
+  - resilience_retry
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: resilience.rate_limit_enforcement_point
+    description: Where rate limiting/quotas are enforced (edge/gateway/service) and how responsibility is distributed.
+    options:
+    - option_id: edge_or_gateway
+      summary: Enforce rate limits/quotas at edge or API gateway as the primary enforcement point.
+      notes: ''
+    - option_id: service_level
+      summary: Enforce rate limits/quotas at the service level (gateway provides routing only).
+      notes: ''
+    - option_id: both_edge_and_service
+      summary: 'Defense-in-depth: baseline limits at gateway; additional limits at services.'
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: edge_or_gateway
+  human_questions:
+  - question_key: resilience_rate_limit_enforcement_point
+    question_id: Q-EXT-RL-01
+    question: Where are rate limits/quotas enforced (gateway vs service vs both)?
+    description: Select the enforcement point(s) for rate limiting and quotas and the intended defense-in-depth posture.
+    option_set_id: resilience.rate_limit_enforcement_point
+    specialization_notes:
+    - Warranted when external APIs or shared backends need protection against bursts, abuse, or noisy neighbors.
+    anchors:
+    - caf_pattern: EXT-RATE_LIMITING_QUOTAS
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-rate_limiting_quotas.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-RATE_LIMITING_QUOTAS
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

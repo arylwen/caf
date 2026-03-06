@@ -1,0 +1,128 @@
+pattern_id: CAF-MODEL-01
+name: Domain Modeling Framework Selection (DDD + Clean Architecture Default)
+summary: Select a modeling framework that yields plane-aware boundaries, invariants, and test seams without prescribing domain-specific
+  nouns.
+intent: Make domain modeling and boundary structure an explicit architectural choice so CAF can compile obligations and validation
+  gates from pattern prose and pins while keeping solution content non-deterministic within rails.
+context: Systems with non-trivial rules, permissions, and multi-plane concerns where correctness depends on explicit boundaries
+  and stable interfaces.
+problem: Without an explicit modeling framework, CAF and workers tend to drift toward ad-hoc CRUD stubs and coupled modules;
+  cross-plane designs become ambiguous and hard to validate.
+forces_tradeoffs: Higher upfront modeling rigor vs faster scaffolding; strict dependency direction vs rapid iteration; explicit
+  ports/adapters vs fewer layers.
+solution_structure_behavior: "**What this pattern establishes**\n\nSelect a modeling framework that determines:\n\n- which\
+  \ boundary kinds must exist (domain, use-cases, inbound adapters, outbound adapters)\n- which invariants must hold (dependency\
+  \ direction, explicit interfaces, fail-closed decisions)\n- where tests should live (at seams, around invariants)\n\n**Default\
+  \ recommendation (v1)**\n\nUse **DDD + Clean Architecture** as the default modeling framework for multi-plane SaaS because\
+  \ it makes boundaries explicit and verifiable without requiring domain-specific nouns in the library.\n\n**Plane interpretations\
+  \ (default)**\n\n- **AP (Application Plane)**\n  - Inbound adapters (HTTP/API) translate requests into explicit use-cases.\n\
+  \  - Use-cases orchestrate domain behavior and enforce application-level rules.\n  - Domain model enforces invariants and\
+  \ remains independent of infrastructure.\n  - Outbound ports capture dependencies (policy, persistence, external services)\
+  \ as explicit interfaces.\n\n- **CP (Control Plane)**\n  - Domain model expresses governance truth (tenancy, identity, policy\
+  \ lifecycle).\n  - Use-cases implement administrative workflows (publish, revoke, rollout) with audit.\n  - CP exposes explicit\
+  \ distribution/lookup surfaces to other planes via versioned contracts.\n\n- **DP (Data Plane)**\n  - Inbound boundaries\
+  \ enforce access decisions at data boundaries.\n  - Outbound adapters implement storage access behind explicit interfaces.\n\
+  \  - Prefer stateless evaluation at boundaries; do not embed governance orchestration.\n\n- **ST (Storage Plane)**\n  -\
+  \ Storage adapters are explicit; retention and audit constraints are enforced at boundaries.\n  - Storage does not encode\
+  \ domain semantics beyond schema and integrity constraints.\n\n- **AI (AI Plane)**\n  - Invocation boundary is explicit,\
+  \ rate-limited, and traceable.\n  - Evidence emission is a first-class outbound concern with stable contracts.\n\n**Invariants\
+  \ (normative)**\n\n- Domain code does not depend on infrastructure or framework modules.\n- Boundary interfaces are explicit\
+  \ and stable (no ambient context).\n- Authorization/policy decisions are fail-closed and auditable.\n- Cross-boundary calls\
+  \ propagate tenant, principal, and correlation context.\n\n**What is not prescribed**\n\n- This pattern does not prescribe\
+  \ directory names; only boundary roles and invariants are normative.\n- This pattern does not prescribe specific DDD tactical\
+  \ patterns (aggregate vs entity) unless required by other adopted patterns.\n"
+consequences: Improves semantic clarity and verifiability; increases structure and may add layers that feel heavier for very
+  simple domains.
+implementation_notes: 'Treat the selected framework as an architectural contract:
+
+
+  - Materialize explicit boundary modules for domain, use-cases, and adapters.
+
+  - Enforce dependency direction via validation (domain must not import adapter/framework code).
+
+  - Test at seams: domain invariants and use-case behavior are tested without requiring framework setup.
+
+
+  Directory layout may vary by language and framework (for example, .NET may prefer Domain/Application/Infrastructure/Web).
+  The invariant is the boundary role separation and dependency direction, not the folder names.
+
+  '
+examples_known_uses: DDD + Clean Architecture in multi-service SaaS; boundary-driven systems where policy, tenancy, and auditability
+  are first-class.
+related_patterns: |
+  complements: CAF-IAM-02
+  complements: CAF-PLANE-01
+  complements: CAF-POL-01
+  complements: CAF-POL-02
+  complements: CAF-TCTX-01
+  complements: CAF-XPLANE-01
+  complements: CTX-01
+  complements: POL-01
+  complements: PST-01
+  complements: SVC-01
+extended_definition: This pattern is the foundation for semantic derivation. It enables CAF to compile boundary obligations
+  and validation gates from adopted patterns while leaving domain-specific nouns to the architect and workers.
+source_documents:
+- path: architecture_library/patterns/core_v1/sources_v1.md
+  sections:
+  - Clean Architecture
+  - Domain-Driven Design
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - The system has protected operations, governance rules, or non-trivial invariants that require explicit boundaries and
+    stable interfaces.
+  decision_prompts:
+  - Record an explicit decision selecting a modeling framework option (default DDD + Clean or an alternative), including scope
+    and evidence anchors.
+  definition_of_done:
+  - Verify that boundary roles are materialized (domain, use-cases, inbound adapters, outbound adapters) for applicable planes.
+  - Verify that dependency direction is enforced (domain does not import infrastructure/framework).
+  - Verify that boundary tests exist for invariants and use-case behavior.
+  capabilities_needed:
+  - domain_modeling
+  - service_facade_implementation
+  - api_boundary_implementation
+  - persistence_implementation
+  - structural_validation
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific directory layout across languages.
+  - No assumption of a specific DDD tactical pattern unless required by another adopted pattern.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: modeling.framework
+    description: Select the modeling framework used to structure boundaries and dependency direction.
+    options:
+    - option_id: ddd_clean_default
+      summary: Domain-driven modeling with Clean Architecture style boundaries (recommended default for multi-plane SaaS).
+    - option_id: transaction_script_layered
+      summary: Layered transaction-script approach with service orchestration; minimal domain modeling.
+    - option_id: active_record_mvc
+      summary: MVC/Active Record style with framework-centric modeling; fastest scaffolding, weakest boundary guarantees.
+    - option_id: custom
+      summary: Custom framework (architect provides boundary rules and invariants).
+    default_option_id: ddd_clean_default
+  human_questions:
+  - question_key: modeling_framework
+    question_id: Q-MODEL-FWK-01
+    question: Which modeling framework should CAF treat as the default for derivation and validation?
+    description: Select a framework option so CAF can compile boundary obligations and enforce dependency direction.
+    option_set_id: modeling.framework
+    specialization_notes:
+    - Strongly recommended when policies, tenancy, auditability, or cross-plane contracts are present.
+    - If selecting an alternative, record the boundary invariants that replace the DDD + Clean defaults.
+    anchors:
+    - caf_pattern: CAF-MODEL-01

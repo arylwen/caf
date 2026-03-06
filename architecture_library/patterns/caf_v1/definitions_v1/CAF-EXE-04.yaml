@@ -1,0 +1,63 @@
+pattern_id: CAF-EXE-04
+name: Minimum Evidence Bundle
+summary: 'For a component to be considered “tenancy-safe” and “agent-ready”, the minimum evidence bundle includes:'
+intent: 'For a component to be considered “tenancy-safe” and “agent-ready”, the minimum evidence bundle includes:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## Minimum Evidence Bundle
+
+
+  For a component to be considered “tenancy-safe” and “agent-ready”, the minimum evidence bundle includes:
+
+
+  - A scoped ADR or ADR section referencing the relevant checklist IDs
+
+  - Automated tests or static checks demonstrating tenant context binding and propagation
+
+  - Proof of tenant-scoped authorization and data access enforcement
+
+  - Proof of tenant-scoped telemetry fields and correlation IDs
+
+  - Proof of metering attribution where relevant
+
+  - Links to dashboards or query recipes for audit and incident triage'
+source_documents:
+- path: architecture_library/60_executable_architecture_overview_v1.md
+  section_heading: Minimum Evidence Bundle
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## Minimum Evidence Bundle For a component to be considered “tenancy-safe” and “agent-ready”, the minimum evidence bundle includes'
+  - '- A scoped ADR or ADR section referencing the relevant checklist IDs - Automated tests or static checks demonstrating tenant context binding and propagation - Proof of tenant-scoped authorization and data access enforcement - Proof of tenant-scoped telemetry fields and correlation IDs - Proof of metering attribution where relevant - Links to dashboards or query recipes for audit and incident triage'
+  definition_of_done:
+  - Verify that - A scoped ADR or ADR section referencing the relevant checklist IDs - Automated tests or static checks demonstrating tenant context binding and propagation - Proof of tenant-scoped authorization and data access enforcement - Proof of tenant-scoped telemetry fields and correlation IDs - Proof of metering attribution where relevant - Links to dashboards or query recipes for audit and incident triage
+  capabilities_needed:
+  - validation_gates
+  - adr_integration
+  - evidence_bundle
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: process_contract

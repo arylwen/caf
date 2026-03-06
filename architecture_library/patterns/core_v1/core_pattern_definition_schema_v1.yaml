@@ -1,0 +1,264 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: CAF Core Pattern Definition Schema v1
+type: object
+additionalProperties: false
+required:
+- pattern_id
+- name
+- summary
+- intent
+- context
+- problem
+- forces_tradeoffs
+- solution_structure_behavior
+- consequences
+- implementation_notes
+- examples_known_uses
+- related_patterns
+- extended_definition
+- core
+- caf
+properties:
+  pattern_id:
+    type: string
+    pattern: ^[A-Z]{3}-[0-9]{2}$
+  name:
+    type: string
+    minLength: 2
+  summary:
+    type: string
+  intent:
+    type: string
+  context:
+    type: string
+  problem:
+    type: string
+  forces_tradeoffs:
+    type: string
+  solution_structure_behavior:
+    type: string
+  consequences:
+    type: string
+  implementation_notes:
+    type: string
+  examples_known_uses:
+    type: string
+  related_patterns:
+    type: string
+  extended_definition:
+    type: string
+  core:
+    type: object
+    additionalProperties: false
+    required:
+    - category
+    - applies_when
+    - required_evidence_hooks
+    - structural_validations
+    - plan_step_archetypes
+    - version
+    - source_path
+    properties:
+      category:
+        type:
+        - string
+        - 'null'
+      applies_when:
+        type:
+        - string
+        - 'null'
+      introduces_module_roles:
+        type:
+        - string
+        - 'null'
+      allowed_dependencies:
+        type:
+        - string
+        - 'null'
+      assembly_contract:
+        type:
+        - string
+        - 'null'
+      required_evidence_hooks:
+        type: array
+        items:
+          type: string
+      structural_validations:
+        type: array
+        items:
+          type: string
+      plan_step_archetypes:
+        type: array
+        items:
+          type: string
+      justification:
+        type:
+        - string
+        - 'null'
+      version:
+        type:
+        - string
+        - 'null'
+      version_history:
+        type: array
+        items:
+          type: string
+      source_path:
+        type: string
+        pattern: ^architecture_library/patterns/core_v1/patterns/.+\.md$
+  caf:
+    type: object
+    additionalProperties: false
+    required:
+    - layer
+    - verifiability
+    - plane
+    - default_anchor_policy
+    - allowed_anchor_types
+    - default_anchor
+    - minimum_evidence
+    - definition_of_done
+    - capabilities_needed
+    - forbidden_assumptions
+    properties:
+      layer:
+        type: string
+        enum:
+        - core
+      verifiability:
+        type: string
+        enum:
+        - plan_ready
+      plane:
+        type: string
+        enum:
+        - application
+        - control
+        - both
+      default_anchor_policy:
+        type: string
+      allowed_anchor_types:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          enum:
+          - checklist_item
+          - caf_pattern
+          - core_pattern
+          - tbp
+          - rail
+        uniqueItems: true
+      default_anchor:
+        type: object
+        additionalProperties: false
+        required:
+        - anchor_type
+        - anchor_id
+        properties:
+          anchor_type:
+            type: string
+            enum:
+            - core_pattern
+          anchor_id:
+            type: string
+            pattern: ^[A-Z]{3}-[0-9]{2}$
+      minimum_evidence:
+        type: array
+        minItems: 1
+        items:
+          type: string
+      definition_of_done:
+        type: array
+        minItems: 1
+        items:
+          type: string
+      capabilities_needed:
+        type: array
+        items:
+          type: string
+      forbidden_assumptions:
+        type: array
+        minItems: 1
+        items:
+          type: string
+
+  promotions:
+    type: object
+    additionalProperties: false
+    required:
+    - semantic_inputs
+    - required_trace_anchors
+    properties:
+      semantic_inputs:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - source_path
+          - scope
+          properties:
+            source_path:
+              type: string
+              minLength: 1
+            scope:
+              type: string
+              enum: [global, cross_cutting, per_resource]
+      required_trace_anchors:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - pattern_id
+          - anchor_kind
+          - scope
+          properties:
+            pattern_id:
+              type: string
+              minLength: 1
+            anchor_kind:
+              type: string
+              enum: [plan_step_archetype]
+            scope:
+              type: string
+              enum: [global, cross_cutting, per_resource]
+      required_role_bindings:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - role_binding_key
+          - scope
+          properties:
+            role_binding_key:
+              type: string
+              minLength: 1
+            scope:
+              type: string
+              enum: [global, cross_cutting, per_resource]
+      plane_placements:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - plane_id
+          - role_binding_keys
+          properties:
+            plane_id:
+              type: string
+              minLength: 1
+            role_binding_keys:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                minLength: 1
+            anchors:
+              type: array
+              items:
+                type: string
+                minLength: 1

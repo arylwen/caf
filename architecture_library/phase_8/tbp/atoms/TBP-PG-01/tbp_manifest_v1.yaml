@@ -1,0 +1,62 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-PG-01
+binds_to:
+- atom_path: database.engine
+  atom_value: postgresql
+- atom_path: runtime.language
+  atom_value: python
+requires_tbps:
+- TBP-PY-01
+conflicts_with_tbps: []
+layout:
+  scaffold_directories:
+  - infrastructure/
+  role_bindings:
+    database_env_contract:
+      path_template: infrastructure/postgres.env.example
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+      - POSTGRES_
+    postgres_compose_candidate:
+      path_template: docker/compose.candidate.yaml
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+      - postgres
+      - DATABASE_URL
+    postgres_adapter_module:
+      path_template: code/ap/persistence/postgres_adapter.py
+      artifact_class: code_placeholders_non_runnable
+      evidence_contains:
+      - psycopg
+      - DATABASE_URL
+extensions:
+  obligations:
+  - obligation_id: O-TBP-PG-01-compose-postgres-service
+    title: Materialize PostgreSQL service in candidate compose wiring and expose DATABASE_URL
+    required_capability: postgres_persistence_wiring
+    role_binding_key: postgres_compose_candidate
+  - obligation_id: O-TBP-PG-01-env-contract
+    title: Materialize PostgreSQL environment contract examples (DATABASE_URL / POSTGRES_*)
+    required_capability: postgres_persistence_wiring
+    role_binding_key: database_env_contract
+  - obligation_id: O-TBP-PG-01-app-adapter-hook
+    title: Materialize minimal PostgreSQL persistence adapter hook for the application
+      plane
+    required_capability: postgres_persistence_wiring
+    role_binding_key: postgres_adapter_module
+  gates:
+  - gate_id: G-PG-CONFIG-EXTERNALIZATION
+    title: Externalize PostgreSQL configuration and credentials
+    gate_kind: coding_standard
+    required_capability: postgres_persistence_wiring
+    criteria:
+    - Database credentials and endpoints are provided via environment variables (DATABASE_URL
+      and/or POSTGRES_*); no credentials are hard-coded in code or versioned config.
+    - Runtime wiring uses internal service DNS names for DB connectivity in compose-based
+      local runs.
+    review_questions:
+    - Are any database credentials embedded directly in source code or committed configuration?
+    focus_areas:
+    - security
+    - portability
+    severity_threshold_override: high

@@ -1,0 +1,92 @@
+pattern_id: EXT-CACHE_ASIDE
+name: Cache-Aside
+summary: App-managed caching strategy
+intent: App-managed caching strategy
+context: Systems needing low-latency reads, scalable storage, and fit-for-purpose data models.
+problem: One-size-fits-all persistence and modeling leads to slow reads, complex queries, and scaling bottlenecks.
+forces_tradeoffs: Duplication vs performance; consistency vs speed; operational burden vs specialization benefits.
+solution_structure_behavior: A caching approach where the application checks the cache first; on a miss it loads from the
+  source of truth and populates the cache. It is simple and widely used, but must handle invalidation (TTL vs explicit), cache
+  stampedes, and consistency expectations.
+consequences: Better performance and clearer models; more data stores/projections to manage.
+implementation_notes: Start with simple caching/projections, measure hotspots, and introduce specialized stores/projections
+  incrementally.
+examples_known_uses: Read-heavy dashboards, search/catalog, reporting projections.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A caching approach where the application checks the cache first; on a miss it loads from the source of
+  truth and populates the cache. It is simple and widely used, but must handle invalidation (TTL vs explicit), cache stampedes,
+  and consistency expectations.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-CACHE_ASIDE
+  minimum_evidence:
+  - Systems needing low-latency reads, scalable storage, and fit-for-purpose data models.
+  - One-size-fits-all persistence and modeling leads to slow reads, complex queries, and scaling bottlenecks.
+  definition_of_done:
+  - Verify that it is simple and widely used, but must handle invalidation (TTL vs explicit), cache stampedes, and consistency
+    expectations.
+  capabilities_needed:
+  - cqrs_projections
+  - caching
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: caching.cache_aside_invalidation_model
+    description: How cache-aside entries are invalidated or refreshed.
+    options:
+    - option_id: ttl_only
+      summary: Use TTL-based invalidation only; accept bounded staleness and occasional misses.
+      notes: ''
+    - option_id: explicit_invalidation
+      summary: Explicitly invalidate/refresh cache entries on writes or via events.
+      notes: ''
+    - option_id: mixed_ttl_plus_invalidation
+      summary: Use explicit invalidation for key flows plus TTL as a safety net.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: mixed_ttl_plus_invalidation
+  human_questions:
+  - question_key: caching_cache_aside_invalidation_model
+    question_id: Q-EXT-CA-01
+    question: Which cache-aside invalidation model should be used?
+    description: Select TTL-only, explicit invalidation/refresh, or a mixed approach with TTL safety net.
+    option_set_id: caching.cache_aside_invalidation_model
+    specialization_notes:
+    - Use when low-latency reads are needed and you can define acceptable staleness and invalidation triggers.
+    anchors:
+    - caf_pattern: EXT-CACHE_ASIDE
+  conflict_semantics:
+    alternative_to:
+    - EXT-READ_THROUGH_CACHE
+    - EXT-WRITE_THROUGH_CACHE
+    incompatible_with: []
+    default_alternative: true
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-cache_aside.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-CACHE_ASIDE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

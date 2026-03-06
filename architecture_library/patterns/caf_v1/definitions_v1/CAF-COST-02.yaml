@@ -1,0 +1,121 @@
+pattern_id: CAF-COST-02
+name: Budgets, Quotas, and Entitlements
+summary: Derived from architecture_library/12_contura_cost_governance_finops_v1.md section '6. Budgets, Quotas, and Entitlements'.
+intent: Derived from 6. Budgets, Quotas, and Entitlements.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: |
+  ## 6. Budgets, Quotas, and Entitlements
+
+  ### 6.1 Budgets
+
+  Budgets define **absolute or periodic spending limits**.
+
+  Budgets MUST:
+
+  - Be tenant-scoped or agent-scoped  
+  - Be enforceable at runtime  
+  - Support exhaustion detection  
+
+  Budgets MUST NOT:
+
+  - Be advisory only  
+  - Be enforced solely offline  
+
+  ---
+
+  ### 6.2 Quotas
+
+  Quotas define **usage limits** (e.g., requests, tokens, storage).
+
+  Quotas MUST:
+
+  - Be evaluated at execution time  
+  - Be enforced before or during execution  
+  - Be tenant-scoped  
+
+  ---
+
+  ### 6.3 Entitlements
+
+  Entitlements define **what is allowed**, not what is consumed.
+
+  Entitlements MAY include:
+
+  - Allowed models or tools  
+  - Concurrency limits  
+  - Rate limits  
+
+  Entitlements MUST be enforced consistently across planes.
+
+  ---
+source_documents:
+- path: architecture_library/12_contura_cost_governance_finops_v1.md
+  section_heading: 6. Budgets, Quotas, and Entitlements
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Budgets MUST
+  - '- Be tenant-scoped or agent-scoped - Be enforceable at runtime - Support exhaustion detection Budgets MUST NOT'
+  - Quotas MUST
+  definition_of_done:
+  - Verify that budgets MUST
+  - Verify that - Be tenant-scoped or agent-scoped - Be enforceable at runtime - Support exhaustion detection Budgets MUST
+    NOT
+  - Verify that quotas MUST
+  - Verify that - Allowed models or tools - Concurrency limits - Rate limits Entitlements MUST be enforced consistently across
+    planes.
+  capabilities_needed:
+  - cost_governance
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  option_sets:
+  - option_set_id: cost_governance.primary_scope
+    summary: Select whether cost governance primitives are primarily tenant-scoped or agent-scoped.
+    options:
+    - option_id: tenant_scoped
+      status: defer
+      summary: Primarily tenant-scoped budgets/quotas/entitlements.
+    - option_id: agent_scoped
+      status: defer
+      summary: Primarily agent-scoped budgets/quotas/entitlements.
+    - option_id: both_tenant_and_agent
+      status: defer
+      summary: Both tenant-scoped and agent-scoped governance are required.
+    - option_id: custom
+      status: defer
+      summary: Custom (describe scope and enforcement).
+      notes: ''
+    default_option_id: tenant_scoped
+  human_questions:
+  - question_key: cost_governance_scope
+    question_id: Q-COST-SCOPE-01
+    question: Should budgets/quotas/entitlements be primarily tenant-scoped, agent-scoped, or both?
+    description: Select one option; use 'custom' only if none fit.
+    option_set_id: cost_governance.primary_scope
+    anchors:
+    - caf_pattern: CAF-COST-02
+  kind: decision_pattern

@@ -1,0 +1,160 @@
+pattern_id: CAF-MTEN-VALU-09
+name: Enterprise & Compliance Mode Validation
+summary: '**Are compliance modes explicit, named, and policy-governed?**'
+intent: '**Are compliance modes explicit, named, and policy-governed?**'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: '## 9. Enterprise & Compliance Mode Validation
+
+
+  **Are compliance modes explicit, named, and policy-governed?**
+
+
+  - PASS: Mode is declared and enforced.
+
+  - FAIL: Enterprise behavior is implicit.
+
+
+  **Is the active compliance mode immutable per execution?**
+
+
+  - PASS: Mode cannot change mid-run.
+
+  - FAIL: Mode toggles dynamically.
+
+
+  **Are isolation changes executed via lifecycle workflows?**
+
+
+  - PASS: Changes follow audited workflows.
+
+  - FAIL: Isolation is changed manually.
+
+
+  **Are operator actions explicit, tenant-scoped, and auditable?**
+
+
+  - PASS: Operator actions require tenant selection.
+
+  - FAIL: Operators act globally.
+
+
+  **Is cross-tenant operator access deliberate and logged?**
+
+
+  - PASS: Access requires explicit approval.
+
+  - FAIL: Operators switch tenants silently.
+
+
+  **Are data residency constraints enforced via routing and placement?**
+
+
+  - PASS: Routing enforces residency.
+
+  - FAIL: Residency is advisory only.
+
+
+  **Are audit retention and legal hold policies governed by AccountScope?**
+
+
+  - PASS: Policies are centrally enforced.
+
+  - FAIL: Retention varies per service.
+
+
+  **Are AI autonomy and budgets stricter under enterprise modes?**
+
+
+  - PASS: Enterprise mode enforces tighter limits.
+
+  - FAIL: Enterprise mode relaxes controls.
+
+
+  **Does enterprise operation avoid custom forks or snowflake tenants?**
+
+
+  - PASS: Same architecture supports all modes.
+
+  - FAIL: Enterprise uses custom code paths.
+
+
+  ---'
+source_documents:
+- path: architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+  section_heading: 9. Enterprise & Compliance Mode Validation
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Operator actions require tenant selection.
+  - Access requires explicit approval.
+  definition_of_done:
+  - 'Verify that ## 9.'
+  - Verify that enterprise & Compliance Mode Validation **Are compliance modes explicit, named, and policy-governed?** - PASS
+  capabilities_needed:
+  - tenancy_context
+  - tenancy_routing
+  - tenant_lifecycle
+  - tenancy_isolation
+  - observability_audit
+  - enterprise_compliance
+  - policy_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: tenancy.compliance_validation_mode
+    summary: Choose among bounded variants for `tenancy.compliance_validation_mode` (or use `custom`).
+    options:
+    - option_id: policy_as_code_ci_gate
+      status: defer
+      summary: Policy-as-code checks enforced as a CI gate with evidence hooks.
+      notes: ''
+    - option_id: audit_evidence_pack
+      status: defer
+      summary: Generate an audit evidence pack (artifacts + traces) per release.
+      notes: ''
+    - option_id: runtime_reporting
+      status: defer
+      summary: Runtime compliance reporting with periodic attestations.
+      notes: ''
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: policy_as_code_ci_gate
+  human_questions:
+  - question_key: auto_tenancy_compliance_validation_mode
+    question_id: Q-CAF-MTEN-VALU-09-AUTO-01
+    question: Select an option for tenancy.compliance_validation_mode.
+    description: ''
+    option_set_id: tenancy.compliance_validation_mode
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-MTEN-VALU-09

@@ -1,0 +1,176 @@
+pattern_id: SVC-01
+name: Application Service Facade Boundary
+summary: Provide a stable application boundary that exposes resource and use-case
+  operations and orchestrates domain logic, persistence, and policies behind a consistent
+  interface.
+intent: Provide a stable application boundary that exposes resource and use-case operations
+  and orchestrates domain logic, persistence, and policies behind a consistent interface.
+context: This pattern applies when the application_spec defines resources and operations,
+  or when the design requires a clear entry boundary between inbound interfaces and
+  domain logic.
+problem: Without a stable application boundary (domain facade), controllers/integrations
+  tend to embed business coordination directly, producing duplicated orchestration
+  logic, inconsistent transactions, and a weak seam for policy/validation/observability.
+forces_tradeoffs: '- Centralized coordination in service layer vs pushing logic into
+  controllers or repositories.
+
+  - Stable boundary interfaces vs rapid iteration on internal domain shapes.
+
+  - Transaction/consistency control vs keeping services thin and composable.'
+solution_structure_behavior: 'Introduces module roles: application_service_facade;
+  inbound_adapter; domain_core; persistence_port
+
+
+  Allowed dependencies: inbound_adapter may depend on application_service_facade;
+  application_service_facade may depend on domain_core and ports; domain_core must
+  not depend on inbound_adapter or persistence implementations; persistence implementations
+  must not be called directly from inbound_adapter.
+
+
+  Assembly contract: All resource operations are invoked through application_service_facade.
+  Inbound adapters translate external requests into facade calls and do not contain
+  business rules. The facade is the primary coordination point for validation, policy
+  checks, persistence interactions through ports, and transactional boundaries when
+  applicable.'
+consequences: This pattern creates a deterministic place to implement resource operations,
+  prevents business logic drift into adapters, and enables clean validation and policy
+  enforcement.
+implementation_notes: See required evidence hooks, structural validations, and plan
+  step archetypes in this definition. Legacy pattern IDs from core inventory (ASM-*/BND-*/DAT-*)
+  are not yet published as core_v1 definitions; related_patterns point to canonical
+  implemented core IDs only.
+examples_known_uses: Typical in CRUD-oriented SaaS services where controllers call
+  an application service/facade per resource/use-case that coordinates validation,
+  policy, persistence, and response shaping.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CAF-MODEL-01
+  complements: CTX-01
+  complements: INT-01
+  complements: POL-01
+  complements: VAL-01
+extended_definition: |
+  # Application Service Facade Boundary (SVC-01)
+
+  PATTERN_ID: SVC-01
+  NAME: Application Service Facade Boundary
+  CATEGORY: boundaries
+  INTENT: Provide a stable application boundary that exposes resource and use-case operations and orchestrates domain logic, persistence, and policies behind a consistent interface.
+  \
+    APPLIES_WHEN: This pattern applies when the application_spec defines resources and operations, or when the design requires a clear entry boundary between inbound interfaces and domain logic.
+  INTRODUCES_MODULE_ROLES: application_service_facade; inbound_adapter; domain_core; persistence_port
+  ALLOWED_DEPENDENCIES: inbound_adapter may depend on application_service_facade; application_service_facade may depend on domain_core and ports; domain_core must not depend on inbound_adapter or persistence implementations; persistence implementations must not be called directly from inbound_adapter.
+  ASSEMBLY_CONTRACT: All resource operations are invoked through application_service_facade. Inbound adapters translate external requests into facade calls and do not contain business rules. The facade is the primary coordination point for validation, policy checks, persistence interactions through ports, and transactional boundaries when applicable.
+
+  REQUIRED_EVIDENCE_HOOKS:
+  - E-SVC-01-01: The module plan lists a service facade boundary and maps each declared resource operation to a facade operation.
+  - E-SVC-01-02: The plan declares that inbound adapters call facades and must not bypass them to reach persistence.
+
+  STRUCTURAL_VALIDATIONS:
+  \
+    - V-SVC-01-01: For each resource operation in application_spec, module_plan provides a corresponding facade operation identifier.
+  - V-SVC-01-02: The dependency rules prohibit inbound adapters from depending on persistence implementations.
+
+  PLAN_STEP_ARCHETYPES:
+  \
+    - STEP_TITLE_TEMPLATE: Define service facade operations from application_spec resources and ops
+    REQUIRED_CAPABILITIES: architecture_decomposition
+    WRITE_SET: docs_architecture
+    DELIVERABLES: facade_operation_map
+    EVIDENCE_REQUIRED: E-SVC-01-01
+    VALIDATIONS: V-SVC-01-01
+  - STEP_TITLE_TEMPLATE: Define inbound-to-facade calling contract
+    REQUIRED_CAPABILITIES: architecture_decomposition
+    WRITE_SET: docs_architecture
+    DELIVERABLES: boundary_contract
+    EVIDENCE_REQUIRED: E-SVC-01-02
+    VALIDATIONS: V-SVC-01-02
+
+  JUSTIFICATION: This pattern creates a deterministic place to implement resource operations, prevents business logic drift into adapters, and enables clean validation and policy enforcement.
+  VERSION: v1
+  VERSION_HISTORY:
+  - v1: Initial release.
+core:
+  category: boundaries
+  applies_when: This pattern applies when the application_spec defines resources and
+    operations, or when the design requires a clear entry boundary between inbound
+    interfaces and domain logic.
+  introduces_module_roles: application_service_facade; inbound_adapter; domain_core;
+    persistence_port
+  allowed_dependencies: inbound_adapter may depend on application_service_facade;
+    application_service_facade may depend on domain_core and ports; domain_core must
+    not depend on inbound_adapter or persistence implementations; persistence implementations
+    must not be called directly from inbound_adapter.
+  assembly_contract: All resource operations are invoked through application_service_facade.
+    Inbound adapters translate external requests into facade calls and do not contain
+    business rules. The facade is the primary coordination point for validation, policy
+    checks, persistence interactions through ports, and transactional boundaries when
+    applicable.
+  required_evidence_hooks:
+  - 'E-SVC-01-01: The module plan lists a service facade boundary and maps each declared
+    resource operation to a facade operation.'
+  - 'E-SVC-01-02: The plan declares that inbound adapters call facades and must not
+    bypass them to reach persistence.'
+  structural_validations:
+  - 'V-SVC-01-01: For each resource operation in application_spec, module_plan provides
+    a corresponding facade operation identifier.'
+  - 'V-SVC-01-02: The dependency rules prohibit inbound adapters from depending on
+    persistence implementations.'
+  plan_step_archetypes:
+  - "- STEP_TITLE_TEMPLATE: Define service facade operations from application_spec\
+    \ resources and ops\n  REQUIRED_CAPABILITIES: architecture_decomposition\n  WRITE_SET:\
+    \ docs_architecture\n  DELIVERABLES: facade_operation_map\n  EVIDENCE_REQUIRED:\
+    \ E-SVC-01-01\n  VALIDATIONS: V-SVC-01-01"
+  - "- STEP_TITLE_TEMPLATE: Define inbound-to-facade calling contract\n  REQUIRED_CAPABILITIES:\
+    \ architecture_decomposition\n  WRITE_SET: docs_architecture\n  DELIVERABLES:\
+    \ boundary_contract\n  EVIDENCE_REQUIRED: E-SVC-01-02\n  VALIDATIONS: V-SVC-01-02\n\
+    \nJUSTIFICATION: This pattern creates a deterministic place to implement resource\
+    \ operations, prevents business logic drift into adapters, and enables clean validation\
+    \ and policy enforcement.\nVERSION: v1"
+  justification: This pattern creates a deterministic place to implement resource
+    operations, prevents business logic drift into adapters, and enables clean validation
+    and policy enforcement.
+  version: v1
+  version_history:
+  - 'v1: Initial release.'
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_svc_01_v1.md
+caf:
+  layer: core
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: core_patterns_are_normative
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: core_pattern
+    anchor_id: SVC-01
+  minimum_evidence:
+  - This pattern applies when the application_spec defines resources and operations,
+    or when the design requires a clear entry boundary between inbound interfaces
+    and domain logic.
+  definition_of_done:
+  - 'Verify that V-SVC-01-01: For each resource operation in application_spec, module_plan
+    provides a corresponding facade operation identifier.'
+  - 'Verify that V-SVC-01-02: The dependency rules prohibit inbound adapters from
+    depending on persistence implementations.'
+  - 'Verify evidence hook is satisfied: E-SVC-01-01: The module plan lists a service
+    facade boundary and maps each declared resource operation to a facade operation.'
+  - 'Verify evidence hook is satisfied: E-SVC-01-02: The plan declares that inbound
+    adapters call facades and must not bypass them to reach persistence.'
+  capabilities_needed:
+  - architecture_decomposition
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: core_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/core_v1/definitions_v1/SVC-01.yaml
+    scope: per_resource
+  required_trace_anchors:
+  - pattern_id: SVC-01
+    anchor_kind: plan_step_archetype
+    scope: per_resource

@@ -1,0 +1,136 @@
+pattern_id: CAF-DG-06
+name: Data Quality Dimensions and Invariants
+summary: Data quality is a **continuous, machine-evaluable property**.
+intent: Data quality is a **continuous, machine-evaluable property**.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 6. Data Quality Dimensions and Invariants
+
+
+  Data quality is a **continuous, machine-evaluable property**.
+
+
+  Each governed dataset MUST declare explicit quality dimensions and invariants, which MAY include:
+
+
+  - Completeness
+
+  - Validity
+
+  - Consistency
+
+  - Timeliness
+
+  - Accuracy
+
+  - Referential integrity
+
+
+  Quality invariants MUST be:
+
+
+  - Deterministic
+
+  - Testable
+
+  - Observable
+
+  - Auditable
+
+
+  Data quality checks MUST occur:
+
+
+  - At ingestion
+
+  - At transformation
+
+  - At retrieval
+
+  - At AI or agent consumption
+
+
+  Data that fails required quality thresholds MUST be rejected, quarantined, or escalated per policy.
+
+
+  Silent degradation is forbidden.
+
+
+  ---'
+source_documents:
+- path: architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+  section_heading: 6. Data Quality Dimensions and Invariants
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Each governed dataset MUST declare explicit quality dimensions and invariants, which MAY include
+  - '- Completeness - Validity - Consistency - Timeliness - Accuracy - Referential integrity Quality invariants MUST be'
+  - '- Deterministic - Testable - Observable - Auditable Data quality checks MUST occur'
+  definition_of_done:
+  - Verify that each governed dataset MUST declare explicit quality dimensions and invariants, which MAY include
+  - Verify that - Completeness - Validity - Consistency - Timeliness - Accuracy - Referential integrity Quality invariants
+    MUST be
+  - Verify that - Deterministic - Testable - Observable - Auditable Data quality checks MUST occur
+  - Verify that - At ingestion - At transformation - At retrieval - At AI or agent consumption Data that fails required quality
+    thresholds MUST be rejected, quarantined, or escalated per policy.
+  capabilities_needed:
+  - data_quality
+  - ai_data_constraints
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: data_quality.enforcement_profile
+    summary: Choose among bounded variants for `data_quality.enforcement_profile` (or use `custom`).
+    options:
+    - option_id: minimal
+      status: defer
+      summary: Minimal data quality enforcement (core validity checks only).
+      notes: ''
+    - option_id: standard
+      status: defer
+      summary: Standard enforcement (validity + completeness + consistency invariants).
+      notes: ''
+    - option_id: strict
+      status: defer
+      summary: Strict enforcement (includes timeliness, anomaly thresholds, and governance traceability).
+      notes: ''
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: standard
+  human_questions:
+  - question_key: auto_data_quality_enforcement_profile
+    question_id: Q-CAF-DG-06-AUTO-01
+    question: Select an option for data_quality.enforcement_profile.
+    description: ''
+    option_set_id: data_quality.enforcement_profile
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-DG-06

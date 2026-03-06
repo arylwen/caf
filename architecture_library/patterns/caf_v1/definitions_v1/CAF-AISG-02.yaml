@@ -1,0 +1,121 @@
+pattern_id: CAF-AISG-02
+name: Required Structure of a Safety Gate
+summary: 'Each Safety Gate must include the following evaluative components:'
+intent: 'Each Safety Gate must include the following evaluative components:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: |
+  ## Required Structure of a Safety Gate
+
+  Each Safety Gate must include the following evaluative components:
+   n1. **Identity Boundary Check**  
+     - Validates agent, model, and tool identities.  
+     - Confirms least-privilege access.
+   n2. **Intent & Scope Evaluation**  
+     - Determines whether the planned action fits allowed operational scope.  
+     - Assesses potential misuse or overreach.
+
+  3. **Risk Classification**  
+     - Maps proposed action to Contura’s risk classes (defined below).  
+     - Determines required guardrail posture.
+
+  4. **Guardrail Bundle Selection**  
+     - Pre-execution rules  
+     - Mid-execution monitors  
+     - Post-execution validators
+
+  5. **Contextual Awareness Evaluation**  
+     - Tenancy context  
+     - Data governance constraints  
+     - User-provided vs. system-generated data provenance
+
+  \
+    6. **Chain-of-Thought / Reasoning Trace Review**  
+     - Evaluates permissible exposure and redaction rules.  
+     - Enforces trace observability.
+
+  7. **HITL Decision Point**  
+     - Determines whether human approval is required.
+
+  8. **Output Policy Enforcement**  
+     - Applies safety, legality, compliance, and brand-aligned filters.
+
+  9. **Logging, Telemetry, and Trace Emission**  
+     - Ensures full auditability and lineage.
+
+  10. **Lifecycle Stage Justification**  
+
+  - Confirms that action is appropriate for the system’s CAF stage.
+source_documents:
+- path: architecture_library/10_contura_ai_safety_gate_specification_v1.md
+  section_heading: Required Structure of a Safety Gate
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## Required Structure of a Safety Gate Each Safety Gate must include the following evaluative components'
+  - '**Output Policy Enforcement** - Applies safety, legality, compliance, and brand-aligned filters.'
+  definition_of_done:
+  - 'Verify that ## Required Structure of a Safety Gate Each Safety Gate must include the following evaluative components'
+  - Verify that - Determines required guardrail posture.
+  - Verify that **HITL Decision Point** - Determines whether human approval is required.
+  capabilities_needed:
+  - safety_gating
+  - observability_emit
+  - compliance_evidence
+  - policy_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: safety_gate.structure_variant
+    description: Structure of safety gate stages around inference/tooling.
+    options:
+    - option_id: pre_only
+      summary: Pre-inference gate only (input validation + allow/deny).
+      stages:
+      - pre_inference
+    - option_id: pre_post
+      summary: Pre- and post-inference gates (input + output checks).
+      stages:
+      - pre_inference
+      - post_inference
+    - option_id: multi_stage
+      summary: Multi-stage pipeline (pre + tool-call + post gates).
+      stages:
+      - pre_inference
+      - tool_call
+      - post_inference
+    - option_id: custom
+      summary: Custom (fill fields).
+      stages: []
+    default_option_id: pre_only
+  human_questions:
+  - question_id: Q-CAF-AISG-02-01
+    topic: safety_gate.structure_variant
+    question: Which safety gate structure will you adopt for this system?
+    status: open
+    option_set_id: safety_gate.structure_variant
+    answer: {}

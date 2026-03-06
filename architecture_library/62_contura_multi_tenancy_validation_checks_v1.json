@@ -1,0 +1,206 @@
+[
+  {
+    "id": "MT-CX-001",
+    "section": "2. Routing & Tenant Context Validation",
+    "checklist_question": "Is tenant identity resolved exactly once per request or invocation?",
+    "category": "CONTEXT_BINDING",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "2. Routing & Tenant Context Validation",
+      "incident_classes": ["A", "C"]
+    }
+  },
+  {
+    "id": "MT-CX-002",
+    "section": "2. Routing & Tenant Context Validation",
+    "checklist_question": "Is the tenant identifier sourced from an authoritative input (token, domain, or explicit selection)?",
+    "category": "CONTEXT_BINDING",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "2. Routing & Tenant Context Validation",
+      "incident_classes": ["A"]
+    }
+  },
+  {
+    "id": "MT-CX-003",
+    "section": "2. Routing & Tenant Context Validation",
+    "checklist_question": "Does the system fail closed if tenant context is missing or ambiguous?",
+    "category": "CONTEXT_BINDING",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "2. Routing & Tenant Context Validation",
+      "incident_classes": ["B"]
+    }
+  },
+  {
+    "id": "MT-CX-010",
+    "section": "2. Routing & Tenant Context Validation",
+    "checklist_question": "Is Tenant Context bound immutably at the start of execution?",
+    "category": "CONTEXT_BINDING",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P1",
+    "references": {
+      "validation_guide_section": "2. Routing & Tenant Context Validation",
+      "incident_classes": []
+    }
+  },
+  {
+    "id": "MT-CX-020",
+    "section": "2. Routing & Tenant Context Validation",
+    "checklist_question": "Is Tenant Context propagated across all synchronous calls?",
+    "category": "CONTEXT_PROPAGATION",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "2. Routing & Tenant Context Validation",
+      "incident_classes": ["C"]
+    }
+  },
+  {
+    "id": "MT-CX-021",
+    "section": "2. Routing & Tenant Context Validation",
+    "checklist_question": "Is Tenant Context propagated across all asynchronous boundaries?",
+    "category": "CONTEXT_PROPAGATION",
+    "enforceability_stages": ["ADR", "CI", "Runtime", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "2. Routing & Tenant Context Validation",
+      "incident_classes": ["B", "C"]
+    }
+  },
+  {
+    "id": "MT-CX-030",
+    "section": "3. Identity & Access Validation",
+    "checklist_question": "Do authorization checks always validate tenant ownership of resources?",
+    "category": "AUTHZ_ACCESS",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "3. Identity & Access Validation",
+      "incident_classes": ["A", "B", "D"]
+    }
+  },
+  {
+    "id": "MT-CX-031",
+    "section": "2. Routing & Tenant Context Validation",
+    "checklist_question": "Is tenant context validated against resource ownership at enforcement points?",
+    "category": "AUTHZ_ACCESS",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "2. Routing & Tenant Context Validation",
+      "incident_classes": ["A", "B"]
+    }
+  },
+  {
+    "id": "MT-CX-032",
+    "section": "5. Isolation Validation",
+    "checklist_question": "Are cache keys guaranteed to include tenant identifiers?",
+    "category": "AUTHZ_ACCESS",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "5. Isolation Validation",
+      "incident_classes": ["A", "B"]
+    }
+  },
+  {
+    "id": "MT-CX-040",
+    "section": "7. Observability, Audit & Safety Validation",
+    "checklist_question": "Do all traces include tenant and principal context?",
+    "category": "IDENTITY_DELEGATION",
+    "enforceability_stages": ["ADR", "CI", "Runtime", "Safety Gate"],
+    "severity": "P1",
+    "references": {
+      "validation_guide_section": "7. Observability, Audit & Safety Validation",
+      "incident_classes": ["D"]
+    }
+  },
+  {
+    "id": "MT-CX-041",
+    "section": "3. Identity & Access Validation",
+    "checklist_question": "Is delegated agent identity explicit, constrained, and auditable?",
+    "category": "IDENTITY_DELEGATION",
+    "enforceability_stages": ["ADR", "CI", "Runtime", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "3. Identity & Access Validation",
+      "incident_classes": ["B", "D"]
+    }
+  },
+  {
+    "id": "MT-CX-042",
+    "section": "3. Identity & Access Validation",
+    "checklist_question": "Are tokens or sessions prohibited from spanning multiple tenants?",
+    "category": "IDENTITY_DELEGATION",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P1",
+    "references": {
+      "validation_guide_section": "3. Identity & Access Validation",
+      "incident_classes": ["D"]
+    }
+  },
+  {
+    "id": "MT-CX-050",
+    "section": "7. Observability, Audit & Safety Validation",
+    "checklist_question": "Do all logs include tenant identifiers?",
+    "category": "OBS_AUDIT",
+    "enforceability_stages": ["ADR", "CI", "Runtime", "Safety Gate"],
+    "severity": "P1",
+    "references": {
+      "validation_guide_section": "7. Observability, Audit & Safety Validation",
+      "incident_classes": ["E"]
+    }
+  },
+  {
+    "id": "MT-CX-051",
+    "section": "7. Observability, Audit & Safety Validation",
+    "checklist_question": "Are audit events immutable and tenant-scoped?",
+    "category": "OBS_AUDIT",
+    "enforceability_stages": ["ADR", "CI", "Runtime", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "7. Observability, Audit & Safety Validation",
+      "incident_classes": ["E"]
+    }
+  },
+  {
+    "id": "MT-CX-060",
+    "section": "6. Cost & Usage Enforcement Validation",
+    "checklist_question": "Does every metering event include tenant identifier and acting principal?",
+    "category": "COST_SAFETY",
+    "enforceability_stages": ["ADR", "CI", "Runtime", "Safety Gate"],
+    "severity": "P1",
+    "references": {
+      "validation_guide_section": "6. Cost & Usage Enforcement Validation",
+      "incident_classes": ["F"]
+    }
+  },
+  {
+    "id": "MT-CX-061",
+    "section": "6. Cost & Usage Enforcement Validation",
+    "checklist_question": "Are entitlements enforced before or during execution?",
+    "category": "COST_SAFETY",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P1",
+    "references": {
+      "validation_guide_section": "6. Cost & Usage Enforcement Validation",
+      "incident_classes": ["F"]
+    }
+  },
+  {
+    "id": "MT-CX-062",
+    "section": "6. Cost & Usage Enforcement Validation",
+    "checklist_question": "Can agent or workflow execution be interrupted on budget exhaustion?",
+    "category": "COST_SAFETY",
+    "enforceability_stages": ["ADR", "CI", "Safety Gate"],
+    "severity": "P0",
+    "references": {
+      "validation_guide_section": "6. Cost & Usage Enforcement Validation",
+      "incident_classes": ["F"]
+    }
+  }
+]

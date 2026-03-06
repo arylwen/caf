@@ -1,0 +1,84 @@
+pattern_id: EXT-MULTI_REGION_ACTIVE_PASSIVE
+name: Multi-Region Active/Passive
+summary: DR standby
+intent: DR standby
+context: High availability and disaster recovery needs across regions and failure domains.
+problem: Regional outages or data loss can take the system down without redundancy and recoverability.
+forces_tradeoffs: Cost vs resilience; consistency vs multi-region performance; operational complexity vs RTO/RPO targets.
+solution_structure_behavior: A disaster recovery design where one region is primary and another is on standby to take over
+  during outages. It is typically simpler than active/active, but recovery time (RTO) and data loss tolerance (RPO) depend
+  on replication and failover automation.
+consequences: Improved uptime and recoverability; more complex data replication and failover testing.
+implementation_notes: Define RTO/RPO, practice failover, automate backups, and validate restores regularly.
+examples_known_uses: Critical SaaS platforms, regulated workloads, global customer bases.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A disaster recovery design where one region is primary and another is on standby to take over during
+  outages. It is typically simpler than active/active, but recovery time (RTO) and data loss tolerance (RPO) depend on replication
+  and failover automation.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-MULTI_REGION_ACTIVE_PASSIVE
+  minimum_evidence:
+  - High availability and disaster recovery needs across regions and failure domains.
+  - Regional outages or data loss can take the system down without redundancy and recoverability.
+  definition_of_done:
+  - Verify that a disaster recovery design where one region is primary and another is on standby to take over during outages.
+  capabilities_needed:
+  - backup_restore
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: ops.failover_model
+    description: Failover readiness model for active-passive multi-region architecture.
+    options:
+    - option_id: cold_standby
+      summary: 'Cold standby: provision on failover; lowest cost, highest RTO.'
+      notes: ''
+    - option_id: warm_standby
+      summary: 'Warm standby: partially provisioned; moderate cost and RTO.'
+      notes: ''
+    - option_id: hot_standby
+      summary: 'Hot standby: fully provisioned; higher cost, fastest failover.'
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: cold_standby
+  human_questions:
+  - question_key: ops_failover_model
+    question_id: Q-EXT-MRAP-01
+    question: What failover readiness model will active-passive use?
+    description: Select the failover readiness model (cold/warm/hot standby) for active-passive multi-region.
+    option_set_id: ops.failover_model
+    specialization_notes:
+    - Warranted when regional resilience is required and cost vs RTO tradeoffs must be explicit.
+    anchors:
+    - caf_pattern: EXT-MULTI_REGION_ACTIVE_PASSIVE
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-multi_region_active_passive.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-MULTI_REGION_ACTIVE_PASSIVE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

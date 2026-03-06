@@ -1,0 +1,92 @@
+schema_version: phase8_worker_capability_catalog_v1
+entries:
+- capability_id: application_planning
+  worker_id: caf-application-architect
+  role_kind: application_architect
+  status: active
+  notes: Decompose architect-approved intent into plan contract artifacts (PSM/Task Graph/Traceability).
+- capability_id: candidate_orchestration
+  worker_id: caf-build-candidate
+  role_kind: manager
+  status: active
+  notes: Execute validated tasks under derived rails; fail-closed on violations.
+- capability_id: domain_modeling
+  worker_id: worker-domain-modeler
+  role_kind: worker
+  status: active
+- capability_id: api_boundary_implementation
+  worker_id: worker-api-boundary
+  role_kind: worker
+  status: active
+- capability_id: plane_runtime_scaffolding
+  worker_id: worker-plane-runtime
+  role_kind: worker
+  status: active
+- capability_id: service_facade_implementation
+  worker_id: worker-service-facade
+  role_kind: worker
+  status: active
+- capability_id: persistence_implementation
+  worker_id: worker-persistence
+  role_kind: worker
+  status: active
+- capability_id: policy_enforcement
+  worker_id: worker-policy
+  role_kind: worker
+  status: active
+
+- capability_id: ui_frontend_scaffolding
+  worker_id: worker-ui-frontend
+  role_kind: worker
+  status: active
+  notes: Scaffold and extend a minimal UI (web SPA) in the companion repo, grounded in ui_requirements_v1 and pins.
+
+- capability_id: runtime_wiring
+  worker_id: worker-runtime-wiring
+  role_kind: worker
+  status: active
+  notes: Wire AP/CP runtimes into a runnable candidate shape per task DoD (routers, entrypoints, compose wiring).
+
+- capability_id: postgres_persistence_wiring
+  worker_id: worker-postgres
+  role_kind: worker
+  status: active
+  notes: Materialize PostgreSQL runtime wiring surfaces (compose service + DATABASE_URL/env contract + minimal adapter hooks).
+
+
+- capability_id: localstack_emulation_wiring
+  worker_id: worker-localstack
+  role_kind: worker
+  status: active
+  notes: Materialize LocalStack service wiring in compose + minimal env contract surfaces (AWS endpoint URL).
+- capability_id: repo_documentation
+  worker_id: worker-tech-writer
+  role_kind: worker
+  status: active
+  notes: Generate companion repo operator README (run/test/env) grounded in pins, TBPs, and produced artifacts.
+
+- capability_id: unit_test_scaffolding
+  worker_id: worker-unit-tests
+  role_kind: worker
+  status: active
+  notes: Create meaningful unit tests and test harness wiring per DoD; no tautological asserts.
+- capability_id: observability_and_config
+  worker_id: worker-observability-config
+  role_kind: worker
+  status: active
+- capability_id: contract_scaffolding
+  worker_id: worker-contract-scaffolder
+  role_kind: worker
+  status: active
+  notes: Materialize cross-plane contract integration surfaces (client/server stubs, message schemas) per Task Graph; deterministic scaffolding only.
+- capability_id: structural_validation
+  worker_id: caf-validate
+  role_kind: validator
+  status: active
+
+- capability_id: semantic_code_review
+  worker_id: worker-code-reviewer
+  role_kind: reviewer
+  status: active
+  notes: Semantic code review gate after each task; emits feedback packets on high-severity findings.
+

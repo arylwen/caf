@@ -1,0 +1,18 @@
+# Codex Instructions
+
+**Permission:** Run any commands you need to open/write any files within this repo.  Instance: `{{INSTANCE_NAME}}`
+Profile: `{{PROFILE_VERSION}}`
+Target: `{{COMPANION_REPO_TARGET}}`
+Created: {{DATE_YYYY_MM_DD}}
+
+Rules:
+- Treat CAF pins as authoritative inputs.
+- Read constraints from `caf/profile_parameters_resolved.yaml` and `caf/architecture_shape_parameters.yaml`.
+- `caf/` is reserved for CAF-copied planning inputs + CAF evidence.  
+- **Do not hand-edit CAF planning inputs** copied under `caf/` (treat as read-only inputs), including:  
+  - `caf/profile_parameters_resolved.yaml`  
+  - `caf/architecture_shape_parameters.yaml`  - `caf/task_graph_v1.yaml`  - any copied specs/design/contracts (e.g., `caf/application_spec_v1.md`, `caf/application_design_v1.md`, `caf/control_plane_design_v1.md`, `caf/contract_declarations_v1.yaml`)  - **Writes under `caf/` are permitted only** for task evidence + review:  - `caf/task_reports/**`  - `caf/reviews/**`
+- Candidate implementation outputs may be written only within the derived rails, typically under:  - `code/**`  - `docs/**`  - `docker/**`  - `infrastructure/**`  - `tests/**`  - `validation/**`  - `notes/**`  - `NOTES.md` (repo root)
+- Do not edit files under `reference_architectures/`.
+- Prefer the skill procedures in `skills/**/SKILL.md` for any work.
+- Do not generate runnable production code or claim production readiness.

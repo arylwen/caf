@@ -1,0 +1,83 @@
+pattern_id: EXT-MULTI_REGION_ACTIVE_ACTIVE
+name: Multi-Region Active/Active
+summary: Serve traffic in multiple regions
+intent: Serve traffic in multiple regions
+context: High availability and disaster recovery needs across regions and failure domains.
+problem: Regional outages or data loss can take the system down without redundancy and recoverability.
+forces_tradeoffs: Cost vs resilience; consistency vs multi-region performance; operational complexity vs RTO/RPO targets.
+solution_structure_behavior: A high-availability design where multiple regions serve production traffic simultaneously. It
+  improves resilience and latency, but requires global traffic management, multi-region data replication, and strategies for
+  conflict resolution, consistency, and regional degradation.
+consequences: Improved uptime and recoverability; more complex data replication and failover testing.
+implementation_notes: Define RTO/RPO, practice failover, automate backups, and validate restores regularly.
+examples_known_uses: Critical SaaS platforms, regulated workloads, global customer bases.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A high-availability design where multiple regions serve production traffic simultaneously. It improves
+  resilience and latency, but requires global traffic management, multi-region data replication, and strategies for conflict
+  resolution, consistency, and regional degradation.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-MULTI_REGION_ACTIVE_ACTIVE
+  minimum_evidence:
+  - High availability and disaster recovery needs across regions and failure domains.
+  - Regional outages or data loss can take the system down without redundancy and recoverability.
+  definition_of_done:
+  - Verify that a high-availability design where multiple regions serve production traffic simultaneously.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: ops.multi_region_active_active_consistency
+    description: Consistency strategy and acceptable staleness for active-active multi-region operation.
+    options:
+    - option_id: eventual_consistency
+      summary: Eventual consistency across regions with conflict handling and idempotent processing.
+      notes: ''
+    - option_id: bounded_staleness
+      summary: Bounded staleness with explicit freshness targets and read routing.
+      notes: ''
+    - option_id: strong_consistency_subset
+      summary: Strong consistency for a critical subset; eventual elsewhere with explicit boundaries.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: eventual_consistency
+  human_questions:
+  - question_key: ops_multi_region_active_active_consistency
+    question_id: Q-EXT-MRAA-01
+    question: What consistency strategy will active-active multi-region use?
+    description: Select the consistency approach and explicit boundaries for active-active multi-region operation.
+    option_set_id: ops.multi_region_active_active_consistency
+    specialization_notes:
+    - Warranted when the system must remain available across regions and can tolerate explicit consistency tradeoffs.
+    anchors:
+    - caf_pattern: EXT-MULTI_REGION_ACTIVE_ACTIVE
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-multi_region_active_active.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-MULTI_REGION_ACTIVE_ACTIVE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

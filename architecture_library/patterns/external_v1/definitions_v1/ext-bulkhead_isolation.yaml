@@ -1,0 +1,89 @@
+pattern_id: EXT-BULKHEAD_ISOLATION
+name: Bulkhead Isolation
+summary: Separate pools/resources per workload/tenant
+intent: Prevent one workload/tenant/dependency from exhausting shared resources.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: "A pattern that partitions resources (threads, connection pools, queues, nodes) so one overloaded\
+  \ component or tenant cannot exhaust shared capacity. By isolating \u2018compartments,\u2019 it limits blast radius and\
+  \ improves predictability, but requires capacity planning and per-partition tuning."
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A pattern that partitions resources (threads, connection pools, queues, nodes) so one overloaded component or tenant cannot exhaust shared capacity. By isolating ‘compartments,’ it limits blast radius and improves predictability, but requires capacity planning and per-partition tuning.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-BULKHEAD_ISOLATION
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a pattern that partitions resources (threads, connection pools, queues, nodes) so one overloaded component
+    or tenant cannot exhaust shared capacity.
+  capabilities_needed:
+  - tenancy_context
+  - eventing
+  - resilience_retry
+  - resilience_bulkhead
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: resilience.bulkhead_strategy
+    description: How capacity is partitioned to isolate failures and contention (pools/processes/services).
+    options:
+    - option_id: pool_partitioning
+      summary: Partition thread/connection pools or work queues to isolate tenants/dependencies.
+      notes: ''
+    - option_id: process_isolation
+      summary: Use separate worker processes/executors per class of work or dependency.
+      notes: ''
+    - option_id: service_isolation
+      summary: Isolate into separate services to enforce stronger failure domain separation.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: pool_partitioning
+  human_questions:
+  - question_key: resilience_bulkhead_strategy
+    question_id: Q-EXT-BULKHEAD-01
+    question: What bulkhead strategy is used (pools, processes, or services)?
+    description: Select how capacity is partitioned to isolate failure domains and prevent cross-impact.
+    option_set_id: resilience.bulkhead_strategy
+    specialization_notes:
+    - Warranted when multiple dependencies/tenant workloads contend for shared resources and need isolation.
+    anchors:
+    - caf_pattern: EXT-BULKHEAD_ISOLATION
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-bulkhead_isolation.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-BULKHEAD_ISOLATION
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

@@ -1,0 +1,122 @@
+pattern_id: CAF-XPLANE-01
+name: Allowed Cross-Plane Interaction Patterns
+summary: "Define the approved shapes for Control\u2194Application\u2194Data plane interactions and delegation."
+intent: Enable necessary inter-plane collaboration without leaking authority or creating hidden coupling.
+context: Tri-plane Contura systems where planes must collaborate via explicit interfaces and delegated enforcement.
+problem: Teams often create convenience backdoors (direct DB access, bypassing policy/identity checks) that erode governance
+  and create non-auditable behavior.
+forces_tradeoffs: Minimize latency and duplication while preserving authority boundaries, auditability, and deterministic
+  evaluation.
+solution_structure_behavior: Use explicit interfaces/events for plane interactions; CP coordinates governance and delegates
+  enforcement; AP executes tenant workflows; DP provides data/compute services behind AP-mediated access and policy checks.
+consequences: Prevents authority leakage and drift; may introduce additional hops and requires clear interface ownership and
+  versioning.
+implementation_notes: Document interaction shapes in design; enforce via dependency rules and interface contracts; use TBPs
+  for implementation mechanisms (HTTP/eventing/etc.).
+examples_known_uses: Platform governance services issuing policies/entitlements consumed by application services; application
+  services invoking data/inference services with enforced context.
+related_patterns: |
+  depends_on: CAF-TCTX-01
+  depends_on: OBS-01
+  complements: CAF-IAM-02
+  complements: CAF-MODEL-01
+  complements: CAF-PLANE-01
+  complements: CAF-POL-02
+  complements: CAF-XPLANE-02
+extended_definition: |
+  **Allowed cross-plane interaction shapes (normative examples)**
+  
+  - **Control → Application (orchestrated):** CP instructs AP to bootstrap tenant data, rotate secrets, trigger maintenance; CP remains source of truth.
+  - **Control → Data (policy distribution and provisioning):** CP provisions resources (databases/schemas/indexes/queues/retention rules) and distributes policy intent.
+  - **Application → Data (tenant business operations):** AP executes tenant-scoped queries/retrieval/inference calls against DP using validated tenant context.
+  - **Application → Control (feedback and requests):** AP emits usage/anomaly events and submits requests for CP to evaluate changes; CP remains authoritative.
+  
+  **Workflow constraints: orchestration vs choreography**
+  
+  - Platform-level workflows (tenant lifecycle, policy rollout, AI configuration) **MUST** be orchestrated by the Control Plane.
+  - Tenant business workflows **MUST** be orchestrated in the Application Plane.
+  - AP may use internal choreography (event-driven services) only if tenant context is preserved and CP-defined global invariants are not violated.
+  - Data Plane **MUST NOT** orchestrate governance or tenant lifecycle; it may only coordinate data-internal maintenance.
+  
+  **Evidence hooks (what to show in design/spec)**
+  
+  - A Plane Integration Contract that lists allowed interaction modes (sync API, async message, artifact handoff) per boundary and names the owning interfaces/events.
+  - For each cross-plane call: required authn/authz checks, required context (tenant + principal), and required audit/telemetry emission.
+  
+  **Common failure modes**
+  
+  - Convenience backdoors: direct DB access, bypassed policy enforcement, or “shared admin” services that collapse plane boundaries.
+  - Using events as uncontrolled choreography between planes (CP must remain the orchestrator for platform workflows).
+  - Losing tenant context across async boundaries or background jobs.
+  
+source_documents:
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Cross-Plane Interaction Patterns/Allowed Patterns
+  - 'Workflow Patterns: Orchestration and Choreography'
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - System scope includes governance/control concerns distinct from tenant-facing workflows and data/compute responsibilities.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that each cross-plane interaction follows an approved interaction shape (explicit interface/event) and does not
+    leak authority.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: cross_plane.interaction_mode
+    description: Which cross-plane interaction mode(s) are allowed for this boundary.
+    options:
+    - option_id: synchronous_api
+      summary: Synchronous request/response API call across the plane boundary.
+      mode: synchronous_api
+      notes: ''
+    - option_id: async_message
+      summary: Asynchronous message/event across the plane boundary.
+      mode: async_message
+      notes: ''
+    - option_id: artifact_handoff
+      summary: Artifact/handle handoff (e.g., contract, plan, or data artifact) across the boundary.
+      mode: artifact_handoff
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      mode: ''
+      notes: ''
+    default_option_id: synchronous_api
+  human_questions:
+  - question_key: cross_plane_interaction
+    question_id: Q-XPLANE-MODE-01
+    question: Which cross-plane interaction mode(s) are allowed (synchronous API, async message, artifact handoff)?
+    description: Select allowed interaction modes for cross-plane boundaries.
+    option_set_id: cross_plane.interaction_mode
+    specialization_notes:
+    - Warranted whenever two planes integrate; constrain modes to reduce implicit coupling.
+    - If an existing Plane Integration Contract section already pins modes, keep this consistent.
+    anchors:
+    - caf_pattern: CAF-XPLANE-01
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-XPLANE-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-XPLANE-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

@@ -1,0 +1,151 @@
+schema_version: phase8_technology_atom_capabilities_v1
+# NOTE: CAF preflight is disabled in the current posture. This mapping is retained for future use and MUST NOT be used as a generation gate.
+catalog_version: phase8_technology_catalog_v1
+
+# Phase 8 preflight capability mapping.
+#
+# This file defines:
+# - Capability ids (stable) and their deterministic probe commands.
+# - Mappings from technology profile fields ("atoms") to the capability ids required
+#   to work with that profile in a given execution context.
+#
+# IMPORTANT:
+# - Probes must be shallow: check command availability/version only. Do not create
+#   infrastructure, start containers, or access remote services.
+# - Local preflight is the only required context in v1. The structure supports
+#   future CI/cloud contexts without changing the meaning of existing ids.
+
+capabilities:
+  python_toolchain_available:
+    description: "A working Python command is available (used for unit/smoke/contract tests and local runs)."
+    probes:
+      - probe_kind: command_any
+        command_candidates:
+          - description: "Use CAF_PYTHON_CMD override if set"
+            env_var: CAF_PYTHON_CMD
+            cmd: "${CAF_PYTHON_CMD} --version"
+          - description: "python3 on PATH"
+            cmd: "python3 --version"
+          - description: "python on PATH"
+            cmd: "python --version"
+
+  node_toolchain_available:
+    description: "A working Node.js command is available (used for TypeScript tooling)."
+    probes:
+      - probe_kind: command_any
+        command_candidates:
+          - description: "node on PATH"
+            cmd: "node --version"
+          - description: "npm on PATH"
+            cmd: "npm --version"
+
+  docker_runtime_available:
+    description: "Docker runtime is available."
+    probes:
+      - probe_kind: command_all
+        commands:
+          - "docker version"
+
+  docker_compose_available:
+    description: "A working Docker Compose runner is available."
+    probes:
+      - probe_kind: command_any
+        command_candidates:
+          - description: "Docker Compose v2"
+            cmd: "docker compose version"
+          - description: "docker-compose v1"
+            cmd: "docker-compose --version"
+
+  podman_runtime_available:
+    description: "Podman runtime is available."
+    probes:
+      - probe_kind: command_all
+        commands:
+          - "podman version"
+
+  podman_compose_available:
+    description: "A working Podman Compose runner is available."
+    probes:
+      - probe_kind: command_any
+        command_candidates:
+          - description: "podman compose (integrated)"
+            cmd: "podman compose version"
+          - description: "podman-compose (external)"
+            cmd: "podman-compose --version"
+
+  terraform_available:
+    description: "Terraform CLI is available."
+    probes:
+      - probe_kind: command_all
+        commands:
+          - "terraform version"
+
+  aws_cli_available:
+    description: "AWS CLI is available (shallow availability check only)."
+    probes:
+      - probe_kind: command_all
+        commands:
+          - "aws --version"
+
+  gcloud_cli_available:
+    description: "gcloud CLI is available (shallow availability check only)."
+    probes:
+      - probe_kind: command_all
+        commands:
+          - "gcloud --version"
+
+  azure_cli_available:
+    description: "Azure CLI is available (shallow availability check only)."
+    probes:
+      - probe_kind: command_all
+        commands:
+          - "az version"
+
+
+# Mapping from technology profile fields to required capabilities.
+# These mappings are applied by (preflight removed) and .
+
+field_value_requirements:
+  runtime.language:
+    python:
+      - python_toolchain_available
+    typescript:
+      - node_toolchain_available
+    go: []
+    java: []
+
+  deployment.mode:
+    docker_compose:
+      - docker_runtime_available
+      - docker_compose_available
+    podman_compose:
+      - podman_runtime_available
+      - podman_compose_available
+    container_service: []
+    kubernetes: []
+    serverless: []
+    none: []
+
+  iac.tool:
+    terraform:
+      - terraform_available
+    cdk: []
+    pulumi: []
+    none: []
+
+
+# Conditional requirements based on profile fields + execution intent.
+# (preflight removed) MUST activate these only when the activation rule is true.
+
+conditional_requirements:
+  provider_cli_when_iac_enabled:
+    activation:
+      require_iac_tool_not_none: true
+    provider_to_capabilities:
+      aws:
+        - aws_cli_available
+      gcp:
+        - gcloud_cli_available
+      azure:
+        - azure_cli_available
+      local: []

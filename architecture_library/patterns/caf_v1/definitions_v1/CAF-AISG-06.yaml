@@ -1,0 +1,92 @@
+pattern_id: CAF-AISG-06
+name: Change Control and Versioning
+summary: Safety Gate configurations must be versioned.
+intent: Safety Gate configurations must be versioned.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: |
+  ## Change Control and Versioning
+
+  Safety Gate configurations must be versioned.
+
+  - Structural updates → new Safety Gate version  
+  - Model or agent updates → re-evaluation  
+  - Tool capability expansions → Safety Gate update + ADR  
+  - Cross-plane impact updates → mandatory review (control/application/data planes)
+
+  \
+    Version metadata must include:
+
+  - Semantic version  
+  - Author and reviewer  
+  - Rationale for change  
+  - Migration strategy  
+  - Deprecation path for old gates
+source_documents:
+- path: architecture_library/10_contura_ai_safety_gate_specification_v1.md
+  section_heading: Change Control and Versioning
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## Change Control and Versioning Safety Gate configurations must be versioned.'
+  - "- Structural updates \u2192 new Safety Gate version - Model or agent updates \u2192 re-evaluation - Tool capability expansions\
+    \ \u2192 Safety Gate update + ADR - Cross-plane impact updates \u2192 mandatory review (control/application/data planes)\
+    \ Version metadata must include"
+  definition_of_done:
+  - 'Verify that ## Change Control and Versioning Safety Gate configurations must be versioned.'
+  - "Verify that - Structural updates \u2192 new Safety Gate version - Model or agent updates \u2192 re-evaluation - Tool\
+    \ capability expansions \u2192 Safety Gate update + ADR - Cross-plane impact updates \u2192 mandatory review (control/application/data\
+    \ planes) Version metadata must include"
+  capabilities_needed:
+  - safety_gating
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: change_control.release_mode
+    description: How model/agent/policy changes are approved and rolled out.
+    options:
+    - option_id: manual
+      summary: Manual approval and release only (HITL required).
+      mode: manual
+    - option_id: eval_gated
+      summary: Automated release gated by evaluation suite thresholds.
+      mode: eval_gated
+    - option_id: canary
+      summary: Automated canary rollout with rollback triggers.
+      mode: canary
+    - option_id: custom
+      summary: Custom (fill fields).
+      mode: ''
+    default_option_id: manual
+  human_questions:
+  - question_id: Q-CAF-AISG-06-01
+    topic: change_control.release_mode
+    question: Which change control/release mode will you adopt?
+    status: open
+    option_set_id: change_control.release_mode
+    answer: {}

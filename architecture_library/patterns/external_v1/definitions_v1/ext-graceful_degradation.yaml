@@ -1,0 +1,85 @@
+pattern_id: EXT-GRACEFUL_DEGRADATION
+name: Graceful Degradation
+summary: Reduce features instead of failing hard
+intent: Continue providing core functionality by reducing non-critical features under stress.
+context: Microservices and async flows where debugging spans many components and failures are partial.
+problem: Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+forces_tradeoffs: Signal quality vs cost/volume; cardinality vs queryability; instrumentation effort vs MTTR reduction.
+solution_structure_behavior: A resilience approach where, under stress or partial dependency failure, the system continues
+  operating by reducing non-critical functionality. Examples include serving cached data, disabling optional features, or
+  returning partial responses, prioritizing core journeys over completeness.
+consequences: Faster detection and lower MTTR; increased telemetry costs and governance requirements.
+implementation_notes: Standardize correlation IDs, structured logs, tracing, and SLOs; alert on user impact; sample intelligently.
+examples_known_uses: Production incident response, performance tuning, auditing critical flows.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A resilience approach where, under stress or partial dependency failure, the system continues operating
+  by reducing non-critical functionality. Examples include serving cached data, disabling optional features, or returning
+  partial responses, prioritizing core journeys over completeness.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-GRACEFUL_DEGRADATION
+  minimum_evidence:
+  - Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+  definition_of_done:
+  - Verify that a resilience approach where, under stress or partial dependency failure, the system continues operating by
+    reducing non-critical functionality.
+  capabilities_needed:
+  - observability_emit
+  - caching
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: resilience.degradation_strategy
+    description: How the system degrades under stress or dependency failure.
+    options:
+    - option_id: serve_cached_or_stale
+      summary: Serve cached/stale data when dependencies fail; prioritize core journeys.
+      notes: ''
+    - option_id: feature_shedding
+      summary: Disable non-critical features under stress (e.g., via feature flags/policy).
+      notes: ''
+    - option_id: partial_results
+      summary: Return partial responses with clear indicators and degrade non-critical sections.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: serve_cached_or_stale
+  human_questions:
+  - question_key: resilience_degradation_strategy
+    question_id: Q-EXT-GD-01
+    question: Which graceful degradation strategy should be used under stress or dependency failure?
+    description: Choose a degradation strategy (serve cached/stale, shed features, or return partial results) to preserve
+      core journeys.
+    option_set_id: resilience.degradation_strategy
+    specialization_notes:
+    - Use when tail latency or dependency failures are expected and user journeys can tolerate reduced fidelity.
+    anchors:
+    - caf_pattern: EXT-GRACEFUL_DEGRADATION
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-graceful_degradation.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-GRACEFUL_DEGRADATION
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

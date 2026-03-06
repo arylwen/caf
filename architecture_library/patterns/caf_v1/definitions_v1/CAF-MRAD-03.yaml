@@ -1,0 +1,117 @@
+pattern_id: CAF-MRAD-03
+name: MRAD-3 Bounded Payload and Collection Pattern
+summary: Mobile-facing APIs provide bounded response shapes via pagination and controlled expansions.
+intent: Prevent unbounded responses that degrade mobile reliability and performance.
+context: Clients with constrained bandwidth/latency where large payloads cause timeouts and poor UX.
+problem: Unbounded collections and nested expansions cause unpredictable payload sizes and failure modes.
+forces_tradeoffs: Convenience of large responses vs reliability and predictability; server complexity vs client simplicity.
+solution_structure_behavior: Paginate/cursor large collections; avoid unbounded nested expansions by default; require explicit
+  contract to expand; shape payload growth deterministically.
+consequences: More predictable performance; may require additional endpoints or read models.
+implementation_notes: Define paging contracts consistently; ensure paging is stable and tenant-scoped; avoid exposing internal
+  IDs without justification.
+examples_known_uses: List endpoints for feeds and collections; admin lists with filters and paging.
+related_patterns: |
+  complements: CAF-CH-01
+  complements: CAF-MRAD-02
+  complements: CAF-MRAD-04
+  complements: EXT-CQRS
+  complements: EXT-MATERIALIZED_VIEW
+extended_definition: |
+  This pattern enforces **bounded response shapes** for mobile-facing APIs to control payload growth and avoid unbounded expansions.
+
+  **Normative constraints**
+  - Mobile-facing APIs MUST provide bounded response shapes.
+  - Unbounded collections MUST be paginated/cursor-based.
+  - Responses MUST avoid unbounded nested expansions by default.
+  - Payload size growth MUST be controlled via an explicit contract shape.
+
+  **Evidence hooks**
+  - API responses use pagination/cursors for collections with documented limits.
+  - Nested expansions are opt-in and bounded (no default deep expansion).
+  - Contract includes explicit shape/size parameters (page size, fields, include options) where applicable.
+
+  **Common failure modes**
+  - Returning full collections “for convenience” (unbounded lists).
+  - Default deep expansion of nested resources leading to payload blowups.
+  - No documented limits, causing inconsistent client behavior.
+
+source_documents:
+- path: architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+  sections:
+  - 'MRAD-3: Bounded Payload and Collection Pattern'
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly identifies a constrained channel (e.g., mobile) with intermittent connectivity/latency constraints.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that collections are bounded via pagination/cursors and default expansions are controlled.
+  capabilities_needed:
+  - pagination_contracts
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific mobile protocol, client framework, or edge product.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: api.payload_bounding_strategy
+    description: How requests and responses bound payload size, collection size, and transfer semantics.
+    options:
+    - option_id: hard_limits_and_pagination
+      summary: Hard payload limits with pagination for collections.
+      strategy_kind: limits_pagination
+      max_payload_bytes: ''
+      max_item_count: ''
+      rejection_conditions:
+      - too_large
+      - too_many_items
+    - option_id: chunked_transfer
+      summary: Chunked transfer with explicit part limits and assembly rules.
+      strategy_kind: chunked
+      max_payload_bytes: ''
+      max_item_count: ''
+      rejection_conditions:
+      - part_missing
+      - too_large
+      - invalid_sequence
+    - option_id: indirect_reference
+      summary: Large payloads passed by reference (pointer/handle) with validation.
+      strategy_kind: by_reference
+      max_payload_bytes: ''
+      max_item_count: ''
+      rejection_conditions:
+      - invalid_reference
+      - expired_reference
+      - unauthorized
+    - option_id: custom
+      summary: Custom (fill fields).
+      strategy_kind: ''
+      max_payload_bytes: ''
+      max_item_count: ''
+      rejection_conditions: []
+    default_option_id: hard_limits_and_pagination
+  human_questions:
+  - question_key: payload_bounds
+    question_id: Q-MRAD-BOUNDS-01
+    question: What payload bounding strategy applies (limits/pagination/chunking/reference) and what are the rejection conditions?
+    description: Select how payload and collection bounds are enforced.
+    option_set_id: api.payload_bounding_strategy
+    specialization_notes:
+    - Warranted when clients can send/receive large collections or blobs.
+    - Record concrete max sizes later; for now choose the bounding strategy.
+    anchors:
+    - caf_pattern: CAF-MRAD-03

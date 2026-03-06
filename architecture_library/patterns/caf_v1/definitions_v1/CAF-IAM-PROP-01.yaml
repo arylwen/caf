@@ -1,0 +1,97 @@
+pattern_id: CAF-IAM-PROP-01
+name: Revocation and Change Propagation
+summary: Policy delegation is revocable and subject to change.
+intent: Policy delegation is revocable and subject to change.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-01
+extended_definition: '### Revocation and Change Propagation Pattern
+
+
+  Policy delegation is revocable and subject to change.
+
+
+  Under this pattern:
+
+
+  - Policy changes originate in the Control Plane
+
+  - Delegated enforcement reacts to updated policy intent
+
+  - Cached or derived policy state is refreshable and bounded
+
+  - Revocation of delegation takes effect without requiring downstream redeployment
+
+
+  Delegation is conditional, not permanent.
+
+
+  ---'
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Revocation and Change Propagation Pattern
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '### Revocation and Change Propagation Pattern Policy delegation is revocable and subject to change.'
+  - Under this pattern
+  definition_of_done:
+  - 'Verify that ### Revocation and Change Propagation Pattern Policy delegation is revocable and subject to change.'
+  - Verify that under this pattern
+  capabilities_needed:
+  - policy_enforcement
+  - revocation_propagation
+  - delegation_boundary
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.revocation_propagation_strategy
+    description: How identity/policy changes and revocations propagate through the system.
+    options:
+    - option_id: short_ttl
+      summary: Use short-lived tokens/leases so revocation is naturally bounded.
+      strategy: short_ttl
+      notes: ''
+    - option_id: event_driven
+      summary: Event-driven invalidation/propagation to caches and services.
+      strategy: event_driven
+      notes: ''
+    - option_id: introspection_on_use
+      summary: Introspect/check revocation status on use (or at intervals).
+      strategy: introspection_on_use
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      strategy: ''
+      notes: ''
+    default_option_id: short_ttl
+  human_questions:
+  - question_id: Q-IAM-REVOCATION_PROPAGATION_STRATEGY-01
+    question: Select an option for iam.revocation_propagation_strategy and fill any required fields.
+    option_set_id: iam.revocation_propagation_strategy
+    status: open
+    answer: {}

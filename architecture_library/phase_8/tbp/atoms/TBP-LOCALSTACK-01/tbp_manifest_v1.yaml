@@ -1,0 +1,40 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-LOCALSTACK-01
+
+binds_to:
+  - atom_path: deployment.target
+    atom_value: localstack
+
+requires_tbps: []
+conflicts_with_tbps: []
+
+layout:
+  scaffold_directories:
+    - infrastructure/
+
+  role_bindings:
+    localstack_compose_candidate:
+      path_template: docker/compose.candidate.yaml
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - "localstack"
+        - "4566"
+
+    localstack_env_example:
+      path_template: infrastructure/localstack.env.example
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - "LOCALSTACK"
+        - "AWS_ENDPOINT_URL"
+
+extensions:
+  obligations:
+    - obligation_id: O-TBP-LOCALSTACK-01-compose-service
+      title: Materialize LocalStack service in compose candidate
+      required_capability: localstack_emulation_wiring
+      role_binding_key: localstack_compose_candidate
+
+    - obligation_id: O-TBP-LOCALSTACK-01-env-contract
+      title: Materialize LocalStack env contract example
+      required_capability: localstack_emulation_wiring
+      role_binding_key: localstack_env_example

@@ -1,0 +1,91 @@
+pattern_id: EXT-BLUE_GREEN_DEPLOY
+name: Blue/Green Deploy
+summary: Two environments, switch traffic atomically
+intent: Two environments, switch traffic atomically
+context: Teams shipping frequently with high availability requirements and multiple environments.
+problem: Risky deployments and environment drift lead to outages and slow delivery.
+forces_tradeoffs: Speed vs safety; cost of parallel environments vs reduced downtime; flexibility vs standardization.
+solution_structure_behavior: A release technique with two production environments (blue and green). Deploy and validate the
+  new version in the idle environment, then switch traffic over in one step; rollback is a fast switch back. It requires careful
+  handling of database/schema compatibility and shared resources.
+consequences: Lower release risk and better repeatability; added pipeline and environment management overhead.
+implementation_notes: Automate builds, use IaC, bake artifacts once, promote through environments, and use progressive delivery
+  with fast rollback.
+examples_known_uses: Zero-downtime deploys, regulated releases, multi-tenant SaaS releases.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A release technique with two production environments (blue and green). Deploy and validate the new version
+  in the idle environment, then switch traffic over in one step; rollback is a fast switch back. It requires careful handling
+  of database/schema compatibility and shared resources.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-BLUE_GREEN_DEPLOY
+  minimum_evidence:
+  - Teams shipping frequently with high availability requirements and multiple environments.
+  - Risky deployments and environment drift lead to outages and slow delivery.
+  definition_of_done:
+  - Verify that lower release risk and better repeatability
+  capabilities_needed:
+  - backup_restore
+  - deployment_blue_green
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific orchestration or deployment platform unless provided by platform pins (technology atoms) / TBPs.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: ops.blue_green_cutover_model
+    description: Cutover mechanism for blue/green deployments and rollback strategy.
+    options:
+    - option_id: dns_switch
+      summary: Cut over via DNS switch with health checks and rollback to prior target.
+      notes: ''
+    - option_id: load_balancer_switch
+      summary: Cut over via load balancer/traffic router switch with quick rollback.
+      notes: ''
+    - option_id: routing_layer_switch
+      summary: Cut over via routing layer rules (e.g., service router) with staged validation.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: dns_switch
+  human_questions:
+  - question_key: ops_blue_green_cutover_model
+    question_id: Q-EXT-BG-01
+    question: How will blue/green cutover be performed?
+    description: Select the cutover mechanism for blue/green deploys and how rollback is achieved.
+    option_set_id: ops.blue_green_cutover_model
+    specialization_notes:
+    - Warranted when near-instant rollback is needed and the system can run two full versions in parallel.
+    anchors:
+    - caf_pattern: EXT-BLUE_GREEN_DEPLOY
+  conflict_semantics:
+    alternative_to:
+    - EXT-CANARY_RELEASE
+    incompatible_with: []
+    default_alternative: true
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-blue_green_deploy.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-BLUE_GREEN_DEPLOY
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

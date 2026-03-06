@@ -1,0 +1,104 @@
+pattern_id: EXT-KUBERNETES_PLATFORM
+name: Kubernetes Platform
+summary: Full Kubernetes for complex platform needs
+intent: Full Kubernetes for complex platform needs
+context: Services that must scale, deploy frequently, and run reliably with predictable
+  operational burden.
+problem: Manual server management and stateful designs hinder scaling, resilience,
+  and deployment velocity.
+forces_tradeoffs: Operational simplicity vs flexibility/control; portability vs managed
+  constraints; cost vs performance.
+solution_structure_behavior: A full Kubernetes-based platform for running containerized
+  workloads with rich scheduling, service discovery, policies, and extensibility.
+  It supports complex multi-service systems and platform capabilities (service mesh,
+  custom controllers), but adds operational overhead and requires strong platform
+  engineering maturity.
+consequences: Improved scale and reliability when done well; requires discipline around
+  state, networking, and observability.
+implementation_notes: Prefer statelessness, externalize state, standardize health
+  checks, and automate deployments and rollbacks.
+examples_known_uses: Domain microservices, async workers, and integration services.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A full Kubernetes-based platform for running containerized workloads
+  with rich scheduling, service discovery, policies, and extensibility. It supports
+  complex multi-service systems and platform capabilities (service mesh, custom controllers),
+  but adds operational overhead and requires strong platform engineering maturity.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-KUBERNETES_PLATFORM
+  minimum_evidence:
+  - Services that must scale, deploy frequently, and run reliably with predictable
+    operational burden.
+  - Manual server management and stateful designs hinder scaling, resilience, and
+    deployment velocity.
+  definition_of_done:
+  - Verify that a full Kubernetes-based platform for running containerized workloads
+    with rich scheduling, service discovery, policies, and extensibility.
+  capabilities_needed:
+  - observability_emit
+  - orchestration_kubernetes
+  - container_runtime
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific orchestration or deployment platform unless provided
+    by platform pins (technology atoms) / TBPs.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including
+    scope, required choices (option sets), and evidence anchors.
+  option_sets:
+  - option_set_id: ops.kubernetes_ownership_model
+    description: Ownership and responsibility model for Kubernetes platform operations
+      and application onboarding.
+    options:
+    - option_id: platform_team_managed
+      summary: Platform team manages clusters and platform services; app teams consume
+        via self-service.
+      notes: ''
+    - option_id: shared_platform_and_apps
+      summary: 'Shared responsibility: platform provides guardrails; app teams manage
+        many workloads directly.'
+      notes: ''
+    - option_id: app_team_self_managed
+      summary: App teams self-manage clusters/workloads with minimal central platform
+        involvement.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: shared_platform_and_apps
+  human_questions:
+  - question_key: ops_kubernetes_ownership_model
+    question_id: Q-EXT-K8S-01
+    question: What is the Kubernetes ownership model?
+    description: Select how Kubernetes clusters/platform services are operated and
+      how responsibilities are split across teams.
+    option_set_id: ops.kubernetes_ownership_model
+    specialization_notes:
+    - Warranted when a Kubernetes runtime is adopted and operating responsibilities
+      must be explicit to prevent drift and outages.
+    anchors:
+    - caf_pattern: EXT-KUBERNETES_PLATFORM
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-kubernetes_platform.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-KUBERNETES_PLATFORM
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

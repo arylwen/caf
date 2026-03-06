@@ -1,0 +1,226 @@
+policy_version: phase8_profile_derivation_policy_matrix_v1
+status: normative
+notes:
+  - This matrix is the single derivation source of truth for Phase 8; it maps the architect pins to derived enforcement rails and posture.
+  - Structure is defaults + overrides. Defaults are phase-wide policies; overrides exist only when warranted by a specific platform spine.
+  - Matching is deterministic. Evaluate (overrides + defaults) together and choose the single most-specific match (more constrained platform keys wins).
+  - If tie for max specificity, fail-closed. If no match, fail-closed.
+  - Outside architecture_scaffolding, wildcard matches for platform keys are allowed only for explicit defaults; overrides must match platform keys exactly.
+  - String templates may use {{instance_name}} and are resolved by caf-guardrails.
+match_keys:
+  - evolution_stage
+  - generation_phase
+  - infra_target
+  - packaging
+  - runtime_language
+  - database_engine
+defaults:
+  - policy_id: PM-default-architecture_scaffolding
+    match:
+      evolution_stage: '*'
+      generation_phase: architecture_scaffolding
+      infra_target: '*'
+      packaging: '*'
+      runtime_language: '*'
+      database_engine: '*'
+    derive:
+      profile_version: profile_v1
+      companion_repo_target_template: companion_repositories/{{instance_name}}/profile_v1
+      runnable_code_approved: false
+      refusal_posture: fail_closed
+      lifecycle_rails:
+        allowed_artifact_classes:
+          - directories
+          - markdown_docs
+          - config_stubs_non_executable
+          - code_placeholders_non_runnable
+          - todo_comments
+        allowed_write_paths_template:
+          - companion_repositories/{{instance_name}}/profile_v1/
+          - reference_architectures/{{instance_name}}/spec/playbook/
+          - reference_architectures/{{instance_name}}/spec/caf_meta/
+          - reference_architectures/{{instance_name}}/layer_7/
+          - reference_architectures/{{instance_name}}/spec/guardrails/
+          - reference_architectures/{{instance_name}}/feedback_packets/
+        forbidden_actions:
+          - generate_runnable_production_code
+          - deploy_to_production
+          - claim_production_readiness
+          - select_vendors_or_providers
+          - introduce_new_architecture_choices
+          - modify_architecture_shape_parameters
+          - bypass_refusal_conditions
+          - write_outside_allowed_paths
+          - alter_security_or_safety_posture_without_explicit_choice
+      candidate_enforcement_bar:
+        bar_id: contract_scaffolding_bar_v1
+        test_policy:
+          require_unit: false
+          require_smoke: false
+          require_contract: false
+          required_test_kinds: []
+        required_paths: []
+        placeholder_policy:
+          forbidden_tokens:
+            - <...>
+        runnable_policy:
+          require_infrastructure_readme: false
+          require_runtime_wiring: false
+  - policy_id: PM-default-implementation_scaffolding
+    match:
+      evolution_stage: '*'
+      generation_phase: implementation_scaffolding
+      infra_target: '*'
+      packaging: '*'
+      runtime_language: '*'
+      database_engine: '*'
+    derive:
+      profile_version: profile_v1
+      companion_repo_target_template: companion_repositories/{{instance_name}}/profile_v1
+      runnable_code_approved: false
+      refusal_posture: fail_closed
+      lifecycle_rails:
+        allowed_artifact_classes:
+          - directories
+          - markdown_docs
+          - config_stubs_non_executable
+          - code_placeholders_non_runnable
+          - code_runnable_candidate
+          - tests_runnable_candidate
+          - todo_comments
+        allowed_write_paths_template:
+          - companion_repositories/{{instance_name}}/profile_v1/
+          - reference_architectures/{{instance_name}}/spec/playbook/
+          - reference_architectures/{{instance_name}}/spec/caf_meta/
+          - reference_architectures/{{instance_name}}/layer_7/
+          - reference_architectures/{{instance_name}}/spec/guardrails/
+          - reference_architectures/{{instance_name}}/feedback_packets/
+          - reference_architectures/{{instance_name}}/design/
+        forbidden_actions:
+          - generate_runnable_production_code
+          - deploy_to_production
+          - claim_production_readiness
+          - select_vendors_or_providers
+          - introduce_new_architecture_choices
+          - modify_architecture_shape_parameters
+          - bypass_refusal_conditions
+          - write_outside_allowed_paths
+          - alter_security_or_safety_posture_without_explicit_choice
+      candidate_enforcement_bar:
+        bar_id: candidate_code_bar_v1
+        test_policy:
+          require_unit: true
+          require_smoke: false
+          require_contract: false
+          required_test_kinds:
+            - unit
+        required_paths: []
+        placeholder_policy:
+          forbidden_tokens:
+            - <...>
+        runnable_policy:
+          require_infrastructure_readme: false
+          require_runtime_wiring: true
+  - policy_id: PM-default-pre_production
+    match:
+      evolution_stage: '*'
+      generation_phase: pre_production
+      infra_target: '*'
+      packaging: '*'
+      runtime_language: '*'
+      database_engine: '*'
+    derive:
+      profile_version: profile_v1
+      companion_repo_target_template: companion_repositories/{{instance_name}}/profile_v1
+      runnable_code_approved: false
+      refusal_posture: fail_closed
+      lifecycle_rails:
+        allowed_artifact_classes:
+          - directories
+          - markdown_docs
+          - config_stubs_non_executable
+          - code_placeholders_non_runnable
+          - todo_comments
+        allowed_write_paths_template:
+          - companion_repositories/{{instance_name}}/profile_v1/
+          - reference_architectures/{{instance_name}}/spec/playbook/
+          - reference_architectures/{{instance_name}}/spec/caf_meta/
+          - reference_architectures/{{instance_name}}/layer_7/
+          - reference_architectures/{{instance_name}}/spec/guardrails/
+          - reference_architectures/{{instance_name}}/feedback_packets/
+          - reference_architectures/{{instance_name}}/design/
+        forbidden_actions:
+          - deploy_to_production
+          - claim_production_readiness
+          - select_vendors_or_providers
+          - introduce_new_architecture_choices
+          - modify_architecture_shape_parameters
+          - bypass_refusal_conditions
+          - write_outside_allowed_paths
+          - alter_security_or_safety_posture_without_explicit_choice
+      candidate_enforcement_bar:
+        bar_id: candidate_code_bar_v1
+        test_policy:
+          require_unit: false
+          require_smoke: false
+          require_contract: false
+          required_test_kinds: []
+        required_paths: []
+        placeholder_policy:
+          forbidden_tokens:
+            - <...>
+        runnable_policy:
+          require_infrastructure_readme: true
+          require_runtime_wiring: true
+  - policy_id: PM-default-production_hardening
+    match:
+      evolution_stage: '*'
+      generation_phase: production_hardening
+      infra_target: '*'
+      packaging: '*'
+      runtime_language: '*'
+      database_engine: '*'
+    derive:
+      profile_version: profile_v1
+      companion_repo_target_template: companion_repositories/{{instance_name}}/profile_v1
+      runnable_code_approved: false
+      refusal_posture: fail_closed
+      lifecycle_rails:
+        allowed_artifact_classes:
+          - directories
+          - markdown_docs
+          - config_stubs_non_executable
+          - code_placeholders_non_runnable
+          - todo_comments
+        allowed_write_paths_template:
+          - companion_repositories/{{instance_name}}/profile_v1/
+          - reference_architectures/{{instance_name}}/spec/playbook/
+          - reference_architectures/{{instance_name}}/spec/caf_meta/
+          - reference_architectures/{{instance_name}}/layer_7/
+          - reference_architectures/{{instance_name}}/spec/guardrails/
+          - reference_architectures/{{instance_name}}/feedback_packets/
+          - reference_architectures/{{instance_name}}/design/
+        forbidden_actions:
+          - deploy_to_production
+          - claim_production_readiness
+          - select_vendors_or_providers
+          - introduce_new_architecture_choices
+          - modify_architecture_shape_parameters
+          - bypass_refusal_conditions
+          - write_outside_allowed_paths
+          - alter_security_or_safety_posture_without_explicit_choice
+      candidate_enforcement_bar:
+        bar_id: candidate_code_bar_v1
+        test_policy:
+          require_unit: false
+          require_smoke: false
+          require_contract: false
+          required_test_kinds: []
+        required_paths: []
+        placeholder_policy:
+          forbidden_tokens:
+            - <...>
+        runnable_policy:
+          require_infrastructure_readme: true
+          require_runtime_wiring: true
+overrides: []

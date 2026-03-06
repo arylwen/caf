@@ -1,0 +1,85 @@
+pattern_id: EXT-LEAST_PRIVILEGE_RBAC_IAM
+name: Least Privilege (RBAC/IAM)
+summary: Minimal permissions per principal
+intent: Limit every principal to the minimum permissions needed to perform its job.
+context: Systems handling sensitive data and multiple services/identities across networks and environments.
+problem: Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+forces_tradeoffs: Security depth vs developer friction; least privilege vs operational agility; privacy vs usability.
+solution_structure_behavior: "A principle of granting only the permissions required to perform a task\u2014no more, no longer.\
+  \ Implemented via RBAC/IAM roles, scoped credentials, and time-bounded access, it reduces the impact of credential compromise\
+  \ and misconfiguration."
+consequences: Reduced blast radius and better compliance; requires governance, tooling, and ongoing hygiene.
+implementation_notes: Centralize identity, enforce least privilege, store secrets in a vault, keep services private by default,
+  and automate policy checks.
+examples_known_uses: Enterprise SaaS, healthcare/finance workloads, multi-tenant platforms.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A principle of granting only the permissions required to perform a task—no more, no longer. Implemented via RBAC/IAM roles, scoped credentials, and time-bounded access, it reduces the impact of credential compromise and misconfiguration.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-LEAST_PRIVILEGE_RBAC_IAM
+  minimum_evidence:
+  - Systems handling sensitive data and multiple services/identities across networks and environments.
+  - Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+  definition_of_done:
+  - "Verify that a principle of granting only the permissions required to perform a task\u2014no more, no longer."
+  capabilities_needed:
+  - identity_access
+  - policy_enforcement
+  - config_management
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: security.iam_authorization_model
+    description: Authorization model used to enforce least privilege across users and services.
+    options:
+    - option_id: role_based_rbac
+      summary: Role-based access control (RBAC) with explicit roles and permissions.
+      notes: ''
+    - option_id: attribute_based_abac
+      summary: Attribute-based access control (ABAC) with policy conditions over attributes.
+      notes: ''
+    - option_id: mixed_rbac_abac
+      summary: Mix RBAC for coarse access with ABAC/policies for fine-grained rules.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: mixed_rbac_abac
+  human_questions:
+  - question_key: security_iam_authorization_model
+    question_id: Q-EXT-RBAC-01
+    question: What authorization model will enforce least privilege?
+    description: Select the authorization model used to enforce least privilege for user and service access.
+    option_set_id: security.iam_authorization_model
+    specialization_notes:
+    - Warranted when the system needs explicit least-privilege controls across APIs, services, and administrative actions.
+    anchors:
+    - caf_pattern: EXT-LEAST_PRIVILEGE_RBAC_IAM
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-least_privilege_rbac_iam.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-LEAST_PRIVILEGE_RBAC_IAM
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

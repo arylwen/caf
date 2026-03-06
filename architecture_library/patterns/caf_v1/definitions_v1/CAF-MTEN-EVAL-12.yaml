@@ -1,0 +1,61 @@
+pattern_id: CAF-MTEN-EVAL-12
+name: Evolution & Maturity Model
+summary: A clear maturity model is present. Each stage has defining characteristics. Transition triggers between stages are described. The guide discourages premature over-isolation. It supports incremental evolution without r...
+intent: A clear maturity model is present.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: '## 12. Evolution & Maturity Model
+
+
+  - [ ] A clear maturity model is present.
+
+  - [ ] Each stage has defining characteristics.
+
+  - [ ] Transition triggers between stages are described.
+
+  - [ ] The guide discourages premature over-isolation.
+
+  - [ ] It supports incremental evolution without rewrites.
+
+
+  ---'
+source_documents:
+- path: architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+  section_heading: 12. Evolution & Maturity Model
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## 12.'
+  - Evolution & Maturity Model - [ ] A clear maturity model is present.
+  definition_of_done:
+  - 'Verify that ## 12.'
+  - Verify that evolution & Maturity Model - [ ] A clear maturity model is present.
+  capabilities_needed:
+  - evolution_policy
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: checklist

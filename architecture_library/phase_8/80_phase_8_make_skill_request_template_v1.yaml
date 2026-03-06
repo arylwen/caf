@@ -1,0 +1,66 @@
+schema_version: phase8_make_skill_request_v1
+request_id: BP-YYYYMMDD-missing_worker_capabilities
+created_at: "YYYY-MM-DD"
+
+instance:
+  instance_name: "<instance>"
+  reference_architecture_path: "reference_architectures/<instance>/"
+  companion_repo_target_path: "companion_repositories/<instance>/<profile_version>/"
+
+pins:
+  lifecycle_evolution_stage: "<evolution_stage>"
+  lifecycle_generation_phase: "<generation_phase>"
+  platform_pins: "<platform_pins>"
+
+missing_capabilities:
+  - "<capability_id>"
+
+requested_workers:
+  - proposed_worker_id: "worker-<capability-scope>"
+    role_kind: worker
+    capabilities:
+      - "<capability_id>"
+    rationale: "Cover missing capability required by the Task Graph."
+
+constraints:
+  allowed_artifact_classes:
+    - "code_runnable_candidate"
+  allowed_write_paths:
+    - "companion_repositories/<instance>/<profile_version>/"
+  forbidden_actions:
+    - "introduce_new_architecture_choices"
+
+task_signatures:
+  - task_id: "TG-XXX"
+    title: "<task title>"
+    required_capabilities:
+      - "<capability_id>"
+    inputs:
+      - path: "companion_repositories/<instance>/<profile_version>/caf/task_graph_v1.yaml"
+        required: true    definition_of_done:
+      - "<DoD criterion 1 (semantic; no file paths)>"
+      - "<DoD criterion 2 (semantic; no script-like checks)>"
+      - "<DoD criterion 3 (semantic)>"
+    semantic_review:
+      review_questions:
+        - "<Review question 1>"
+        - "<Review question 2>"
+        - "<Review question 3>"
+      severity_threshold: blocker
+      focus_areas: []
+    trace_anchors:
+
+      - pattern_id: "<core_pattern_id>"
+        anchor_kind: "plan_step_archetype"
+        anchor_ref: "<plan step title template>"
+
+scaffolding_instructions:
+  output_skill_root: "skills"
+  worker_skill_manifest:
+    required_sections:
+      - "## Capabilities"
+      - "## Inputs"
+      - "## Outputs"
+      - "## Acceptance Checks"
+      - "## Fail-closed conditions"
+  create_runner_shims: false

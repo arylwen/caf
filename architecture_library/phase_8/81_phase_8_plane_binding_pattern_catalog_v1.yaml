@@ -1,0 +1,12 @@
+catalog_version: 1
+planes:
+- plane_id: CP
+  manifest_path: architecture_library/phase_8/pbp/planes/CP/pbp_manifest_v1.yaml
+- plane_id: AP
+  manifest_path: architecture_library/phase_8/pbp/planes/AP/pbp_manifest_v1.yaml
+- plane_id: DP
+  manifest_path: architecture_library/phase_8/pbp/planes/DP/pbp_manifest_v1.yaml
+- plane_id: AI
+  manifest_path: architecture_library/phase_8/pbp/planes/AI/pbp_manifest_v1.yaml
+- plane_id: ST
+  manifest_path: architecture_library/phase_8/pbp/planes/ST/pbp_manifest_v1.yaml

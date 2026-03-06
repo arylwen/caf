@@ -1,0 +1,41 @@
+schema_version: phase8_plane_runtime_shape_compilation_v1
+notes: >
+  Maps plane.runtime_shape selections into runtime scaffold task intent.
+  This file provides semantic planning guidance only. It MUST NOT encode script-like checks.
+
+entries:
+  - runtime_shape: api_service_http
+    required_capability: plane_runtime_scaffolding
+    outputs_rel:
+      - runtime/README.md
+    definition_of_done:
+      - "A minimal runtime README exists for the plane describing entrypoints and how the plane is invoked in the candidate."
+      - "The plane runtime scaffold establishes a clear module boundary between runtime wiring and application logic."
+      - "No production-readiness claims; candidate scaffolding only."
+
+  - runtime_shape: worker_service_events
+    required_capability: plane_runtime_scaffolding
+    outputs_rel:
+      - runtime/README.md
+    definition_of_done:
+      - "A minimal runtime README exists for the plane describing the worker entrypoint and message/event handling shape at a high level."
+      - "The plane runtime scaffold establishes a clear boundary between event transport adapters and domain/service logic."
+      - "No production-readiness claims; candidate scaffolding only."
+
+  - runtime_shape: library_embedded
+    required_capability: plane_runtime_scaffolding
+    outputs_rel:
+      - runtime/README.md
+    definition_of_done:
+      - "A minimal runtime README exists describing how the embedded library surface is imported/used by other components."
+      - "The scaffold avoids binding to a specific runtime host unless explicitly adopted elsewhere."
+      - "No production-readiness claims; candidate scaffolding only."
+
+  - runtime_shape: custom
+    required_capability: plane_runtime_scaffolding
+    outputs_rel:
+      - runtime/README.md
+    definition_of_done:
+      - "A minimal runtime README exists describing the custom runtime shape and any key constraints from adopted design."
+      - "The scaffold establishes a clear boundary between runtime concerns and application logic."
+      - "No production-readiness claims; candidate scaffolding only."

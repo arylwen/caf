@@ -1,0 +1,115 @@
+pattern_id: CAF-AIOBS-03
+name: Required Telemetry Fields
+summary: 'Each AI action must emit a standardized telemetry record including:'
+intent: 'Each AI action must emit a standardized telemetry record including:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: |
+  ## Required Telemetry Fields
+
+  Each AI action must emit a standardized telemetry record including:
+   n- Request ID
+  - Trace ID and parent-child correlation IDs
+  - Agent identity, model identity, and tool identity
+  - Model version, embedding version, or routing decision version
+  - Tenancy context (tenant, workspace, partition, or equivalent)
+  \
+    - User identity context (if applicable)
+  - Input and output hashes
+  - Safety Gate evaluation result
+  - Risk class (0–\
+    4)
+  - Guardrail triggers or bypass attempts
+  - Evaluation scores (semantic accuracy, policy compliance, deviation)
+  - Execution timing and recursion depth
+  - Drift indicators (if available)
+  - Data provenance indicators
+  - Reasoning trace availability flag
+  - Observability completeness score
+
+  All fields must be immutable once emitted.
+source_documents:
+- path: architecture_library/11_contura_ai_observability_and_evaluation_specification_v1.md
+  section_heading: Required Telemetry Fields
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## Required Telemetry Fields Each AI action must emit a standardized telemetry record including'
+  - "- Request ID - Trace ID and parent-child correlation IDs - Agent identity, model identity, and tool identity - Model\
+    \ version, embedding version, or routing decision version - Tenancy context (tenant, workspace, partition, or equivalent)\
+    \ - User identity context (if applicable) - Input and output hashes - Safety Gate evaluation result - Risk class (0\u2013\
+    4) - Guardrail triggers or bypass attempts - Evaluation scores (semantic accuracy, policy compliance, deviation) - Execution\
+    \ timing and recursion depth - Drift indicators (if available) - Data provenance indicators - Reasoning trace availability\
+    \ flag - Observability completeness score All fields must be immutable once emitted."
+  definition_of_done:
+  - 'Verify that ## Required Telemetry Fields Each AI action must emit a standardized telemetry record including'
+  - "Verify that - Request ID - Trace ID and parent-child correlation IDs - Agent identity, model identity, and tool identity\
+    \ - Model version, embedding version, or routing decision version - Tenancy context (tenant, workspace, partition, or\
+    \ equivalent) - User identity context (if applicable) - Input and output hashes - Safety Gate evaluation result - Risk\
+    \ class (0\u20134) - Guardrail triggers or bypass attempts - Evaluation scores (semantic accuracy, policy compliance,\
+    \ deviation) - Execution timing and recursion depth - Drift indicators (if available) - Data provenance indicators - Reasoning\
+    \ trace availability flag - Observability completeness score All fields must be immutable once emitted."
+  capabilities_needed:
+  - safety_gating
+  - observability_emit
+  - compliance_evidence
+  - policy_enforcement
+  - drift_detection
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: ai_observability.required_fields_profile
+    description: Preset bundles for required AI telemetry fields.
+    options:
+    - option_id: minimal
+      summary: Minimal fields (run_id, tenant, model_id, latency, outcome).
+      profile: minimal
+    - option_id: standard
+      summary: Standard fields (adds token counts, prompt hash, tool list, policy decisions).
+      profile: standard
+    - option_id: audit
+      summary: Audit fields (adds redaction metadata, evaluation refs, retention class).
+      profile: audit
+    - option_id: custom
+      summary: Custom (fill fields).
+      profile: ''
+    default_option_id: standard
+  human_questions:
+  - question_id: Q-CAF-AIOBS-03-01
+    topic: ai_observability.required_fields_profile
+    question: Which required-fields profile will you adopt for AI telemetry?
+    status: open
+    option_set_id: ai_observability.required_fields_profile
+    answer: {}
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AIOBS-03.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-AIOBS-03
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

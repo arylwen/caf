@@ -1,0 +1,200 @@
+pattern_id: CAF-IAM-09
+name: Zero Trust Identity Patterns Across Planes
+summary: Contura systems apply **Zero Trust** as a principle of **identity and access**, not as a network topology or product
+  choice.
+intent: Contura systems apply **Zero Trust** as a principle of **identity and access**, not as a network topology or product
+  choice.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-01
+extended_definition: |
+  ## Zero Trust Identity Patterns Across Planes
+
+  Contura systems apply **Zero Trust** as a principle of **identity and access**, not as a network topology or product choice.
+
+  Zero Trust in this context means that **no identity, plane, or component is implicitly trusted**.  
+  All access decisions are based on explicit identity, context, and policy.
+
+  ---
+
+  ### No Implicit Trust Between Planes Pattern
+
+  No plane implicitly trusts another plane.
+
+  Under this pattern:
+
+  - Control Plane requests are authenticated and authorized like any other
+  - Application Plane services do not assume Control Plane calls are trusted by default
+  - Data Plane systems do not trust Application Plane access without verified identity and context
+  - Network locality or deployment boundaries do not confer trust
+
+  Trust is established through identity, not position.
+
+  ---
+
+  ### Explicit Identity Verification Pattern
+
+  Every access path requires explicit identity verification.
+
+  Under this pattern:
+
+  - All cross-plane calls carry explicit identity and tenant context
+  \
+    - Identity verification occurs at plane boundaries
+  - Identity verification is enforced consistently across synchronous and asynchronous interactions
+  - No “internal” or “system” access path bypasses verification
+
+  Internal does not mean trusted.
+
+  ---
+
+  ### Least-Privilege and Just-Enough-Access Pattern
+
+  All principals operate with least-privilege access.
+
+  Under this pattern:
+
+  - Permissions are scoped to tenant, principal type, and execution context
+  - Broad or wildcard privileges are prohibited
+  - Elevated privileges are explicit, bounded, and auditable
+  - Automation and agents are not granted implicit exceptions
+
+  Least privilege applies equally to humans and machines.
+
+  ---
+
+  ### Continuous Verification Pattern
+
+  Identity and access are continuously verified, not assumed to be static.
+
+  Under this pattern:
+   n- Identity validity is re-evaluated at relevant decision points
+  - Policy changes take effect without relying on restarts or redeployments
+  - Revocation of identity or delegation propagates promptly
+  - Cached trust assumptions are bounded and refreshable
+
+  Trust decays unless actively maintained.
+
+  ---
+
+  ### No Shared Secrets or Transitive Trust Pattern
+
+  \
+    Trust must not propagate transitively through shared credentials.
+
+  Under this pattern:
+
+  - Principals do not reuse credentials across planes or tenants
+  - Possession of a credential does not imply authority beyond its scope
+  - Downstream systems do not act on behalf of upstream principals unless explicitly delegated
+  - Identity delegation boundaries are explicit and non-transitive
+
+  Access does not flow implicitly.
+
+  ---
+
+  ### Failure-Isolation Pattern
+
+  Failure to authenticate or authorize must not degrade system integrity.
+
+  Under this pattern:
+
+  - Authentication failures are handled deterministically
+  \
+    - Authorization failures do not trigger control or lifecycle actions
+  - Partial failures do not result in privilege escalation
+  \
+    - Error handling does not leak sensitive identity or policy information
+
+  Failure does not create trust.
+
+  ---
+
+  **Normative statement:**
+
+  > Zero Trust in Contura systems requires explicit identity verification, least-privilege access, and continuous enforcement across all planes; no plane, component, or identity is implicitly trusted.
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Zero Trust Identity Patterns Across Planes
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '--- ### Explicit Identity Verification Pattern Every access path requires explicit identity verification.'
+  - '- Permissions are scoped to tenant, principal type, and execution context - Broad or wildcard privileges are prohibited
+    - Elevated privileges are explicit, bounded, and auditable - Automation and agents are not granted implicit exceptions
+    Least privilege applies equally to humans and machines.'
+  - '--- ### No Shared Secrets or Transitive Trust Pattern Trust must not propagate transitively through shared credentials.'
+  definition_of_done:
+  - 'Verify that --- ### No Shared Secrets or Transitive Trust Pattern Trust must not propagate transitively through shared
+    credentials.'
+  - 'Verify that --- ### Failure-Isolation Pattern Failure to authenticate or authorize must not degrade system integrity.'
+  capabilities_needed:
+  - authn
+  - authz_policy
+  - identity_model
+  - zero_trust
+  - audit_observability
+  - agent_identity
+  - control_plane_governance
+  - data_plane_enforcement
+  - anti_pattern_detection
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: zero_trust.identity_verification_mode
+    description: How Zero Trust identity verification is applied across planes (verification frequency and delegation).
+    options:
+    - option_id: verify_every_hop
+      summary: Each plane verifies identity/context on every request
+      verification_frequency: per_request
+      delegation: none
+    - option_id: signed_delegation
+      summary: Delegation tokens are issued and verified at each hop
+      verification_frequency: per_request
+      delegation: signed_token
+    - option_id: mTLS_plus_token
+      summary: mTLS between planes plus signed token/claims per request
+      verification_frequency: per_request
+      delegation: none
+    - option_id: session_bound_reauth
+      summary: Session-bound verification with periodic re-auth (bounded TTL)
+      verification_frequency: bounded_session
+      delegation: none
+    - option_id: custom
+      summary: Custom (fill details; prefer adopting a retrieved option when available)
+    default_option_id: mTLS_plus_token
+  human_questions:
+  - question_key: auto_zero_trust_identity_verification_mode
+    question_id: Q-CAF-IAM-09-AUTO-01
+    question: How Zero Trust identity verification is applied across planes (verification frequency and delegation).
+    description: How Zero Trust identity verification is applied across planes (verification frequency and delegation).
+    option_set_id: zero_trust.identity_verification_mode
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-IAM-09

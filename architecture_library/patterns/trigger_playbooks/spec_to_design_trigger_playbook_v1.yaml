@@ -1,0 +1,9 @@
+playbook_version: spec_to_design_trigger_playbook_v1
+scope: spec_to_design
+notes:
+- This playbook is a thin wrapper over the core and external pattern trigger playbooks.
+- It is intended for implementation_scaffolding runs to propose core/external patterns from system/application specification text.
+- Trigger cues are maintained in the respective pattern libraries.
+references:
+- architecture_library/patterns/core_v1/core_pattern_trigger_playbook_v1.yaml
+- architecture_library/patterns/external_v1/pattern_trigger_playbook_v1.yaml

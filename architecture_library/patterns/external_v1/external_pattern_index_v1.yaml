@@ -1,0 +1,374 @@
+index_version: external_pattern_index_v1
+patterns:
+- pattern_id: EXT-EDGE_GATEWAY
+  name: Edge Gateway
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-edge_gateway.yaml
+- pattern_id: EXT-API_GATEWAY
+  name: API Gateway
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-api_gateway.yaml
+- pattern_id: EXT-BACKEND_FOR_FRONTEND_BFF
+  name: Backend-for-Frontend (BFF)
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-backend_for_frontend_bff.yaml
+- pattern_id: EXT-API_COMPOSITION_AGGREGATOR
+  name: API Composition / Aggregator
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-api_composition_aggregator.yaml
+- pattern_id: EXT-STRANGLER_FIG
+  name: Strangler Fig
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-strangler_fig.yaml
+- pattern_id: EXT-ANTI_CORRUPTION_LAYER
+  name: Anti-corruption Layer
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-anti_corruption_layer.yaml
+- pattern_id: EXT-STATELESS_SERVICE
+  name: Stateless Service
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-stateless_service.yaml
+- pattern_id: EXT-SERVERLESS
+  name: Serverless
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-serverless.yaml
+- pattern_id: EXT-MANAGED_CONTAINERS
+  name: Managed Containers
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-managed_containers.yaml
+- pattern_id: EXT-KUBERNETES_PLATFORM
+  name: Kubernetes Platform
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-kubernetes_platform.yaml
+- pattern_id: EXT-SIDECAR
+  name: Sidecar
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-sidecar.yaml
+- pattern_id: EXT-BLUE_GREEN_DEPLOY
+  name: Blue/Green Deploy
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-blue_green_deploy.yaml
+- pattern_id: EXT-CANARY_RELEASE
+  name: Canary Release
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-canary_release.yaml
+- pattern_id: EXT-IMMUTABLE_INFRASTRUCTURE
+  name: Immutable Infrastructure
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-immutable_infrastructure.yaml
+- pattern_id: EXT-CONFIG_EXTERNALIZATION
+  name: Config Externalization
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-config_externalization.yaml
+- pattern_id: EXT-MULTI_ENV_PROMOTION
+  name: Multi-Env Promotion
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-multi_env_promotion.yaml
+- pattern_id: EXT-EVENT_DRIVEN_ARCHITECTURE
+  name: Event-Driven Architecture
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-event_driven_architecture.yaml
+- pattern_id: EXT-PUB_SUB
+  name: Pub/Sub
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-pub_sub.yaml
+- pattern_id: EXT-QUEUE_BASED_LOAD_LEVELING
+  name: Queue-based Load Leveling
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-queue_based_load_leveling.yaml
+- pattern_id: EXT-COMPETING_CONSUMERS
+  name: Competing Consumers
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-competing_consumers.yaml
+- pattern_id: EXT-DEAD_LETTER_QUEUE_DLQ
+  name: Dead Letter Queue (DLQ)
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-dead_letter_queue_dlq.yaml
+- pattern_id: EXT-RETRY_W_BACKOFF_JITTER
+  name: Retry w/ Backoff + Jitter
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-retry_w_backoff_jitter.yaml
+- pattern_id: EXT-CIRCUIT_BREAKER
+  name: Circuit Breaker
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-circuit_breaker.yaml
+- pattern_id: EXT-BULKHEAD_ISOLATION
+  name: Bulkhead Isolation
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-bulkhead_isolation.yaml
+- pattern_id: EXT-TIMEOUT_DEADLINES
+  name: Timeout + Deadlines
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-timeout_deadlines.yaml
+- pattern_id: EXT-RATE_LIMITING_QUOTAS
+  name: Rate Limiting / Quotas
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-rate_limiting_quotas.yaml
+- pattern_id: EXT-IDEMPOTENCY
+  name: Idempotency
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-idempotency.yaml
+- pattern_id: EXT-OUTBOX_PATTERN
+  name: Outbox Pattern
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-outbox_pattern.yaml
+- pattern_id: EXT-SAGA
+  name: Saga
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-saga.yaml
+- pattern_id: EXT-ORCHESTRATION
+  name: Orchestration
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-orchestration.yaml
+- pattern_id: EXT-CHOREOGRAPHY
+  name: Choreography
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-choreography.yaml
+- pattern_id: EXT-CQRS
+  name: CQRS
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-cqrs.yaml
+- pattern_id: EXT-MATERIALIZED_VIEW
+  name: Materialized View
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-materialized_view.yaml
+- pattern_id: EXT-POLYGLOT_PERSISTENCE
+  name: Polyglot Persistence
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-polyglot_persistence.yaml
+- pattern_id: EXT-CACHE_ASIDE
+  name: Cache-Aside
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-cache_aside.yaml
+- pattern_id: EXT-WRITE_THROUGH_CACHE
+  name: Write-Through Cache
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-write_through_cache.yaml
+- pattern_id: EXT-READ_THROUGH_CACHE
+  name: Read-Through Cache
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-read_through_cache.yaml
+- pattern_id: EXT-SECURITY_TRIMMING
+  name: Security Trimming
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-security_trimming.yaml
+- pattern_id: EXT-ZERO_TRUST
+  name: Zero Trust
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-zero_trust.yaml
+- pattern_id: EXT-LEAST_PRIVILEGE_RBAC_IAM
+  name: Least Privilege (RBAC/IAM)
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-least_privilege_rbac_iam.yaml
+- pattern_id: EXT-SECRETS_MANAGEMENT
+  name: Secrets Management
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-secrets_management.yaml
+- pattern_id: EXT-PRIVATE_CONNECTIVITY
+  name: Private Connectivity
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-private_connectivity.yaml
+- pattern_id: EXT-DEFENSE_IN_DEPTH
+  name: Defense in Depth
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-defense_in_depth.yaml
+- pattern_id: EXT-POLICY_AS_CODE_GUARDRAILS
+  name: Policy-as-Code / Guardrails
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-policy_as_code_guardrails.yaml
+- pattern_id: EXT-AUDITABILITY
+  name: Auditability
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-auditability.yaml
+- pattern_id: EXT-DISTRIBUTED_TRACING
+  name: Distributed Tracing
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-distributed_tracing.yaml
+- pattern_id: EXT-STRUCTURED_LOGGING
+  name: Structured Logging
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-structured_logging.yaml
+- pattern_id: EXT-SLO_SLI_MONITORING
+  name: SLO/SLI Monitoring
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-slo_sli_monitoring.yaml
+- pattern_id: EXT-GRACEFUL_DEGRADATION
+  name: Graceful Degradation
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-graceful_degradation.yaml
+- pattern_id: EXT-FEATURE_FLAGS
+  name: Feature Flags
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-feature_flags.yaml
+- pattern_id: EXT-MULTI_REGION_ACTIVE_ACTIVE
+  name: Multi-Region Active/Active
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-multi_region_active_active.yaml
+- pattern_id: EXT-MULTI_REGION_ACTIVE_PASSIVE
+  name: Multi-Region Active/Passive
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-multi_region_active_passive.yaml
+- pattern_id: EXT-BACKUP_PITR
+  name: Backup & PITR
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-backup_pitr.yaml
+- pattern_id: EXT-OBSERVABILITY_3_PILLARS
+  name: Observability “3 pillars”
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-observability_3_pillars.yaml
+- pattern_id: EXT-COST_ALLOCATION_CHARGEBACK
+  name: Cost Allocation / Chargeback
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-cost_allocation_chargeback.yaml
+- pattern_id: EXT-LANDING_ZONE
+  name: Landing Zone
+  layer: external
+  verifiability: overlay_candidate
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-landing_zone.yaml
+- pattern_id: EXT-GOLDEN_PATH_TEMPLATES
+  name: Golden Path Templates
+  layer: external
+  verifiability: overlay_candidate
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-golden_path_templates.yaml
+- pattern_id: EXT-RAG
+  name: RAG
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-rag.yaml
+- pattern_id: EXT-HYBRID_RETRIEVAL
+  name: Hybrid Retrieval
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-hybrid_retrieval.yaml
+- pattern_id: EXT-CHUNKING_METADATA_ENRICHMENT
+  name: Chunking + Metadata Enrichment
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-chunking_metadata_enrichment.yaml
+- pattern_id: EXT-PROMPT_VERSIONING
+  name: Prompt Versioning
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-prompt_versioning.yaml
+- pattern_id: EXT-GUARDRAILS_SAFETY_FILTERS
+  name: Guardrails / Safety Filters
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  source_path: architecture_library/patterns/external_v1/definitions_v1/ext-guardrails_safety_filters.yaml

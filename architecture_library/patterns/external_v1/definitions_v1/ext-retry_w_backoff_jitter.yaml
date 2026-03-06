@@ -1,0 +1,89 @@
+pattern_id: EXT-RETRY_W_BACKOFF_JITTER
+name: Retry w/ Backoff + Jitter
+summary: Controlled retries for transient failures
+intent: Recover from transient failures without causing retry storms or cascading overload.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: A resiliency technique that retries transient failures with increasing delays (backoff) and randomized
+  variation (jitter). This reduces thundering herds and coordinated retry storms, and should include caps, deadlines, and
+  error classification to avoid amplifying persistent failures.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A resiliency technique that retries transient failures with increasing delays (backoff) and randomized
+  variation (jitter). This reduces thundering herds and coordinated retry storms, and should include caps, deadlines, and
+  error classification to avoid amplifying persistent failures.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-RETRY_W_BACKOFF_JITTER
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that this reduces thundering herds and coordinated retry storms, and should include caps, deadlines, and error
+    classification to avoid amplifying persistent failures.
+  capabilities_needed:
+  - eventing
+  - resilience_retry
+  - resilience_timeouts
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: resilience.retry_scope
+    description: Where retries happen and what scope they cover (client/gateway/both).
+    options:
+    - option_id: client_side_only
+      summary: Retries happen only at clients/SDKs/workers with backoff and jitter.
+      notes: ''
+    - option_id: gateway_or_edge_only
+      summary: Retries happen only at gateway/edge for eligible requests.
+      notes: ''
+    - option_id: both_client_and_gateway
+      summary: Retries happen at both client and gateway with explicit safeguards to avoid retry storms.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: client_side_only
+  human_questions:
+  - question_key: resilience_retry_scope
+    question_id: Q-EXT-RETRY-01
+    question: Where should retries run (client, gateway, or both)?
+    description: Select the retry scope and primary enforcement point(s) for retry with backoff + jitter.
+    option_set_id: resilience.retry_scope
+    specialization_notes:
+    - Warranted when transient failures are expected and you need bounded recovery without amplifying load.
+    anchors:
+    - caf_pattern: EXT-RETRY_W_BACKOFF_JITTER
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-retry_w_backoff_jitter.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-RETRY_W_BACKOFF_JITTER
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

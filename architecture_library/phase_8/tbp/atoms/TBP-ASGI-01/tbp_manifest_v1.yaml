@@ -1,0 +1,17 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-ASGI-01
+binds_to:
+- atom_path: runtime.framework
+  atom_value: fastapi
+- atom_path: plane.runtime_shape
+  atom_value: api_service_http
+requires_tbps:
+- TBP-PY-01
+conflicts_with_tbps: []
+layout:
+  role_bindings:
+    asgi_entrypoint:
+      path_template: asgi.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - "from .main import app"

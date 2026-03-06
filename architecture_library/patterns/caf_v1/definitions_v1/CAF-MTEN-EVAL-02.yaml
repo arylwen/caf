@@ -1,0 +1,67 @@
+pattern_id: CAF-MTEN-EVAL-02
+name: SaaS-First Framing
+summary: Derived from architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md section '2. SaaS-First Framing'.
+intent: Derived from 2. SaaS-First Framing.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: '## 2. SaaS-First Framing
+
+
+  ### 2.1 SaaS Motivation
+
+  - [ ] The guide explicitly explains **why multi-tenancy exists in SaaS systems**.
+
+  - [ ] The document answers: “Why is this necessary for a SaaS platform?”
+
+  - [ ] Multi-tenancy is framed as a **product and platform concern**, not just infrastructure.
+
+
+  ### 2.2 Economic and Operational Context
+
+  - [ ] Cost, scale, and operational tradeoffs are discussed.
+
+  - [ ] The guide explains why pooled is often the default.
+
+  - [ ] It explains why isolation increases cost and complexity.
+
+
+  ---'
+source_documents:
+- path: architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+  section_heading: 2. SaaS-First Framing
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## 2.'
+  - 'SaaS-First Framing ### 2.1 SaaS Motivation - [ ] The guide explicitly explains **why multi-tenancy exists in SaaS systems**.'
+  definition_of_done:
+  - 'Verify that ## 2.'
+  - 'Verify that saaS-First Framing ### 2.1 SaaS Motivation - [ ] The guide explicitly explains **why multi-tenancy exists in SaaS systems**.'
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: checklist

@@ -1,0 +1,80 @@
+version: 1
+inventory_id: contura_command_surface_v1
+commands:
+  - command_id: CAF
+    ux_surface: core
+    skill: skills/caf/SKILL.md
+    summary: Single-entry CAF router (single-command surface).
+    args:
+      - name: subcommand
+        required: true
+        kind: string
+      - name: args
+        required: false
+        kind: string
+    subcommands:
+      - verb: help
+        skill: skills/caf-help/SKILL.md
+        summary: Help and onboarding guidance for CAF.
+        args:
+          - name: question
+            required: false
+            kind: string
+      - verb: ask
+        skill: skills/caf-ask/SKILL.md
+        summary: Ask a stakeholder question about an instance (CAF selects minimal context and answers).
+        args:
+          - name: question
+            required: true
+            kind: string
+      - verb: saas
+        skill: skills/caf-saas/SKILL.md
+        summary: Initialize (or re-seed) a reference architecture instance.
+        args:
+          - name: instance_name
+            required: true
+            kind: string
+      - verb: arch
+        skill: skills/caf-arch/SKILL.md
+        summary: Run the architecture pipeline for the current phase.
+        args:
+          - name: instance_name
+            required: true
+            kind: string
+      - verb: plan
+        skill: skills/caf-plan/SKILL.md
+        summary: Generate planning artifacts (obligations + task graph) after design outputs exist.
+        args:
+          - name: instance_name
+            required: true
+            kind: string
+      - verb: next
+        skill: skills/caf-next/SKILL.md
+        summary: Preview or apply the next phase transition.
+        args:
+          - name: instance_name
+            required: true
+            kind: string
+          - name: apply
+            required: false
+            kind: boolean
+      - verb: prd
+        skill: skills/caf-prd/SKILL.md
+        summary: PRD → Architecture Shape workflow (extract, infer, validate, promote).
+        args:
+          - name: instance_name
+            required: true
+            kind: string
+          - name: promote
+            required: false
+            kind: boolean
+      - verb: build
+        skill: skills/caf-build-candidate/SKILL.md
+        summary: Build candidate artifacts when gates allow.
+        args:
+          - name: instance_name
+            required: true
+            kind: string
+removed_commands:
+  - command_id: LEGACY_MULTI_COMMAND_SURFACE
+    notes: "Removed: CAF now exposes a single router command (/caf). Legacy skills remain internal only and must not be advertised."

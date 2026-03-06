@@ -1,0 +1,92 @@
+pattern_id: EXT-CANARY_RELEASE
+name: Canary Release
+summary: Gradual traffic shift to new version
+intent: Gradual traffic shift to new version
+context: Teams shipping frequently with high availability requirements and multiple environments.
+problem: Risky deployments and environment drift lead to outages and slow delivery.
+forces_tradeoffs: Speed vs safety; cost of parallel environments vs reduced downtime; flexibility vs standardization.
+solution_structure_behavior: A progressive delivery strategy that exposes a new version to a small subset of traffic first,
+  then increases exposure as health metrics remain stable. It reduces blast radius and supports quick rollback, but depends
+  on strong observability, automated analysis, and stable routing/traffic-splitting controls.
+consequences: Lower release risk and better repeatability; added pipeline and environment management overhead.
+implementation_notes: Automate builds, use IaC, bake artifacts once, promote through environments, and use progressive delivery
+  with fast rollback.
+examples_known_uses: Zero-downtime deploys, regulated releases, multi-tenant SaaS releases.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A progressive delivery strategy that exposes a new version to a small subset of traffic first, then increases
+  exposure as health metrics remain stable. It reduces blast radius and supports quick rollback, but depends on strong observability,
+  automated analysis, and stable routing/traffic-splitting controls.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-CANARY_RELEASE
+  minimum_evidence:
+  - Teams shipping frequently with high availability requirements and multiple environments.
+  - Risky deployments and environment drift lead to outages and slow delivery.
+  definition_of_done:
+  - Verify that lower release risk and better repeatability
+  capabilities_needed:
+  - observability_emit
+  - backup_restore
+  - deployment_canary
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific orchestration or deployment platform unless provided by platform pins (technology atoms) / TBPs.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: ops.canary_strategy
+    description: Primary canary strategy used to gradually roll out changes and observe impact.
+    options:
+    - option_id: percentage_based
+      summary: Gradually increase traffic percentage to new version with automated rollbacks.
+      notes: ''
+    - option_id: ring_based
+      summary: Deploy to rings (internal, beta, small cohort) before broad rollout.
+      notes: ''
+    - option_id: header_or_tenant_based
+      summary: Route by header/tenant/user cohort to isolate impact and enable targeted rollback.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: percentage_based
+  human_questions:
+  - question_key: ops_canary_strategy
+    question_id: Q-EXT-CANARY-01
+    question: What canary rollout strategy will you use?
+    description: Select the primary canary strategy for incremental rollout and monitoring-based rollback.
+    option_set_id: ops.canary_strategy
+    specialization_notes:
+    - Warranted when releases must be de-risked through gradual exposure and fast rollback based on signals.
+    anchors:
+    - caf_pattern: EXT-CANARY_RELEASE
+  conflict_semantics:
+    alternative_to:
+    - EXT-BLUE_GREEN_DEPLOY
+    incompatible_with: []
+    default_alternative: false
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-canary_release.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-CANARY_RELEASE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

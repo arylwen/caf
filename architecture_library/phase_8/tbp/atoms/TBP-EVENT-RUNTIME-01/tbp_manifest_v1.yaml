@@ -1,0 +1,12 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-EVENT-RUNTIME-01
+binds_to:
+  - atom_path: plane.runtime_shape
+    atom_value: worker_service_events
+requires_tbps: []
+conflicts_with_tbps: []
+layout:
+  role_bindings:
+    event_runtime_note:
+      path_template: runtime/events_runtime.md
+      artifact_class: markdown_docs

@@ -1,0 +1,90 @@
+pattern_id: EXT-SAGA
+name: Saga
+summary: Distributed transaction with compensations
+intent: Coordinate a distributed business transaction using local commits and compensations.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: A pattern for coordinating a multi-step business transaction across services without a global
+  lock. Each step performs a local transaction and, on failure, triggers compensating actions to undo prior effects. Sagas
+  embrace eventual consistency and require careful design of compensations and timeouts.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CAF-MRAD-02
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A pattern for coordinating a multi-step business transaction across services without a global lock. Each step performs a local transaction and, on failure, triggers compensating actions to undo prior effects. Sagas embrace eventual consistency and require careful design of compensations and timeouts.
+
+
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-SAGA
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a pattern for coordinating a multi-step business transaction across services without a global lock.
+  capabilities_needed:
+  - eventing
+  - resilience_retry
+  - resilience_timeouts
+  - workflow_saga
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: async.saga_coordinator_model
+    description: How long-running business transactions are coordinated across services, including compensations.
+    options:
+    - option_id: orchestration
+      summary: Central coordinator drives steps and compensations (orchestrated saga).
+      notes: ''
+    - option_id: choreography
+      summary: Services react to events; coordination emerges through event flows (choreographed saga).
+      notes: ''
+    - option_id: mixed
+      summary: Orchestrate critical flows; choreograph simpler flows.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: mixed
+  human_questions:
+  - question_key: async_saga_coordinator_model
+    question_id: Q-EXT-SAGA-01
+    question: How should sagas be coordinated across services?
+    description: Select the coordination model for long-running transactions and compensating actions.
+    option_set_id: async.saga_coordinator_model
+    specialization_notes:
+    - Warranted when business workflows span multiple services and require compensations on partial failure.
+    anchors:
+    - caf_pattern: EXT-SAGA
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-saga.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-SAGA
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

@@ -1,0 +1,161 @@
+pattern_id: CAF-IAM-04
+name: Application Plane Authentication & Authorization Patterns
+summary: The Application Plane is responsible for **authentication validation** and **authorization enforcement** within the
+  boundaries defined by Control Plane identity governance.
+intent: The Application Plane is responsible for **authentication validation** and **authorization enforcement** within the
+  boundaries defined by Control Plane identity governance.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-01
+extended_definition: |
+  ## Application Plane Authentication & Authorization Patterns
+
+  The Application Plane is responsible for **authentication validation** and **authorization enforcement** within the boundaries defined by Control Plane identity governance.
+
+  Application Plane systems do not govern identity authority or policy intent.  
+  They **consume identity context and policy** and apply them to tenant-facing workflows.
+
+  The following patterns describe how authentication and authorization are applied in Contura-compliant systems.
+
+  ---
+
+  ### Authentication Validation Pattern
+
+  Application Plane systems validate incoming identities according to Control Plane–governed integration and trust rules.
+
+  Under this pattern:
+
+  - Authentication tokens or credentials are validated against governed trust boundaries
+  - Identity context (principal type, tenant, roles) is extracted and verified
+  - Invalid or untrusted identities are rejected at the earliest entry point
+  - Authentication validation is consistent across all tenant-facing entry paths
+
+  Authentication establishes **who is acting**, but does not determine **what is allowed**.
+
+  ---
+
+  ### Delegated Authorization Enforcement Pattern
+   nApplication Plane systems enforce authorization decisions using **delegated policy intent**.
+
+  Under this pattern:
+
+  \
+    - Authorization checks are applied to tenant workflows and APIs
+  - Policy intent is sourced from the Control Plane
+  - Enforcement logic does not redefine or reinterpret policy semantics
+  - Authorization decisions are scoped to tenant and workflow context
+   nApplications enforce **what is permitted**, not **what policy means**.
+
+  ---
+
+  ### Tenant-Context–Aware Authorization Pattern
+
+  All authorization in the Application Plane is evaluated in explicit tenant context.
+
+  Under this pattern:
+   n- Tenant context is mandatory for authorization decisions
+  - Roles, permissions, and entitlements are interpreted per tenant
+  - No authorization decision is made without tenant scoping
+  - Cross-tenant access requires explicit, governed allowance
+
+  This pattern prevents implicit cross-tenant access and leakage.
+
+  ---
+
+  ### Runtime Policy Consumption Pattern
+
+  Application Plane systems consume policy intent at runtime without becoming policy authorities.
+
+  Under this pattern:
+
+  - Policy updates are propagated from the Control Plane
+  - Applications react to policy changes but do not originate them
+  - Cached or derived policy state is bounded and refreshable
+  - Policy enforcement remains observable and auditable
+
+  Policy consumption is reactive and constrained.
+
+  ---
+
+  ### Agent and Service Authorization Pattern
+
+  \
+    Application Plane systems enforce authorization for services and agents using the same governance boundaries as for users.
+   nUnder this pattern:
+
+  - Agents and services operate under explicit, governed identities
+  - Authorization checks apply uniformly to human and non-human principals
+  - Agent actions are constrained by policy, safety gates, and identity scope
+  \
+    - No implicit elevation is granted to automation or AI behavior
+
+  Automation does not bypass authorization.
+
+  ---
+
+  \
+    ### Failure Handling and Denial Pattern
+
+  Authorization failures are handled explicitly and consistently.
+
+  Under this pattern:
+
+  - Unauthorized actions are rejected deterministically
+  - Failures are observable and attributable to identity and context
+  - Authorization failures do not trigger governance or lifecycle changes
+  - Error handling does not leak sensitive policy information
+
+  Authorization failure is a runtime outcome, not a control signal.
+
+  ---
+
+  **Normative statement:**
+   n> Application Plane systems authenticate identities and enforce authorization strictly within delegated scope; they must not govern identity authority or policy intent.
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Application Plane Authentication & Authorization Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '- Tenant context is mandatory for authorization decisions - Roles, permissions, and entitlements are interpreted per
+    tenant - No authorization decision is made without tenant scoping - Cross-tenant access requires explicit, governed allowance
+    This pattern prevents implicit cross-tenant access and leakage.'
+  - they must not govern identity authority or policy intent.
+  definition_of_done:
+  - "Verify that --- ### Authentication Validation Pattern Application Plane systems validate incoming identities according\
+    \ to Control Plane\u2013governed integration and trust rules."
+  - Verify that they must not govern identity authority or policy intent.
+  capabilities_needed:
+  - authn
+  - authz_policy
+  - identity_model
+  - token_claims
+  - audit_observability
+  - agent_identity
+  - control_plane_governance
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

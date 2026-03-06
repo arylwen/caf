@@ -1,0 +1,87 @@
+pattern_id: EXT-DEFENSE_IN_DEPTH
+name: Defense in Depth
+summary: Layered security controls
+intent: Layered security controls
+context: Systems handling sensitive data and multiple services/identities across networks and environments.
+problem: Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+forces_tradeoffs: Security depth vs developer friction; least privilege vs operational agility; privacy vs usability.
+solution_structure_behavior: A security strategy that uses multiple, overlapping controls across layers (identity, network,
+  application, data, and monitoring) so that failure of one control does not result in compromise. It pairs preventive measures
+  with detection and response capabilities.
+consequences: Reduced blast radius and better compliance; requires governance, tooling, and ongoing hygiene.
+implementation_notes: Centralize identity, enforce least privilege, store secrets in a vault, keep services private by default,
+  and automate policy checks.
+examples_known_uses: Enterprise SaaS, healthcare/finance workloads, multi-tenant platforms.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A security strategy that uses multiple, overlapping controls across layers (identity, network, application,
+  data, and monitoring) so that failure of one control does not result in compromise. It pairs preventive measures with detection
+  and response capabilities.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-DEFENSE_IN_DEPTH
+  minimum_evidence:
+  - Systems handling sensitive data and multiple services/identities across networks and environments.
+  - Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+  definition_of_done:
+  - Verify that a security strategy that uses multiple, overlapping controls across layers (identity, network, application,
+    data, and monitoring) so that failure of one control does not result in compromise.
+  capabilities_needed:
+  - identity_access
+  - eventing
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: security.defense_in_depth_layers
+    description: Baseline layering approach for defense-in-depth across ingress, identity, network, runtime, and observability
+      controls.
+    options:
+    - option_id: baseline_layers
+      summary: 'Baseline layers: ingress controls + authn/z + least privilege + audit/telemetry.'
+      notes: ''
+    - option_id: hardened_layers
+      summary: 'Hardened layers: baseline plus mTLS/segmentation, secrets hygiene, and stricter policy enforcement.'
+      notes: ''
+    - option_id: risk_based_layers
+      summary: 'Risk-based layering: hardened controls only for sensitive data paths and privileged operations.'
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: baseline_layers
+  human_questions:
+  - question_key: security_defense_in_depth_layers
+    question_id: Q-EXT-DID-01
+    question: What defense-in-depth layering will you adopt?
+    description: Select the baseline layering strategy for applying multiple, independent security controls.
+    option_set_id: security.defense_in_depth_layers
+    specialization_notes:
+    - Warranted when a single control failure must not lead to compromise and multiple independent safeguards are required.
+    anchors:
+    - caf_pattern: EXT-DEFENSE_IN_DEPTH
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-defense_in_depth.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-DEFENSE_IN_DEPTH
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

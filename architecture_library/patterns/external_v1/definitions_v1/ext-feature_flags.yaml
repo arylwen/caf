@@ -1,0 +1,83 @@
+pattern_id: EXT-FEATURE_FLAGS
+name: Feature Flags
+summary: Toggle behavior safely
+intent: Safely control rollout and behavior changes without redeploying.
+context: Microservices and async flows where debugging spans many components and failures are partial.
+problem: Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+forces_tradeoffs: Signal quality vs cost/volume; cardinality vs queryability; instrumentation effort vs MTTR reduction.
+solution_structure_behavior: "A technique to control application behavior via runtime-configurable toggles. Flags enable gradual\
+  \ rollouts, A/B tests, and rapid kill switches without redeploying. They require governance for lifecycle cleanup, blast-radius\
+  \ scoping, and preventing \u2018flag debt.\u2019"
+consequences: Faster detection and lower MTTR; increased telemetry costs and governance requirements.
+implementation_notes: Standardize correlation IDs, structured logs, tracing, and SLOs; alert on user impact; sample intelligently.
+examples_known_uses: Production incident response, performance tuning, auditing critical flows.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A technique to control application behavior via runtime-configurable toggles. Flags enable gradual rollouts, A/B tests, and rapid kill switches without redeploying. They require governance for lifecycle cleanup, blast-radius scoping, and preventing ‘flag debt.’
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-FEATURE_FLAGS
+  minimum_evidence:
+  - Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+  definition_of_done:
+  - Verify that a technique to control application behavior via runtime-configurable toggles.
+  capabilities_needed:
+  - observability_emit
+  - eventing
+  - config_management
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: ops.feature_flag_scope
+    description: Scope and usage model for feature flags across releases, operations, and experiments.
+    options:
+    - option_id: release_flags
+      summary: Release flags for progressive delivery; removed after rollout completes.
+      notes: ''
+    - option_id: ops_flags
+      summary: Operational flags for safety toggles and emergency controls; tightly governed.
+      notes: ''
+    - option_id: experimentation_flags
+      summary: Experiment flags for A/B testing and cohorting with explicit analytics.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: release_flags
+  human_questions:
+  - question_key: ops_feature_flag_scope
+    question_id: Q-EXT-FF-01
+    question: What feature flag scope and usage model will you adopt?
+    description: Select the primary feature flag usage model and expected governance/cleanup discipline.
+    option_set_id: ops.feature_flag_scope
+    specialization_notes:
+    - Warranted when risk-managed rollout, kill-switches, or experiments require runtime toggles without redeploys.
+    anchors:
+    - caf_pattern: EXT-FEATURE_FLAGS
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-feature_flags.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-FEATURE_FLAGS
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

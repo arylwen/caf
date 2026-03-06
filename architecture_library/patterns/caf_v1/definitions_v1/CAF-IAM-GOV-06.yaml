@@ -1,0 +1,114 @@
+pattern_id: CAF-IAM-GOV-06
+name: Delegated Enforcement Boundary
+summary: The Control Plane explicitly defines **delegation boundaries** for identity enforcement.
+intent: The Control Plane explicitly defines **delegation boundaries** for identity enforcement.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-GOV-01
+extended_definition: '### Delegated Enforcement Boundary Pattern
+
+
+  The Control Plane explicitly defines **delegation boundaries** for identity enforcement.
+
+
+  Under this pattern:
+
+
+  - Enforcement responsibilities are scoped and delegated to downstream planes
+
+  - Delegation is explicit, not inferred
+
+  - Revocation of delegation is centrally controlled
+
+  - No enforcement authority exists without governance context
+
+
+  This pattern ensures that distributed enforcement does not result in distributed authority.
+
+
+  ---
+
+
+  **Normative statement:**
+
+
+  > The Control Plane is the sole authority for identity governance in Contura systems; downstream systems enforce identity
+  policy only within explicitly delegated boundaries.'
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Delegated Enforcement Boundary Pattern
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '### Delegated Enforcement Boundary Pattern The Control Plane explicitly defines **delegation boundaries** for identity
+    enforcement.'
+  - Under this pattern
+  definition_of_done:
+  - Verify that - Enforcement responsibilities are scoped and delegated to downstream planes - Delegation is explicit, not
+    inferred - Revocation of delegation is centrally controlled - No enforcement authority exists without governance context
+    This pattern ensures that distributed enforcement does not result in distributed authority.
+  capabilities_needed:
+  - identity_authentication
+  - policy_enforcement
+  - revocation_propagation
+  - delegation_boundary
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.delegation_boundary_mode
+    description: How delegated enforcement boundaries are defined and constrained across planes/services.
+    options:
+    - option_id: explicit_contract_allowlist
+      summary: Delegation allowed only by explicit contract allowlists
+      boundary_artifact: contract_allowlist
+      default: deny
+    - option_id: capability_token_scoped
+      summary: Scoped capability tokens define delegated actions and bounds
+      boundary_artifact: capability_token
+      default: deny
+    - option_id: signed_policy_bundle
+      summary: Signed policy bundles define delegated enforcement scope
+      boundary_artifact: policy_bundle
+      default: deny
+    - option_id: deny_by_default_no_delegation
+      summary: No delegation unless explicitly approved case-by-case
+      boundary_artifact: manual_approval
+      default: deny
+    - option_id: custom
+      summary: Custom (fill details; prefer adopting a retrieved option when available)
+    default_option_id: explicit_contract_allowlist
+  human_questions:
+  - question_key: auto_iam_delegation_boundary_mode
+    question_id: Q-CAF-IAM-GOV-06-AUTO-01
+    question: How delegated enforcement boundaries are defined and constrained across planes/services.
+    description: How delegated enforcement boundaries are defined and constrained across planes/services.
+    option_set_id: iam.delegation_boundary_mode
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-IAM-GOV-06

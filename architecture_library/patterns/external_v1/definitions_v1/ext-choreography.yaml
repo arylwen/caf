@@ -1,0 +1,90 @@
+pattern_id: EXT-CHOREOGRAPHY
+name: Choreography
+summary: Services coordinate via events (no central controller)
+intent: Let services coordinate a workflow through events without a central controller.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: A coordination style where services react to events and publish new events, with no single controller
+  dictating the flow. It enables loose coupling and independent evolution, but can be harder to reason about end-to-end behavior
+  and requires strong event contracts and tracing.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A coordination style where services react to events and publish new events, with no single controller
+  dictating the flow. It enables loose coupling and independent evolution, but can be harder to reason about end-to-end behavior
+  and requires strong event contracts and tracing.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-CHOREOGRAPHY
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a coordination style where services react to events and publish new events, with no single controller dictating
+    the flow.
+  capabilities_needed:
+  - observability_emit
+  - eventing
+  - resilience_retry
+  - workflow_saga
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: async.choreography_governance_model
+    description: Governance and contract discipline for event choreography across teams and services.
+    options:
+    - option_id: central_event_governance
+      summary: Central governance defines event contracts and shared evolution rules.
+      notes: ''
+    - option_id: team_owned_with_core_rules
+      summary: Teams own event contracts with core fields/rules and compatibility constraints.
+      notes: ''
+    - option_id: minimal_governance
+      summary: Minimal governance; rely on consumer-driven compatibility and strong observability.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: minimal_governance
+  human_questions:
+  - question_key: async_choreography_governance_model
+    question_id: Q-EXT-CHOR-01
+    question: How are choreography event contracts governed?
+    description: Select the governance model for event contracts and evolution in choreographed systems.
+    option_set_id: async.choreography_governance_model
+    specialization_notes:
+    - Warranted when coordination emerges from events and contract evolution is a major source of coupling and risk.
+    anchors:
+    - caf_pattern: EXT-CHOREOGRAPHY
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-choreography.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-CHOREOGRAPHY
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

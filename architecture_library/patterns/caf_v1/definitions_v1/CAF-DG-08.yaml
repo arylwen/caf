@@ -1,0 +1,108 @@
+pattern_id: CAF-DG-08
+name: Design-Time Data Governance (ADR Integration)
+summary: 'All Architectural Decision Records (ADRs) that affect data MUST:'
+intent: 'All Architectural Decision Records (ADRs) that affect data MUST:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 8. Design-Time Data Governance (ADR Integration)
+
+
+  All Architectural Decision Records (ADRs) that affect data MUST:
+
+
+  - Declare affected data assets
+
+  - Declare classification and sensitivity
+
+  - Declare quality expectations
+
+  - Declare lifecycle implications
+
+  - Declare enforcement points
+
+  - Declare required evidence
+
+
+  An ADR that introduces data usage without governance analysis MAY be rejected.
+
+
+  Design-time governance prevents systemic violations.
+
+
+  ---'
+source_documents:
+- path: architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+  section_heading: 8. Design-Time Data Governance (ADR Integration)
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Design-Time Data Governance (ADR Integration) All Architectural Decision Records (ADRs) that affect data MUST
+  definition_of_done:
+  - Verify that design-Time Data Governance (ADR Integration) All Architectural Decision Records (ADRs) that affect data MUST
+  - Verify that - Declare affected data assets - Declare classification and sensitivity - Declare quality expectations - Declare
+    lifecycle implications - Declare enforcement points - Declare required evidence An ADR that introduces data usage without
+    governance analysis MAY be rejected.
+  capabilities_needed:
+  - data_governance
+  - data_classification
+  - data_quality
+  - data_lifecycle
+  - data_validation
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: data_governance.design_time_mechanism
+    summary: Choose among bounded variants for `data_governance.design_time_mechanism` (or use `custom`).
+    options:
+    - option_id: adr_based_governance
+      status: defer
+      summary: Use ADRs as the primary design-time governance mechanism (decisions + traceability).
+      notes: ''
+    - option_id: policy_as_code
+      status: defer
+      summary: Use policy-as-code rules checked in CI for design-time governance.
+      notes: ''
+    - option_id: combined_adr_and_ci
+      status: defer
+      summary: Combine ADRs for intent with CI policy checks for enforcement.
+      notes: ''
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: adr_based_governance
+  human_questions:
+  - question_key: auto_data_governance_design_time_mechanism
+    question_id: Q-CAF-DG-08-AUTO-01
+    question: Select an option for data_governance.design_time_mechanism.
+    description: ''
+    option_set_id: data_governance.design_time_mechanism
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-DG-08

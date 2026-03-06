@@ -1,0 +1,29 @@
+schema_version: "syntactic_checks_registry_v1"
+
+# This registry classifies checks as either:
+# - hard_fail: must stop the pipeline with a feedback packet when violated
+# - report_only: may be reported but MUST NOT block progress
+
+checks:
+  - check_id: "SC-PINS-01"
+    phase: "guardrails"
+    class: "hard_fail"
+    description: "Pinned profile_parameters.yaml must parse as YAML and conform to schema."
+
+  - check_id: "SC-PINS-02"
+    phase: "guardrails"
+    class: "hard_fail"
+    description: "No placeholder tokens (e.g. <...>, {{...}}, TODO, TBD) allowed in pinned inputs."
+
+  - check_id: "SC-TG-01"
+    phase: "playbook"
+    class: "hard_fail"
+    description: "task_graph_v1.yaml must parse and conform to schema (DoD + required_capabilities + trace_anchors)."
+
+  - check_id: "SC-REPORTS-01"
+    phase: "guardrails"
+    class: "report_only"
+    description: "Emit a short syntactic check summary markdown for humans (optional)."
+
+notes:
+  - "Tools/skills MUST NOT treat report_only checks as prerequisites for any phase."

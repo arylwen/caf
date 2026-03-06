@@ -1,0 +1,100 @@
+pattern_id: EXT-IMMUTABLE_INFRASTRUCTURE
+name: Immutable Infrastructure
+summary: Rebuild artifacts instead of patching in place
+intent: Rebuild artifacts instead of patching in place
+context: Teams shipping frequently with high availability requirements and multiple
+  environments.
+problem: Risky deployments and environment drift lead to outages and slow delivery.
+forces_tradeoffs: Speed vs safety; cost of parallel environments vs reduced downtime;
+  flexibility vs standardization.
+solution_structure_behavior: An approach where servers/containers are replaced with
+  newly built images rather than patched in place. This improves reproducibility,
+  reduces configuration drift, and enables safer rollbacks, at the cost of requiring
+  reliable build pipelines and fast redeploy processes.
+consequences: Lower release risk and better repeatability; added pipeline and environment
+  management overhead.
+implementation_notes: Automate builds, use IaC, bake artifacts once, promote through
+  environments, and use progressive delivery with fast rollback.
+examples_known_uses: Zero-downtime deploys, regulated releases, multi-tenant SaaS
+  releases.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: An approach where servers/containers are replaced with newly
+  built images rather than patched in place. This improves reproducibility, reduces
+  configuration drift, and enables safer rollbacks, at the cost of requiring reliable
+  build pipelines and fast redeploy processes.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-IMMUTABLE_INFRASTRUCTURE
+  minimum_evidence:
+  - Teams shipping frequently with high availability requirements and multiple environments.
+  - Risky deployments and environment drift lead to outages and slow delivery.
+  definition_of_done:
+  - Verify that lower release risk and better repeatability
+  capabilities_needed:
+  - backup_restore
+  - immutable_infrastructure
+  - container_runtime
+  - config_management
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific orchestration or deployment platform unless provided
+    by platform pins (technology atoms) / TBPs.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including
+    scope, required choices (option sets), and evidence anchors.
+  option_sets:
+  - option_set_id: ops.immutable_deploy_unit
+    description: Immutable deploy unit strategy used to prevent in-place mutation
+      and configuration drift.
+    options:
+    - option_id: immutable_images
+      summary: Immutable machine/image builds; replace instances rather than patching
+        in place.
+      notes: ''
+    - option_id: immutable_containers
+      summary: Immutable container revisions; replace deployments rather than mutating
+        running containers.
+      notes: ''
+    - option_id: immutable_revisions_serverless
+      summary: Immutable serverless revisions; deploy new revision and shift traffic.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: immutable_images
+  human_questions:
+  - question_key: ops_immutable_deploy_unit
+    question_id: Q-EXT-IMM-01
+    question: What is the immutable deploy unit strategy?
+    description: Select the immutable deploy unit used to prevent in-place mutation
+      and reduce drift.
+    option_set_id: ops.immutable_deploy_unit
+    specialization_notes:
+    - Warranted when reliability and reproducibility require immutable deployments
+      and auditable change history.
+    anchors:
+    - caf_pattern: EXT-IMMUTABLE_INFRASTRUCTURE
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-immutable_infrastructure.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-IMMUTABLE_INFRASTRUCTURE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

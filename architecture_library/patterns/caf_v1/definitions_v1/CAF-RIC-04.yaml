@@ -1,0 +1,64 @@
+pattern_id: CAF-RIC-04
+name: Explicit Parameter Pinning
+summary: 'All parameters exposed by each instantiated template MUST be:'
+intent: 'All parameters exposed by each instantiated template MUST be:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '### 2. Explicit Parameter Pinning
+
+
+  All parameters exposed by each instantiated template MUST be:
+
+
+  - Explicitly listed
+
+  - Explicitly pinned to an allowed value
+
+
+  Defaults, inference, or omission are forbidden.
+
+
+  If a required architectural choice cannot be expressed as a template parameter, the reference implementation MUST stop and surface the gap.
+
+
+  ---'
+source_documents:
+- path: architecture_library/70_contura_reference_implementation_structure_and_derivation_contract_v1.md
+  section_heading: 2. Explicit Parameter Pinning
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Explicit Parameter Pinning All parameters exposed by each instantiated template MUST be
+  - If a required architectural choice cannot be expressed as a template parameter, the reference implementation MUST stop and surface the gap.
+  definition_of_done:
+  - Verify that explicit Parameter Pinning All parameters exposed by each instantiated template MUST be
+  - Verify that if a required architectural choice cannot be expressed as a template parameter, the reference implementation MUST stop and surface the gap.
+  capabilities_needed:
+  - validation_gates
+  - rails_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: process_contract

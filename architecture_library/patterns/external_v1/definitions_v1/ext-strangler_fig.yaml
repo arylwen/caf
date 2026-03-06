@@ -1,0 +1,63 @@
+pattern_id: EXT-STRANGLER_FIG
+name: Strangler Fig
+summary: Incrementally replace legacy behind a gateway
+intent: Modernize safely by incrementally replacing legacy functionality behind a
+  stable interface.
+context: Legacy systems with high risk of big-bang rewrite; you can route traffic
+  by capability, user segment, or endpoint.
+problem: A full rewrite is risky and slow; the business still needs continuous delivery
+  while modernization happens.
+forces_tradeoffs: Speed of replacement vs maintaining two systems; data consistency
+  vs migration safety; clean boundaries vs messy legacy coupling.
+solution_structure_behavior: A modernization approach where a new system gradually
+  takes over functionality from a legacy system by routing specific paths/features
+  to new components. Over time the ‘strangler’ expands until the legacy system is
+  fully retired, enabling incremental delivery and reduced migration risk.
+consequences: Reduces rewrite risk and enables phased value delivery; temporary complexity
+  (dual routing, dual data paths) until legacy is fully retired.
+implementation_notes: Identify “seams” (endpoints/modules). Use feature flags/traffic
+  splitting. Ensure strong observability and clear decommission criteria per slice.
+examples_known_uses: Routing specific endpoints from a monolith to new services; gradually
+  moving UI flows to a new backend.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A modernization approach where a new system gradually takes over
+  functionality from a legacy system by routing specific paths/features to new components.
+  Over time the ‘strangler’ expands until the legacy system is fully retired, enabling
+  incremental delivery and reduced migration risk.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-STRANGLER_FIG
+  minimum_evidence:
+  - Legacy systems with high risk of big-bang rewrite
+  - A full rewrite is risky and slow
+  definition_of_done:
+  - Verify that reduces rewrite risk and enables phased value delivery
+  capabilities_needed:
+  - ingress_boundary
+  - migration_strangler
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: external_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-strangler_fig.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-STRANGLER_FIG
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

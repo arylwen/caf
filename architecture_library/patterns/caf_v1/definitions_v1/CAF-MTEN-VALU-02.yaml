@@ -1,0 +1,97 @@
+pattern_id: CAF-MTEN-VALU-02
+name: Routing & Tenant Context Validation
+summary: '**Is tenant identity resolved exactly once per request or invocation?**'
+intent: '**Is tenant identity resolved exactly once per request or invocation?**'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: POL-01
+  refines: CAF-MTEN-01
+  complements: PST-01
+extended_definition: |
+  ## 2. Routing & Tenant Context Validation
+
+  **Is tenant identity resolved exactly once per request or invocation?**
+
+  - PASS: Tenant is resolved at ingress and treated as immutable.
+  - FAIL: Tenant is re-resolved inside downstream business logic.
+
+  **Is the tenant identifier sourced from an authoritative input?**
+
+  - PASS: Tenant ID comes from a signed token claim.
+  - FAIL: Tenant ID is accepted directly from a request body field.
+
+  **Does the system fail closed if tenant context is missing or ambiguous?**
+
+  - PASS: Requests without valid Tenant Context are rejected.
+  - FAIL: Requests default to a “global” or “system” tenant.
+
+  **Is Tenant Context bound immutably at the start of execution?**
+
+  - PASS: Tenant Context is read-only once created.
+  - FAIL: Code mutates tenant context mid-request.
+   n**Is Tenant Context propagated across all synchronous calls?**
+
+  - PASS: Downstream service calls require tenant-scoped headers.
+  - FAIL: Internal calls omit tenant information.
+
+  **Is Tenant Context propagated across all asynchronous boundaries?**
+   n- PASS: Jobs and events carry signed tenant envelopes.
+  - FAIL: Background workers run without tenant validation.
+
+  \
+    **Are background jobs prevented from executing without validated Tenant Context?**
+
+  - PASS: Job consumers reject messages lacking tenant binding.
+  - FAIL: Cron jobs run globally and infer tenant later.
+
+  **Are routing decisions deterministic and auditable?**
+
+  - PASS: Routing decisions are logged with tenant identifiers.
+  - FAIL: Routing logic depends on dynamic runtime heuristics.
+
+  **Is tenant context validated against resource ownership at enforcement points?**
+
+  - PASS: Resource access checks confirm matching tenant ownership.
+  - FAIL: Resource IDs are trusted without ownership validation.
+
+  ---
+source_documents:
+- path: architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+  section_heading: 2. Routing & Tenant Context Validation
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Downstream service calls require tenant-scoped headers.
+  definition_of_done:
+  - 'Verify that ## 2.'
+  - Verify that routing & Tenant Context Validation **Is tenant identity resolved exactly once per request or invocation?**
+    - PASS
+  capabilities_needed:
+  - tenancy_context
+  - tenancy_routing
+  - identity_access
+  - observability_audit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

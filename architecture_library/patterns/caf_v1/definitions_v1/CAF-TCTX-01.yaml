@@ -1,0 +1,214 @@
+pattern_id: CAF-TCTX-01
+name: Tenant Context Propagation (Normative)
+summary: Treat tenant as a first-class concept and require explicit tenant context propagation across planes.
+intent: Prevent cross-tenant data leakage and enforce per-tenant governance and entitlements deterministically.
+context: Multi-tenant SaaS where many tenants share infrastructure and the system must prove isolation by construction.
+problem: If tenant context is implicit or inferred, authorization and routing become inconsistent and hard to audit; leakage
+  risk increases non-linearly with system growth.
+forces_tradeoffs: Ease-of-use (implicit context) vs correctness and auditability (explicit context); performance vs comprehensive
+  context propagation.
+solution_structure_behavior: Require tenant context to be explicit at boundaries and propagated through service calls, workflows,
+  and data/inference requests; reject execution when tenant context is missing or ambiguous.
+consequences: Improves safety and compliance posture; increases need for consistent context carriers and validation across
+  layers.
+implementation_notes: "Define a canonical context carrier and validate it at ingress and internal boundaries; avoid \u201C\
+  best-effort\u201D inference."
+examples_known_uses: Tenant-scoped request handling and policy evaluation; per-tenant usage enforcement and audit trails.
+related_patterns: |
+  complements: CAF-EDGE-01
+  complements: CAF-IAM-02
+  complements: CAF-MODEL-01
+  complements: CAF-MTEN-01
+  complements: CAF-PLANE-01
+  complements: CAF-POL-01
+  complements: CAF-POL-02
+  complements: CAF-RES-ID-01
+  complements: CAF-SAFE-DP-01
+  complements: CAF-XPLANE-01
+  complements: CAF-ZT-01
+  complements: PST-01
+extended_definition: |
+  **Normative constraints**
+
+  - Tenant context **MUST** be established at the first entry boundary (e.g., verified token claim, trusted routing signal).
+  - Every tenant-facing request **MUST** carry explicit tenant context end-to-end (ingress → AP → DP).
+  - Tenant context **MUST** be applied to logs, traces, metrics, and data/inference operations.
+  \
+    - Any processing path that cannot reliably propagate tenant context is **not allowed** for multi-tenant workloads.
+  - A Contura system **MUST NOT** rely on implicit inference, ambient defaults, UI-selected state alone, or unverified client-supplied tenant identifiers.
+  - If tenant context is missing, ambiguous, or unverifiable, the operation **MUST** fail closed.
+   n**What tenant context includes (minimum)**
+
+  - Tenant identifier
+  - Acting principal (user, service, or agent)
+  - Applicable entitlements/policies
+  - Optional workspace identifier (if present in the product model)
+
+  **Evidence hooks (what to show in design/spec)**
+
+  - Canonical context carrier (claims/header/context object) plus validation points at ingress and internal service boundaries.
+  - Explicit propagation requirements across synchronous calls, async messages, and background jobs.
+  - Telemetry schema: tenant identifiers present in logs/traces/metrics unless explicitly justified in an ADR.
+
+  \
+    **Common failure modes**
+
+  - Tenant inferred from mutable UI state or “current workspace”, creating cross-tenant ambiguity.
+  - Multiple tenant carriers present with no precedence/conflict rule.
+  - Async processing or scheduled jobs executed without tenant context and enforcement.
+  - Tenant identifiers missing from telemetry, making audit/evaluation non-deterministic.
+
+
+source_documents:
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Core Architectural Principles and Constraints/Tenant Context Propagation
+  - Tenancy and Multi-Tenancy Pattern Overview/Tenant Context Propagation Rules
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  sections:
+  - 1. Introduction & Scope
+  - 1.1 Why This Guide Exists
+  - 4.4.2 Tenant Context as a First-Class Invariant
+  - '5.3.1 Core Principle: Tenant Context Must Be Explicit'
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: core_patterns_are_normative
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly states multi-tenancy or tenant isolation requirements.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that tenant context is explicit at ingress and validated at internal boundaries.
+  - Verify that operations reject execution when tenant context is missing or ambiguous.
+  capabilities_needed:
+  - request_context_propagation
+  - authorization_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: tenant_context.ingress_carrier
+    description: How tenant context is carried at ingress and validated.
+    options:
+    - option_id: auth_claim
+      summary: Tenant context from verified auth claims (e.g., JWT claim).
+      carrier_kind: verified_claim
+      carrier_name: tenant_id
+      value_type: uuid
+      rejection_conditions:
+      - missing
+      - malformed
+    - option_id: signed_gateway_header
+      summary: Tenant context from a trusted gateway header (not client-controlled).
+      carrier_kind: trusted_header
+      carrier_name: X-Tenant-Id
+      value_type: uuid
+      rejection_conditions:
+      - missing
+      - malformed
+      - untrusted_source
+    - option_id: path_segment
+      summary: Tenant id from URL path segment.
+      carrier_kind: path_segment
+      carrier_name: tenant_id
+      value_type: uuid
+      rejection_conditions:
+      - missing
+      - malformed
+    - option_id: subdomain
+      summary: Tenant id from host/subdomain.
+      carrier_kind: host_subdomain
+      carrier_name: '{tenant}.<domain>'
+      value_type: string
+      rejection_conditions:
+      - missing
+      - malformed
+    - option_id: custom
+      summary: Custom (fill fields).
+      carrier_kind: ''
+      carrier_name: ''
+      value_type: ''
+      rejection_conditions: []
+    default_option_id: auth_claim
+  - option_set_id: tenant_context.conflict_precedence_rule
+    description: If multiple tenant carriers are present, define precedence and conflict handling.
+    options:
+    - option_id: claim_over_header
+      summary: Verified claim wins; reject if any other carrier conflicts.
+      precedence_order:
+      - verified_claim
+      - trusted_header
+      - path_segment
+      - host_subdomain
+      rejection_rule: reject_if_conflict
+    - option_id: path_over_claim
+      summary: Path segment wins; reject if any other carrier conflicts.
+      precedence_order:
+      - path_segment
+      - verified_claim
+      - trusted_header
+      - host_subdomain
+      rejection_rule: reject_if_conflict
+    - option_id: custom
+      summary: Custom (fill fields).
+      precedence_order: []
+      rejection_rule: ''
+    default_option_id: claim_over_header
+  human_questions:
+  - question_key: tenant_context_carrier
+    question_id: Q-AP-TENANT-CARRIER-01
+    question: What is the tenant context carrier at the AP ingress boundary (kind/name/type) and what are the rejection conditions?
+    description: Select how tenant context is carried and validated at the application ingress boundary.
+    option_set_id: tenant_context.ingress_carrier
+    specialization_notes:
+    - This question is warranted when multi-tenancy is in scope (tenant isolation) or tenant context propagation is required.
+    - If tenant context is already decided in an upstream contract block, keep this question only if AP has an independent
+      ingress boundary.
+    anchors:
+    - caf_pattern: CAF-TCTX-01
+    - caf_pattern: CAF-AID-01
+  - question_key: cp_ap_tenant_context_carrier
+    question_id: Q-CPAP-TENANT-CARRIER-01
+    question: "What tenant context carrier is used on CP\u2194AP interactions (kind/name/type) and what are the rejection\
+      \ conditions?"
+    description: "Select how tenant context is carried and validated for CP\u2194AP contract interactions (control signals\
+      \ and governance coordination)."
+    option_set_id: tenant_context.ingress_carrier
+    specialization_notes:
+    - "Warranted when CAF-PLANE-01 is adopted and the CP\u2194AP contract is in scope."
+    - If AP has a separate external ingress boundary, AP ingress carrier may be the same or stricter; do not assume equivalence.
+    anchors:
+    - caf_pattern: CAF-TCTX-01
+    - caf_pattern: CAF-PLANE-01
+  - question_key: tenant_context_conflict_precedence
+    question_id: Q-CPAP-TCTX-CONFLICT-01
+    question: If multiple potential tenant carriers are present (e.g., claim + header), which is authoritative and what is
+      the rejection rule?
+    description: Define precedence and conflict handling when more than one tenant carrier could be observed.
+    option_set_id: tenant_context.conflict_precedence_rule
+    specialization_notes:
+    - Warranted when a design allows multiple tenant carriers to be present on the same request/message boundary.
+    - Prefer fail-closed conflict handling (reject_if_conflict) unless explicitly justified.
+    anchors:
+    - caf_pattern: CAF-TCTX-01
+    - caf_pattern: CAF-PLANE-01
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-TCTX-01.yaml
+    scope: per_resource
+  required_trace_anchors:
+  - pattern_id: CAF-TCTX-01
+    anchor_kind: plan_step_archetype
+    scope: per_resource

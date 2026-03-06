@@ -1,0 +1,102 @@
+pattern_id: CAF-CH-01
+name: Channel Constraints Do Not Change Plane Authority
+summary: Treat channels as delivery constraints; do not use channel limitations to justify control-plane authority leakage.
+intent: Keep plane invariants intact while adapting interaction semantics for constrained channels.
+context: Systems exposing web/mobile/voice surfaces with different reliability constraints.
+problem: "Teams often \u201Cbend\u201D architecture to accommodate channel constraints, accidentally moving governance logic\
+  \ into channel-facing services."
+forces_tradeoffs: User experience vs strict governance boundaries; immediate responsiveness vs reliable completion under intermittent
+  connectivity.
+solution_structure_behavior: Apply channel patterns at interaction surfaces (API shapes, workflow semantics) while keeping
+  identity/policy/tenancy authority unchanged.
+consequences: Preserves governance model; requires explicit workflow patterns for constrained channels.
+implementation_notes: Express constraints in API contracts and workflow execution; do not introduce new authority semantics
+  due to channel.
+examples_known_uses: Mobile-friendly workflows with resumable operations while retaining CP-owned policy/identity rules.
+related_patterns: |
+  depends_on: CAF-ZT-01
+  complements: CAF-MRAD-01
+  complements: CAF-MRAD-02
+  complements: CAF-MRAD-03
+  complements: CAF-MRAD-04
+extended_definition: |
+  Channels (web/mobile/voice/etc.) are **delivery constraints**. They change interaction shape, not governance authority.
+
+  **Normative constraints**
+  - Channel constraints apply to interaction surfaces and request/workflow semantics; they MUST NOT be used to justify authority leakage between planes.
+  - Delivery adapters (e.g., BFFs) MUST NOT introduce new business logic or authority.
+  - Delivery adapters MUST operate under Application Plane identity and policy constraints and MUST NOT bypass Control Plane governance or Data Plane enforcement.
+
+  **Responsibilities and boundaries**
+  - Keep identity, policy, tenancy, and lifecycle authority semantics unchanged while adapting UX/API shapes (bounded payloads, resumable flows, retries).
+  - Use explicit workflow patterns (durable jobs, status retrieval/notifications) to handle intermittent connectivity rather than moving governance into channel-facing code.
+
+  **Evidence hooks**
+  - Spec/design identifies channel constraints (latency, retries, payload limits, offline/background limits) and the delivery patterns used to satisfy them.
+  - If a BFF exists, its responsibilities are documented as delivery-only (aggregation/shaping/versioning) with explicit prohibitions on governance semantics.
+  - Cross-plane calls remain Zero-Trust: authenticated, authorized, and tenant-context-bound.
+
+  **Common failure modes**
+  - “Bending” plane boundaries to meet channel constraints (governance logic in delivery layer).
+  - BFF becomes a second Control Plane or performs lifecycle/policy authority decisions.
+  - Client/channel surfaces directly access Data Plane without enforced identity/tenant scope.
+
+source_documents:
+- path: architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+  sections:
+  - Channel Model (Normative)
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly identifies a constrained channel (e.g., mobile) with intermittent connectivity/latency constraints.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that channel-specific constraints do not alter plane authority or introduce governance logic into delivery layers.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific mobile protocol, client framework, or edge product.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: channel.constraint_enforcement_location
+    summary: Choose among bounded variants for `channel.constraint_enforcement_location` (or use `custom`).
+    options:
+    - option_id: edge_plus_plane
+      status: defer
+      summary: Validate channel constraints at edge and re-validate critical constraints in-plane.
+    - option_id: edge_only
+      status: defer
+      summary: Validate channel constraints at edge; plane assumes validated envelope (explicit trust contract).
+    - option_id: plane_only
+      status: defer
+      summary: No smart edge; plane validates all channel constraints at ingress.
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: edge_plus_plane
+  human_questions:
+  - question_key: auto_channel_constraint_enforcement_location
+    question_id: Q-CAF-CH-01-AUTO-01
+    question: Select an option for channel.constraint_enforcement_location.
+    description: ''
+    option_set_id: channel.constraint_enforcement_location
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-CH-01

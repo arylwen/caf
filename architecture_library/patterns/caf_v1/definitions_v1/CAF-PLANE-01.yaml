@@ -1,0 +1,132 @@
+pattern_id: CAF-PLANE-01
+name: Tri-Plane Separation (Control/Application/Data)
+summary: Define Control Plane, Application Plane, and Data Plane as distinct architectural
+  roles with explicit boundaries.
+intent: Provide a shared vocabulary and enforceable separation so governance, tenant
+  workflows, and data/inference workloads are isolated and can evolve independently.
+context: AI-first, cloud-native, multi-tenant SaaS systems where platform governance
+  must not be overwhelmed or compromised by tenant workloads.
+problem: Without explicit plane boundaries, governance logic leaks into product services,
+  tenant workloads can impact platform reliability, and safety/compliance become non-deterministic.
+forces_tradeoffs: Balance independent scaling and blast-radius reduction against integration
+  friction and the need for explicit cross-plane contracts.
+solution_structure_behavior: Define CP as governance source-of-truth and enforcement
+  coordinator; AP as tenant-facing workflow execution surface; DP as storage/compute/inference
+  substrate. Establish allowed/prohibited cross-plane interactions and require context
+  propagation and zero-trust norms at plane boundaries.
+consequences: Improves governance clarity, containment, and evolvability; increases
+  need for explicit contracts, context propagation, and disciplined dependency direction.
+implementation_notes: Treat plane boundaries as architectural contracts (module boundaries
+  + validations). Avoid vendor-specific assumptions; rely on TBPs for concrete implementation
+  patterns.
+examples_known_uses: Contura SaaS baseline architecture; common separation of governance/control
+  concerns from tenant workloads and data/inference substrates.
+related_patterns: |
+  depends_on: CAF-TCTX-01
+  depends_on: CAF-XPLANE-01
+  complements: CAF-IAM-02
+  complements: CAF-MODEL-01
+  complements: CAF-POL-02
+  complements: CAF-XPLANE-02
+  complements: CAF-ZT-01
+extended_definition: |
+  **Normative constraints**
+  
+  - Control, Application, and Data planes **MUST** have clearly defined, non-overlapping responsibilities.
+  - Tenant business workflows **MUST NOT** be implemented in the Control Plane.
+  - Platform governance and multi-tenant operations **MUST NOT** be embedded ad-hoc inside Application or Data Plane code.
+  - Every cross-plane call **MUST** be authenticated and authorized; there is **no implicit trust** between planes.
+  - Tenant-facing execution **MUST** carry explicit tenant context end-to-end (ingress → AP → DP) and apply it to telemetry and data operations.
+  - AI policies (allowed models, tool permissions, safety gates) **MUST** be governed centrally via the Control Plane; Application Plane treats AI outputs as untrusted input; Data Plane AI components **MUST NOT** bypass Control Plane policy intent.
+  
+  **Canonical plane roles**
+  
+  - **Control Plane (CP):** tenant lifecycle + platform users, global policies/config/entitlements, provisioning/lifecycle of AP/DP resources, AI governance and safety gates, aggregation of telemetry/audit/billing usage. CP operates and governs the SaaS platform.
+  - **Application Plane (AP):** tenant-facing product surface; orchestrates tenant business workflows and tenant agents/tools/APIs; enforces tenant policy as configured by CP; propagates tenant context and identity into DP.
+  - **Data Plane (DP):** storage + compute substrate; queries/transactions/analytics; AI model serving/inference/embeddings/retrieval; enforces data-level isolation and retention. DP is driven by CP/AP and does not self-govern.
+  
+  **Cross-plane integration rules (high-level)**
+  
+  - Plane interactions **MUST** use explicit interfaces/events and be documented as a plane integration contract (see CAF-XPLANE-01/02).
+  - Platform-level workflows (tenant lifecycle, policy rollout, AI configuration) **MUST** be orchestrated by CP; tenant business workflows **MUST** be orchestrated in AP.
+  
+  **Evidence hooks (what to show in design/spec)**
+  
+  - A plane map: which modules/services belong to CP vs AP vs DP, and which plane owns each data store/compute component.
+  - An explicit CP↔AP and AP↔DP contract surface (sync APIs, async events, or mixed) with authentication/authorization requirements.
+  - A canonical tenant-context carrier and validation points (ingress and internal boundaries).
+  
+  **Common failure modes**
+  
+  - CP implements tenant workflows “for convenience”, or AP/DP embed global governance decisions.
+  - Cross-plane backdoors (direct data access, bypassed policy/identity checks), or DP initiating governance/lifecycle actions.
+  - Missing/implicit tenant context, or shared caches/logs/indexes without robust tenant scoping.
+  
+source_documents:
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Purpose
+  - Core Plane Definitions
+  - Core Architectural Principles and Constraints
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly states multi-tenancy or tenant isolation requirements.
+  - System scope includes governance/control concerns distinct from tenant-facing
+    workflows and data/compute responsibilities.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including
+    scope, constraints/required choices, and evidence anchors.
+  definition_of_done:
+  - Verify that responsibilities are separated into Control, Application, and Data
+    planes in the design artifact and module structure.
+  - Verify that cross-plane interactions are documented and constrained (allowed/prohibited).
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: cp_ap.contract_surface
+    description: Primary CP↔AP integration surface for control/coordination flows.
+    options:
+    - option_id: synchronous_http
+      summary: CP↔AP calls via HTTP APIs.
+    - option_id: async_events
+      summary: CP↔AP coordination via async events/messages.
+    - option_id: mixed
+      summary: 'Mix: sync for enforcement, async for lifecycle and audit.'
+    - option_id: custom
+      summary: Custom (fill notes).
+    default_option_id: mixed
+  human_questions:
+  - question_key: cp_ap_contract_surface
+    question_id: Q-CP-AP-SURFACE-01
+    question: What is the primary CP↔AP contract surface (sync HTTP APIs, async events/messages, or a mixed approach)?
+    description: Select the primary integration surface between Control Plane and Application Plane for governance and coordination flows.
+    option_set_id: cp_ap.contract_surface
+    specialization_notes:
+    - Warranted when CAF-PLANE-01 is adopted and CP↔AP interactions exist.
+    - If a plane integration contract section is present, populate this question there rather than duplicating elsewhere.
+    anchors:
+    - caf_pattern: CAF-PLANE-01
+
+promotions:
+  semantic_inputs:
+    - source_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-PLANE-01.yaml"
+      scope: "cross_cutting"
+  required_trace_anchors:
+    - pattern_id: "CAF-PLANE-01"
+      anchor_kind: "plan_step_archetype"
+      scope: "cross_cutting"

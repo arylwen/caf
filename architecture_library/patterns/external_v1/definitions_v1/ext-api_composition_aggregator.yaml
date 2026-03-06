@@ -1,0 +1,99 @@
+pattern_id: EXT-API_COMPOSITION_AGGREGATOR
+name: API Composition / Aggregator
+summary: One endpoint composes multiple downstream calls
+intent: Expose one endpoint that composes multiple downstream calls into a single
+  response.
+context: Microservices with UX/workflow endpoints needing multiple data sources; desire
+  to reduce round trips and simplify clients.
+problem: Clients must call many services and handle partial failures; latency and
+  coupling increase with each additional call.
+forces_tradeoffs: Lower client complexity vs higher server complexity; performance
+  gains vs fan-out risk; consistency vs eventual consistency.
+solution_structure_behavior: A composition layer that calls multiple downstream services
+  (often in parallel), combines the results, and returns a single response. It simplifies
+  consumers but must carefully manage latency, partial failures, caching, and contract
+  ownership to avoid turning into a monolithic dependency.
+consequences: Fewer client calls and centralized orchestration; introduces fan-out
+  latency and requires careful timeout/circuit-breaker handling.
+implementation_notes: Use parallelism, strict timeouts, partial responses, and caching.
+  Avoid deep dependency graphs. Consider materialized views for heavy read paths.
+examples_known_uses: Order details endpoint aggregating items, payments, shipments;
+  profile endpoint aggregating identity + preferences.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CAF-MRAD-04
+  complements: CTX-01
+  complements: POL-01
+extended_definition: 'A composition layer that calls multiple downstream services
+  (often in parallel), combines the results, and returns a single response. It simplifies
+  consumers but must carefully manage latency, partial failures, caching, and contract
+  ownership to avoid turning into a monolithic dependency.
+
+
+  '
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-API_COMPOSITION_AGGREGATOR
+  minimum_evidence:
+  - Microservices with UX/workflow endpoints needing multiple data sources
+  - Clients must call many services and handle partial failures
+  definition_of_done:
+  - Verify that it simplifies consumers but must carefully manage latency, partial
+    failures, caching, and contract ownership to avoid turning into a monolithic dependency.
+  capabilities_needed:
+  - eventing
+  - resilience_timeouts
+  - workflow_saga
+  - api_composition
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+
+  kind: decision_pattern
+  decision_prompts:
+  - "Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets), and evidence anchors."
+  option_sets:
+  - option_set_id: api.composition_ownership
+    description: "Where API composition/orchestration lives and how fan-out concerns (timeouts/partial responses) are handled."
+    default_option_id: dedicated_composition_endpoint
+    options:
+    - option_id: bff_composes_downstreams
+      summary: "BFF performs composition/orchestration and returns UI-friendly responses."
+      notes: ''
+    - option_id: dedicated_composition_endpoint
+      summary: "Application plane exposes dedicated composition endpoints that orchestrate downstream calls."
+      notes: ''
+    - option_id: precomputed_read_model
+      summary: "Prefer precomputed/materialized read models for heavy read paths; minimize runtime fan-out."
+      notes: ''
+    - option_id: custom
+      summary: "Custom (fill fields)."
+      notes: ''
+  human_questions:
+  - question_key: api_composition_ownership
+    question_id: Q-EXT-AGG-01
+    question: "Where does API composition/orchestration live and what fan-out safeguards apply?"
+    description: "Select the ownership/placement strategy for API composition and the default safeguards for fan-out (timeouts/partial responses)."
+    option_set_id: api.composition_ownership
+    specialization_notes:
+    - "Warranted when UI/workflow endpoints require data from multiple downstream services or bounded contexts."
+    anchors:
+    - caf_pattern: EXT-API_COMPOSITION_AGGREGATOR
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-api_composition_aggregator.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-API_COMPOSITION_AGGREGATOR
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

@@ -1,0 +1,96 @@
+schema_version: contract_declarations_schema_v1
+title: Contract Declarations Registry (v1)
+description: >
+  Canonical registry enumerating system boundary contracts, the chosen contract form, references to where the contract lives,
+  and the justification/anchors required for deterministic planning and fail-closed QA.
+type: object
+required:
+  - registry_version
+  - contracts
+additionalProperties: false
+properties:
+  registry_version:
+    type: string
+    enum: [contract_declarations_v1]
+  contracts:
+    type: array
+    items:
+      type: object
+      required:
+        - boundary_id
+        - boundary_type
+        - materiality
+        - contract_form
+        - contract_ref
+        - anchors
+        - justification
+      additionalProperties: false
+      properties:
+        boundary_id:
+          type: string
+          description: Stable identifier (e.g., BND-CP-AP-01).
+          pattern: '^[A-Z0-9\-]+$'
+        boundary_type:
+          type: string
+          description: Boundary category.
+          enum:
+            - cross_plane
+            - async_messaging
+            - external_integration
+            - internal_api
+            - storage
+            - other
+        materiality:
+          type: object
+          required: [is_material, indicators]
+          additionalProperties: false
+          properties:
+            is_material:
+              type: boolean
+            indicators:
+              type: array
+              description: Short reasons why the boundary is material (e.g., multi-tenancy, governance, lifecycle automation).
+              items:
+                type: string
+        contract_form:
+          type: string
+          enum:
+            - FORM_A_STANDALONE_DOC
+            - FORM_B_EMBEDDED_SECTION
+            - FORM_C_REGISTRY_REFERENCED
+        contract_ref:
+          type: object
+          description: Reference to where the contract is expressed.
+          required: [path]
+          additionalProperties: false
+          properties:
+            path:
+              type: string
+            section_heading:
+              type: string
+              description: Required for embedded-section or referenced forms; optional for standalone docs.
+        anchors:
+          type: array
+          description: Anchors justifying the need and chosen form (decision IDs, pattern IDs, TBP IDs, rails IDs).
+          minItems: 1
+          items:
+            type: object
+            required: [anchor_type, anchor_ref]
+            additionalProperties: false
+            properties:
+              anchor_type:
+                type: string
+                enum: [design_decision, caf_pattern, core_pattern, external_pattern, tbp, rail]
+              anchor_ref:
+                type: string
+        justification:
+          type: object
+          required: [why_this_form, why_not_alternatives]
+          additionalProperties: false
+          properties:
+            why_this_form:
+              type: string
+            why_not_alternatives:
+              type: array
+              items:
+                type: string

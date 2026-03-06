@@ -1,0 +1,128 @@
+---
+name: caf-arch-postprocess
+description: Internal sub-skill for caf-arch. Emits rerun-safe derived views (backlog + traceability mindmap) and performs lightweight projection integrity checks. No new user-facing commands.
+---
+
+> **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
+> If this SKILL conflicts with the contract, the contract wins.
+
+
+# caf-arch-postprocess
+
+## Purpose
+
+Finalize `/caf arch <name>` by emitting human-facing derived views that are
+pure projections of authoritative playbook artifacts.
+
+This sub-skill is intentionally narrow:
+- It MUST NOT introduce new decisions.
+- It MUST be rerun-safe (`overwrite=true`).
+- It MUST be fail-closed for required derived views.
+
+Authoritative sources:
+- Task Graph: `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
+- Pattern obligations: `reference_architectures/<name>/design/playbook/pattern_obligations_v1.yaml`
+
+Derived views emitted here:
+- Backlog projection: `reference_architectures/<name>/design/playbook/task_backlog_v1.md` (required)
+- Traceability mindmap (phase-owned; required; fail-closed):
+  - `architecture_scaffolding` => `reference_architectures/<name>/spec/caf_meta/spec_traceability_mindmap_v3.md`
+  - `implementation_scaffolding` (design post-gate) => `reference_architectures/<name>/design/caf_meta/design_traceability_mindmap_v3.md`
+  - planning (`/caf plan`) => `reference_architectures/<name>/design/caf_meta/plan_traceability_mindmap_v3.md`
+
+Authoritative instance surfaces (ship rule):
+- Only read/write within:
+  - `reference_architectures/<name>/spec/playbook/**`
+  - `reference_architectures/<name>/spec/guardrails/**`
+  - `reference_architectures/<name>/spec/playbook/**`
+  - `reference_architectures/<name>/feedback_packets/**`
+- Ignore sibling folders such as `playbook-1`, `playbook-2`, `playbook_old`, `tmp`, etc. They are user-created and MUST NOT be searched or read.
+- Do not delete user-generated content. This skill may delete only CAF-managed obsolete outputs inside the canonical folders (e.g., deprecated derived views under `spec/caf_meta/`).
+
+## Procedure
+
+0a. Verify CAF-managed pin explanations (script-owned upstream; fail-closed)
+
+   Rationale: pin explanations should be produced immediately after spec scaffolding,
+   before retrieval (so the retrieval blob is stable). Postprocess does not “repair”
+   missing pin explanations.
+
+   Postcondition (fail-closed):
+   - Require `system_spec_v1.md` contains a non-placeholder `pin_value_explanations_v1` block.
+   - If missing: write a feedback packet that includes copy/paste remediation and STOP:
+     - `node tools/caf/build_pin_value_explanations_v1.mjs <name>`
+     - then (if retrieval already ran) rebuild blob:
+       - `node tools/caf/build_retrieval_context_blob_v1.mjs <name> --profile=<profile>`
+
+0. Read `reference_architectures/<name>/spec/guardrails/profile_parameters.yaml` (required) and determine `lifecycle.generation_phase`.
+
+   - Optionally read `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` (if present) for additional context, but **do not** use the resolved view to gate phase behavior (it is derived and can lag the pin).
+
+1. If `generation_phase == architecture_scaffolding`:
+
+   - Do NOT attempt backlog generation (Task Graph is not guaranteed to exist).
+   - DO emit the traceability mindmap anyway (it is a best-effort diagnostic projection that must render even when planning outputs are missing):
+
+     - Preferred: run `node tools/caf/worker_traceability_mindmap_v3.mjs <name>` (overwrite=true)
+     - If scripted run fails, fall back to: `skills/worker-traceability-mindmap/SKILL.md`
+
+   Postcondition (fail-closed):
+   - Require `reference_architectures/<name>/spec/caf_meta/spec_traceability_mindmap_v3.md` exists.
+   - If missing: write a feedback packet and STOP.
+
+   1a. Emit retrieval diagnostics (CAF-managed; scripted; rerun-safe)
+
+   Rationale:
+   - CAF provides deterministic projections derived from authoritative artifacts in the canonical playbook folder.
+
+   Actions (overwrite=true):
+   - Run: `node tools/caf/build_candidate_selection_report_v1.mjs <name> --profile=arch_scaffolding`
+     - Output: `reference_architectures/<name>/spec/caf_meta/pattern_candidate_selection_report_arch_scaffolding_v1.md`
+   - Run: `node tools/caf/build_retrieval_debug_v1.mjs <name> --profile=arch_scaffolding` (read-only; does not modify candidate selection)
+      - Output: `reference_architectures/<name>/spec/caf_meta/retrieval_debug_computed_arch_scaffolding_v1.md`
+
+   Postconditions (fail-closed):
+   - Require selection report exists under `spec/caf_meta/`.
+
+   Then exit successfully.
+
+2. Otherwise (any phase where planning is expected):
+
+   Preconditions (fail-closed):
+   - Require `reference_architectures/<name>/design/playbook/task_graph_v1.yaml` exists and parses as YAML.
+
+   2a. Emit backlog projection (required; fail-closed)
+
+   - Follow: `skills/worker-task-backlog-projector/SKILL.md`
+   - Use `overwrite=true`.
+
+   Postcondition (fail-closed):
+   - Require `reference_architectures/<name>/design/playbook/task_backlog_v1.md` exists.
+
+   Projection integrity check (fail-closed; deterministic):
+   - Parse task ids from `task_graph_v1.yaml` (`tasks[*].task_id`).
+   - Require each task_id string appears at least once in `task_backlog_v1.md`.
+   - If any are missing: write a feedback packet and STOP.
+
+   2b. Emit traceability mindmap (required; fail-closed)
+
+   - Follow: `skills/worker-traceability-mindmap/SKILL.md`
+   - Use `overwrite=true`.
+
+   Postcondition (fail-closed):
+   - Require `reference_architectures/<name>/design/caf_meta/plan_traceability_mindmap_v3.md` exists.
+   - If missing: write a feedback packet and STOP.
+
+3. Do not modify instance outputs outside CAF-managed blocks.
+
+## Feedback packet (on failure)
+
+Write to:
+- `reference_architectures/<name>/feedback_packets/BP-YYYYMMDD-arch-postprocess-derived-views.md`
+
+Include:
+- Stuck At
+- Observed Constraint
+- Gap Type
+- Minimal Fix Proposal
+- Evidence (file paths + excerpts as needed)

@@ -1,0 +1,62 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: CAF Pattern Index Schema v1
+type: object
+additionalProperties: false
+required:
+- catalog_version
+- patterns
+properties:
+  catalog_version:
+    type: string
+    enum:
+    - v1
+  patterns:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required:
+      - pattern_id
+      - name
+      - layer
+      - verifiability
+      - plane
+      - definition_path
+      - trigger_entry_id
+      - source_paths
+      properties:
+        pattern_id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        layer:
+          type: string
+          enum:
+          - caf
+        verifiability:
+          type: string
+          enum:
+          - plan_ready
+          - overlay_candidate
+          - deferred_advisory
+        plane:
+          type: string
+          enum:
+          - application
+          - control
+          - both
+        definition_path:
+          type: string
+          minLength: 1
+        trigger_entry_id:
+          type: string
+          minLength: 1
+        source_paths:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 1

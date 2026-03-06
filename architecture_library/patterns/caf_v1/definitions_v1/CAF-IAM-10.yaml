@@ -1,0 +1,225 @@
+pattern_id: CAF-IAM-10
+name: Observability, Auditability, and Traceability for Identity
+summary: Identity and access controls are only meaningful if they are **observable, auditable, and traceable**.
+intent: Identity and access controls are only meaningful if they are **observable, auditable, and traceable**.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-01
+extended_definition: |
+  ## Observability, Auditability, and Traceability for Identity
+
+  Identity and access controls are only meaningful if they are **observable, auditable, and traceable**.
+
+  Contura systems must be able to answer, at any time:
+   n- who acted
+  - under which identity and scope
+  - on whose behalf
+  - within which tenant
+  - under which policy and delegation
+  \
+    - and with what outcome
+
+  This section defines patterns that ensure identity-related behavior is explainable and reviewable across planes.
+
+  ---
+
+  ### Identity Attribution Pattern
+
+  Every significant action must be attributable to a governed identity.
+
+  Under this pattern:
+
+  - All actions are associated with a principal type and identifier
+  - Tenant context is always included where applicable
+  - Actions performed by services or agents retain linkage to their root identity
+  \
+    - No security-relevant action occurs anonymously
+
+  Attribution is required for correctness, not just compliance.
+
+  ---
+   n### End-to-End Traceability Pattern
+
+  Identity context must be traceable end-to-end across planes and workflows.
+
+  \
+    Under this pattern:
+
+  - Identity and tenant context are preserved across service boundaries
+  - Context is maintained across synchronous, asynchronous, and deferred execution
+  - Traces link upstream intent to downstream execution
+  - Background or retried work retains originating identity context
+
+  Traceability ensures that distributed systems behave as a coherent whole.
+
+  ---
+
+  ### Policy and Delegation Visibility Pattern
+
+  Policy application and delegation boundaries must be observable.
+
+  Under this pattern:
+
+  - It is visible which policy intent applied to an action
+  - Delegated enforcement scope is attributable to Control Plane configuration
+  - Authorization outcomes are explainable in terms of policy and identity
+  - Changes in policy or delegation are traceable over time
+
+  This prevents “mystery denials” and silent privilege expansion.
+
+  ---
+
+  ### Audit Signal Completeness Pattern
+
+  Audit signals must be sufficient to reconstruct identity-relevant decisions.
+
+  Under this pattern:
+
+  - Audit records include identity, tenant, principal type, and execution context
+  - Time, scope, and outcome are recorded
+  - Audit signals are immutable once emitted
+  - Absence of audit data is treated as a failure condition
+
+  Auditability is a system invariant, not an optional feature.
+
+  ---
+
+  ### Cross-Plane Correlation Pattern
+
+  Identity-related signals must be correlatable across planes.
+
+  Under this pattern:
+
+  - Control Plane governance actions can be correlated with downstream enforcement
+  - Application Plane authorization decisions are linkable to upstream identity context
+  - Data Plane access events are attributable to the initiating principal
+  - Correlation identifiers span planes and workflows
+
+  Correlation enables investigation, not just logging.
+
+  ---
+
+  ### Identity Drift Detection Pattern
+
+  Observability mechanisms must enable detection of identity drift.
+
+  Under this pattern:
+
+  - Unexpected changes in identity usage are detectable
+  - Repeated authorization failures are visible and attributable
+  - Policy violations or near-misses can be identified
+  - Agent or service behavior deviating from expected scope is observable
+
+  Drift detection supports prevention as well as response.
+
+  ---
+
+  ### Human and Automated Review Pattern
+
+  Identity observability must support both human review and automated evaluation.
+
+  Under this pattern:
+
+  - Audit and trace signals are consumable by humans for investigation
+  - Signals are structured and consistent for automated analysis
+  - Observability supports governance, security, and reliability use cases
+  - Evaluation does not require reverse-engineering application logic
+   nObservability is an enabler of safe automation.
+
+  ---
+
+  **Normative statement:**
+
+  > All identity and access behavior in Contura systems must be observable, auditable, and traceable across planes; actions that cannot be attributed and explained are non-compliant.
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Observability, Auditability, and Traceability for Identity
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Contura systems must be able to answer, at any time
+  - '--- ### Identity Attribution Pattern Every significant action must be attributable to a governed identity.'
+  - '--- ### End-to-End Traceability Pattern Identity context must be traceable end-to-end across planes and workflows.'
+  definition_of_done:
+  - Verify that contura systems must be able to answer, at any time
+  - Verify that - who acted - under which identity and scope - on whose behalf - within which tenant - under which policy
+    and delegation - and with what outcome This section defines patterns that ensure identity-related behavior is explainable
+    and reviewable across planes.
+  - 'Verify that --- ### Identity Attribution Pattern Every significant action must be attributable to a governed identity.'
+  - Verify that - All actions are associated with a principal type and identifier - Tenant context is always included where
+    applicable - Actions performed by services or agents retain linkage to their root identity - No security-relevant action
+    occurs anonymously Attribution is required for correctness, not just compliance.
+  - 'Verify that --- ### End-to-End Traceability Pattern Identity context must be traceable end-to-end across planes and workflows.'
+  - 'Verify that --- ### Policy and Delegation Visibility Pattern Policy application and delegation boundaries must be observable.'
+  - 'Verify that --- ### Audit Signal Completeness Pattern Audit signals must be sufficient to reconstruct identity-relevant
+    decisions.'
+  - Verify that - Audit records include identity, tenant, principal type, and execution context - Time, scope, and outcome
+    are recorded - Audit signals are immutable once emitted - Absence of audit data is treated as a failure condition Auditability
+    is a system invariant, not an optional feature.
+  capabilities_needed:
+  - authz_policy
+  - identity_model
+  - audit_observability
+  - agent_identity
+  - control_plane_governance
+  - data_plane_enforcement
+  - drift_detection
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.audit_trace_strategy
+    description: How identity/authZ decisions are logged and correlated for audit and traceability.
+    options:
+    - option_id: decision_log_minimal
+      summary: Log decision outcome + principal + resource identifiers
+      fields_profile: minimal
+      retention_class: standard
+    - option_id: decision_plus_inputs_hash
+      summary: Log decision + hashed/normalized inputs for reproducibility
+      fields_profile: inputs_hash
+      retention_class: standard
+    - option_id: full_explain_trace
+      summary: Log decision + explain trace (reason codes) + key inputs
+      fields_profile: explain
+      retention_class: high
+    - option_id: sampled_full_trace
+      summary: Full trace for a sampled subset; minimal logs otherwise
+      fields_profile: sampled_full
+      retention_class: mixed
+    - option_id: custom
+      summary: Custom (fill details; prefer adopting a retrieved option when available)
+    default_option_id: decision_plus_inputs_hash
+  human_questions:
+  - question_key: iam.audit_trace_strategy
+    question_id: Q-IAM-AUDIT-TRACE-01
+    question: What audit/trace strategy should identity and authorization decisions use?
+    description: Choose the evidence level required for auditability and investigations.
+    option_set_id: iam.audit_trace_strategy
+    specialization_notes:
+    - If regulated workloads exist, prefer explain traces with stable reason codes.
+    anchors:
+    - caf_pattern: CAF-IAM-10

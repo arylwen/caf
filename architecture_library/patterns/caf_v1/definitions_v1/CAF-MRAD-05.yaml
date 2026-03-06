@@ -1,0 +1,95 @@
+pattern_id: CAF-MRAD-05
+name: MRAD-5 Offline/Degraded Mode Pattern
+summary: Where meaningful, support offline/degraded behavior such as draft capture and later synchronization.
+intent: Maintain user productivity under connectivity loss by enabling meaningful local progress and later reconciliation.
+context: Workflows where capturing intent offline is valuable and safe (not all workflows qualify).
+problem: Strict online-only flows fail under intermittent networks, causing loss of work and poor experience.
+forces_tradeoffs: UX vs complexity and consistency; offline capability vs conflict resolution burden; local storage risk vs
+  usability.
+solution_structure_behavior: Allow drafts or queued actions locally; provide server-side reconciliation/sync behavior; ensure
+  operations remain authorized and tenant-scoped upon sync.
+consequences: Improves resilience; requires explicit conflict handling and careful security around local data.
+implementation_notes: Define which workflows support offline mode and why; define conflict strategy; avoid offline mode for
+  operations that require strict real-time policy.
+examples_known_uses: Draft creation and later submission; offline note capture; deferred upload workflows.
+related_patterns: |
+  complements: CAF-MRAD-01
+  complements: CAF-MRAD-02
+  complements: EXT-IDEMPOTENCY
+  complements: EXT-OUTBOX_PATTERN
+extended_definition: |
+  This pattern supports **offline or degraded behavior** for workflows where it is meaningful, with explicit sync/reconcile and deterministic conflict handling.
+
+  **Normative constraints**
+  - For workflows where degraded mode is meaningful, systems SHOULD support offline/degraded behavior.
+  - Draft capture SHOULD be allowed without continuous connectivity.
+  - Sync/reconcile MUST be explicit and auditable.
+  - Conflict resolution and reconciliation MUST be handled deterministically.
+
+  **Evidence hooks**
+  - The client and server contract defines how drafts are captured and later synced.
+  - Sync/reconcile is modeled explicitly (events/operations) with auditability.
+  - Reconciliation rules are deterministic and testable for the relevant resource types.
+
+  **Common failure modes**
+  - Implicit background sync with no audit trail or user-visible state.
+  - Non-deterministic conflict handling (“last write wins” without rules).
+  - Offline mode attempted without idempotency, causing duplicate effects on reconnect.
+
+source_documents:
+- path: architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+  sections:
+  - 'MRAD-5: Offline/Degraded Mode Pattern (Where Applicable)'
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly identifies a constrained channel (e.g., mobile) with intermittent connectivity/latency constraints.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that offline/degraded workflows (where enabled) define reconciliation and authorization on sync.
+  capabilities_needed:
+  - offline_sync_reconciliation
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific mobile protocol, client framework, or edge product.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: resilience.offline_mode_support_level
+    summary: Choose among bounded variants for `resilience.offline_mode_support_level` (or use `custom`).
+    options:
+    - option_id: none
+      status: defer
+      summary: No offline/degraded mode support (online-only).
+    - option_id: draft_capture_only
+      status: defer
+      summary: Offline draft capture; submission requires connectivity.
+    - option_id: queued_actions_with_replay
+      status: defer
+      summary: Queue actions locally and replay/synchronize later with reconciliation.
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: draft_capture_only
+  human_questions:
+  - question_id: Q-CAF-MRAD-05-01
+    topic: resilience.offline_mode_support_level
+    question: Which option best matches your intended choice for `resilience.offline_mode_support_level` and what constraints/rejection
+      conditions apply?
+    status: open
+    answer: {}
+    option_set_id: resilience.offline_mode_support_level

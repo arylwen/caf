@@ -1,0 +1,3 @@
+output_kind	relative_path_template	notes
+plane_boundary_readme	boundaries/{archetype}/{obligation_id}/README.md	Used for plane-scoped derived obligation tasks (TG-00-DO-*). Includes obligation_id to avoid write collisions when multiple patterns imply the same (plane, archetype).
+system_contract_doc	contracts/derived/{obligation_id}.md	Used for SYSTEM-scoped derived obligations.

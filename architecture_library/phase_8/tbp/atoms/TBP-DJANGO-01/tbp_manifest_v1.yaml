@@ -1,0 +1,25 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-DJANGO-01
+binds_to:
+- atom_path: runtime.framework
+  atom_value: django
+- atom_path: plane.runtime_shape
+  atom_value: api_service_http
+requires_tbps:
+- TBP-PY-01
+- TBP-ASGI-01
+conflicts_with_tbps:
+- TBP-FASTAPI-01
+layout:
+  role_bindings:
+    composition_root:
+      path_template: manage.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - DJANGO_SETTINGS_MODULE
+    api_boundary:
+      path_template: '{resource_snake}/views.py'
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - def
+      - class

@@ -1,0 +1,123 @@
+pattern_id: CAF-MRAD-02
+name: MRAD-2 Resumable Workflow Pattern
+summary: Long-running actions return durable identifiers and can be resumed/observed without restarting.
+intent: Support reliable completion of long-running actions under intermittent client connectivity.
+context: Mobile workflows where clients may disconnect, background, or lose connectivity mid-operation.
+problem: If progress depends on continuous connectivity, users must restart operations, creating poor UX and inconsistent
+  state.
+forces_tradeoffs: Operational complexity vs UX; durability/visibility of workflow state vs storage cost; synchronous simplicity
+  vs async orchestration.
+solution_structure_behavior: Return a durable workflow/operation ID; persist progress; provide status endpoints; ensure operations
+  can continue server-side without client connectivity.
+consequences: Improves reliability and user experience; requires workflow state persistence and status models.
+implementation_notes: Define status model and retention; ensure status queries are authorized and tenant-scoped; avoid leaking
+  workflow internals.
+examples_known_uses: Uploads, AI processing jobs, batch operations, provisioning flows.
+related_patterns: |
+  complements: CAF-CH-01
+  complements: CAF-MRAD-01
+  complements: CAF-MRAD-03
+  complements: CAF-MRAD-04
+  complements: CAF-MRAD-05
+  complements: EXT-QUEUE_BASED_LOAD_LEVELING
+  complements: EXT-SAGA
+extended_definition: |
+  This pattern ensures **long-running actions are resumable** so mobile clients can disconnect and reconnect without restarting workflows.
+
+  **Normative constraints**
+  - Long-running actions MUST be resumable.
+  - Operations MUST return a durable identifier for progress tracking.
+  - Clients MUST be able to reconnect and observe status without restarting the operation.
+  - Workflows MUST NOT depend on continuous client connectivity.
+
+  **Evidence hooks**
+  - The API contract exposes a durable operation/workflow identifier and a status endpoint (or equivalent).
+  - Progress/state is persisted durably and can be queried by identifier.
+  - The workflow can resume from a persisted state after retries or restarts.
+
+  **Common failure modes**
+  - “Fire-and-forget” operations with no durable tracking identifier.
+  - Status stored only in ephemeral memory (lost on restart).
+  - Resumption requires replaying all client steps (not resumable).
+
+source_documents:
+- path: architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+  sections:
+  - 'MRAD-2: Resumable Workflow Pattern'
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly identifies a constrained channel (e.g., mobile) with intermittent connectivity/latency constraints.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that long-running operations return durable identifiers and expose resumable status.
+  capabilities_needed:
+  - workflow_status_tracking
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific mobile protocol, client framework, or edge product.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: workflow.resume_token_strategy
+    description: How a client resumes or retries long-running workflows deterministically.
+    options:
+    - option_id: server_workflow_id
+      summary: Server issues a stable workflow/execution id for resume/retry.
+      token_kind: workflow_id
+      token_name: workflow_id
+      expiry_policy: until_complete
+      rejection_conditions:
+      - missing
+      - unknown
+      - expired
+    - option_id: client_resume_token
+      summary: Client holds an opaque resume token issued by the server.
+      token_kind: resume_token
+      token_name: resume_token
+      expiry_policy: ttl
+      rejection_conditions:
+      - missing
+      - unknown
+      - expired
+      - tampered
+    - option_id: checkpoint_step_id
+      summary: Resume via explicit checkpoint/step identifiers with server-side state.
+      token_kind: checkpoint
+      token_name: checkpoint_id
+      expiry_policy: until_complete
+      rejection_conditions:
+      - missing
+      - unknown
+      - invalid_transition
+    - option_id: custom
+      summary: Custom (fill fields).
+      token_kind: ''
+      token_name: ''
+      expiry_policy: ''
+      rejection_conditions: []
+    default_option_id: server_workflow_id
+  human_questions:
+  - question_key: workflow_resume
+    question_id: Q-MRAD-RESUME-01
+    question: What is the resumable workflow token/id strategy and what are the rejection conditions?
+    description: Select how workflow resume/retry is represented and validated.
+    option_set_id: workflow.resume_token_strategy
+    specialization_notes:
+    - Warranted when a workflow spans multiple steps, retries, or asynchronous boundaries.
+    - Ensure resume tokens/ids are tenant-bound and cannot be replayed across tenants.
+    anchors:
+    - caf_pattern: CAF-MRAD-02

@@ -1,0 +1,92 @@
+pattern_id: CAF-AISG-04
+name: Human-in-the-Loop (HITL) Policies
+summary: 'A Safety Gate must define explicit HITL triggers:'
+intent: 'A Safety Gate must define explicit HITL triggers:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: |
+  ## Human-in-the-Loop (HITL) Policies
+
+  A Safety Gate must define explicit HITL triggers:
+
+  1. High-risk actions  
+  2. Cross-tenant effects  
+  3. Identity or permission updates  
+  4. Large-scale migrations or deletions  
+  \
+    5. Financial commitments  
+  6. Regulatory or compliance-sensitive workflows
+
+  HITL escalation path (plain text diagram):
+   nUser/Agent Request  
+  → Safety Gate Risk Classifier  
+  → HITL Required?  
+  → If Yes: Human Review Queue  
+  → Approved/Rejected  
+  → Execution or Abort
+source_documents:
+- path: architecture_library/10_contura_ai_safety_gate_specification_v1.md
+  section_heading: Human-in-the-Loop (HITL) Policies
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## Human-in-the-Loop (HITL) Policies A Safety Gate must define explicit HITL triggers'
+  definition_of_done:
+  - 'Verify that ## Human-in-the-Loop (HITL) Policies A Safety Gate must define explicit HITL triggers'
+  - "Verify that user/Agent Request \u2192 Safety Gate Risk Classifier \u2192 HITL Required?"
+  capabilities_needed:
+  - safety_gating
+  - compliance_evidence
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  option_sets:
+  - option_set_id: hitl.trigger_bundle
+    summary: Select the default bundle of Human-in-the-Loop triggers.
+    options:
+    - option_id: minimal_high_risk_only
+      status: defer
+      summary: 'Minimal: HITL for high-risk actions only.'
+    - option_id: standard_high_risk_cross_tenant_identity
+      status: defer
+      summary: 'Standard: high-risk actions + cross-tenant effects + identity/permission updates.'
+    - option_id: strict_including_migrations_financial_regulatory
+      status: defer
+      summary: 'Strict: standard bundle plus large migrations/deletions, financial commitments, and regulatory/compliance-sensitive
+        workflows.'
+    - option_id: custom
+      status: defer
+      summary: Custom (describe HITL triggers and escalation path).
+      notes: ''
+    default_option_id: standard_high_risk_cross_tenant_identity
+  human_questions:
+  - question_key: hitl_trigger_bundle
+    question_id: Q-AISG-HITL-01
+    question: What should the default HITL trigger bundle be?
+    description: Select one option; use 'custom' only if none fit.
+    option_set_id: hitl.trigger_bundle
+    anchors:
+    - caf_pattern: CAF-AISG-04
+  kind: decision_pattern

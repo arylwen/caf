@@ -1,0 +1,176 @@
+pattern_id: CMP-01
+name: Composition Root and Layered Boundaries
+summary: Centralize application assembly in a single composition root and enforce
+  one-way dependency direction across named layers and boundaries.
+intent: Centralize application assembly in a single composition root and enforce one-way
+  dependency direction across named layers and boundaries.
+context: This pattern applies whenever the system has more than one module of meaningful
+  responsibility and requires deterministic wiring of dependencies. It is required
+  for any architecture that claims separation between application boundary, domain
+  core, and infrastructure adapters.
+problem: Without an explicit composition root and enforced dependency direction, module
+  wiring becomes scattered and layers leak implementation details, leading to cyclic
+  dependencies, tangled build graphs, and brittle change propagation.
+forces_tradeoffs: '- Strict dependency direction vs short-term convenience of cross-layer
+  imports.
+
+  - Centralized wiring in a composition root vs distributed instantiation for speed.
+
+  - Testability/modularity vs additional indirection via interfaces and injection.'
+solution_structure_behavior: 'Introduces module roles: app_composition_root; application_boundary;
+  domain_core; infrastructure_adapters
+
+
+  Allowed dependencies: application_boundary may depend on domain_core and abstract
+  ports; domain_core must not depend on infrastructure_adapters; infrastructure_adapters
+  may depend on domain_core ports and external SDKs; no circular dependencies across
+  roles.
+
+
+  Assembly contract: All concrete wiring occurs in app_composition_root. application_boundary
+  depends only on abstractions for infrastructure concerns. domain_core defines ports
+  required from infrastructure_adapters. Registration is performed through explicit
+  registries owned by app_composition_root (for example: api_registry; dependency_registry;
+  config_registry). Modules contribute via declared extension points to avoid shared-file
+  thrash.'
+consequences: This pattern creates a stable, stack-independent skeleton for modularity,
+  prevents dependency drift, and provides deterministic extension points for multi-worker
+  code generation.
+implementation_notes: See required evidence hooks, structural validations, and plan
+  step archetypes in this definition. Legacy pattern IDs from core inventory (ASM-*/BND-*/DAT-*)
+  are not yet published as core_v1 definitions; related_patterns point to canonical
+  implemented core IDs only.
+examples_known_uses: Typical in layered monoliths and modular services where a single
+  bootstrap/assembly component wires controllers, services, and repositories.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  # Composition Root and Layered Boundaries (CMP-01)
+
+  PATTERN_ID: CMP-01
+  NAME: Composition Root and Layered Boundaries
+  CATEGORY: assembly_composition
+  \
+    INTENT: Centralize application assembly in a single composition root and enforce one-way dependency direction across named layers and boundaries.
+  APPLIES_WHEN: This pattern applies whenever the system has more than one module of meaningful responsibility and requires deterministic wiring of dependencies. It is required for any architecture that claims separation between application boundary, domain core, and infrastructure adapters.
+  INTRODUCES_MODULE_ROLES: app_composition_root; application_boundary; domain_core; infrastructure_adapters
+  ALLOWED_DEPENDENCIES: application_boundary may depend on domain_core and abstract ports; domain_core must not depend on infrastructure_adapters; infrastructure_adapters may depend on domain_core ports and external SDKs; no circular dependencies across roles.
+  \
+    ASSEMBLY_CONTRACT: All concrete wiring occurs in app_composition_root. application_boundary depends only on abstractions for infrastructure concerns. domain_core defines ports required from infrastructure_adapters. Registration is performed through explicit registries owned by app_composition_root (for example: api_registry; dependency_registry; config_registry). Modules contribute via declared extension points to avoid shared-file thrash.
+
+  REQUIRED_EVIDENCE_HOOKS:
+  - E-CMP-01-01: The module plan lists the chosen layers and assigns each module role to a layer or boundary.
+  - E-CMP-01-02: The plan declares the composition root and the registries it owns (api_registry; dependency_registry; config_registry).
+
+  STRUCTURAL_VALIDATIONS:
+  \
+    - V-CMP-01-01: No dependency from domain_core to infrastructure_adapters is present in the module plan dependency rules.
+  - V-CMP-01-02: The module plan defines exactly one app_composition_root role and it is the only role allowed to bind ports to adapters.
+
+  PLAN_STEP_ARCHETYPES:
+  - STEP_TITLE_TEMPLATE: Define module boundaries and dependency direction
+    REQUIRED_CAPABILITIES: architecture_decomposition
+    WRITE_SET: docs_architecture
+    DELIVERABLES: module_plan_section
+    EVIDENCE_REQUIRED: E-CMP-01-01
+    VALIDATIONS: V-CMP-01-01
+  - STEP_TITLE_TEMPLATE: Define composition root registries and extension points
+    REQUIRED_CAPABILITIES: architecture_decomposition
+    WRITE_SET: docs_architecture
+    DELIVERABLES: assembly_contract_section
+    EVIDENCE_REQUIRED: E-CMP-01-02
+    VALIDATIONS: V-CMP-01-02
+
+  JUSTIFICATION: This pattern creates a stable, stack-independent skeleton for modularity, prevents dependency drift, and provides deterministic extension points for multi-worker code generation.
+  \
+    VERSION: v1
+  VERSION_HISTORY:
+  - v1: Initial release.
+core:
+  category: assembly_composition
+  applies_when: This pattern applies whenever the system has more than one module
+    of meaningful responsibility and requires deterministic wiring of dependencies.
+    It is required for any architecture that claims separation between application
+    boundary, domain core, and infrastructure adapters.
+  introduces_module_roles: app_composition_root; application_boundary; domain_core;
+    infrastructure_adapters
+  allowed_dependencies: application_boundary may depend on domain_core and abstract
+    ports; domain_core must not depend on infrastructure_adapters; infrastructure_adapters
+    may depend on domain_core ports and external SDKs; no circular dependencies across
+    roles.
+  assembly_contract: 'All concrete wiring occurs in app_composition_root. application_boundary
+    depends only on abstractions for infrastructure concerns. domain_core defines
+    ports required from infrastructure_adapters. Registration is performed through
+    explicit registries owned by app_composition_root (for example: api_registry;
+    dependency_registry; config_registry). Modules contribute via declared extension
+    points to avoid shared-file thrash.'
+  required_evidence_hooks:
+  - 'E-CMP-01-01: The module plan lists the chosen layers and assigns each module
+    role to a layer or boundary.'
+  - 'E-CMP-01-02: The plan declares the composition root and the registries it owns
+    (api_registry; dependency_registry; config_registry).'
+  structural_validations:
+  - 'V-CMP-01-01: No dependency from domain_core to infrastructure_adapters is present
+    in the module plan dependency rules.'
+  - 'V-CMP-01-02: The module plan defines exactly one app_composition_root role and
+    it is the only role allowed to bind ports to adapters.'
+  plan_step_archetypes:
+  - "- STEP_TITLE_TEMPLATE: Define module boundaries and dependency direction\n  REQUIRED_CAPABILITIES:\
+    \ architecture_decomposition\n  WRITE_SET: docs_architecture\n  DELIVERABLES:\
+    \ module_plan_section\n  EVIDENCE_REQUIRED: E-CMP-01-01\n  VALIDATIONS: V-CMP-01-01"
+  - "- STEP_TITLE_TEMPLATE: Define composition root registries and extension points\n\
+    \  REQUIRED_CAPABILITIES: architecture_decomposition\n  WRITE_SET: docs_architecture\n\
+    \  DELIVERABLES: assembly_contract_section\n  EVIDENCE_REQUIRED: E-CMP-01-02\n\
+    \  VALIDATIONS: V-CMP-01-02\n\nJUSTIFICATION: This pattern creates a stable, stack-independent\
+    \ skeleton for modularity, prevents dependency drift, and provides deterministic\
+    \ extension points for multi-worker code generation.\nVERSION: v1"
+  justification: This pattern creates a stable, stack-independent skeleton for modularity,
+    prevents dependency drift, and provides deterministic extension points for multi-worker
+    code generation.
+  version: v1
+  version_history:
+  - 'v1: Initial release.'
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_cmp_01_v1.md
+caf:
+  layer: core
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: core_patterns_are_normative
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: core_pattern
+    anchor_id: CMP-01
+  minimum_evidence:
+  - This pattern applies whenever the system has more than one module of meaningful
+    responsibility and requires deterministic wiring of dependencies.
+  - It is required for any architecture that claims separation between application
+    boundary, domain core, and infrastructure adapters.
+  definition_of_done:
+  - 'Verify that V-CMP-01-01: No dependency from domain_core to infrastructure_adapters
+    is present in the module plan dependency rules.'
+  - 'Verify that V-CMP-01-02: The module plan defines exactly one app_composition_root
+    role and it is the only role allowed to bind ports to adapters.'
+  - 'Verify evidence hook is satisfied: E-CMP-01-01: The module plan lists the chosen
+    layers and assigns each module role to a layer or boundary.'
+  - 'Verify evidence hook is satisfied: E-CMP-01-02: The plan declares the composition
+    root and the registries it owns (api_registry; dependency_registry; config_registry).'
+  capabilities_needed:
+  - architecture_decomposition
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: core_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/core_v1/definitions_v1/CMP-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CMP-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

@@ -1,0 +1,98 @@
+pattern_id: EXT-MULTI_ENV_PROMOTION
+name: Multi-Env Promotion
+summary: Dev→Test→Prod via pipelines and IaC
+intent: Dev→Test→Prod via pipelines and IaC
+context: Teams shipping frequently with high availability requirements and multiple
+  environments.
+problem: Risky deployments and environment drift lead to outages and slow delivery.
+forces_tradeoffs: Speed vs safety; cost of parallel environments vs reduced downtime;
+  flexibility vs standardization.
+solution_structure_behavior: A delivery model where the same build artifact is promoted
+  through environments (dev → test → prod) via automated pipelines and infrastructure-as-code.
+  It reduces environment drift and improves auditability by making promotions explicit,
+  gated, and repeatable.
+consequences: Lower release risk and better repeatability; added pipeline and environment
+  management overhead.
+implementation_notes: Automate builds, use IaC, bake artifacts once, promote through
+  environments, and use progressive delivery with fast rollback.
+examples_known_uses: Zero-downtime deploys, regulated releases, multi-tenant SaaS
+  releases.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A delivery model where the same build artifact is promoted through
+  environments (dev → test → prod) via automated pipelines and infrastructure-as-code.
+  It reduces environment drift and improves auditability by making promotions explicit,
+  gated, and repeatable.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-MULTI_ENV_PROMOTION
+  minimum_evidence:
+  - Teams shipping frequently with high availability requirements and multiple environments.
+  - Risky deployments and environment drift lead to outages and slow delivery.
+  definition_of_done:
+  - Verify that lower release risk and better repeatability
+  capabilities_needed:
+  - observability_emit
+  - backup_restore
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific orchestration or deployment platform unless provided
+    by platform pins (technology atoms) / TBPs.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including
+    scope, required choices (option sets), and evidence anchors.
+  option_sets:
+  - option_set_id: ops.promotion_model
+    description: How changes are promoted across environments (artifact vs config
+      vs both).
+    options:
+    - option_id: artifact_promotion
+      summary: Promote the same built artifact across environments; environment differences
+        are config only.
+      notes: ''
+    - option_id: config_promotion
+      summary: Promote configuration and environment-specific artifacts separately
+        with explicit gates.
+      notes: ''
+    - option_id: artifact_and_config
+      summary: Promote both artifact and config with explicit compatibility validation.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: artifact_promotion
+  human_questions:
+  - question_key: ops_promotion_model
+    question_id: Q-EXT-MEP-01
+    question: How will you promote changes across environments?
+    description: Select the promotion model across dev/stage/prod (artifact promotion
+      vs config promotion).
+    option_set_id: ops.promotion_model
+    specialization_notes:
+    - Warranted when multiple environments exist and releases must be promoted with
+      controlled risk and reproducibility.
+    anchors:
+    - caf_pattern: EXT-MULTI_ENV_PROMOTION
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-multi_env_promotion.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-MULTI_ENV_PROMOTION
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

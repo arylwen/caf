@@ -1,0 +1,64 @@
+pattern_id: CAF-EXE-03
+name: Mapping Requirements to Checks
+summary: To be executable, normative requirements must be mapped to stable check IDs.
+intent: To be executable, normative requirements must be mapped to stable check IDs.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: |
+  ## Mapping Requirements to Checks
+
+  To be executable, normative requirements must be mapped to stable check IDs.
+
+  Rules:
+
+  1. Every checklist item must have a stable ID.
+  2. Checks must declare enforceability stage(s):
+     - Authoring-time (documentation completeness)
+     - Build-time (static analysis, unit tests)
+     - Deploy-time (config validation)
+     - Runtime (policy enforcement, Safety Gates)
+     - Post-execution (evaluation jobs, audits)
+  3. “Not applicable” requires explicit justification and expiry if it is a waiver.
+  4. Violations must map to operational severity for incident response.
+source_documents:
+- path: architecture_library/60_executable_architecture_overview_v1.md
+  section_heading: Mapping Requirements to Checks
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## Mapping Requirements to Checks To be executable, normative requirements must be mapped to stable check IDs.'
+  - Every checklist item must have a stable ID.
+  - Checks must declare enforceability stage(s)
+  definition_of_done:
+  - 'Verify that ## Mapping Requirements to Checks To be executable, normative requirements must be mapped to stable check IDs.'
+  - Verify that every checklist item must have a stable ID.
+  - Verify that checks must declare enforceability stage(s)
+  - Verify that violations must map to operational severity for incident response.
+  capabilities_needed:
+  - validation_gates
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: process_contract

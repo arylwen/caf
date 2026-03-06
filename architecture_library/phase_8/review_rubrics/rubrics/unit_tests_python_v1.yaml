@@ -1,0 +1,25 @@
+schema_version: v1
+kind: review_rubric
+rubric_id: RR-PY-TESTS-01
+title: Python unit test quality bar (v1)
+applies_when:
+  - condition: "platform.runtime_language == python"
+checks:
+  - check_id: RR-TST-BLOCK-01
+    severity: blocker
+    category: testing
+    rule: "No tautological or placeholder tests (e.g., 'assert True', empty tests)."
+    evidence_hints:
+      - "scan tests for assert True / pass / TODO-only"
+  - check_id: RR-TST-HIGH-01
+    severity: high
+    category: testing
+    rule: "At least one test asserts observable behavior for each implemented endpoint/service path touched by the task (status+payload, not only status)."
+    evidence_hints:
+      - "tests should assert response JSON fields, not only codes"
+  - check_id: RR-TST-HIGH-02
+    severity: high
+    category: testing
+    rule: "Include at least one negative-path test for validation or policy enforcement when applicable (bad input, forbidden action)."
+    evidence_hints:
+      - "look for 4xx tests tied to invalid payloads or policy denies"

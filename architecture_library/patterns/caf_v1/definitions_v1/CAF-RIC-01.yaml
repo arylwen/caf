@@ -1,0 +1,123 @@
+pattern_id: CAF-RIC-01
+name: Derivation Contract for Phase 7
+summary: All Phase 7 reference implementations MUST satisfy the following rules.
+intent: All Phase 7 reference implementations MUST satisfy the following rules.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: |
+  ## Derivation Contract (Normative for Phase 7)
+
+  All Phase 7 reference implementations MUST satisfy the following rules.
+
+  ### 1. Template Declaration Requirement
+
+  Each reference implementation MUST explicitly declare:
+
+  - The Phase 6 template(s) it instantiates
+  - The exact version of each template
+
+  No implicit or assumed template usage is allowed.
+
+  ---
+
+  ### 2. Explicit Parameter Pinning
+
+  All parameters exposed by each instantiated template MUST be:
+
+  - Explicitly listed
+  - Explicitly pinned to an allowed value
+
+  Defaults, inference, or omission are forbidden.
+
+  If a required architectural choice cannot be expressed as a template parameter, the reference implementation MUST stop and surface the gap.
+
+  ---
+
+  ### 3. No Architectural Invention
+
+  Reference implementations:
+
+  - MAY select among exposed parameters
+  - MUST NOT introduce new architectural structures
+  - MUST NOT redefine boundaries, responsibilities, or invariants
+
+  Anything not representable via Phase 6 templates is out of scope.
+
+  ---
+
+  ### 4. ADR Production Constraint
+
+  Only ADRs **required by template instantiation** may be produced.
+
+  ADR content MUST:
+
+  - Capture pinned parameter decisions
+  - Reference applicable governance documents
+  - Reference applicable validation checklist IDs
+
+  No exploratory, speculative, or forward-looking ADRs are permitted.
+
+  ---
+
+  ### 5. Validation Mapping Requirement
+
+  Each reference implementation MUST include an explicit mapping from:
+
+  - Architecture shape parameters
+    → Pattern guides
+    → Validation checklist IDs
+
+  Validation mapping is **conceptual only** and does not include evidence or runtime proof.
+
+  ---
+source_documents:
+- path: architecture_library/70_contura_reference_implementation_structure_and_derivation_contract_v1.md
+  section_heading: Derivation Contract (Normative for Phase 7)
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## Derivation Contract (Normative for Phase 7) All Phase 7 reference implementations MUST satisfy the following rules.'
+  - Template Declaration Requirement Each reference implementation MUST explicitly declare
+  - Explicit Parameter Pinning All parameters exposed by each instantiated template MUST be
+  definition_of_done:
+  - 'Verify that ## Derivation Contract (Normative for Phase 7) All Phase 7 reference implementations MUST satisfy the following rules.'
+  - Verify that template Declaration Requirement Each reference implementation MUST explicitly declare
+  - Verify that explicit Parameter Pinning All parameters exposed by each instantiated template MUST be
+  - Verify that if a required architectural choice cannot be expressed as a template parameter, the reference implementation MUST stop and surface the gap.
+  - Verify that - MAY select among exposed parameters - MUST NOT introduce new architectural structures - MUST NOT redefine boundaries, responsibilities, or invariants Anything not representable via Phase 6 templates is out of scope.
+  - Verify that aDR Production Constraint Only ADRs **required by template instantiation** may be produced.
+  - Verify that aDR content MUST
+  - Verify that validation Mapping Requirement Each reference implementation MUST include an explicit mapping from
+  capabilities_needed:
+  - validation_gates
+  - derivation_engine
+  - rails_enforcement
+  - adr_integration
+  - evidence_bundle
+  - phase7_structure
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: process_contract

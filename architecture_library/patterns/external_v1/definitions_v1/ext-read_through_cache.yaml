@@ -1,0 +1,93 @@
+pattern_id: EXT-READ_THROUGH_CACHE
+name: Read-Through Cache
+summary: Cache fetches on miss (library/pattern)
+intent: Cache fetches on miss (library/pattern)
+context: Systems needing low-latency reads, scalable storage, and fit-for-purpose data models.
+problem: One-size-fits-all persistence and modeling leads to slow reads, complex queries, and scaling bottlenecks.
+forces_tradeoffs: Duplication vs performance; consistency vs speed; operational burden vs specialization benefits.
+solution_structure_behavior: A caching strategy where the cache layer (or client library) automatically loads data from the
+  backing store on a miss and stores it in the cache. It centralizes caching logic and simplifies application code, but must
+  manage stampedes, TTLs, and error propagation.
+consequences: Better performance and clearer models; more data stores/projections to manage.
+implementation_notes: Start with simple caching/projections, measure hotspots, and introduce specialized stores/projections
+  incrementally.
+examples_known_uses: Read-heavy dashboards, search/catalog, reporting projections.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A caching strategy where the cache layer (or client library) automatically loads data from the backing
+  store on a miss and stores it in the cache. It centralizes caching logic and simplifies application code, but must manage
+  stampedes, TTLs, and error propagation.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-READ_THROUGH_CACHE
+  minimum_evidence:
+  - Systems needing low-latency reads, scalable storage, and fit-for-purpose data models.
+  - One-size-fits-all persistence and modeling leads to slow reads, complex queries, and scaling bottlenecks.
+  definition_of_done:
+  - Verify that it centralizes caching logic and simplifies application code, but must manage stampedes, TTLs, and error propagation.
+  capabilities_needed:
+  - policy_enforcement
+  - cqrs_projections
+  - caching
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: caching.read_through_placement
+    description: Where read-through logic lives (library, sidecar/proxy, or shared cache layer).
+    options:
+    - option_id: library_in_service
+      summary: Implement read-through in the service via a client library; cache loads from store on miss.
+      notes: ''
+    - option_id: sidecar_or_proxy
+      summary: Implement read-through in a sidecar/proxy cache that fronts the backing store.
+      notes: ''
+    - option_id: shared_cache_service
+      summary: Implement read-through in a shared cache layer used by multiple services.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: shared_cache_service
+  human_questions:
+  - question_key: caching_read_through_placement
+    question_id: Q-EXT-RTC-01
+    question: Where should read-through caching be implemented?
+    description: Choose whether read-through behavior is implemented in-service, in a sidecar/proxy, or in a shared cache
+      layer.
+    option_set_id: caching.read_through_placement
+    specialization_notes:
+    - Use when you want to centralize cache-miss loading logic and reduce application-level cache plumbing.
+    anchors:
+    - caf_pattern: EXT-READ_THROUGH_CACHE
+  conflict_semantics:
+    alternative_to:
+    - EXT-CACHE_ASIDE
+    - EXT-WRITE_THROUGH_CACHE
+    incompatible_with: []
+    default_alternative: false
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-read_through_cache.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-READ_THROUGH_CACHE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

@@ -1,0 +1,77 @@
+retrieval_view_profiles_version: v1
+surface:
+  path: architecture_library/patterns/retrieval_surface_v1/pattern_retrieval_surface_v1.jsonl
+  record_schema: key, namespace, id, name, summary, plane, family, definition_path, relations[{kind, id}], terms[{value, kind}]
+profiles:
+  arch_scaffolding:
+    description: "Narrow retrieval view for pins\u2192spec scaffolding. Prefer CAF + core patterns; exclude external patterns\
+      \ by default.\n"
+    include_namespaces:
+    - caf_v1
+    - core_v1
+    # Hard cap (token budget): the worker must not emit/ground more than this count.
+    # If recall is insufficient, rely on graph expansion rather than raising this.
+    max_candidates: 15
+    open_definitions_top_k: 15
+    diversity_constraints:
+      max_per_plane: 20
+      max_per_family: 5
+    fill_to_max_candidates: true
+    graph_expansion:
+      enabled: true
+      reserve_slots: 4
+      oversample_factor: 3
+      max_hops: 2
+      relation_kinds:
+      - depends_on
+      - refines
+      - complements
+      - alternative_to
+      max_new_candidates: 6
+      max_opened_definitions_for_graph: 8
+    coverage_rules:
+    - id: tenancy_foundation
+      when_any_terms:
+      - tenant
+      - tenancy
+      - multi-tenant
+      - multi tenancy
+      - tenant-keyed
+      - tenant-partitioned
+      - tenant-scoped
+      require_families:
+        MTEN: 1
+      note: "If tenant signals are present in the retrieval blob, ensure \u22651 MTEN-family candidate is emitted (prefer\
+        \ CAF-MTEN-01)."
+  solution_architecture:
+    description: "Widened retrieval view for spec\u2192design (solution architecture) work. Includes external patterns when\
+      \ required by the design.\n"
+    include_namespaces:
+    - caf_v1
+    - core_v1
+    - external_v1
+    # Hard cap (token budget): higher than arch_scaffolding due to broader solution coverage.
+    max_candidates: 30
+    open_definitions_top_k: 30
+    diversity_constraints:
+      max_per_plane: 25
+      max_per_family: 5
+    namespace_coverage:
+      min_external_v1: 3
+      min_core_v1: 2
+      note: "Ship blocker: ensure external patterns are present in candidates for solution architecture retrieval. Ship blocker:\
+        \ ensure caf_v1 patterns are present (\u22653) so CAF obligations and contracts are not starved."
+      min_caf_v1: 2
+    fill_to_max_candidates: true
+    graph_expansion:
+      enabled: true
+      reserve_slots: 4
+      oversample_factor: 3
+      max_hops: 2
+      relation_kinds:
+      - depends_on
+      - refines
+      - complements
+      - alternative_to
+      max_new_candidates: 6
+      max_opened_definitions_for_graph: 12

@@ -1,0 +1,42 @@
+bridge_lexicon_version: v1
+purpose: Canonical bridge phrases used to align pattern retrieval across CAF/core/external namespaces. Used for cue sweeps
+  and optional retrieval blob bridge-echo.
+categories:
+  plane_terms:
+  - control plane
+  - application plane
+  - data plane
+  - cross-plane
+  - plane boundary
+  - "CP\u2194AP contract"
+  - CP->AP contract
+  - AP->CP contract
+  contract_terms:
+  - integration contract
+  - request context propagation
+  - tenant context carrier
+  - identity context carrier
+  - context propagation
+  - tenant isolation
+  boundary_terms:
+  - ingress boundary
+  - egress boundary
+  - policy enforcement boundary
+  - edge boundary
+  - UI boundary
+  composition_terms:
+  - composition root
+  - runtime configuration boundary
+  - dependency injection boundary
+  - assembly boundary
+  ui_terms:
+  - SPA UI
+  - BFF facade
+  - API facade
+  - frontend boundary
+  tenancy_terms:
+  - multi-tenancy
+  - tenant isolation
+  - tenant partitioning
+  - tenant-keyed
+  - tenant-scoped

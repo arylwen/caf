@@ -1,0 +1,85 @@
+pattern_id: EXT-BACKUP_PITR
+name: Backup & PITR
+summary: Restore to a point in time
+intent: Restore to a point in time
+context: High availability and disaster recovery needs across regions and failure domains.
+problem: Regional outages or data loss can take the system down without redundancy and recoverability.
+forces_tradeoffs: Cost vs resilience; consistency vs multi-region performance; operational complexity vs RTO/RPO targets.
+solution_structure_behavior: A data protection capability combining regular backups with point-in-time recovery (PITR) using
+  transaction logs or snapshots. It protects against accidental deletion, corruption, and ransomware impacts, but must be
+  tested regularly to validate restore procedures and meet RPO/RTO goals.
+consequences: Improved uptime and recoverability; more complex data replication and failover testing.
+implementation_notes: Define RTO/RPO, practice failover, automate backups, and validate restores regularly.
+examples_known_uses: Critical SaaS platforms, regulated workloads, global customer bases.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A data protection capability combining regular backups with point-in-time recovery (PITR) using transaction
+  logs or snapshots. It protects against accidental deletion, corruption, and ransomware impacts, but must be tested regularly
+  to validate restore procedures and meet RPO/RTO goals.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-BACKUP_PITR
+  minimum_evidence:
+  - High availability and disaster recovery needs across regions and failure domains.
+  - Regional outages or data loss can take the system down without redundancy and recoverability.
+  definition_of_done:
+  - Verify that it protects against accidental deletion, corruption, and ransomware impacts, but must be tested regularly
+    to validate restore procedures and meet RPO/RTO goals.
+  capabilities_needed:
+  - backup_restore
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: data.pitr_mode
+    description: Point-in-time recovery (PITR) mode and how backups/logs are captured for recovery.
+    options:
+    - option_id: snapshots_only
+      summary: Snapshots only with periodic backups; recovery limited to snapshot points.
+      notes: ''
+    - option_id: continuous_logs
+      summary: Continuous log capture enabling point-in-time restore within the retention window.
+      notes: ''
+    - option_id: snapshots_plus_logs
+      summary: Snapshots plus continuous logs for faster restore and flexible PITR.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: snapshots_plus_logs
+  human_questions:
+  - question_key: data_pitr_mode
+    question_id: Q-EXT-PITR-01
+    question: What PITR mode will you use for backups and restore?
+    description: Select the point-in-time recovery mode (snapshots, continuous logs, or both) and how restores are performed.
+    option_set_id: data.pitr_mode
+    specialization_notes:
+    - Warranted when recovery objectives require restoring to a recent point and backup/restore procedures must be defined
+      and testable.
+    anchors:
+    - caf_pattern: EXT-BACKUP_PITR
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-backup_pitr.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-BACKUP_PITR
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

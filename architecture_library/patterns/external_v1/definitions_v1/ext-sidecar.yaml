@@ -1,0 +1,105 @@
+pattern_id: EXT-SIDECAR
+name: Sidecar
+summary: Add cross-cutting features via companion container
+intent: Add cross-cutting features via companion container
+context: Services that must scale, deploy frequently, and run reliably with predictable
+  operational burden.
+problem: Manual server management and stateful designs hinder scaling, resilience,
+  and deployment velocity.
+forces_tradeoffs: Operational simplicity vs flexibility/control; portability vs managed
+  constraints; cost vs performance.
+solution_structure_behavior: A deployment pattern where a helper process runs alongside
+  the main service (e.g., in the same Pod) to provide cross-cutting concerns such
+  as proxies, TLS/mTLS, logging, metrics, or secrets fetching. Sidecars standardize
+  capabilities without changing application code, but add resource use and debugging
+  complexity.
+consequences: Improved scale and reliability when done well; requires discipline around
+  state, networking, and observability.
+implementation_notes: Prefer statelessness, externalize state, standardize health
+  checks, and automate deployments and rollbacks.
+examples_known_uses: Domain microservices, async workers, and integration services.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A deployment pattern where a helper process runs alongside the
+  main service (e.g., in the same Pod) to provide cross-cutting concerns such as proxies,
+  TLS/mTLS, logging, metrics, or secrets fetching. Sidecars standardize capabilities
+  without changing application code, but add resource use and debugging complexity.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-SIDECAR
+  minimum_evidence:
+  - Services that must scale, deploy frequently, and run reliably with predictable
+    operational burden.
+  - Manual server management and stateful designs hinder scaling, resilience, and
+    deployment velocity.
+  definition_of_done:
+  - Verify that a deployment pattern where a helper process runs alongside the main
+    service (e.g., in the same Pod) to provide cross-cutting concerns such as proxies,
+    TLS/mTLS, logging, metrics, or secrets fetching.
+  capabilities_needed:
+  - observability_emit
+  - sidecar_pattern
+  - container_runtime
+  - config_management
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific orchestration or deployment platform unless provided
+    by platform pins (technology atoms) / TBPs.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including
+    scope, required choices (option sets), and evidence anchors.
+  option_sets:
+  - option_set_id: ops.sidecar_responsibility
+    description: Primary responsibilities assigned to sidecars and how they integrate
+      with app containers.
+    options:
+    - option_id: network_policy_and_mtls
+      summary: Sidecar handles network policy, mTLS, retries/timeouts, and traffic
+        shaping.
+      notes: ''
+    - option_id: observability_only
+      summary: Sidecar handles telemetry emission/collection only (logs/metrics/traces).
+      notes: ''
+    - option_id: policy_and_routing
+      summary: Sidecar handles policy enforcement and routing, including authz checks
+        at the edge of the pod.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: network_policy_and_mtls
+  human_questions:
+  - question_key: ops_sidecar_responsibility
+    question_id: Q-EXT-SC-01
+    question: What responsibilities will sidecars handle?
+    description: Select the primary responsibilities assigned to sidecars and the
+      expected integration boundaries.
+    option_set_id: ops.sidecar_responsibility
+    specialization_notes:
+    - Warranted when cross-cutting concerns should be separated from app code and
+      enforced consistently per workload.
+    anchors:
+    - caf_pattern: EXT-SIDECAR
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-sidecar.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-SIDECAR
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

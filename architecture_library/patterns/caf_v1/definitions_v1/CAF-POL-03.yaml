@@ -1,0 +1,110 @@
+pattern_id: CAF-POL-03
+name: Policy Decision Telemetry and Audit
+summary: Require observability for policy evaluation, including decision lineage, inputs attribution, and outcomes.
+intent: Make policy enforcement provable and debuggable, and prevent silent drift.
+context: Systems where policy gates workflows, agent tool use, and data access.
+problem: Unobserved policy evaluation creates non-determinism and makes it impossible to prove compliance or diagnose incidents.
+forces_tradeoffs: Telemetry richness vs cost; logging sensitive context vs privacy and governance requirements.
+solution_structure_behavior: Emit structured policy decision telemetry capturing policy version, scope, principal/tenant attribution,
+  inputs summary, outcome, and correlation IDs; store auditable decision records where required.
+consequences: Enables compliance and rapid debugging; requires retention/access controls and careful handling of sensitive
+  attributes.
+implementation_notes: Define minimal required fields; avoid logging raw sensitive inputs unless explicitly approved; ensure
+  decision records are immutable.
+examples_known_uses: Audit trail of allow/deny decisions for sensitive operations; tracing policy gating through workflows.
+related_patterns: |
+  depends_on: CAF-IAM-03
+  depends_on: CAF-POL-02
+  depends_on: OBS-01
+  complements: CAF-AI-01
+  complements: CAF-ZT-01
+extended_definition: |
+  This pattern makes policy enforcement **provable and debuggable** by requiring **decision-level evidence** and auditability.
+
+  **Normative constraints**
+  - Every policy evaluation MUST emit structured decision telemetry (not ad-hoc logs).
+  - Decision evidence MUST include: policy identifier + version, outcome, enforcement action, tenant + principal scope, timestamp, and plane.
+  - Evaluation inputs SHOULD be recorded as **hashed or referenced** identifiers (avoid raw sensitive payloads unless explicitly approved).
+
+  **Responsibilities and boundaries**
+  - Application Plane is the primary runtime evaluation/enforcement surface: it MUST invoke evaluation deterministically, provide complete context, enforce outcomes consistently, and reject execution when context is missing.
+  - Application Plane MUST NOT bypass evaluation or cache outcomes without binding to policy version.
+  - Data Plane SHOULD emit immutable, tenant-scoped audit records for data-level enforcement where applicable.
+
+  **Evidence hooks**
+  - Spec/design defines a minimal decision record schema (fields above) and redaction/retention/access controls.
+  - Policy versions are referenced from telemetry/audit records, enabling rollout/rollback attribution.
+  - Correlation IDs connect policy decisions to workflow steps, tool calls, and downstream data operations.
+
+  **Common failure modes (explicitly forbidden)**
+  - Missing policy telemetry / “best-effort” enforcement.
+  - Policy evaluated without tenant/principal context.
+  - Unversioned policy changes or outcome caching that is not version-bound.
+
+source_documents:
+- path: architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+  sections:
+  - 4.2 Application Plane Responsibilities
+  - 13. Policy Observability, Evidence, and Drift
+  - 14. Failure Modes & Anti-Patterns
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Observability, Telemetry, and Evaluation Hooks
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly requires deterministic policy enforcement (not ad-hoc checks) for one or more operations.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that policy is represented as explicit, versioned artifacts and that evaluations emit decision telemetry.
+  capabilities_needed:
+  - policy_enforcement
+  - policy_decision_telemetry
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific policy language or rule engine unless provided by TBPs/technology profile.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: policy.telemetry_detail_level
+    summary: Choose among bounded variants for `policy.telemetry_detail_level` (or use `custom`).
+    options:
+    - option_id: decision_only
+      status: defer
+      summary: Telemetry includes decision outcome + correlation identifiers only.
+    - option_id: decision_plus_policy_version
+      status: defer
+      summary: Telemetry includes decision outcome + policy/version identifiers.
+    - option_id: decision_plus_trace_inputs
+      status: defer
+      summary: Telemetry includes outcome + bounded inputs + evaluation trace summary.
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: decision_plus_policy_version
+  human_questions:
+  - question_key: auto_policy_telemetry_detail_level
+    question_id: Q-CAF-POL-03-AUTO-01
+    question: Select an option for policy.telemetry_detail_level.
+    description: ''
+    option_set_id: policy.telemetry_detail_level
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-POL-03

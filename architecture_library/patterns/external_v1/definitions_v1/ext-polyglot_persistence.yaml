@@ -1,0 +1,86 @@
+pattern_id: EXT-POLYGLOT_PERSISTENCE
+name: Polyglot Persistence
+summary: Use best datastore per use case
+intent: Use best datastore per use case
+context: Systems needing low-latency reads, scalable storage, and fit-for-purpose data models.
+problem: One-size-fits-all persistence and modeling leads to slow reads, complex queries, and scaling bottlenecks.
+forces_tradeoffs: Duplication vs performance; consistency vs speed; operational burden vs specialization benefits.
+solution_structure_behavior: A data strategy where different storage technologies are used for different needs (relational,
+  document, key-value, time-series, graph). It can improve fit and performance per workload, but increases operational complexity,
+  data governance needs, and cross-store consistency challenges.
+consequences: Better performance and clearer models; more data stores/projections to manage.
+implementation_notes: Start with simple caching/projections, measure hotspots, and introduce specialized stores/projections
+  incrementally.
+examples_known_uses: Read-heavy dashboards, search/catalog, reporting projections.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A data strategy where different storage technologies are used for different needs (relational, document,
+  key-value, time-series, graph). It can improve fit and performance per workload, but increases operational complexity, data
+  governance needs, and cross-store consistency challenges.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-POLYGLOT_PERSISTENCE
+  minimum_evidence:
+  - Systems needing low-latency reads, scalable storage, and fit-for-purpose data models.
+  - One-size-fits-all persistence and modeling leads to slow reads, complex queries, and scaling bottlenecks.
+  definition_of_done:
+  - Verify that a data strategy where different storage technologies are used for different needs (relational, document, key-value,
+    time-series, graph).
+  capabilities_needed:
+  - cqrs_projections
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: data.polyglot_persistence_scope
+    description: How broadly multiple datastores are allowed/used across the system.
+    options:
+    - option_id: single_primary_store_plus_views
+      summary: Prefer a single system of record; use projections/caches for specialized reads.
+      notes: ''
+    - option_id: per_bounded_context_store
+      summary: Allow different stores per bounded context with explicit ownership and boundaries.
+      notes: ''
+    - option_id: per_workload_store
+      summary: Allow different stores per workload (OLTP/search/analytics) with governance and consistency rules.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: single_primary_store_plus_views
+  human_questions:
+  - question_key: data_polyglot_persistence_scope
+    question_id: Q-EXT-PP-01
+    question: What scope of polyglot persistence do we allow?
+    description: Choose whether to keep one primary store, allow per-bounded-context stores, or allow per-workload stores
+      with governance.
+    option_set_id: data.polyglot_persistence_scope
+    specialization_notes:
+    - Use when differing query/latency/scale requirements cannot be met by a single storage model.
+    anchors:
+    - caf_pattern: EXT-POLYGLOT_PERSISTENCE
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-polyglot_persistence.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-POLYGLOT_PERSISTENCE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

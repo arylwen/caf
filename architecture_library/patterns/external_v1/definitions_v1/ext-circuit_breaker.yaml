@@ -1,0 +1,88 @@
+pattern_id: EXT-CIRCUIT_BREAKER
+name: Circuit Breaker
+summary: Stop calling a failing dependency to reduce blast radius
+intent: Fail fast when a dependency is unhealthy to reduce blast radius and allow recovery.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: "A fault-tolerance pattern that temporarily stops calls to a dependency after detecting a failure\
+  \ threshold, allowing it time to recover. The breaker typically transitions through closed \u2192 open \u2192 half-open\
+  \ states, reducing cascading failures and preserving resources for healthy paths."
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  A fault-tolerance pattern that temporarily stops calls to a dependency after detecting a failure threshold, allowing it time to recover. The breaker typically transitions through closed → open → half-open states, reducing cascading failures and preserving resources for healthy paths.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-CIRCUIT_BREAKER
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a fault-tolerance pattern that temporarily stops calls to a dependency after detecting a failure threshold,
+    allowing it time to recover.
+  capabilities_needed:
+  - eventing
+  - resilience_retry
+  - resilience_circuit_breaker
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: resilience.circuit_breaker_placement
+    description: Where circuit breaking is enforced (client library, proxy/sidecar, gateway).
+    options:
+    - option_id: client_side_library
+      summary: Circuit breaker enforced in client/SDK/library at call sites.
+      notes: ''
+    - option_id: sidecar_or_proxy_enforced
+      summary: Circuit breaker enforced by a local proxy/sidecar layer near services.
+      notes: ''
+    - option_id: gateway_enforced
+      summary: Circuit breaker enforced at gateway/edge for downstream services.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: client_side_library
+  human_questions:
+  - question_key: resilience_circuit_breaker_placement
+    question_id: Q-EXT-CB-01
+    question: Where is circuit breaking enforced (client, proxy/sidecar, or gateway)?
+    description: Select the enforcement location for circuit breaker behavior to prevent cascading failures.
+    option_set_id: resilience.circuit_breaker_placement
+    specialization_notes:
+    - Use when downstream dependencies can fail or degrade and you need fast fail behavior and containment.
+    anchors:
+    - caf_pattern: EXT-CIRCUIT_BREAKER
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-circuit_breaker.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-CIRCUIT_BREAKER
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

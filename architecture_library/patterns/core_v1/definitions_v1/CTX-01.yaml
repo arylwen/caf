@@ -1,0 +1,176 @@
+pattern_id: CTX-01
+name: Request Context and Propagation
+summary: Establish a request-scoped context that carries identity, tenancy, and correlation
+  metadata and ensure it is available to all layers handling the request.
+intent: Establish a request-scoped context that carries identity, tenancy, and correlation
+  metadata and ensure it is available to all layers handling the request.
+context: This pattern applies when the spec or design implies multi-user behavior,
+  multi-tenancy, auditing, or correlation. CAF's identity core requires tenant_id,
+  user_id, and user_name, and the design must ensure these values are established
+  at the application boundary and propagated through internal calls.
+problem: Without a standard request context propagated through call flows, identity/tenant/request
+  metadata becomes inconsistent or implicit, causing incorrect scoping, weak auditing,
+  and policy enforcement gaps across module boundaries.
+forces_tradeoffs: '- Passing context explicitly vs convenience of hidden global/thread-local
+  state.
+
+  - Immutability of primary context values vs need to enrich context (e.g., sub-span
+  IDs).
+
+  - Uniform propagation vs performance/verbosity overhead in interfaces.'
+solution_structure_behavior: 'Introduces module roles: context_boundary; context_object;
+  context_access_api
+
+
+  Allowed dependencies: application_boundary may create or populate context_object;
+  domain_core may read context via context_access_api; infrastructure_adapters may
+  read context for tagging logs, queries, or outbound calls; no module may infer tenant
+  or user identity from ad hoc globals.
+
+
+  Assembly contract: The application boundary establishes a context instance per request.
+  Downstream modules access context via a stable access API (explicit parameter passing
+  or an equivalent scoped access mechanism declared in the module plan). Context propagation
+  is mandatory for all operations that touch tenant-scoped data or user-scoped policy
+  decisions.'
+consequences: Context propagation is the minimal, stack-independent mechanism to preserve
+  tenant isolation, policy enforcement inputs, and correlation across layers without
+  relying on framework-specific behavior.
+implementation_notes: See required evidence hooks, structural validations, and plan
+  step archetypes in this definition. Legacy pattern IDs from core inventory (ASM-*/BND-*/DAT-*)
+  are not yet published as core_v1 definitions; related_patterns point to canonical
+  implemented core IDs only.
+examples_known_uses: Typical in web APIs where each request carries identity/tenant
+  and a request ID that must be available to authorization, logging, and persistence
+  scoping.
+related_patterns:
+extended_definition: |
+  # Request Context and Propagation (CTX-01)
+
+  PATTERN_ID: CTX-01
+  \
+    NAME: Request Context and Propagation
+  CATEGORY: boundaries
+  INTENT: Establish a request-scoped context that carries identity, tenancy, and correlation metadata and ensure it is available to all layers handling the request.
+  APPLIES_WHEN: This pattern applies when the spec or design implies multi-user behavior, multi-tenancy, auditing, or correlation. CAF's identity core requires tenant_id, user_id, and user_name, and the design must ensure these values are established at the application boundary and propagated through internal calls.
+  INTRODUCES_MODULE_ROLES: context_boundary; context_object; context_access_api
+  ALLOWED_DEPENDENCIES: application_boundary may create or populate context_object; domain_core may read context via context_access_api; infrastructure_adapters may read context for tagging logs, queries, or outbound calls; no module may infer tenant or user identity from ad hoc globals.
+  ASSEMBLY_CONTRACT: The application boundary establishes a context instance per request. Downstream modules access context via a stable access API (explicit parameter passing or an equivalent scoped access mechanism declared in the module plan). Context propagation is mandatory for all operations that touch tenant-scoped data or user-scoped policy decisions.
+
+  REQUIRED_EVIDENCE_HOOKS:
+  - E-CTX-01-01: The module plan defines the context object fields (tenant_id; user_id; user_name; correlation_id) and identifies where the context is created.
+  - E-CTX-01-02: The plan lists which internal interfaces require context and how propagation is enforced.
+
+  STRUCTURAL_VALIDATIONS:
+  \
+    - V-CTX-01-01: The module plan includes a context_object role with the required identity core fields.
+  - V-CTX-01-02: The plan declares a propagation rule for all application_boundary to domain_core calls for tenant-scoped operations.
+
+  \
+    PLAN_STEP_ARCHETYPES:
+  - STEP_TITLE_TEMPLATE: Define request context object and creation boundary
+    REQUIRED_CAPABILITIES: identity_context; tenancy_context
+    WRITE_SET: docs_architecture
+    DELIVERABLES: module_plan_section
+    EVIDENCE_REQUIRED: E-CTX-01-01
+    VALIDATIONS: V-CTX-01-01
+  - STEP_TITLE_TEMPLATE: Define context propagation contract across internal interfaces
+    REQUIRED_CAPABILITIES: identity_context; tenancy_context
+    WRITE_SET: docs_architecture
+    DELIVERABLES: assembly_contract_section
+    EVIDENCE_REQUIRED: E-CTX-01-02
+    VALIDATIONS: V-CTX-01-02
+
+  JUSTIFICATION: Context propagation is the minimal, stack-independent mechanism to preserve tenant isolation, policy enforcement inputs, and correlation across layers without relying on framework-specific behavior.
+  VERSION: v1
+  VERSION_HISTORY:
+  - v1: Initial release.
+core:
+  category: boundaries
+  applies_when: This pattern applies when the spec or design implies multi-user behavior,
+    multi-tenancy, auditing, or correlation. CAF's identity core requires tenant_id,
+    user_id, and user_name, and the design must ensure these values are established
+    at the application boundary and propagated through internal calls.
+  introduces_module_roles: context_boundary; context_object; context_access_api
+  allowed_dependencies: application_boundary may create or populate context_object;
+    domain_core may read context via context_access_api; infrastructure_adapters may
+    read context for tagging logs, queries, or outbound calls; no module may infer
+    tenant or user identity from ad hoc globals.
+  assembly_contract: The application boundary establishes a context instance per request.
+    Downstream modules access context via a stable access API (explicit parameter
+    passing or an equivalent scoped access mechanism declared in the module plan).
+    Context propagation is mandatory for all operations that touch tenant-scoped data
+    or user-scoped policy decisions.
+  required_evidence_hooks:
+  - 'E-CTX-01-01: The module plan defines the context object fields (tenant_id; user_id;
+    user_name; correlation_id) and identifies where the context is created.'
+  - 'E-CTX-01-02: The plan lists which internal interfaces require context and how
+    propagation is enforced.'
+  structural_validations:
+  - 'V-CTX-01-01: The module plan includes a context_object role with the required
+    identity core fields.'
+  - 'V-CTX-01-02: The plan declares a propagation rule for all application_boundary
+    to domain_core calls for tenant-scoped operations.'
+  plan_step_archetypes:
+  - "- STEP_TITLE_TEMPLATE: Define request context object and creation boundary\n\
+    \  REQUIRED_CAPABILITIES: identity_context; tenancy_context\n  WRITE_SET: docs_architecture\n\
+    \  DELIVERABLES: module_plan_section\n  EVIDENCE_REQUIRED: E-CTX-01-01\n  VALIDATIONS:\
+    \ V-CTX-01-01"
+  - "- STEP_TITLE_TEMPLATE: Define context propagation contract across internal interfaces\n\
+    \  REQUIRED_CAPABILITIES: identity_context; tenancy_context\n  WRITE_SET: docs_architecture\n\
+    \  DELIVERABLES: assembly_contract_section\n  EVIDENCE_REQUIRED: E-CTX-01-02\n\
+    \  VALIDATIONS: V-CTX-01-02\n\nJUSTIFICATION: Context propagation is the minimal,\
+    \ stack-independent mechanism to preserve tenant isolation, policy enforcement\
+    \ inputs, and correlation across layers without relying on framework-specific\
+    \ behavior.\nVERSION: v1"
+  justification: Context propagation is the minimal, stack-independent mechanism to
+    preserve tenant isolation, policy enforcement inputs, and correlation across layers
+    without relying on framework-specific behavior.
+  version: v1
+  version_history:
+  - 'v1: Initial release.'
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_ctx_01_v1.md
+caf:
+  layer: core
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: core_patterns_are_normative
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: core_pattern
+    anchor_id: CTX-01
+  minimum_evidence:
+  - This pattern applies when the spec or design implies multi-user behavior, multi-tenancy,
+    auditing, or correlation.
+  - CAF's identity core requires tenant_id, user_id, and user_name, and the design
+    must ensure these values are established at the application boundary and propagated
+    through internal calls.
+  definition_of_done:
+  - 'Verify that V-CTX-01-01: The module plan includes a context_object role with
+    the required identity core fields.'
+  - 'Verify that V-CTX-01-02: The plan declares a propagation rule for all application_boundary
+    to domain_core calls for tenant-scoped operations.'
+  - 'Verify evidence hook is satisfied: E-CTX-01-01: The module plan defines the context
+    object fields (tenant_id; user_id; user_name; correlation_id) and identifies where
+    the context is created.'
+  - 'Verify evidence hook is satisfied: E-CTX-01-02: The plan lists which internal
+    interfaces require context and how propagation is enforced.'
+  capabilities_needed:
+  - identity_context
+  - tenancy_context
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: core_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/core_v1/definitions_v1/CTX-01.yaml
+    scope: per_resource
+  required_trace_anchors:
+  - pattern_id: CTX-01
+    anchor_kind: plan_step_archetype
+    scope: per_resource

@@ -1,0 +1,113 @@
+pattern_id: CAF-DG-10
+name: AI and Agent Data Usage Constraints
+summary: AI agents amplify data governance risks.
+intent: AI agents amplify data governance risks.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 10. AI and Agent Data Usage Constraints
+
+
+  AI agents amplify data governance risks.
+
+
+  All AI and agent-driven data usage MUST:
+
+
+  - Operate under explicit tenant and identity context
+
+  - Respect data classification and sensitivity
+
+  - Validate data quality before use
+
+  - Record lineage of retrieved and generated data
+
+  - Reject data without governance metadata
+
+
+  Agents MUST NOT:
+
+
+  - Infer governance context from memory
+
+  - Reuse data outside declared scope
+
+  - Train, fine-tune, or store data without authorization
+
+
+  AI data misuse constitutes a Safety Gate violation.
+
+
+  ---'
+source_documents:
+- path: architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+  section_heading: 10. AI and Agent Data Usage Constraints
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - All AI and agent-driven data usage MUST
+  - '- Operate under explicit tenant and identity context - Respect data classification and sensitivity - Validate data quality
+    before use - Record lineage of retrieved and generated data - Reject data without governance metadata Agents MUST NOT'
+  definition_of_done:
+  - Verify that all AI and agent-driven data usage MUST
+  - Verify that - Operate under explicit tenant and identity context - Respect data classification and sensitivity - Validate
+    data quality before use - Record lineage of retrieved and generated data - Reject data without governance metadata Agents
+    MUST NOT
+  capabilities_needed:
+  - data_governance
+  - data_classification
+  - data_quality
+  - data_observability_lineage
+  - ai_data_constraints
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: ai_data_usage.allowed_classes
+    description: What classes of data may be used by AI/agents (inputs, retrieval, tool outputs).
+    options:
+    - option_id: none
+      summary: No classified data may be used by AI/agents.
+      allowed: none
+    - option_id: public_internal_only
+      summary: AI/agents may use public/internal data only (no confidential/restricted).
+      allowed: public_internal_only
+    - option_id: deidentified_only
+      summary: AI/agents may use de-identified/redacted data only for sensitive sources.
+      allowed: deidentified_only
+    - option_id: policy_engine_gated
+      summary: AI/agent data access is dynamically gated by policy engine decisions.
+      allowed: policy_engine_gated
+    - option_id: custom
+      summary: Custom (fill fields).
+      allowed: ''
+    default_option_id: public_internal_only
+  human_questions:
+  - question_id: Q-CAF-DG-10-01
+    topic: ai_data_usage.allowed_classes
+    question: Which data classes may AI/agents use, and what redaction/policy gates apply?
+    status: open
+    option_set_id: ai_data_usage.allowed_classes
+    answer: {}

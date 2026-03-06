@@ -1,0 +1,20 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-DRF-01
+binds_to:
+- atom_path: runtime.framework
+  atom_value: django_rest_framework
+- atom_path: plane.runtime_shape
+  atom_value: api_service_http
+requires_tbps:
+- TBP-DJANGO-01
+conflicts_with_tbps:
+- TBP-FASTAPI-01
+layout:
+  role_bindings:
+    api_boundary:
+      path_template: '{resource_snake}/api.py'
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - APIView
+      - ViewSet
+      - serializer

@@ -1,0 +1,11 @@
+# Ignore build artifacts and temporary files
+feedback_packets
+tools/caf-state
+architecture_library/__meta/caf_meta
+tools/caf-meta/out
+tools/caf-meta/artifacts
+architecture_library/__meta/caf_library__evals
+
+# tools/caf generated outputs
+tools/caf/out
+

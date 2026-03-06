@@ -1,0 +1,71 @@
+pattern_id: CAF-EXE-05
+name: Non-Goals and Anti-Patterns
+summary: 'The executable layer must not become:'
+intent: 'The executable layer must not become:'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## Non-Goals and Anti-Patterns
+
+
+  The executable layer must not become:
+
+
+  - A second architecture framework that contradicts CAF
+
+  - A vendor-specific cookbook embedded into core documents
+
+  - A loose “best practices” list without stable IDs and enforceability definitions
+
+
+  Anti-patterns:
+
+
+  - Requirements without IDs
+
+  - IDs without enforceable checks
+
+  - Checks that cannot produce or reference evidence
+
+  - Runtime gates without telemetry and audit outputs
+
+  - ADRs that claim compliance without evidence links'
+source_documents:
+- path: architecture_library/60_executable_architecture_overview_v1.md
+  section_heading: Non-Goals and Anti-Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## Non-Goals and Anti-Patterns The executable layer must not become'
+  definition_of_done:
+  - 'Verify that ## Non-Goals and Anti-Patterns The executable layer must not become'
+  - Verify that - Requirements without IDs - IDs without enforceable checks - Checks that cannot produce or reference evidence - Runtime gates without telemetry and audit outputs - ADRs that claim compliance without evidence links
+  capabilities_needed:
+  - validation_gates
+  - adr_integration
+  - evidence_bundle
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: process_contract

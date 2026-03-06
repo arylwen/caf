@@ -1,0 +1,23 @@
+schema_version: v1
+kind: review_rubric
+rubric_id: RR-TASK-REPORT-01
+title: Task report completeness + step evidence (v1)
+applies_when:
+  - condition: "true"
+checks:
+  - check_id: RR-TR-STRUCT-01
+    severity: high
+    category: correctness
+    rule: >
+      Task report exists and includes the required sections: Task Spec Digest, Inputs declared by task,
+      Inputs consumed, Step execution evidence, Outputs produced, and Rails/TBP satisfaction.
+    evidence_hints:
+      - "inspect caf/task_reports/<task_id>.md"
+  - check_id: RR-TR-STEP-01
+    severity: medium
+    category: correctness
+    rule: >
+      Step execution evidence addresses every step from the task spec (or explicitly states why a step
+      is N/A), and inputs consumed include all required task inputs (or explain omissions).
+    evidence_hints:
+      - "compare task report sections to the task's steps and inputs in caf/task_graph_v1.yaml"

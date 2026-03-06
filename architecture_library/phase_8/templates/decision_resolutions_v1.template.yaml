@@ -1,0 +1,30 @@
+# Decision Resolutions Registry (v1)
+# Canonical path: reference_architectures/<name>/spec/playbook/decision_resolutions_v1.yaml
+#
+# Purpose:
+# - Record human resolution (adopt/reject/defer) of CAF-proposed candidates emitted in specs.
+# - Enable traceability across hops (specs → design → plan → build).
+#
+# Rules:
+# - Only status=adopt is binding input to downstream steps.
+# - Missing semantics MUST be captured as status=defer + rationale and/or resolved_values.
+# - Every entry MUST include at least one legitimacy anchor.
+#
+schema_version: decision_resolutions_v1
+
+decisions: []
+# Example (uncomment and edit):
+# decisions:
+#  - evidence_hook_id: H-CAF-MTEN-01-01
+#  pattern_id: CAF-MTEN-01
+#  status: defer  # adopt | reject | defer
+#  anchors:
+#  - anchor_type: caf_pattern_requirement
+#  anchor_id: CAF-MTEN-01
+#  anchor_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-01.yaml
+#  rationale: >
+#  We acknowledge multi-tenancy tradeoffs but need to confirm isolation posture and tenant cohorts.
+#  resolved_values:
+#  tenancy.isolation_posture: unknown
+#  downstream_implications:
+#  - design: clarify tenant isolation posture in data boundary decisions

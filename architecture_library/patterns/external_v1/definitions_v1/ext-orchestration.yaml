@@ -1,0 +1,91 @@
+pattern_id: EXT-ORCHESTRATION
+name: Orchestration
+summary: The central coordinator controls the workflow
+intent: Use a central coordinator to drive a multi-step workflow with explicit state transitions.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: A coordination style where a dedicated orchestrator service directs each step of a multi-service
+  workflow by issuing commands and tracking state. It improves visibility and control over the process, but can increase coupling
+  to the orchestrator and concentrate complexity in one component.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A coordination style where a dedicated orchestrator service directs each step of a multi-service workflow
+  by issuing commands and tracking state. It improves visibility and control over the process, but can increase coupling to
+  the orchestrator and concentrate complexity in one component.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-ORCHESTRATION
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that a coordination style where a dedicated orchestrator service directs each step of a multi-service workflow
+    by issuing commands and tracking state.
+  capabilities_needed:
+  - eventing
+  - resilience_retry
+  - workflow_saga
+  - backup_restore
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: async.orchestration_engine_scope
+    description: Where orchestration logic lives and how workflow ownership is distributed.
+    options:
+    - option_id: workflow_orchestrator_service
+      summary: Dedicated workflow/orchestrator service owns coordination and state.
+      notes: ''
+    - option_id: domain_service_orchestration
+      summary: Domain services embed orchestration logic; coordination is part of app services.
+      notes: ''
+    - option_id: integration_layer_orchestration
+      summary: Orchestration lives in an integration layer separate from domain services.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: workflow_orchestrator_service
+  human_questions:
+  - question_key: async_orchestration_engine_scope
+    question_id: Q-EXT-ORCH-01
+    question: Where does orchestration logic live?
+    description: Select where orchestration logic is implemented and owned (dedicated orchestrator vs domain vs integration
+      layer).
+    option_set_id: async.orchestration_engine_scope
+    specialization_notes:
+    - Warranted when workflows require explicit sequencing, timeouts, retries, and compensations across multiple components.
+    anchors:
+    - caf_pattern: EXT-ORCHESTRATION
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-orchestration.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-ORCHESTRATION
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

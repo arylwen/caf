@@ -1,0 +1,217 @@
+pattern_id: CAF-DG-04
+name: Data Governance Responsibilities Across the Tri-Plane Architecture
+summary: Data governance responsibilities are intentionally separated across the **Control Plane**, **Application Plane**,
+  and **Data Plane**.
+intent: Data governance responsibilities are intentionally separated across the **Control Plane**, **Application Plane**,
+  and **Data Plane**.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 4. Data Governance Responsibilities Across the Tri-Plane Architecture
+
+
+  Data governance responsibilities are intentionally separated across the **Control Plane**, **Application Plane**, and **Data
+  Plane**.
+
+
+  ### 4.1 Control Plane Responsibilities
+
+
+  The Control Plane (CP) is the **source of data governance intent**.
+
+
+  The Control Plane MUST:
+
+
+  - Define data classification schemas and domains
+
+  - Define data quality dimensions and invariants
+
+  - Define data lifecycle policies (retention, deletion, archival)
+
+  - Define data access and usage policies
+
+  - Bind governance rules to tenants, identities, agents, and plans
+
+  - Version governance rules and schemas
+
+  - Orchestrate lifecycle transitions
+
+  - Aggregate governance evidence and posture
+
+
+  The Control Plane MUST NOT:
+
+
+  - Store bulk tenant business data
+
+  - Perform data processing or inference
+
+  - Interpret governance intent ad-hoc at runtime
+
+
+  ---
+
+
+  ### 4.2 Application Plane Responsibilities
+
+
+  The Application Plane (AP) is the **primary runtime enforcement surface**.
+
+
+  The Application Plane MUST:
+
+
+  - Enforce governance policies during execution
+
+  - Validate data quality before and after use
+
+  - Propagate governance context (tenant, identity, classification)
+
+  - Attribute all data access and mutation
+
+  - Reject execution when governance context is missing
+
+  - Integrate data checks into workflows and agents
+
+  - Emit governance telemetry and audit events
+
+
+  The Application Plane MUST NOT:
+
+
+  - Invent governance rules
+
+  - Bypass Control Plane policy
+
+  - Use data with unknown classification or quality state
+
+
+  ---
+
+
+  ### 4.3 Data Plane Responsibilities
+
+
+  The Data Plane (DP) is the **final enforcement boundary**.
+
+
+  The Data Plane MUST:
+
+
+  - Enforce tenant-scoped data isolation
+
+  - Enforce access controls derived from policy
+
+  - Enforce retention and deletion rules
+
+  - Enforce schema and integrity constraints
+
+  - Emit immutable, tenant-scoped audit records
+
+  - Preserve lineage and provenance metadata
+
+
+  The Data Plane MUST NOT:
+
+
+  - Make independent governance decisions
+
+  - Accept operations without validated governance context
+
+  - Expose data directly to end users or agents
+
+
+  ---'
+source_documents:
+- path: architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+  section_heading: 4. Data Governance Responsibilities Across the Tri-Plane Architecture
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - The Control Plane MUST
+  - '- Define data classification schemas and domains - Define data quality dimensions and invariants - Define data lifecycle
+    policies (retention, deletion, archival) - Define data access and usage policies - Bind governance rules to tenants, identities,
+    agents, and plans - Version governance rules and schemas - Orchestrate lifecycle transitions - Aggregate governance evidence
+    and posture The Control Plane MUST NOT'
+  - The Application Plane MUST
+  definition_of_done:
+  - Verify that the Control Plane MUST
+  - Verify that - Define data classification schemas and domains - Define data quality dimensions and invariants - Define
+    data lifecycle policies (retention, deletion, archival) - Define data access and usage policies - Bind governance rules
+    to tenants, identities, agents, and plans - Version governance rules and schemas - Orchestrate lifecycle transitions -
+    Aggregate governance evidence and posture The Control Plane MUST NOT
+  - Verify that the Application Plane MUST
+  - Verify that - Enforce governance policies during execution - Validate data quality before and after use - Propagate governance
+    context (tenant, identity, classification) - Attribute all data access and mutation - Reject execution when governance
+    context is missing - Integrate data checks into workflows and agents - Emit governance telemetry and audit events The
+    Application Plane MUST NOT
+  - Verify that the Data Plane MUST
+  - Verify that - Enforce tenant-scoped data isolation - Enforce access controls derived from policy - Enforce retention and
+    deletion rules - Enforce schema and integrity constraints - Emit immutable, tenant-scoped audit records - Preserve lineage
+    and provenance metadata The Data Plane MUST NOT
+  capabilities_needed:
+  - data_governance
+  - data_classification
+  - data_quality
+  - data_lifecycle
+  - data_validation
+  - data_observability_lineage
+  - ai_data_constraints
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: data_governance.responsibility_allocation
+    summary: Choose among bounded variants for `data_governance.responsibility_allocation` (or use `custom`).
+    options:
+    - option_id: cp_sets_policy_ap_enforces
+      status: defer
+      summary: Control plane defines governance policy; application plane enforces at runtime.
+      notes: ''
+    - option_id: ap_owns_governance
+      status: defer
+      summary: Application plane owns governance policy and enforcement (CP provides tooling only).
+      notes: ''
+    - option_id: shared_governance_service
+      status: defer
+      summary: Shared governance service provides policy evaluation and audit hooks across planes.
+      notes: ''
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: cp_sets_policy_ap_enforces
+  human_questions:
+  - question_key: auto_data_governance_responsibility_allocation
+    question_id: Q-CAF-DG-04-AUTO-01
+    question: Select an option for data_governance.responsibility_allocation.
+    description: ''
+    option_set_id: data_governance.responsibility_allocation
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-DG-04

@@ -1,0 +1,98 @@
+pattern_id: EXT-CHUNKING_METADATA_ENRICHMENT
+name: Chunking + Metadata Enrichment
+summary: Normalize chunks + provenance + ACL tags
+intent: Create retrieval-ready chunks with provenance, structure, and ACL metadata
+  to improve relevance and governance.
+context: LLM-powered apps needing reliability, safety, and change management across
+  prompts and retrieval components.
+problem: Model outputs can be unsafe or inconsistent; prompts and indexes change over
+  time without traceability.
+forces_tradeoffs: Safety vs helpfulness; latency/cost vs quality; rapid iteration
+  vs stability and auditability.
+solution_structure_behavior: A document preparation approach for search/RAG where
+  content is split into chunks sized for retrieval and LLM context windows, and enriched
+  with metadata such as source, section, timestamps, and access control labels. Good
+  chunking improves relevance and reduces leakage; poor chunking harms recall and
+  citations.
+consequences: More trustworthy assistants; added evaluation, monitoring, and governance
+  work.
+implementation_notes: Version prompts, log inputs/outputs, implement guardrails, evaluate
+  regularly, and enforce ACL-aware retrieval.
+examples_known_uses: Enterprise assistants, copilots, automated document drafting
+  with citations.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A document preparation approach for search/RAG where content
+  is split into chunks sized for retrieval and LLM context windows, and enriched with
+  metadata such as source, section, timestamps, and access control labels. Good chunking
+  improves relevance and reduces leakage; poor chunking harms recall and citations.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-CHUNKING_METADATA_ENRICHMENT
+  minimum_evidence:
+  - LLM-powered apps needing reliability, safety, and change management across prompts
+    and retrieval components.
+  - Model outputs can be unsafe or inconsistent
+  definition_of_done:
+  - Verify that a document preparation approach for search/RAG where content is split
+    into chunks sized for retrieval and LLM context windows, and enriched with metadata
+    such as source, section, timestamps, and access control labels.
+  capabilities_needed:
+  - identity_access
+  - observability_emit
+  - integration_translation_boundary
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+kind: decision_pattern
+decision_prompts:
+- Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+  and evidence anchors.
+option_sets:
+- option_set_id: ai.chunking_strategy
+  description: "Chunking and metadata enrichment strategy for indexing/retrieval pipelines."
+  options:
+  - option_id: fixed_tokens_with_overlap
+    summary: "Fixed-size token chunks with overlap; attach minimal metadata (source, section, timestamps)."
+    notes: ''
+  - option_id: semantic_sections
+    summary: "Chunk by semantic/structural sections (headings/blocks); enrich with hierarchical context metadata."
+    notes: ''
+  - option_id: hybrid_fixed_plus_sections
+    summary: "Hybrid: section boundaries with token caps; add both structural and provenance metadata."
+    notes: ''
+  - option_id: custom
+    summary: "Custom (fill fields)."
+    notes: ''
+  default_option_id: hybrid_fixed_plus_sections
+human_questions:
+- question_key: ai_chunking_strategy
+  question_id: Q-EXT-CHUNK-01
+  question: "What chunking strategy and metadata enrichment will be used?"
+  description: "Select how content is chunked and what metadata is added to improve retrieval quality and traceability."
+  option_set_id: ai.chunking_strategy
+  specialization_notes:
+  - "Warranted when retrieval quality depends on preserving context boundaries and provenance."
+  anchors:
+  - caf_pattern: EXT-CHUNKING_METADATA_ENRICHMENT
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-chunking_metadata_enrichment.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-CHUNKING_METADATA_ENRICHMENT
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

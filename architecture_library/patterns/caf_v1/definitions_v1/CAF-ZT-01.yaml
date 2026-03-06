@@ -1,0 +1,127 @@
+pattern_id: CAF-ZT-01
+name: Zero Trust Norms Across Planes
+summary: Assume no trusted internal network; require authentication/authorization and explicit context for every operation.
+intent: Prevent implicit trust and ambient authority by making identity and policy checks explicit and auditable at boundaries.
+context: Multi-tenant systems with agents/services/users executing actions across planes and trust boundaries.
+problem: Ambient trust enables privilege escalation, inconsistent enforcement, and undetectable drift in AI/agent behavior.
+forces_tradeoffs: Security and auditability vs friction and performance; strict rejection on missing context vs availability
+  under partial failures.
+solution_structure_behavior: Require authenticated principals, explicit context propagation, deterministic policy evaluation,
+  and consistent enforcement. Reject operations when context is incomplete.
+consequences: Improves security posture and traceability; requires robust identity/context propagation and careful error handling.
+implementation_notes: "Make \u201Cmissing context\u201D a hard failure mode; centralize enforcement points; ensure telemetry\
+  \ includes principal + tenant + policy decision lineage."
+examples_known_uses: Per-request authz checks; policy decision telemetry; rejecting execution when caller identity/tenant
+  is unknown.
+related_patterns: |
+  depends_on: CAF-IAM-01
+  depends_on: CAF-IAM-02
+  depends_on: CAF-POL-01
+  depends_on: CAF-POL-02
+  depends_on: OBS-01
+  complements: CAF-AID-01
+  complements: CAF-CH-01
+  complements: CAF-IAM-03
+  complements: CAF-MTEN-01
+  complements: CAF-PLANE-01
+  complements: CAF-POL-03
+  complements: CAF-TCTX-01
+  complements: CAF-XPLANE-02
+extended_definition: |
+  Zero Trust in Contura is an **identity-and-policy** discipline: no plane, component, or principal is implicitly trusted.
+
+  **Normative constraints**
+  - All cross-plane calls MUST be authenticated and authorized (no “internal = trusted” paths).
+  - Cross-plane interactions MUST carry explicit identity and tenant context.
+  - Principals MUST operate with least-privilege access; broad/wildcard privileges are prohibited.
+  - Identity and access MUST be continuously verified at relevant decision points; cached trust assumptions must be bounded/refreshable.
+  - Failures to authenticate/authorize MUST be handled deterministically and must not degrade system integrity.
+
+  **Responsibilities and boundaries**
+  - Control Plane governs identity primitives and authoritative policy intent.
+  - Application and Data Planes enforce authorization within delegated scope; neither may redefine identity authority or global policy.
+
+  **Evidence hooks**
+  - Inter-plane contracts specify required identity/tenant context and rejection behavior when missing.
+  - Enforcement points emit telemetry that includes tenant + principal attribution for critical actions.
+  - Designs explicitly avoid shared secrets/transitive trust and clarify delegation boundaries.
+
+  **Common failure modes (anti-patterns)**
+  - “System/internal” bypass routes that skip verification.
+  - Application-originated global policy or identity authority leakage.
+  - Privilege escalation via partial failure handling, broad credentials, or transitive trust.
+
+source_documents:
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Core Architectural Principles and Constraints/Zero Trust
+  - Identity, Access, and Zero Trust Across Planes/Zero Trust Norms
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  sections:
+  - Zero Trust Identity Patterns Across Planes
+  - Prohibited Identity and Access Anti-Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly states multi-tenancy or tenant isolation requirements.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that every operation enforces authn/authz with explicit context (no ambient trust).
+  - Verify that missing identity/tenant context is treated as a hard failure.
+  capabilities_needed:
+  - request_context_propagation
+  - authorization_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: zero_trust.interplane_trust_mode
+    summary: Choose among bounded variants for `zero_trust.interplane_trust_mode` (or use `custom`).
+    options:
+    - option_id: mutual_tls_and_service_identity
+      status: defer
+      summary: mTLS with explicit service identity between plane boundaries.
+    - option_id: signed_requests_with_rotation
+      status: defer
+      summary: Signed requests with key rotation and replay protection across plane boundaries.
+    - option_id: network_plus_app_auth
+      status: defer
+      summary: Network segmentation plus application-layer authentication (explicitly bounded trust).
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: network_plus_app_auth
+  human_questions:
+  - question_key: auto_zero_trust_interplane_trust_mode
+    question_id: Q-CAF-ZT-01-AUTO-01
+    question: Select an option for zero_trust.interplane_trust_mode.
+    description: ''
+    option_set_id: zero_trust.interplane_trust_mode
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-ZT-01
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-ZT-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-ZT-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

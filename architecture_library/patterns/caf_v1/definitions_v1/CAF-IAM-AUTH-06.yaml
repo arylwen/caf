@@ -1,0 +1,113 @@
+pattern_id: CAF-IAM-AUTH-06
+name: Failure Handling and Denial
+summary: Authorization failures are handled explicitly and consistently.
+intent: Authorization failures are handled explicitly and consistently.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-AUTH-01
+extended_definition: '### Failure Handling and Denial Pattern
+
+
+  Authorization failures are handled explicitly and consistently.
+
+
+  Under this pattern:
+
+
+  - Unauthorized actions are rejected deterministically
+
+  - Failures are observable and attributable to identity and context
+
+  - Authorization failures do not trigger governance or lifecycle changes
+
+  - Error handling does not leak sensitive policy information
+
+
+  Authorization failure is a runtime outcome, not a control signal.
+
+
+  ---
+
+
+  **Normative statement:**
+
+
+  > Application Plane systems authenticate identities and enforce authorization strictly within delegated scope; they must
+  not govern identity authority or policy intent.'
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Failure Handling and Denial Pattern
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - they must not govern identity authority or policy intent.
+  definition_of_done:
+  - Verify that they must not govern identity authority or policy intent.
+  capabilities_needed:
+  - identity_authentication
+  - identity_authorization
+  - policy_enforcement
+  - delegation_boundary
+  - failure_handling
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.denial_response_mode
+    description: How authentication/authorization denials are represented at boundaries.
+    options:
+    - option_id: explicit_forbidden
+      summary: Explicit deny responses with clear status codes and audit events.
+      response_kind: explicit_forbidden
+      audit_event: required
+      notes: ''
+    - option_id: opaque_denial
+      summary: Opaque deny responses to avoid information leakage (e.g., generic denial).
+      response_kind: opaque_denial
+      audit_event: required
+      notes: ''
+    - option_id: not_found_forbidden
+      summary: Use not-found semantics for forbidden resources to reduce enumeration risk.
+      response_kind: not_found_forbidden
+      audit_event: required
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      response_kind: ''
+      audit_event: ''
+      notes: ''
+    default_option_id: explicit_forbidden
+  human_questions:
+  - question_key: denial_mode
+    question_id: Q-IAM-DENY-01
+    question: What denial response mode is used (explicit, opaque, not-found-forbidden)?
+    description: Select how denials are expressed and audited.
+    option_set_id: iam.denial_response_mode
+    specialization_notes:
+    - Warranted whenever authentication/authorization failures can occur at ingress or internal boundaries.
+    - Ensure denials are consistently audited and tenant-bound.
+    anchors:
+    - caf_pattern: CAF-IAM-AUTH-06

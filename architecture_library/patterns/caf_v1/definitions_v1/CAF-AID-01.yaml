@@ -1,0 +1,136 @@
+pattern_id: CAF-AID-01
+name: Agent Identity Pattern (Normative Summary)
+summary: Treat agents as first-class principals with explicit identity, attribution, and policy-governed permissions.
+intent: Ensure agent actions are attributable, governable, and constrained under deterministic policy.
+context: Systems that execute agentic workflows that may act on behalf of users/tenants/services.
+problem: Without explicit agent identity, systems cannot audit actions, bound permissions, or safely reason about autonomy.
+forces_tradeoffs: Autonomy and convenience vs safety, attribution, and deterministic enforcement.
+solution_structure_behavior: Define agent principals, bind them to tenants and permissions, require explicit attribution on
+  actions, and enforce via policy evaluation at runtime.
+consequences: Improves auditability and safety; requires identity lifecycle management and consistent attribution propagation.
+implementation_notes: "Avoid \u201Canonymous agent\u201D execution; require correlation IDs and principal attribution in telemetry;\
+  \ treat tool access as policy-governed."
+examples_known_uses: Agents performing workflows with recorded principal identity; policy-enforced tool invocation.
+related_patterns: |
+  depends_on: CAF-IAM-01
+  depends_on: CAF-POL-01
+  depends_on: CAF-POL-02
+  depends_on: OBS-01
+  complements: CAF-AI-01
+  complements: CAF-ZT-01
+extended_definition: |
+  Agents are **first-class principals**. Their actions must be attributable, policy-governed, and tenant-bound.
+
+  **Normative constraints**
+  - Agents MUST NOT operate anonymously or under implicit trust.
+  - By default, an agent inherits the tenant context and authorization scope of the initiating principal (or a safe subset).
+  - Any deviation from default inheritance (dedicated agent identities, delegated user identities) MUST be explicitly configured and governed in the Control Plane.
+  - Agents MUST NOT change identity/scope at runtime or self-escalate privileges.
+  - Agents MUST NOT bypass identity enforcement, policy delegation, or safety gates; they MUST NOT originate governance intent or lifecycle transitions.
+
+  **Plane responsibilities**
+  - Control Plane: defines agent identity types, allowable scopes, delegation boundaries, and lifecycle of dedicated agent identities.
+  - Application Plane: instantiates agents under an explicit governed identity; ensures each tool/action is authorized within delegated scope; propagates tenant/principal context to all downstream calls and telemetry.
+  - Data Plane: enforces access according to agent identity and tenant context; must not accept raw end-user credentials from agents.
+
+  **Evidence hooks**
+  - Design specifies the agent identity mode (service, per-agent, delegated user) and required claims, plus rejection behavior on missing/unverified claims.
+  - Tool invocation and workflow steps include explicit principal attribution and correlation identifiers.
+  - Audit/telemetry can answer who acted, under which identity/scope, for which tenant, under which policy, and with what outcome.
+
+  **Common failure modes**
+  - “Anonymous agent” execution or hidden identity inheritance.
+  - Shared high-privilege credentials reused across tenants.
+  - Tool access granted outside policy-gated, versioned governance intent.
+
+source_documents:
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Agent Identity Pattern (Normative Summary)
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  sections:
+  - Agent Identity Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly distinguishes principal types or requires authn/authz and attribution across operations.
+  - Spec/design includes AI/agent behaviors or governance requirements that require auditability and policy gating.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that agent actions include explicit agent principal identity and attribution in telemetry/audit.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: agent.identity_kind
+    description: What kind of identity an agent presents and how it is verified.
+    options:
+    - option_id: service_identity_only
+      summary: Agent uses a service identity (no per-agent individuality).
+      identity_kind: service
+      required_claims:
+      - service_id
+      rejection_conditions:
+      - missing
+      - unverified
+    - option_id: per_agent_identity
+      summary: Each agent instance has a distinct identity bound to a tenant and role.
+      identity_kind: per_agent
+      required_claims:
+      - agent_id
+      - tenant_id
+      - role
+      rejection_conditions:
+      - missing
+      - unverified
+      - tenant_mismatch
+    - option_id: delegated_user_identity
+      summary: Agent acts on behalf of a user with explicit delegation scope.
+      identity_kind: delegated_user
+      required_claims:
+      - user_id
+      - delegation_scope
+      rejection_conditions:
+      - missing
+      - unverified
+      - scope_missing
+    - option_id: custom
+      summary: Custom (fill fields).
+      identity_kind: ''
+      required_claims: []
+      rejection_conditions: []
+    default_option_id: service_identity_only
+  human_questions:
+  - question_key: agent_identity
+    question_id: Q-AID-KIND-01
+    question: What identity kind does the agent present (service, per-agent, delegated user) and what claims are required?
+    description: Select the agent identity mode and required verification claims.
+    option_set_id: agent.identity_kind
+    specialization_notes:
+    - Warranted when agents trigger actions that require attribution, audit, or tenant binding.
+    - If identity kind is fixed by an upstream IAM governance decision, record it here for consistency.
+    anchors:
+    - caf_pattern: CAF-AID-01
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AID-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-AID-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

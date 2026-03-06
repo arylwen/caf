@@ -1,0 +1,144 @@
+pattern_id: CAF-POL-02
+name: Policy Responsibilities Across Planes
+summary: Separate policy truth and lifecycle (Control) from evaluation/enforcement (Application) and access enforcement (Data).
+intent: Prevent policy semantic drift and authority leakage by placing ownership and enforcement responsibilities explicitly.
+context: Tri-plane systems where policy governs tenants, identities, agents, workflows, and resource access.
+problem: If planes modify policy semantics or evaluate inconsistently, governance becomes non-deterministic and unprovable.
+forces_tradeoffs: Central governance vs local autonomy; enforcement consistency vs latency and coupling.
+solution_structure_behavior: "**Core responsibilities**\n\n- **Control Plane (CP)** is the authority for **policy truth and\
+  \ lifecycle**: schemas, authoring, validation, versioning, distribution, rollout, and rollback.\n- **Application Plane (AP)**\
+  \ performs **deterministic policy evaluation and enforcement** for operations it exposes; it must reject requests when required\
+  \ context is missing.\n- **Data Plane (DP)** enforces **access boundaries** (e.g., storage and data access control) and\
+  \ must not initiate governance orchestration or mutate policy truth.\n\n**Plane interpretations (default)**\n\n- **AP**\n\
+  \  - Provide an explicit **policy evaluation/enforcement boundary** around protected operations.\n  - Require explicit request\
+  \ context (tenant, principal, correlation) and emit decision telemetry.\n- **CP**\n  - Provide a **policy artifact store\
+  \ boundary** (policy as versioned artifacts) and a **distribution boundary** (serve policy artifacts to consumers).\n  -\
+  \ Provide explicit lifecycle controls (publish, rollback) with audit.\n- **DP**\n  - Provide an explicit **access enforcement\
+  \ boundary** for data access; deny by default when context/policy is missing.\n  - Do not embed governance workflows or\
+  \ policy-authoring logic.\n- **ST** (if a separate Storage plane is present)\n  - Store policy artifacts and policy decision\
+  \ telemetry behind explicit storage boundaries.\n  - Apply retention and audit constraints appropriate to policy governance.\n\
+  - **AI** (if AI workflows exist)\n  - Treat AI guardrails/permissions as policy-governed decisions and emit evidence suitable\
+  \ for audit and replay.\n\n**Invariants (normative)**\n\n- Policy truth is tenant-scoped, versioned, and auditable.\n- Policy\
+  \ evaluation is explicit (no ad-hoc checks) and fail-closed.\n- Policy decisions and enforcement emit structured telemetry\
+  \ with correlation.\n- Authority does not leak across planes (no implicit overrides).\n"
+consequences: Improves consistency and auditability; requires clear APIs for policy distribution and evaluation and careful
+  version management.
+implementation_notes: 'Treat missing policy context as hard failure; ensure delegation boundaries are explicit; avoid ad-hoc
+  overrides.
+
+
+  Practical constraints:
+
+
+  - Require explicit **tenant_id**, **principal_id** (or equivalent), and **correlation_id** at the AP policy boundary.
+
+  - Policy distribution must be explicit and version-aware (AP/DP must know which policy version they evaluated).
+
+  - Record policy decisions in an audit-friendly format (inputs, decision, version, correlation).
+
+  '
+examples_known_uses: Control plane policy authoring with application plane enforcement; policy rollout with rollback support.
+related_patterns: |
+  depends_on: CAF-IAM-01
+  depends_on: CAF-IAM-02
+  depends_on: CAF-POL-01
+  depends_on: CAF-TCTX-01
+  complements: CAF-AID-01
+  complements: CAF-IAM-GOV-04
+  complements: CAF-MODEL-01
+  complements: CAF-PLANE-01
+  complements: CAF-POL-03
+  complements: CAF-XPLANE-01
+  complements: CAF-ZT-01
+extended_definition: |
+  **Normative constraints**
+
+  - Policy responsibilities are intentionally separated across planes to prevent semantic drift and authority leakage.
+  - **Control Plane** is the **source of policy truth** and lifecycle authority. CP **MUST** author/validate, version, distribute, and govern who may change policy, and record lineage/intent. CP **MUST NOT** execute tenant business workflows or interpret policy ad-hoc at runtime.
+  - **Application Plane** is the primary runtime evaluation/enforcement surface. AP **MUST** invoke policy evaluation deterministically, provide complete context, enforce outcomes consistently, and **reject execution when required context is missing**. AP **MUST NOT** bypass evaluation or modify policy semantics.
+  - **Data Plane** is the final enforcement boundary. DP **MUST** enforce policy-derived constraints (access/retention/isolation), validate tenant/identity scope on data access, reject non-compliant operations, and emit immutable tenant-scoped audit records. DP **MUST NOT** define policy or execute governance logic independently.
+
+  **Evidence hooks**
+
+  - Plane interfaces specify how policy artifacts/versions are distributed and bound to evaluations.
+  - Designs identify enforcement points per plane and define fail-closed behavior on missing policy/context.
+
+  **Common failure modes**
+
+  - AP embedding “policy truth” (ad-hoc overrides, semantic reinterpretation).
+  - DP implementing independent policy logic rather than enforcing derived constraints.
+  - Caching decisions without version binding, causing silent drift.
+
+source_documents:
+- path: architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+  sections:
+  - 4. Policy Responsibilities Across the Tri-Plane Architecture
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Purpose
+  - Responsibilities and Boundaries per Plane
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design explicitly requires deterministic policy enforcement (not ad-hoc checks) for one or more operations.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that policy is represented as explicit, versioned artifacts and that evaluations emit decision telemetry.
+  capabilities_needed:
+  - policy_enforcement
+  - policy_decision_telemetry
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of a specific policy language or rule engine unless provided by TBPs/technology profile.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: policy.responsibility_distribution
+    description: How policy intent, decision, and enforcement responsibilities are distributed across planes.
+    options:
+    - option_id: cp_central_decision_ap_enforces
+      summary: Control Plane centralizes policy decision; Application Plane enforces.
+      policy_decision_point: control
+      policy_enforcement_point: application
+      notes: ''
+    - option_id: ap_local_decision_and_enforcement
+      summary: Application Plane performs local policy decisions and enforcement (CP provides intent).
+      policy_decision_point: application
+      policy_enforcement_point: application
+      notes: ''
+    - option_id: gateway_or_edge_enforcement
+      summary: Edge/gateway enforces policy at ingress with CP-governed intent.
+      policy_decision_point: control
+      policy_enforcement_point: edge_gateway
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      policy_decision_point: ''
+      policy_enforcement_point: ''
+      notes: ''
+    default_option_id: cp_central_decision_ap_enforces
+  human_questions:
+  - question_key: policy_distribution
+    question_id: Q-POL-DIST-01
+    question: How are policy responsibilities distributed across planes (decision point vs enforcement point)?
+    description: Select where policy decisions are made and where enforcement occurs.
+    option_set_id: policy.responsibility_distribution
+    specialization_notes:
+    - Warranted when policy governs tenant operations, safety, cost, or data access across plane boundaries.
+    - Keep consistent with any existing Plane Integration Contract choices and enforcement rails.
+    anchors:
+    - caf_pattern: CAF-POL-02

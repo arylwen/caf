@@ -1,0 +1,1798 @@
+catalog_version: v1
+patterns:
+- pattern_id: CAF-PLANE-01
+  name: Tri-Plane Separation (Control/Application/Data)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-PLANE-01.yaml
+  trigger_entry_id: TRG-CAF-PLANE-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-PLANE-02
+  name: Plane Runtime Shape Declaration
+  layer: caf
+  verifiability: semiverifiable
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-PLANE-02.yaml
+  trigger_entry_id: TRG-CAF-PLANE-02
+  source_paths: []
+
+- pattern_id: CAF-MODEL-01
+  name: Domain Modeling Framework Selection (DDD + Clean Architecture Default)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MODEL-01.yaml
+  trigger_entry_id: TRG-CAF-MODEL-01
+  source_paths:
+  - architecture_library/patterns/core_v1/sources_v1.md
+- pattern_id: CAF-XPLANE-01
+  name: Allowed Cross-Plane Interaction Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-XPLANE-01.yaml
+  trigger_entry_id: TRG-CAF-XPLANE-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-XPLANE-02
+  name: Prohibited Cross-Plane Interaction Anti-Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-XPLANE-02.yaml
+  trigger_entry_id: TRG-CAF-XPLANE-02
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-TCTX-01
+  name: Tenant Context Propagation (Normative)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-TCTX-01.yaml
+  trigger_entry_id: TRG-CAF-TCTX-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-ZT-01
+  name: Zero Trust Norms Across Planes
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-ZT-01.yaml
+  trigger_entry_id: TRG-CAF-ZT-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-AI-01
+  name: AI Safety and Governance Separation Across Planes
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AI-01.yaml
+  trigger_entry_id: TRG-CAF-AI-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-AID-01
+  name: Agent Identity Pattern (Normative Summary)
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AID-01.yaml
+  trigger_entry_id: TRG-CAF-AID-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-01
+  name: Identity Principal Taxonomy (Platform/Tenant/Service/Agent)
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-01.yaml
+  trigger_entry_id: TRG-CAF-IAM-01
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-02
+  name: Identity and Context Propagation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-02.yaml
+  trigger_entry_id: TRG-CAF-IAM-02
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-IAM-03
+  name: Identity Auditability and Traceability
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-03.yaml
+  trigger_entry_id: TRG-CAF-IAM-03
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-POL-01
+  name: Policy as a First-Class System Artifact
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-01.yaml
+  trigger_entry_id: TRG-CAF-POL-01
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-02
+  name: Policy Responsibilities Across Planes
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-02.yaml
+  trigger_entry_id: TRG-CAF-POL-02
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-POL-03
+  name: Policy Decision Telemetry and Audit
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-03.yaml
+  trigger_entry_id: TRG-CAF-POL-03
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-CH-01
+  name: Channel Constraints Do Not Change Plane Authority
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-CH-01.yaml
+  trigger_entry_id: TRG-CAF-CH-01
+  source_paths:
+  - architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+- pattern_id: CAF-MRAD-01
+  name: MRAD-1 Idempotent Command Pattern
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MRAD-01.yaml
+  trigger_entry_id: TRG-CAF-MRAD-01
+  source_paths:
+  - architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+- pattern_id: CAF-MRAD-02
+  name: MRAD-2 Resumable Workflow Pattern
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MRAD-02.yaml
+  trigger_entry_id: TRG-CAF-MRAD-02
+  source_paths:
+  - architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+- pattern_id: CAF-MRAD-03
+  name: MRAD-3 Bounded Payload and Collection Pattern
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MRAD-03.yaml
+  trigger_entry_id: TRG-CAF-MRAD-03
+  source_paths:
+  - architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+- pattern_id: CAF-MRAD-04
+  name: MRAD-4 Coarse-Grained Interaction Pattern
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MRAD-04.yaml
+  trigger_entry_id: TRG-CAF-MRAD-04
+  source_paths:
+  - architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+- pattern_id: CAF-MRAD-05
+  name: MRAD-5 Offline/Degraded Mode Pattern
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MRAD-05.yaml
+  trigger_entry_id: TRG-CAF-MRAD-05
+  source_paths:
+  - architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+- pattern_id: CAF-MTEN-01
+  name: Multi-Tenancy as First-Class Architectural Concern
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MRAD-06
+  name: Background Execution Constraint
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MRAD-06.yaml
+  trigger_entry_id: TRG-CAF-MRAD-06
+  source_paths:
+  - architecture_library/21_contura_channel_resilient_delivery_pattern_guide_v1.md
+- pattern_id: CAF-IAM-GOV-01
+  name: Centralized Identity Authority
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-GOV-01.yaml
+  trigger_entry_id: TRG-CAF-IAM-GOV-01
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-GOV-02
+  name: Tenant-Scoped Identity Governance
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-GOV-02.yaml
+  trigger_entry_id: TRG-CAF-IAM-GOV-02
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-GOV-03
+  name: Identity Integration Governance
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-GOV-03.yaml
+  trigger_entry_id: TRG-CAF-IAM-GOV-03
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-GOV-04
+  name: Policy Intent Definition
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-GOV-04.yaml
+  trigger_entry_id: TRG-CAF-IAM-GOV-04
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-GOV-05
+  name: Identity Lifecycle Governance
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-GOV-05.yaml
+  trigger_entry_id: TRG-CAF-IAM-GOV-05
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-GOV-06
+  name: Delegated Enforcement Boundary
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-GOV-06.yaml
+  trigger_entry_id: TRG-CAF-IAM-GOV-06
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-AUTH-01
+  name: Authentication Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-AUTH-01.yaml
+  trigger_entry_id: TRG-CAF-IAM-AUTH-01
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-AUTH-02
+  name: Delegated Authorization Enforcement
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-AUTH-02.yaml
+  trigger_entry_id: TRG-CAF-IAM-AUTH-02
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-AUTH-03
+  name: "Tenant-Context\u2013Aware Authorization"
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-AUTH-03.yaml
+  trigger_entry_id: TRG-CAF-IAM-AUTH-03
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-AUTH-04
+  name: Runtime Policy Consumption
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-AUTH-04.yaml
+  trigger_entry_id: TRG-CAF-IAM-AUTH-04
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-AUTH-05
+  name: Agent and Service Authorization
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-AUTH-05.yaml
+  trigger_entry_id: TRG-CAF-IAM-AUTH-05
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-AUTH-06
+  name: Failure Handling and Denial
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-AUTH-06.yaml
+  trigger_entry_id: TRG-CAF-IAM-AUTH-06
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-PROP-01
+  name: Revocation and Change Propagation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-PROP-01.yaml
+  trigger_entry_id: TRG-CAF-IAM-PROP-01
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-PROP-02
+  name: No Transitive Authority
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-PROP-02.yaml
+  trigger_entry_id: TRG-CAF-IAM-PROP-02
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-PROP-03
+  name: Policy Signals vs Control Signals
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-PROP-03.yaml
+  trigger_entry_id: TRG-CAF-IAM-PROP-03
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-PROP-04
+  name: No Implicit Trust Between Planes
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-PROP-04.yaml
+  trigger_entry_id: TRG-CAF-IAM-PROP-04
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-PROP-05
+  name: Explicit Identity Verification
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-PROP-05.yaml
+  trigger_entry_id: TRG-CAF-IAM-PROP-05
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-OBS-01
+  name: Identity Attribution
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-OBS-01.yaml
+  trigger_entry_id: TRG-CAF-IAM-OBS-01
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-OBS-02
+  name: End-to-End Traceability
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-OBS-02.yaml
+  trigger_entry_id: TRG-CAF-IAM-OBS-02
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-MTEN-ISO-01
+  name: Pooled Everything (Logical Isolation Baseline)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ISO-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ISO-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ISO-02
+  name: Pooled Compute + Partitioned Data (Bridge Isolation)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ISO-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ISO-02
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ISO-03
+  name: Silo Tenants (Dedicated Infrastructure)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ISO-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ISO-03
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ISO-04
+  name: Hybrid Isolation (Selective and Tiered)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ISO-04.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ISO-04
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ING-01
+  name: Domain / Subdomain-Based Routing
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ING-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ING-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ING-02
+  name: Token-Embedded Tenant Claims
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ING-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ING-02
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ING-03
+  name: Explicit Tenant Selection with Session Binding
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ING-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ING-03
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-CTX-01
+  name: Context Binding Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-CTX-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-CTX-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-CTX-02
+  name: Context Propagation Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-CTX-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-CTX-02
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-CTX-03
+  name: Context Enforcement Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-CTX-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-CTX-03
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-CTX-04
+  name: Context Validation & Defense-in-Depth
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-CTX-04.yaml
+  trigger_entry_id: TRG-CAF-MTEN-CTX-04
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-LC-01
+  name: Tenant Provisioning Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-LC-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-LC-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-LC-02
+  name: Tenant Migration and Rebalancing
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-LC-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-LC-02
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-LC-03
+  name: Suspension and Quarantine Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-LC-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-LC-03
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-LC-04
+  name: Tenant Deletion and Retention
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-LC-04.yaml
+  trigger_entry_id: TRG-CAF-MTEN-LC-04
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-COST-01
+  name: Metering as a First-Class Execution Step
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-COST-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-COST-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-COST-02
+  name: Enforcement Before Execution
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-COST-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-COST-02
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-COST-03
+  name: Enforcement During Execution
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-COST-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-COST-03
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-COST-04
+  name: AccountScope as Enforcement Authority
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-COST-04.yaml
+  trigger_entry_id: TRG-CAF-MTEN-COST-04
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-COST-05
+  name: Graceful Degradation Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-COST-05.yaml
+  trigger_entry_id: TRG-CAF-MTEN-COST-05
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-OBS-01
+  name: Observability as an Enforcement Primitive
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-OBS-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-OBS-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-OBS-02
+  name: Tenant-Scoped Telemetry (Normative)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-OBS-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-OBS-02
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-OBS-03
+  name: Observability Across Execution Boundaries
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-OBS-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-OBS-03
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-AUD-01
+  name: Audit Trails as First-Class Artifacts
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-AUD-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-AUD-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-SAFE-01
+  name: Safety Gates as Runtime Control Points
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-SAFE-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-SAFE-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-SAFE-02
+  name: AI-Specific Safety and Observability Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-SAFE-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-SAFE-02
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-SAFE-03
+  name: Blast Radius Detection and Containment
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-SAFE-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-SAFE-03
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-AGOBS-01
+  name: Observability for Agents and Autonomous Execution
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-AGOBS-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-AGOBS-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ANTI-01
+  name: Implicit Tenancy
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ANTI-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ANTI-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ANTI-02
+  name: Treating Workspaces (or Projects) as Tenants
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ANTI-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ANTI-02
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ANTI-03
+  name: Coupling Billing, Authorization, and Isolation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ANTI-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ANTI-03
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ANTI-04
+  name: Identity Without Tenant Scope
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ANTI-04.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ANTI-04
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ANTI-05
+  name: Treating Enterprise as a Fork
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ANTI-05.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ANTI-05
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ANTI-06
+  name: Late Introduction of Governance
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ANTI-06.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ANTI-06
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ANTI-07
+  name: Agent Autonomy Without Boundaries
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ANTI-07.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ANTI-07
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ANTI-08
+  name: Assuming Network Isolation Is Sufficient
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ANTI-08.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ANTI-08
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-VAL-01
+  name: 1. Global Tenancy Invariants
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VAL-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VAL-01
+  source_paths:
+  - architecture_library/30_contura_multi_tenancy_validation_guide_v1.md
+- pattern_id: CAF-MTEN-VAL-02
+  name: 2. Routing & Tenant Context Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VAL-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VAL-02
+  source_paths:
+  - architecture_library/30_contura_multi_tenancy_validation_guide_v1.md
+- pattern_id: CAF-MTEN-VAL-03
+  name: 3. Identity & Access Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VAL-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VAL-03
+  source_paths:
+  - architecture_library/30_contura_multi_tenancy_validation_guide_v1.md
+- pattern_id: CAF-MTEN-VAL-04
+  name: 10. Anti-Pattern Detection Checklist
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VAL-04.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VAL-04
+  source_paths:
+  - architecture_library/30_contura_multi_tenancy_validation_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-01
+  name: Global Tenancy Invariants
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-01
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-02
+  name: Routing & Tenant Context Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-02
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-03
+  name: Identity & Access Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-03
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-04
+  name: Lifecycle Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-04.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-04
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-05
+  name: Isolation Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-05.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-05
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-06
+  name: Cost & Usage Enforcement Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-06.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-06
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-07
+  name: Observability, Audit & Safety Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-07.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-07
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-08
+  name: Agent-Specific Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-08.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-08
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-09
+  name: Enterprise & Compliance Mode Validation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-09.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-09
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-VALU-10
+  name: Anti-Pattern Detection Checklist
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-VALU-10.yaml
+  trigger_entry_id: TRG-CAF-MTEN-VALU-10
+  source_paths:
+  - architecture_library/31_contura_multi_tenancy_validation_user_guide_v1.md
+- pattern_id: CAF-MTEN-ENT-01
+  name: Enterprise Is a Mode, Not a Different Architecture
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ENT-02
+  name: Enterprise Drivers and Architectural Pressure
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-02
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ENT-03
+  name: Compliance Modes as Explicit Policy
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-03
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ENT-04
+  name: Isolation Evolution Under Enterprise Modes
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-04.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-04
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ENT-05
+  name: Identity, Operator Access, and Enterprise Governance
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-05.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-05
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ENT-06
+  name: Data Residency and Sovereignty Modes
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-06.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-06
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ENT-07
+  name: Audit, Retention, and Legal Hold Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-07.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-07
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ENT-08
+  name: AI, Agents, and Enterprise Risk Profiles
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-08.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-08
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ENT-09
+  name: Cost, Contracts, and Predictability
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-09.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-09
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-ENT-10
+  name: Evolution Without Fragmentation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ENT-10.yaml
+  trigger_entry_id: TRG-CAF-MTEN-ENT-10
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-MTEN-REDESIGN-01
+  name: Redesign Trigger Indicators
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-REDESIGN-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-REDESIGN-01
+  source_paths:
+  - architecture_library/21_contura_multi_tenancy_patterns_v1.md
+- pattern_id: CAF-WF-CP-01
+  name: 'Control Plane: Orchestration Only'
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-WF-CP-01.yaml
+  trigger_entry_id: TRG-CAF-WF-CP-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-WF-AP-01
+  name: 'Application Plane: Tenant Workflow Orchestration + Internal Choreography'
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-WF-AP-01.yaml
+  trigger_entry_id: TRG-CAF-WF-AP-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-WF-DP-01
+  name: 'Data Plane: No Orchestration of Governance'
+  layer: caf
+  verifiability: plan_ready
+  plane: data
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-WF-DP-01.yaml
+  trigger_entry_id: TRG-CAF-WF-DP-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-TEL-CP-01
+  name: Control Plane Telemetry
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-TEL-CP-01.yaml
+  trigger_entry_id: TRG-CAF-TEL-CP-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-TEL-AP-01
+  name: Application Plane Telemetry
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-TEL-AP-01.yaml
+  trigger_entry_id: TRG-CAF-TEL-AP-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-TEL-DP-01
+  name: Data Plane Telemetry
+  layer: caf
+  verifiability: plan_ready
+  plane: data
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-TEL-DP-01.yaml
+  trigger_entry_id: TRG-CAF-TEL-DP-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-SAFE-CP-01
+  name: Control Plane Responsibilities (Safety & Guardrails)
+  layer: caf
+  verifiability: plan_ready
+  plane: control
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-SAFE-CP-01.yaml
+  trigger_entry_id: TRG-CAF-SAFE-CP-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-SAFE-AP-01
+  name: Application Plane Responsibilities (Safety & Guardrails)
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-SAFE-AP-01.yaml
+  trigger_entry_id: TRG-CAF-SAFE-AP-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-SAFE-DP-01
+  name: Data Plane Responsibilities (Safety & Guardrails)
+  layer: caf
+  verifiability: plan_ready
+  plane: data
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-SAFE-DP-01.yaml
+  trigger_entry_id: TRG-CAF-SAFE-DP-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-VER-01
+  name: Versioning Expectations
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-VER-01.yaml
+  trigger_entry_id: TRG-CAF-VER-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-AIOBS-01
+  name: AI Observability Hooks
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AIOBS-01.yaml
+  trigger_entry_id: TRG-CAF-AIOBS-01
+  source_paths:
+  - architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+- pattern_id: CAF-POL-S05
+  name: Policy Types and Domains
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S05.yaml
+  trigger_entry_id: TRG-CAF-POL-S05
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S06
+  name: Policy Lifecycle and Versioning
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S06.yaml
+  trigger_entry_id: TRG-CAF-POL-S06
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S07
+  name: Design-Time Policy (ADR Integration)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S07.yaml
+  trigger_entry_id: TRG-CAF-POL-S07
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S08
+  name: Runtime Policy Evaluation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S08.yaml
+  trigger_entry_id: TRG-CAF-POL-S08
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S09
+  name: Policy Enforcement Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S09.yaml
+  trigger_entry_id: TRG-CAF-POL-S09
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S10
+  name: Integration with AI Safety Gates
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S10.yaml
+  trigger_entry_id: TRG-CAF-POL-S10
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S11
+  name: Integration with Compliance Automation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S11.yaml
+  trigger_entry_id: TRG-CAF-POL-S11
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S12
+  name: Integration with Cost Governance
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S12.yaml
+  trigger_entry_id: TRG-CAF-POL-S12
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S13
+  name: Policy Observability, Evidence, and Drift
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S13.yaml
+  trigger_entry_id: TRG-CAF-POL-S13
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S14
+  name: Failure Modes & Anti-Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S14.yaml
+  trigger_entry_id: TRG-CAF-POL-S14
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-POL-S15
+  name: Evolution and Backward Compatibility
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-S15.yaml
+  trigger_entry_id: TRG-CAF-POL-S15
+  source_paths:
+  - architecture_library/22_contura_policy_engine_architecture_guide_v1.md
+- pattern_id: CAF-AISG-01
+  name: Definition of an AI Safety Gate
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AISG-01.yaml
+  trigger_entry_id: TRG-CAF-AISG-01
+  source_paths:
+  - architecture_library/10_contura_ai_safety_gate_specification_v1.md
+- pattern_id: CAF-AISG-02
+  name: Required Structure of a Safety Gate
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AISG-02.yaml
+  trigger_entry_id: TRG-CAF-AISG-02
+  source_paths:
+  - architecture_library/10_contura_ai_safety_gate_specification_v1.md
+- pattern_id: CAF-AISG-03
+  name: Required Evaluations for Agents, Tools, Models, and Reasoning Traces
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AISG-03.yaml
+  trigger_entry_id: TRG-CAF-AISG-03
+  source_paths:
+  - architecture_library/10_contura_ai_safety_gate_specification_v1.md
+- pattern_id: CAF-AISG-04
+  name: Human-in-the-Loop (HITL) Policies
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AISG-04.yaml
+  trigger_entry_id: TRG-CAF-AISG-04
+  source_paths:
+  - architecture_library/10_contura_ai_safety_gate_specification_v1.md
+- pattern_id: CAF-AISG-05
+  name: Guardrail Expectations
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AISG-05.yaml
+  trigger_entry_id: TRG-CAF-AISG-05
+  source_paths:
+  - architecture_library/10_contura_ai_safety_gate_specification_v1.md
+- pattern_id: CAF-AISG-06
+  name: Change Control and Versioning
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AISG-06.yaml
+  trigger_entry_id: TRG-CAF-AISG-06
+  source_paths:
+  - architecture_library/10_contura_ai_safety_gate_specification_v1.md
+- pattern_id: CAF-AIOBS-02
+  name: Observability Model for Agents, Models, Tools, and Reasoning Traces
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AIOBS-02.yaml
+  trigger_entry_id: TRG-CAF-AIOBS-02
+  source_paths:
+  - architecture_library/11_contura_ai_observability_and_evaluation_specification_v1.md
+- pattern_id: CAF-AIOBS-03
+  name: Required Telemetry Fields
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AIOBS-03.yaml
+  trigger_entry_id: TRG-CAF-AIOBS-03
+  source_paths:
+  - architecture_library/11_contura_ai_observability_and_evaluation_specification_v1.md
+- pattern_id: CAF-AIOBS-04
+  name: AI Drift Detection and Version Evaluation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AIOBS-04.yaml
+  trigger_entry_id: TRG-CAF-AIOBS-04
+  source_paths:
+  - architecture_library/11_contura_ai_observability_and_evaluation_specification_v1.md
+- pattern_id: CAF-AIOBS-05
+  name: Multi-Tenant Observability Rules
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AIOBS-05.yaml
+  trigger_entry_id: TRG-CAF-AIOBS-05
+  source_paths:
+  - architecture_library/11_contura_ai_observability_and_evaluation_specification_v1.md
+- pattern_id: CAF-COST-01
+  name: Cost as a First-Class Resource
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-COST-01.yaml
+  trigger_entry_id: TRG-CAF-COST-01
+  source_paths:
+  - architecture_library/12_contura_cost_governance_finops_v1.md
+- pattern_id: CAF-COST-02
+  name: Budgets, Quotas, and Entitlements
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-COST-02.yaml
+  trigger_entry_id: TRG-CAF-COST-02
+  source_paths:
+  - architecture_library/12_contura_cost_governance_finops_v1.md
+- pattern_id: CAF-COST-03
+  name: Runtime Cost Enforcement & Interruption
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-COST-03.yaml
+  trigger_entry_id: TRG-CAF-COST-03
+  source_paths:
+  - architecture_library/12_contura_cost_governance_finops_v1.md
+- pattern_id: CAF-COST-04
+  name: Failure Modes & Anti-Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-COST-04.yaml
+  trigger_entry_id: TRG-CAF-COST-04
+  source_paths:
+  - architecture_library/12_contura_cost_governance_finops_v1.md
+- pattern_id: CAF-COMP-01
+  name: Evidence Generation & Traceability
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-COMP-01.yaml
+  trigger_entry_id: TRG-CAF-COMP-01
+  source_paths:
+  - architecture_library/13_contura_compliance_automation_framework_v1.md
+- pattern_id: CAF-COMP-02
+  name: Failure Modes & Anti-Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-COMP-02.yaml
+  trigger_entry_id: TRG-CAF-COMP-02
+  source_paths:
+  - architecture_library/13_contura_compliance_automation_framework_v1.md
+- pattern_id: CAF-DG-01
+  name: Purpose & Role in the Architecture Library
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-01.yaml
+  trigger_entry_id: TRG-CAF-DG-01
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-02
+  name: Why Data Governance Must Be Architectural
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-02.yaml
+  trigger_entry_id: TRG-CAF-DG-02
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-03
+  name: Data as a First-Class Governed Asset
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-03.yaml
+  trigger_entry_id: TRG-CAF-DG-03
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-04
+  name: Data Governance Responsibilities Across the Tri-Plane Architecture
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-04.yaml
+  trigger_entry_id: TRG-CAF-DG-04
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-05
+  name: Data Classification and Sensitivity Domains
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-05.yaml
+  trigger_entry_id: TRG-CAF-DG-05
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-06
+  name: Data Quality Dimensions and Invariants
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-06.yaml
+  trigger_entry_id: TRG-CAF-DG-06
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-07
+  name: Data Lifecycle Governance (Creation to Deletion)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-07.yaml
+  trigger_entry_id: TRG-CAF-DG-07
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-08
+  name: Design-Time Data Governance (ADR Integration)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-08.yaml
+  trigger_entry_id: TRG-CAF-DG-08
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-09
+  name: Runtime Data Validation and Enforcement
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-09.yaml
+  trigger_entry_id: TRG-CAF-DG-09
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-10
+  name: AI and Agent Data Usage Constraints
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-10.yaml
+  trigger_entry_id: TRG-CAF-DG-10
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-11
+  name: Integration with Policy Engine
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-11.yaml
+  trigger_entry_id: TRG-CAF-DG-11
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-12
+  name: Integration with Compliance Automation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-12.yaml
+  trigger_entry_id: TRG-CAF-DG-12
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-13
+  name: Data Observability, Lineage, and Trust Signals
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-13.yaml
+  trigger_entry_id: TRG-CAF-DG-13
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-14
+  name: Failure Modes & Anti-Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-14.yaml
+  trigger_entry_id: TRG-CAF-DG-14
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-15
+  name: Evolution, Migration, and Backward Compatibility
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-15.yaml
+  trigger_entry_id: TRG-CAF-DG-15
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-DG-16
+  name: Version History
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-DG-16.yaml
+  trigger_entry_id: TRG-CAF-DG-16
+  source_paths:
+  - architecture_library/23_contura_data_governance_and_data_quality_standards_v1.md
+- pattern_id: CAF-INC-01
+  name: Severity Levels (Operational)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-INC-01.yaml
+  trigger_entry_id: TRG-CAF-INC-01
+  source_paths:
+  - architecture_library/32_contura_multi_tenancy_incident_classification_v1.md
+- pattern_id: CAF-INC-02
+  name: "Primary Incident Classes \u2192 Checklist Mapping"
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-INC-02.yaml
+  trigger_entry_id: TRG-CAF-INC-02
+  source_paths:
+  - architecture_library/32_contura_multi_tenancy_incident_classification_v1.md
+- pattern_id: CAF-INC-03
+  name: Triage Playbook (Fast Path)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-INC-03.yaml
+  trigger_entry_id: TRG-CAF-INC-03
+  source_paths:
+  - architecture_library/32_contura_multi_tenancy_incident_classification_v1.md
+- pattern_id: CAF-INC-04
+  name: Post-Incident Requirements
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-INC-04.yaml
+  trigger_entry_id: TRG-CAF-INC-04
+  source_paths:
+  - architecture_library/32_contura_multi_tenancy_incident_classification_v1.md
+- pattern_id: CAF-IAM-04
+  name: Application Plane Authentication & Authorization Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-04.yaml
+  trigger_entry_id: TRG-CAF-IAM-04
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-05
+  name: Data Plane Access Enforcement Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: data
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-05.yaml
+  trigger_entry_id: TRG-CAF-IAM-05
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-06
+  name: Identity and Context Propagation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-06.yaml
+  trigger_entry_id: TRG-CAF-IAM-06
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-07
+  name: Policy Delegation and Enforcement Boundaries
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-07.yaml
+  trigger_entry_id: TRG-CAF-IAM-07
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-08
+  name: Agent Identity Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-08.yaml
+  trigger_entry_id: TRG-CAF-IAM-08
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-09
+  name: Zero Trust Identity Patterns Across Planes
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-09.yaml
+  trigger_entry_id: TRG-CAF-IAM-09
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-10
+  name: Observability, Auditability, and Traceability for Identity
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-10.yaml
+  trigger_entry_id: TRG-CAF-IAM-10
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-11
+  name: Prohibited Identity and Access Anti-Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-11.yaml
+  trigger_entry_id: TRG-CAF-IAM-11
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-IAM-12
+  name: ADR Integration and Evolution
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-12.yaml
+  trigger_entry_id: TRG-CAF-IAM-12
+  source_paths:
+  - architecture_library/22_contura_identity_access_pattern_guide_v1.md
+- pattern_id: CAF-COH-01
+  name: Terminology Consistency
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-COH-01.yaml
+  trigger_entry_id: TRG-CAF-COH-01
+  source_paths:
+  - architecture_library/45_contura_library_coherence_audit_checklist_v1.md
+- pattern_id: CAF-COH-02
+  name: Plane Responsibility Integrity
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-COH-02.yaml
+  trigger_entry_id: TRG-CAF-COH-02
+  source_paths:
+  - architecture_library/45_contura_library_coherence_audit_checklist_v1.md
+- pattern_id: CAF-RIC-01
+  name: Derivation Contract for Phase 7
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-RIC-01.yaml
+  trigger_entry_id: TRG-CAF-RIC-01
+  source_paths:
+  - architecture_library/70_contura_reference_implementation_structure_and_derivation_contract_v1.md
+- pattern_id: CAF-RIC-02
+  name: Canonical Phase 7 Directory Structure
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-RIC-02.yaml
+  trigger_entry_id: TRG-CAF-RIC-02
+  source_paths:
+  - architecture_library/70_contura_reference_implementation_structure_and_derivation_contract_v1.md
+- pattern_id: CAF-RIC-03
+  name: Template Declaration Requirement
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-RIC-03.yaml
+  trigger_entry_id: TRG-CAF-RIC-03
+  source_paths:
+  - architecture_library/70_contura_reference_implementation_structure_and_derivation_contract_v1.md
+- pattern_id: CAF-RIC-04
+  name: Explicit Parameter Pinning
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-RIC-04.yaml
+  trigger_entry_id: TRG-CAF-RIC-04
+  source_paths:
+  - architecture_library/70_contura_reference_implementation_structure_and_derivation_contract_v1.md
+- pattern_id: CAF-RIC-05
+  name: No Architectural Invention
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-RIC-05.yaml
+  trigger_entry_id: TRG-CAF-RIC-05
+  source_paths:
+  - architecture_library/70_contura_reference_implementation_structure_and_derivation_contract_v1.md
+- pattern_id: CAF-EXE-01
+  name: Contura Enforcement Chain
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-EXE-01.yaml
+  trigger_entry_id: TRG-CAF-EXE-01
+  source_paths:
+  - architecture_library/60_executable_architecture_overview_v1.md
+- pattern_id: CAF-EXE-02
+  name: Artifact Types and Roles
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-EXE-02.yaml
+  trigger_entry_id: TRG-CAF-EXE-02
+  source_paths:
+  - architecture_library/60_executable_architecture_overview_v1.md
+- pattern_id: CAF-EXE-03
+  name: Mapping Requirements to Checks
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-EXE-03.yaml
+  trigger_entry_id: TRG-CAF-EXE-03
+  source_paths:
+  - architecture_library/60_executable_architecture_overview_v1.md
+- pattern_id: CAF-EXE-04
+  name: Minimum Evidence Bundle
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-EXE-04.yaml
+  trigger_entry_id: TRG-CAF-EXE-04
+  source_paths:
+  - architecture_library/60_executable_architecture_overview_v1.md
+- pattern_id: CAF-EXE-05
+  name: Non-Goals and Anti-Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-EXE-05.yaml
+  trigger_entry_id: TRG-CAF-EXE-05
+  source_paths:
+  - architecture_library/60_executable_architecture_overview_v1.md
+- pattern_id: CAF-MTEN-EVAL-01
+  name: Conceptual Foundations
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-01.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-01
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-02
+  name: SaaS-First Framing
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-02.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-02
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-03
+  name: Tri-Plane Alignment (Hybrid Model)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-03.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-03
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-04
+  name: Pattern Completeness
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-04.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-04
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-05
+  name: Tenancy Models & Isolation Spectrum
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-05.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-05
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-06
+  name: Tenant Lifecycle Coverage
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-06.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-06
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-07
+  name: Identity & Access (Human, Service, Agent)
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-07.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-07
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-08
+  name: AI-First Multi-Tenancy
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-08.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-08
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-09
+  name: Routing & Context Propagation
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-09.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-09
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-10
+  name: Observability & Governance
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-10.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-10
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-11
+  name: Failure Modes & Anti-Patterns
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-11.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-11
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-12
+  name: Evolution & Maturity Model
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-12.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-12
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-13
+  name: Diagram Quality
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-13.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-13
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-14
+  name: Human and Agent Readability
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-14.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-14
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-MTEN-EVAL-15
+  name: Consistency & Governance
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-EVAL-15.yaml
+  trigger_entry_id: TRG-CAF-MTEN-EVAL-15
+  source_paths:
+  - architecture_library/90_multi_tenancy_patterns_evaluation_and_completeness_checklist_v1.md
+- pattern_id: CAF-RES-ID-01
+  name: Resource Identifier Strategy (Opaque vs Natural Key)
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-RES-ID-01.yaml
+  trigger_entry_id: TRG-CAF-RES-ID-01
+  source_paths:
+  - architecture_library/04_contura_architecture_glossary_v1.md
+- pattern_id: CAF-EDGE-01
+  name: Backend-for-Frontend (BFF) / API Composition Boundary
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  definition_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-EDGE-01.yaml
+  trigger_entry_id: TRG-CAF-EDGE-01
+  source_paths: []

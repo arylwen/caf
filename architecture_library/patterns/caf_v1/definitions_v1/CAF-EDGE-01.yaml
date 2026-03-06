@@ -1,0 +1,133 @@
+pattern_id: CAF-EDGE-01
+name: Backend-for-Frontend (BFF) / API Composition Boundary
+summary: 'Introduce a UI-facing boundary that provides a client-optimized, synchronous interface while bridging to asynchronous
+  and/or multi-backend interactions behind the boundary.
+
+  '
+intent: 'Make the UI-to-backend integration shape an explicit architectural choice so CAF can compile obligations and tasks
+  for a UI-facing adapter boundary without assuming frameworks or protocols.
+
+  '
+context: 'Applies when a user-facing UI (e.g., SPA) requires a stable synchronous interface, while the internal system interactions
+  are asynchronous, multi-plane, or require aggregation/composition.
+
+  '
+problem: 'Directly coupling a UI to asynchronous plane interactions (events, workflows) or multiple backends forces UI complexity,
+  leaks internal contracts, and makes evolution difficult.
+
+  '
+forces:
+- UI expects predictable request/response semantics and payloads.
+- Internal contracts may be async/event-driven or span multiple planes/services.
+- Need to evolve internal services/contracts without breaking UI.
+solution_structure_behavior:
+  Invariants (normative):
+  - A UI-facing boundary MUST NOT expose internal plane-to-plane contracts directly.
+  - UI-facing boundary MUST provide explicit request models and stable responses (versionable).
+  - If internal interactions are async, the boundary MUST provide an explicit async-bridge strategy (e.g., job handles, status
+    queries, callbacks) rather than leaking event semantics to the UI.
+  - Tenant/principal/correlation context MUST be propagated across the boundary.
+  Plane interpretations (default):
+  - AP:
+    - Provide an API boundary that is optimized for UI use-cases (BFF/API composition).
+    - Integrate with internal plane interactions via explicit contracts/adapters (sync or async).
+  - SYSTEM:
+    - If UI boundary bridges async internals, treat it as a first-class contract participant with explicit correlation and
+      lifecycle semantics.
+tradeoffs:
+- Adds an extra boundary/service layer to maintain.
+- Requires discipline to keep UI contracts stable and avoid leaking internals.
+implementation_notes:
+- Framework/protocol selection is deferred to TBPs/PBPs (e.g., HTTP stack), not encoded here.
+- This pattern may co-exist with async plane interactions; the BFF boundary bridges semantics.
+evidence_hooks:
+- id: H-CAF-EDGE-01-01
+  kind: candidate_trigger
+  description: 'UI present + internal async/mixed plane interaction suggests BFF/API composition boundary candidate.
+
+    '
+caf:
+  layer: layer_1_core_pattern
+  verifiability: plan_ready
+  kind: decision_pattern
+  plane: application_plane
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: caf_pattern
+    anchor_id: CAF-EDGE-01
+  minimum_evidence:
+  - Pins indicate a UI-facing experience and synchronous client interaction surface (AP plane shape includes UI/API ingress).
+  - Pins or spec indicate cross-plane orchestration/aggregation or async internals that should not leak to UI.
+  - Pin semantics require tenant/principal/correlation context propagation across UI boundary.
+  decision_prompts:
+  - Adopt a UI-facing boundary pattern (BFF/API composition) to stabilize UI contracts while hiding internal plane contracts.
+  - Select an async-bridge strategy (job handle, status polling, callbacks) if internal interactions are asynchronous.
+  definition_of_done:
+  - UI-facing boundary contract is defined with explicit request/response models.
+  - Context propagation across boundary is defined (tenant/principal/correlation).
+  - Async-bridge strategy is defined when internals are async.
+  capabilities_needed:
+  - contract_design
+  - context_propagation
+  - boundary_definition
+  option_sets:
+  - option_set_id: edge.async_bridge_strategy
+    summary: Choose the async-bridge strategy used by the UI-facing boundary when internals are asynchronous.
+    options:
+    - option_id: job_handle_polling
+      summary: Return a job handle and provide status polling endpoints.
+      async_bridge_strategy: job_handle_polling
+      notes: ''
+    - option_id: callbacks_webhooks
+      summary: Use callbacks/webhooks for completion and state transitions.
+      async_bridge_strategy: callbacks_webhooks
+      notes: ''
+    - option_id: hybrid
+      summary: Support both polling and callbacks/webhooks.
+      async_bridge_strategy: hybrid
+      notes: ''
+    default_option_id: job_handle_polling
+  - option_set_id: edge.boundary_shape
+    description: High-level shape of the UI-facing boundary.
+    options:
+    - option_id: bff_service
+      summary: Separate deployable BFF/API composition service.
+    - option_id: gateway_composition
+      summary: Composition at an API gateway layer (if available) without leaking internal contracts.
+    - option_id: embedded_adapter
+      summary: Embedded adapter layer within the UI host/runtime (still a contract boundary).
+    - option_id: custom
+      summary: Custom shape (document details).
+    default_option_id: bff_service
+  human_questions:
+  - question_key: edge_async_bridge_strategy
+    question_id: Q-CAF-EDGE-01-01
+    question: If internal interactions are async, how will the UI-facing boundary bridge async completion?
+    description: Choose polling via job handles, callbacks/webhooks, or a hybrid approach.
+    option_set_id: edge.async_bridge_strategy
+    anchors:
+    - caf_pattern: CAF-EDGE-01
+  - question_key: edge_boundary_shape
+    question_id: Q-EDGE-SHAPE-01
+    question: What is the UI-facing boundary shape (BFF service, gateway composition, embedded adapter, or custom)?
+    description: Select the boundary shape used to stabilize UI contracts while hiding internal plane contracts.
+    option_set_id: edge.boundary_shape
+    anchors:
+    - caf_pattern: CAF-EDGE-01
+  forbidden_assumptions:
+  - Do not assume a specific web framework or protocol; defer to TBPs/PBPs.
+  - Do not assume UI calls internal plane contracts directly.
+related_patterns: |
+  complements: CAF-POL-01
+  complements: CAF-TCTX-01
+promotions:
+- promotion_id: PROM-EDGE-CONTRACT-01
+  scope: per_system
+  summary: Define the UI-facing boundary contract and context propagation expectations.
+  plan_step_archetype_id: PSA-EDGE-CONTRACT-01

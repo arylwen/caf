@@ -1,0 +1,49 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "contura://caf/schemas/phase8_worker_capability_catalog/v1"
+title: "CAF Phase 8 Worker Capability Catalog (v1)"
+type: object
+additionalProperties: false
+
+required:
+  - schema_version
+  - entries
+
+properties:
+  schema_version:
+    type: string
+    const: "phase8_worker_capability_catalog_v1"
+
+  entries:
+    description: "Deterministic mapping from Task Graph capability IDs to worker agent IDs (skills)."
+    type: array
+    minItems: 0
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - capability_id
+        - worker_id
+        - role_kind
+        - status
+      properties:
+        capability_id:
+          type: string
+          minLength: 3
+          description: "Stable capability identifier referenced by tasks (e.g., domain_modeling, api_boundary_implementation)."
+
+        worker_id:
+          type: string
+          minLength: 3
+          description: "Worker agent identifier. In Phase 8, worker agents are implemented as CAF skills at skills/<worker_id>/SKILL.md."
+
+        role_kind:
+          type: string
+          enum: ["application_architect", "manager", "worker", "validator"]
+
+        status:
+          type: string
+          enum: ["active", "planned", "deprecated"]
+
+        notes:
+          type: string
+          description: "Optional clarification. Must not introduce new architecture decisions."

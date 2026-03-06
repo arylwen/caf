@@ -1,0 +1,10 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda",
+    "python-envs.pythonProjects": [],
+
+      // 1. Tool/Terminal Auto-Approvals
+    "chat.tools.terminal.autoApprove": {
+        "/^node .*/": true,         // Auto-approve any command starting with 'node'
+    },
+}

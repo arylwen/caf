@@ -1,0 +1,83 @@
+pattern_id: CAF-PLANE-02
+name: Plane Runtime Shape Declaration
+summary: Declare each plane's runtime shape and ingress mode (HTTP, events, embedded library) so the derivation cascade can
+  compile deployable responsibilities without framework assumptions.
+intent: Make plane deployability and integration surfaces explicit, enabling deterministic task compilation and avoiding bespoke
+  skill recipes.
+context: Multi-plane systems where planes may be separately deployable services, background workers, or embedded libraries;
+  planes may communicate via HTTP, async events, or both.
+problem: Without explicit runtime shape, generators either guess frameworks (bespoke) or emit minimal stubs that appear non-deployable.
+forces_tradeoffs: Balance flexibility (multiple valid plane shapes) with determinism (must select a single shape per plane).
+solution_structure_behavior: Each plane declares a runtime_shape option. The planner compiles shape-specific scaffold obligations
+  and contract compilation rules. Tech profile/TBPs later realize framework details.
+consequences: Improves determinism and prevents accidental framework assumptions; requires explicit architect choice when
+  multiple shapes are valid.
+caf:
+  layer: layer_1_core_pattern
+  verifiability: plan_ready
+  kind: decision_pattern
+  plane: cross_plane
+  forbidden_assumptions:
+  - Do not assume every plane is an HTTP API.
+  - Do not assume a specific web framework unless selected via technology profile atoms/TBPs.
+  option_sets:
+  - option_set_id: plane.runtime_shape
+    description: Runtime shape of a plane (deployability + primary ingress).
+    options:
+    - option_id: api_service_http
+      summary: Separately deployable service exposing HTTP API.
+    - option_id: worker_service_events
+      summary: Separately deployable background worker consuming/producing events/messages (no HTTP ingress).
+    - option_id: library_embedded
+      summary: Not separately deployable; embedded library imported by another plane.
+    - option_id: custom
+      summary: Custom shape (document details).
+    default_option_id: api_service_http
+  human_questions:
+  - question_key: cp_runtime_shape
+    question_id: Q-CP-RUNTIME-SHAPE-01
+    question: What is the Control Plane runtime shape (HTTP API, event worker, embedded library, or custom)?
+    description: Select how the Control Plane is deployed and what its primary ingress is. This must align with CP↔AP contract
+      surface decisions.
+    option_set_id: plane.runtime_shape
+    anchors:
+    - caf_pattern: CAF-PLANE-02
+  - question_key: ap_runtime_shape
+    question_id: Q-AP-RUNTIME-SHAPE-01
+    question: What is the Application Plane runtime shape (HTTP API, event worker, embedded library, or custom)?
+    description: Select how the Application Plane is deployed and what its primary ingress is. This must align with UI/API
+      and CP↔AP contract surface decisions.
+    option_set_id: plane.runtime_shape
+    anchors:
+    - caf_pattern: CAF-PLANE-02
+  definition_of_done: []
+  capabilities_needed: []
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: caf_pattern
+    anchor_id: CAF-PLANE-02
+  minimum_evidence:
+  - Pins specify plane shapes and contracts (CP/AP/DP pins).
+  - Pin value explanations establish plane responsibilities and boundaries.
+  - At least one plane is present in the architecture shape parameters.
+  decision_prompts:
+  - Adopt explicit plane runtime shape decisions so CAF can compile plane boundaries and contracts.
+  - Select runtime shapes for Control Plane and Application Plane using default options unless conflicts exist.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+source_documents: []
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-PLANE-02.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-PLANE-02
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

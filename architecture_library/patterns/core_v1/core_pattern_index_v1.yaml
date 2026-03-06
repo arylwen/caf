@@ -1,0 +1,56 @@
+index_version: core_pattern_index_v1
+patterns:
+- pattern_id: CFG-01
+  name: Configuration Boundary
+  applies_when: This pattern applies whenever the system uses any environment-, file-, or secret-derived configuration, which is expected for nearly all services.
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_cfg_01_v1.md
+  definition_path: architecture_library/patterns/core_v1/definitions_v1/CFG-01.yaml
+  trigger_entry_id: TRG-CFG-01
+- pattern_id: CMP-01
+  name: Composition Root and Layered Boundaries
+  applies_when: This pattern applies whenever the system has more than one module of meaningful responsibility and requires deterministic wiring of dependencies. It is required for any architecture that claims separation between application boundary, domain core, and infrastructure adapters.
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_cmp_01_v1.md
+  definition_path: architecture_library/patterns/core_v1/definitions_v1/CMP-01.yaml
+  trigger_entry_id: TRG-CMP-01
+- pattern_id: CTX-01
+  name: Request Context and Propagation
+  applies_when: This pattern applies when the spec or design implies multi-user behavior, multi-tenancy, auditing, or correlation. CAF's identity core requires tenant_id, user_id, and user_name, and the design must ensure these values are established at the application boundary and propagated through internal calls.
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_ctx_01_v1.md
+  definition_path: architecture_library/patterns/core_v1/definitions_v1/CTX-01.yaml
+  trigger_entry_id: TRG-CTX-01
+- pattern_id: INT-01
+  name: External Integration Adapter Boundary
+  applies_when: This pattern applies whenever the system interacts with external services, third-party SDKs, infrastructure APIs, or inbound callbacks that require translation.
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_int_01_v1.md
+  definition_path: architecture_library/patterns/core_v1/definitions_v1/INT-01.yaml
+  trigger_entry_id: TRG-INT-01
+- pattern_id: OBS-01
+  name: Observability Boundary
+  applies_when: This pattern applies whenever the system is expected to be operated, debugged, or audited, including local prototypes and beyond.
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_obs_01_v1.md
+  definition_path: architecture_library/patterns/core_v1/definitions_v1/OBS-01.yaml
+  trigger_entry_id: TRG-OBS-01
+- pattern_id: POL-01
+  name: Policy Enforcement Boundary
+  applies_when: This pattern applies whenever the system has multiple users or tenants and any operation is restricted by role, permission, or rule. The specific authentication mechanism may remain unspecified; this pattern governs policy enforcement, not identity proof.
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_pol_01_v1.md
+  definition_path: architecture_library/patterns/core_v1/definitions_v1/POL-01.yaml
+  trigger_entry_id: TRG-POL-01
+- pattern_id: PST-01
+  name: Persistence Boundary via Repositories
+  applies_when: This pattern applies whenever the system persists domain state and the design does not explicitly commit to an alternative boundary (for example, event sourcing). In CAF Layer 1, repository ports are the default persistence boundary.
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_pst_01_v1.md
+  definition_path: architecture_library/patterns/core_v1/definitions_v1/PST-01.yaml
+  trigger_entry_id: TRG-PST-01
+- pattern_id: SVC-01
+  name: Application Service Facade Boundary
+  applies_when: This pattern applies when the application_spec defines resources and operations, or when the design requires a clear entry boundary between inbound interfaces and domain logic.
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_svc_01_v1.md
+  definition_path: architecture_library/patterns/core_v1/definitions_v1/SVC-01.yaml
+  trigger_entry_id: TRG-SVC-01
+- pattern_id: VAL-01
+  name: Validation and Error Handling Boundary
+  applies_when: This pattern applies whenever the system accepts any external input (always) and needs consistent error responses and logging.
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_val_01_v1.md
+  definition_path: architecture_library/patterns/core_v1/definitions_v1/VAL-01.yaml
+  trigger_entry_id: TRG-VAL-01

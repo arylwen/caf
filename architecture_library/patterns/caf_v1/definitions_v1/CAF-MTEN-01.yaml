@@ -1,0 +1,127 @@
+pattern_id: CAF-MTEN-01
+name: Multi-Tenancy as First-Class Architectural Concern
+summary: Make tenancy explicit, enforce invariants, and plan for enterprise/compliance evolution without redesign.
+intent: Avoid common multi-tenancy failure modes by treating tenancy as explicit architecture rather than an emergent implementation
+  detail.
+context: SaaS systems where multiple customers share infrastructure and must be isolated by construction.
+problem: Tenancy introduced late or implicitly leads to data leaks, authorization failures, cost overruns, and costly redesign
+  as the system scales.
+forces_tradeoffs: Speed vs safety; shared efficiency vs isolation strength; simplicity vs enterprise evolution requirements.
+solution_structure_behavior: Define a canonical tenant model, explicit boundaries, and non-negotiable invariants. Use composable
+  patterns for routing/context, identity/access, lifecycle, cost/usage enforcement, observability, and compliance evolution.
+consequences: Improves tenant safety and evolvability; increases upfront design work and enforcement requirements.
+implementation_notes: Use MUST/MUST NOT invariants; make tradeoffs explicit early; design for evolution paths without redesign.
+examples_known_uses: Tenant-safe SaaS baselines that scale from early adopters to enterprise compliance requirements.
+related_patterns: |
+  depends_on: CAF-TCTX-01
+  depends_on: OBS-01
+  complements: CAF-IAM-01
+  complements: CAF-POL-01
+  complements: CAF-ZT-01
+  complements: PST-01
+extended_definition: |
+  **Why this pattern is first-class**
+  
+  Multi-tenancy failures (data leaks, authorization gaps, cost overruns, compliance violations, late redesign) commonly arise when tenancy is implicit, emergent, or introduced late. This pattern requires tenancy to be treated as explicit architecture with hard invariants.
+  
+  **Normative framing**
+  
+  - Statements using **MUST/MUST NOT** are hard architectural invariants; violating them is an architectural defect.
+  - Informative sections explain rationale; they do not weaken normative requirements.
+  
+  **Core invariants (normative)**
+  
+  - Every resource **MUST** belong to exactly one tenant.
+  - No resource may be accessed, executed, or evaluated without explicit tenant context.
+  - AccountScope is the authority for billing, authentication configuration, and compliance policy.
+  - Workspaces **MUST NOT** be treated as tenants.
+  - CostCenters **MUST NOT** alter isolation or access semantics.
+  - Tenancy boundaries **MUST** be intentional and high-friction (avoid “soft” boundaries that drift).
+  
+  **Evidence hooks (what to show in design/spec)**
+  
+  - A canonical tenant model (what “tenant” means in this system) plus the above invariants written explicitly.
+  - A declared isolation mode (pooled/silo/hybrid) with upgrade triggers for enterprise tiering and compliance evolution.
+  - Explicit routing + tenant context propagation + enforcement (see CAF-TCTX-01, CAF-IAM-*, CAF-POL-*).
+  
+  **Common failure modes**
+  
+  - Conflating tenant with UX constructs (org/team/workspace) or using billing constructs as an isolation primitive.
+  - Retrofitting “enterprise mode” late, forcing redesign of identity, policy, and data boundaries.
+  - Allowing ambiguous or inferred tenancy, which makes authorization, routing, and audit non-deterministic.
+  
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  sections:
+  - 1. Introduction & Scope
+  - 1.1 Why This Guide Exists
+  - 1.3 Normative vs Informative Content
+  - 3.2 Canonical Tenant Structure
+  - 3.3 Normative Invariants
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design matches the pattern context/problem as stated in the pattern definition.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that tenancy is explicit (tenant model + invariants) and enforced by construction rather than inferred.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  option_sets:
+  - option_set_id: tenancy.isolation_mode
+    summary: Choose the baseline tenancy isolation mode for the system's default tier.
+    options:
+    - option_id: pooled_everything
+      status: defer
+      summary: Pooled everything (logical isolation; shared infra).
+      related_pattern_id: CAF-MTEN-ISO-01
+    - option_id: pooled_compute_partitioned_data
+      status: defer
+      summary: Pooled compute + partitioned data (bridge isolation).
+      related_pattern_id: CAF-MTEN-ISO-02
+    - option_id: silo_tenants_dedicated_infra
+      status: defer
+      summary: Silo tenants (dedicated infrastructure per tenant).
+      related_pattern_id: CAF-MTEN-ISO-03
+    - option_id: hybrid_tiered
+      status: defer
+      summary: Hybrid isolation (selective and tiered by tenant).
+      related_pattern_id: CAF-MTEN-ISO-04
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your isolation approach; prefer adopting an existing mode when possible).
+      notes: ''
+    default_option_id: hybrid_tiered
+  human_questions:
+  - question_key: tenancy_isolation_mode
+    question_id: Q-MTEN-ISO-MODE-01
+    question: Which tenancy isolation mode is intended for the default product tier?
+    description: Select one option. Use 'custom' only if none fit.
+    option_set_id: tenancy.isolation_mode
+    specialization_notes: If you expect enterprise tiering, choose 'hybrid_tiered' and note upgrade triggers.
+    anchors:
+    - caf_pattern: CAF-MTEN-01
+  kind: decision_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-MTEN-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

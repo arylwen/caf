@@ -1,0 +1,15 @@
+contract_surface	plane_id	output_relpath	artifact_class	notes
+any	any	contracts/{boundary_id}/README.md	markdown_docs	Always emitted for each side.
+synchronous_http	any	contracts/{boundary_id}/__init__.py	code_runnable_candidate	Python package marker for contract module.
+synchronous_http	any	contracts/{boundary_id}/envelope.py	code_runnable_candidate	Shared request/response envelope and context fields.
+synchronous_http	CP	contracts/{boundary_id}/http_server.py	code_runnable_candidate	Server stub for CP side.
+synchronous_http	AP	contracts/{boundary_id}/http_client.py	code_runnable_candidate	Client stub for AP side.
+async_events	any	contracts/{boundary_id}/__init__.py	code_runnable_candidate	Python package marker for contract module.
+async_events	any	contracts/{boundary_id}/envelope.py	code_runnable_candidate	Shared event envelope and context fields.
+async_events	any	contracts/{boundary_id}/events.py	code_runnable_candidate	Event shapes/producer-consumer stubs.
+mixed	any	contracts/{boundary_id}/__init__.py	code_runnable_candidate	Python package marker for contract module.
+mixed	any	contracts/{boundary_id}/envelope.py	code_runnable_candidate	Shared envelope for mixed surfaces.
+mixed	CP	contracts/{boundary_id}/http_server.py	code_runnable_candidate	Mixed = HTTP + events.
+mixed	AP	contracts/{boundary_id}/http_client.py	code_runnable_candidate	Mixed = HTTP + events.
+mixed	any	contracts/{boundary_id}/events.py	code_runnable_candidate	Mixed = HTTP + events.
+custom	any	contracts/{boundary_id}/README.md	markdown_docs	Custom surface: README only unless architect adopts a concrete surface.

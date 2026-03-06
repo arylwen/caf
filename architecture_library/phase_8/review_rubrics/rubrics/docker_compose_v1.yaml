@@ -1,0 +1,28 @@
+schema_version: v1
+kind: review_rubric
+rubric_id: RR-COMPOSE-01
+title: Container compose wiring standards (v1)
+applies_when:
+  - condition: "platform.packaging == docker_compose OR platform.packaging == podman_compose"
+checks:
+  - check_id: RR-COMP-CORR-01
+    severity: high
+    category: correctness
+    rule: "Services are wired to run together: AP and CP are present (if required), ports expose the API, and required env vars are defined without secrets."
+    evidence_hints:
+      - "inspect docker/compose.candidate.yaml"
+
+  - check_id: RR-COMP-BUILD-01
+    severity: high
+    category: correctness
+    rule: "Compose uses Dockerfile-based builds (no local pip): CP/AP services use build: and reference docker/Dockerfile.*, and env_file points to a real .env."
+    evidence_hints:
+      - "inspect docker/compose.candidate.yaml for build: + env_file"
+      - "inspect docker/Dockerfile.cp and docker/Dockerfile.ap"
+      - "inspect .env and .gitignore (.env + *.local ignored)"
+  - check_id: RR-COMP-SEC-01
+    severity: medium
+    category: security
+    rule: "No privileged containers or host mounts unless explicitly justified; avoid mounting docker socket."
+    evidence_hints:
+      - "look for privileged: true, /var/run/docker.sock, host network"

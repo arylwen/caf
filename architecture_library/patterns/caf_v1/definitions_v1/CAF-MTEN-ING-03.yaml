@@ -1,0 +1,132 @@
+pattern_id: CAF-MTEN-ING-03
+name: Explicit Tenant Selection with Session Binding
+summary: Allow users who belong to multiple tenants to explicitly select context.
+intent: Allow users who belong to multiple tenants to explicitly select context.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  refines: CAF-MTEN-01
+  complements: CTX-01
+  complements: POL-01
+  complements: PST-01
+extended_definition: '##### C. Explicit Tenant Selection with Session Binding
+
+
+  ###### **Explicit Tenant Selection with Session Binding Intent**
+
+
+  Allow users who belong to multiple tenants to explicitly select context.
+
+
+  ###### **Explicit Tenant Selection with Session Binding Properties**
+
+
+  - Common in enterprise and MSP scenarios
+
+  - Requires clear UX and state handling
+
+
+  ###### **Explicit Tenant Selection with Session Binding Normative Requirements**
+
+
+  - Tenant switching MUST mint a new tenant-scoped session/token
+
+  - Prior tenant context MUST be invalidated
+
+  - Background or agent execution MUST use the active tenant context explicitly
+
+
+  ###### **Explicit Tenant Selection with Session Binding Failure Modes**
+
+
+  - Silent tenant switching
+
+  - Mixed-tenant sessions
+
+  - Cached context reused across tenants
+
+
+  ---
+
+
+  Ingress patterns may be combined, but **exactly one authoritative tenant identifier MUST win**.
+
+
+  ---'
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: C. Explicit Tenant Selection with Session Binding
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '###### **Explicit Tenant Selection with Session Binding Properties** - Common in enterprise and MSP scenarios - Requires
+    clear UX and state handling ###### **Explicit Tenant Selection with Session Binding Normative Requirements** - Tenant
+    switching MUST mint a new tenant-scoped session/token - Prior tenant context MUST be invalidated - Background or agent
+    execution MUST use the active tenant context explicitly ###### **Explicit Tenant Selection with Session Binding Failure
+    Modes** - Silent tenant switching - Mixed-tenant sessions - Cached context reused across tenants --- Ingress patterns
+    may be combined, but **exactly one authoritative tenant identifier MUST win**.'
+  definition_of_done:
+  - 'Verify that ###### **Explicit Tenant Selection with Session Binding Properties** - Common in enterprise and MSP scenarios
+    - Requires clear UX and state handling ###### **Explicit Tenant Selection with Session Binding Normative Requirements**
+    - Tenant switching MUST mint a new tenant-scoped session/token - Prior tenant context MUST be invalidated - Background
+    or agent execution MUST use the active tenant context explicitly ###### **Explicit Tenant Selection with Session Binding
+    Failure Modes** - Silent tenant switching - Mixed-tenant sessions - Cached context reused across tenants --- Ingress patterns
+    may be combined, but **exactly one authoritative tenant identifier MUST win**.'
+  capabilities_needed:
+  - tenancy_context
+  - token_claims
+  - session_binding
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: tenant_selection.session_binding_mode
+    summary: Choose among bounded variants for `tenant_selection.session_binding_mode` (or use `custom`).
+    options:
+    - option_id: stateless_per_request
+      status: defer
+      summary: Tenant selection is carried per request (no server-side session binding).
+      notes: ''
+    - option_id: signed_token_binding
+      status: defer
+      summary: Tenant selection is bound into a signed token and validated per request.
+      notes: ''
+    - option_id: server_side_session_binding
+      status: defer
+      summary: Tenant selection is stored in a server-side session and referenced by token/cookie.
+      notes: ''
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: stateless_per_request
+  human_questions:
+  - question_key: auto_tenant_selection_session_binding_mode
+    question_id: Q-CAF-MTEN-ING-03-AUTO-01
+    question: Select an option for tenant_selection.session_binding_mode.
+    description: ''
+    option_set_id: tenant_selection.session_binding_mode
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-MTEN-ING-03

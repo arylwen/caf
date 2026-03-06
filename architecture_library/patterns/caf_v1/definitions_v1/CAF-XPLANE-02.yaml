@@ -1,0 +1,102 @@
+pattern_id: CAF-XPLANE-02
+name: Prohibited Cross-Plane Interaction Anti-Patterns
+summary: Enumerate forbidden cross-plane interactions that violate authority, auditability, or safety.
+intent: Prevent architectural drift by explicitly disallowing common authority-leak and bypass patterns.
+context: Systems with strict governance and safety requirements where implicit coupling is a defect.
+problem: Without explicit prohibitions, implementations tend to bypass governance checks (e.g., direct data access) and embed
+  control-plane logic into tenant workflow code.
+forces_tradeoffs: Short-term delivery speed vs long-term governance, compliance, and blast-radius control.
+solution_structure_behavior: Define and enforce a set of MUST NOT interaction shapes (e.g., bypassing policy/identity enforcement,
+  embedding CP authority in AP/DP execution paths, DP initiating governance orchestration).
+consequences: "Reduces unsafe shortcuts; requires discipline and tooling to detect violations; may require additional supported\
+  \ \u201Callowed\u201D patterns to replace shortcuts."
+implementation_notes: Encode as validations/linters where possible; require ADRs for any exception (prefer no exceptions).
+examples_known_uses: Blocking direct data-plane writes from untrusted application contexts; preventing CP from executing tenant
+  business workflows.
+related_patterns: |
+  complements: CAF-IAM-01
+  complements: CAF-PLANE-01
+  complements: CAF-POL-01
+  complements: CAF-XPLANE-01
+  complements: CAF-ZT-01
+extended_definition: |
+  **Prohibited cross-plane interaction anti-patterns (MUST NOT)**
+
+  - **Data Plane → Control Plane autonomous changes:** DP components must not create tenants, change policies, or drive platform governance.
+  - **Application or Data bypassing Control Plane policy:** no backdoor configuration or AI operations that bypass CP governance and policy intent.
+  - **Any cross-tenant data exposure:** no shared caches, logs, or indexes without robust tenant scoping and explicit justification.
+  - **Agents or services with unbounded authority:** agents must never hold privileges that exceed their configured identity and delegated scope.
+
+  **Exceptions policy**
+
+  - Any exception **MUST** be captured and justified in an ADR. Prefer no exceptions; replace shortcuts with an allowed interaction pattern (CAF-XPLANE-01).
+
+  **Evidence hooks (what to show in design/spec)**
+
+  - Explicit statements of what is prohibited at each boundary (CP↔AP, AP↔DP, CP↔DP) plus the supported alternatives.
+  - Enforcement plan: dependency rules, interface allowlists, and/or linters that detect bypass and authority leakage.
+
+  **Common failure modes**
+
+  - DP initiating tenant lifecycle actions or policy changes “because it has the data”.
+  - Tenant-unscoped caches/logs/indices used for performance, creating silent cross-tenant leaks.
+  - “Super-agent” identities that accumulate privileges across tenants or planes.
+
+source_documents:
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  sections:
+  - Cross-Plane Interaction Patterns/Prohibited Patterns
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - System scope includes governance/control concerns distinct from tenant-facing workflows and data/compute responsibilities.
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, constraints/required choices,
+    and evidence anchors.
+  definition_of_done:
+  - Verify that prohibited bypass patterns (e.g., skipping enforcement/context) are absent from design and code structure.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: cross_plane.violation_handling
+    summary: Choose among bounded variants for `cross_plane.violation_handling` (or use `custom`).
+    options:
+    - option_id: fail_closed_block
+      status: defer
+      summary: Block prohibited cross-plane interaction (fail-closed) and emit feedback/telemetry.
+    - option_id: warn_and_log
+      status: defer
+      summary: Allow temporarily with explicit warnings + telemetry (time-boxed debt).
+    - option_id: allowlist_exceptions_with_contract
+      status: defer
+      summary: Allow only via explicit allowlist exceptions with a contract and rationale.
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: fail_closed_block
+  human_questions:
+  - question_key: auto_cross_plane_violation_handling
+    question_id: Q-CAF-XPLANE-02-AUTO-01
+    question: Select an option for cross_plane.violation_handling.
+    description: ''
+    option_set_id: cross_plane.violation_handling
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-XPLANE-02

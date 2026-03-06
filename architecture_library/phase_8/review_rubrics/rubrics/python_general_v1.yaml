@@ -1,0 +1,31 @@
+schema_version: v1
+kind: review_rubric
+rubric_id: RR-PY-GENERAL-01
+title: Python general coding standards (v1)
+applies_when:
+  - condition: "platform.runtime_language == python"
+checks:
+  - check_id: RR-PY-SEC-01
+    severity: high
+    category: security
+    rule: "No hardcoded secrets (tokens, passwords, keys) or example credentials committed. Use env vars/config patterns."
+    evidence_hints:
+      - "search for 'PASSWORD', 'SECRET', 'TOKEN', 'AKIA', 'BEGIN PRIVATE KEY'"
+  - check_id: RR-PY-CORR-01
+    severity: blocker
+    category: correctness
+    rule: "Imports resolve within the repo: no broken imports or circular import traps introduced by recent changes."
+    evidence_hints:
+      - "inspect import statements in touched files and their targets"
+  - check_id: RR-PY-CORR-02
+    severity: high
+    category: correctness
+    rule: "Errors are handled consistently: avoid bare except; raise/use typed exceptions; return meaningful error payloads at API boundaries."
+    evidence_hints:
+      - "look for 'except:' or silent pass"
+  - check_id: RR-PY-PERF-01
+    severity: medium
+    category: performance
+    rule: "Avoid obvious N+1 style loops over external boundaries (DB/network) and unbounded in-memory scans in request paths."
+    evidence_hints:
+      - "look for per-item DB calls inside loops"

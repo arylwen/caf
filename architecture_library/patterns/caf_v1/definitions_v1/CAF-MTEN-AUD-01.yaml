@@ -1,0 +1,143 @@
+pattern_id: CAF-MTEN-AUD-01
+name: Audit Trails as First-Class Artifacts
+summary: Audit trails are **authoritative records**, not derived logs.
+intent: Audit trails are **authoritative records**, not derived logs.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  refines: CAF-MTEN-01
+  complements: CTX-01
+  complements: POL-01
+  complements: PST-01
+extended_definition: '#### 5.7.4 Audit Trails as First-Class Artifacts
+
+
+  Audit trails are **authoritative records**, not derived logs.
+
+
+  Audit events MUST:
+
+
+  - Be immutable
+
+  - Be tenant-scoped
+
+  - Be identity-scoped
+
+  - Capture intent and outcome
+
+
+  Canonical audit events include:
+
+
+  - Tenant lifecycle changes
+
+  - Identity and role changes
+
+  - Policy and entitlement changes
+
+  - Resource creation, modification, deletion
+
+  - Agent execution and tool usage
+
+  - Safety gate decisions
+
+
+  Audit trails MUST survive:
+
+
+  - Asynchronous execution
+
+  - Long-running agents
+
+  - Partial failures
+
+
+  Missing audit events constitute compliance failures.
+
+
+  ---'
+source_documents:
+- path: architecture_library/21_contura_multi_tenancy_patterns_v1.md
+  section_heading: 5.7.4 Audit Trails as First-Class Artifacts
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Audit events MUST
+  - '- Tenant lifecycle changes - Identity and role changes - Policy and entitlement changes - Resource creation, modification,
+    deletion - Agent execution and tool usage - Safety gate decisions Audit trails MUST survive'
+  definition_of_done:
+  - Verify that audit events MUST
+  - Verify that - Tenant lifecycle changes - Identity and role changes - Policy and entitlement changes - Resource creation,
+    modification, deletion - Agent execution and tool usage - Safety gate decisions Audit trails MUST survive
+  capabilities_needed:
+  - tenancy_context
+  - audit_trail
+  - safety_gating
+  - metering_usage
+  - identity_access
+  - tenant_lifecycle
+  - agent_boundary
+  - enterprise_compliance
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: audit.log_scope_mode
+    description: What audit trails capture and how they are partitioned.
+    options:
+    - option_id: per_tenant_audit_stream
+      summary: Audit events are partitioned per tenant (logical or physical).
+      mode: per_tenant_audit_stream
+      notes: ''
+    - option_id: shared_stream_with_tenant_field
+      summary: Shared audit stream with mandatory tenant_id field.
+      mode: shared_stream_with_tenant_field
+      notes: ''
+    - option_id: tiered_retention
+      summary: Tiered audit retention/partitioning based on tenant tier/compliance.
+      mode: tiered_retention
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      mode: ''
+      notes: ''
+    default_option_id: shared_stream_with_tenant_field
+  human_questions:
+  - question_key: auto_audit_log_scope_mode
+    question_id: Q-CAF-MTEN-AUD-01-AUTO-01
+    question: What audit trails capture and how they are partitioned.
+    description: What audit trails capture and how they are partitioned.
+    option_set_id: audit.log_scope_mode
+    specialization_notes:
+    - 'Auto-generated: this pattern declares option_sets but lacked caf.human_questions.'
+    - Refine or replace this question text and specialization notes in the library if needed.
+    anchors:
+    - caf_pattern: CAF-MTEN-AUD-01
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-AUD-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: CAF-MTEN-AUD-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

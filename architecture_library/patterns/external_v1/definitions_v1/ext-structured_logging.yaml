@@ -1,0 +1,84 @@
+pattern_id: EXT-STRUCTURED_LOGGING
+name: Structured Logging
+summary: Queryable logs with a consistent schema
+intent: Make logs queryable and consistent by using a standard schema and fields.
+context: Microservices and async flows where debugging spans many components and failures are partial.
+problem: Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+forces_tradeoffs: Signal quality vs cost/volume; cardinality vs queryability; instrumentation effort vs MTTR reduction.
+solution_structure_behavior: Logging in a machine-parseable format (often JSON) with consistent fields such as timestamp,
+  request_id, user/tenant, severity, and component. Structured logs enable powerful querying and dashboards, but must avoid
+  sensitive data and enforce schema discipline.
+consequences: Faster detection and lower MTTR; increased telemetry costs and governance requirements.
+implementation_notes: Standardize correlation IDs, structured logs, tracing, and SLOs; alert on user impact; sample intelligently.
+examples_known_uses: Production incident response, performance tuning, auditing critical flows.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: Logging in a machine-parseable format (often JSON) with consistent fields such as timestamp, request_id,
+  user/tenant, severity, and component. Structured logs enable powerful querying and dashboards, but must avoid sensitive
+  data and enforce schema discipline.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-STRUCTURED_LOGGING
+  minimum_evidence:
+  - Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+  definition_of_done:
+  - Verify that structured logs enable powerful querying and dashboards, but must avoid sensitive data and enforce schema
+    discipline.
+  capabilities_needed:
+  - tenancy_context
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: obs.log_schema_governance
+    description: Governance model for structured logging fields and schema evolution across teams.
+    options:
+    - option_id: central_schema
+      summary: Central schema with required fields and controlled evolution/versioning.
+      notes: ''
+    - option_id: team_owned_with_core_fields
+      summary: Teams own schemas but must emit a core required field set for correlation.
+      notes: ''
+    - option_id: minimal_core_fields_only
+      summary: Minimal required core fields; otherwise free-form per team with best-effort compatibility.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: minimal_core_fields_only
+  human_questions:
+  - question_key: obs_log_schema_governance
+    question_id: Q-EXT-LOG-01
+    question: How will structured logging schemas be governed?
+    description: Select how structured log fields are standardized, required, and evolved across teams.
+    option_set_id: obs.log_schema_governance
+    specialization_notes:
+    - Warranted when troubleshooting and auditability require consistent correlation fields and predictable log structure.
+    anchors:
+    - caf_pattern: EXT-STRUCTURED_LOGGING
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-structured_logging.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-STRUCTURED_LOGGING
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

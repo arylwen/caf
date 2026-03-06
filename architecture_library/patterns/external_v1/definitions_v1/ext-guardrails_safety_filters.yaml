@@ -1,0 +1,66 @@
+pattern_id: EXT-GUARDRAILS_SAFETY_FILTERS
+name: Guardrails / Safety Filters
+summary: Control unsafe output & injection
+intent: Reduce unsafe outputs and prompt injection by validating inputs/outputs and
+  enforcing policies.
+context: LLM-powered apps needing reliability, safety, and change management across
+  prompts and retrieval components.
+problem: Model outputs can be unsafe or inconsistent; prompts and indexes change over
+  time without traceability.
+forces_tradeoffs: Safety vs helpfulness; latency/cost vs quality; rapid iteration
+  vs stability and auditability.
+solution_structure_behavior: Controls that constrain model inputs and outputs to reduce
+  harmful or policy-violating behavior, and to mitigate prompt injection. Guardrails
+  can include allow/deny policies, content filters, tool-use constraints, sandboxing,
+  grounding requirements, and human-in-the-loop review for high-risk actions.
+consequences: More trustworthy assistants; added evaluation, monitoring, and governance
+  work.
+implementation_notes: Version prompts, log inputs/outputs, implement guardrails, evaluate
+  regularly, and enforce ACL-aware retrieval.
+examples_known_uses: Enterprise assistants, copilots, automated document drafting
+  with citations.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: Controls that constrain model inputs and outputs to reduce harmful
+  or policy-violating behavior, and to mitigate prompt injection. Guardrails can include
+  allow/deny policies, content filters, tool-use constraints, sandboxing, grounding
+  requirements, and human-in-the-loop review for high-risk actions.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-GUARDRAILS_SAFETY_FILTERS
+  minimum_evidence:
+  - LLM-powered apps needing reliability, safety, and change management across prompts
+    and retrieval components.
+  - Model outputs can be unsafe or inconsistent
+  definition_of_done:
+  - Verify that controls that constrain model inputs and outputs to reduce harmful
+    or policy-violating behavior, and to mitigate prompt injection.
+  capabilities_needed:
+  - policy_enforcement
+  - observability_emit
+  - backup_restore
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: external_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-guardrails_safety_filters.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-GUARDRAILS_SAFETY_FILTERS
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

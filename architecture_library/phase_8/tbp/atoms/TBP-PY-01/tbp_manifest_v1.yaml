@@ -1,0 +1,41 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-PY-01
+binds_to:
+- atom_path: runtime.language
+  atom_value: python
+requires_tbps: []
+conflicts_with_tbps: []
+layout:
+  code_root: code/
+  scaffold_directories:
+  - code/
+  - tests/
+  - infrastructure/
+  - docs/
+  - validation/
+  role_bindings:
+    policy_boundary_dir:
+      path_template: policy/
+      artifact_class: directories
+    domain_model:
+      path_template: domain/{resource_snake}_model.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - tenant_id
+    persistence_repo:
+      path_template: persistence/{resource_snake}_repo.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - tenant_id
+    service_facade:
+      path_template: services/{resource_snake}_service.py
+      artifact_class: code_runnable_candidate
+      evidence_not_contains:
+      - fastapi
+      - django
+    unit_test:
+      path_template: tests/test_{resource_snake}_unit.py
+      artifact_class: tests_runnable_candidate
+    smoke_test:
+      path_template: tests/test_{resource_snake}_smoke.py
+      artifact_class: tests_runnable_candidate

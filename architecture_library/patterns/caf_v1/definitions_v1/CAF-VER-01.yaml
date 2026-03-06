@@ -1,0 +1,56 @@
+pattern_id: CAF-VER-01
+name: Versioning Expectations
+summary: '- Major changes to responsibilities or boundaries **MUST** be recorded as ADRs. - AI model and prompt versions **MUST**
+  be governed via the Control Plane. - Per-plane deployments **SHOULD** be independently versioned.'
+intent: '- Major changes to responsibilities or boundaries **MUST** be recorded as ADRs.'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: |
+  ### Versioning Expectations
+
+  - Major changes to responsibilities or boundaries **MUST** be recorded as ADRs.  
+  - AI model and prompt versions **MUST** be governed via the Control Plane.  
+  - Per-plane deployments **SHOULD** be independently versioned.
+source_documents:
+- path: architecture_library/20_contura_control_application_data_plane_pattern_guide_v1.md
+  section_heading: Versioning Expectations
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '### Versioning Expectations - Major changes to responsibilities or boundaries **MUST** be recorded as ADRs.'
+  - '- AI model and prompt versions **MUST** be governed via the Control Plane.'
+  - '- Per-plane deployments **SHOULD** be independently versioned.'
+  definition_of_done:
+  - 'Verify that ### Versioning Expectations - Major changes to responsibilities or boundaries **MUST** be recorded as ADRs.'
+  - Verify that - AI model and prompt versions **MUST** be governed via the Control Plane.
+  - Verify that - Per-plane deployments **SHOULD** be independently versioned.
+  capabilities_needed:
+  - adr_integration
+  - versioning_support
+  - ai_safety_integration
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: pattern

@@ -1,0 +1,86 @@
+pattern_id: EXT-PRIVATE_CONNECTIVITY
+name: Private Connectivity
+summary: Keep PaaS/services private
+intent: Keep PaaS/services private
+context: Systems handling sensitive data and multiple services/identities across networks and environments.
+problem: Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+forces_tradeoffs: Security depth vs developer friction; least privilege vs operational agility; privacy vs usability.
+solution_structure_behavior: A networking approach that keeps service endpoints off the public internet using private networks,
+  VPC endpoints, private links, or service endpoints. It reduces exposure and can simplify compliance, but requires careful
+  DNS/routing design and operational tooling for private access.
+consequences: Reduced blast radius and better compliance; requires governance, tooling, and ongoing hygiene.
+implementation_notes: Centralize identity, enforce least privilege, store secrets in a vault, keep services private by default,
+  and automate policy checks.
+examples_known_uses: Enterprise SaaS, healthcare/finance workloads, multi-tenant platforms.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A networking approach that keeps service endpoints off the public internet using private networks, VPC
+  endpoints, private links, or service endpoints. It reduces exposure and can simplify compliance, but requires careful DNS/routing
+  design and operational tooling for private access.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-PRIVATE_CONNECTIVITY
+  minimum_evidence:
+  - Systems handling sensitive data and multiple services/identities across networks and environments.
+  - Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+  definition_of_done:
+  - Verify that a networking approach that keeps service endpoints off the public internet using private networks, VPC endpoints,
+    private links, or service endpoints.
+  capabilities_needed:
+  - identity_access
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: network.private_connectivity_model
+    description: Private connectivity approach for accessing services without public exposure, including routing boundaries.
+    options:
+    - option_id: private_links_to_services
+      summary: Private connectivity to services via private endpoints and restricted routing.
+      notes: ''
+    - option_id: hub_spoke_networking
+      summary: Hub-and-spoke private networking with centralized ingress/egress controls.
+      notes: ''
+    - option_id: service_mesh_only
+      summary: Private connectivity enforced primarily via service mesh networking and policies.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: private_links_to_services
+  human_questions:
+  - question_key: network_private_connectivity_model
+    question_id: Q-EXT-PRIVCONN-01
+    question: What private connectivity model will you use?
+    description: Select the private connectivity model used to avoid public exposure while maintaining controlled routing
+      and policy enforcement.
+    option_set_id: network.private_connectivity_model
+    specialization_notes:
+    - Warranted when services must not be publicly reachable and network boundaries/policies are part of the threat model.
+    anchors:
+    - caf_pattern: EXT-PRIVATE_CONNECTIVITY
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-private_connectivity.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-PRIVATE_CONNECTIVITY
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

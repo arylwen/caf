@@ -1,0 +1,83 @@
+pattern_id: EXT-API_GATEWAY
+name: API Gateway
+summary: Central API policy enforcement (auth, quotas, transforms, versioning)
+intent: Enforce consistent API policies (auth, quotas, transforms, versioning) at a single control point.
+context: Multiple APIs/microservices; external or partner clients; need centralized auth, throttling, request/response shaping, and lifecycle management.
+problem: Duplicating auth/throttling/versioning logic in every service causes inconsistency, security gaps, and slower API evolution.
+forces_tradeoffs: Central governance vs service independence; policy features vs gateway becoming a bottleneck; flexibility vs standardization.
+solution_structure_behavior: A specialized gateway for APIs that enforces cross-cutting policies like authentication/authorization, rate limits/quotas, request/response transforms, and API versioning. It provides a consistent API façade, often handling API keys/OAuth, schema validation, logging, and developer onboarding while keeping backend services simpler.
+consequences: Faster rollout of cross-cutting policies and better visibility; risk of overloading the gateway with business logic or creating a single choke point.
+implementation_notes: Use lightweight transforms; keep authn/z at gateway + service-level authorization where needed. Treat gateway config as code and test changes.
+examples_known_uses: Public REST/GraphQL APIs; partner integrations requiring keys/OAuth, quotas, and version routing.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A specialized gateway for APIs that enforces cross-cutting policies like authentication/authorization, rate limits/quotas, request/response transforms, and API versioning. It provides a consistent API façade, often handling API keys/OAuth, schema validation, logging, and developer onboarding while keeping backend services simpler.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-API_GATEWAY
+  minimum_evidence:
+  - need centralized auth, throttling, request/response shaping, and lifecycle management.
+  definition_of_done:
+  - Verify that it provides a consistent API façade, often handling API keys/OAuth, schema validation, logging, and developer onboarding while keeping backend services simpler.
+  - Verify that risk of overloading the gateway with business logic or creating a single choke point.
+  capabilities_needed:
+  - ingress_boundary
+  - rate_limiting
+  - identity_access
+  - policy_enforcement
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+
+  kind: decision_pattern
+  decision_prompts:
+  - "Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets), and evidence anchors."
+  option_sets:
+  - option_set_id: ingress.api_gateway_policy_placement
+    description: "Where API gateway policies are enforced and how responsibilities are distributed across boundary components and services."
+    default_option_id: shared_gateway_and_services
+    options:
+    - option_id: gateway_enforces_most_policies
+      summary: "Gateway enforces most cross-cutting policies; services focus on business logic and service-level authorization."
+      notes: ''
+    - option_id: shared_gateway_and_services
+      summary: "Default: implement the gateway inside the Control Plane ingress boundary (no standalone gateway product). CP enforces baseline policies; services enforce additional policies with explicit boundaries."
+      notes: "Use this default when the stack does not pin a gateway product/technology. Treat the CP ingress boundary as the gateway responsibility boundary and evolve later if needed."
+    - option_id: services_enforce_gateway_routes_only
+      summary: "Gateway provides routing/versioning; services enforce most policies."
+      notes: ''
+    - option_id: custom
+      summary: "Custom (fill fields)."
+      notes: ''
+  human_questions:
+  - question_key: ingress_api_gateway_policy_placement
+    question_id: Q-EXT-API-GW-01
+    question: "Where are API gateway policies enforced and how are responsibilities distributed?"
+    description: "Select the enforcement/responsibility distribution for API policy enforcement at the ingress boundary."
+    option_set_id: ingress.api_gateway_policy_placement
+    specialization_notes:
+    - "Warranted when the system exposes APIs to external or partner clients and requires consistent ingress policy enforcement."
+    anchors:
+    - caf_pattern: EXT-API_GATEWAY
+promotions:
+  semantic_inputs:
+    - source_path: "architecture_library/patterns/external_v1/definitions_v1/ext-api_gateway.yaml"
+      scope: "cross_cutting"
+  required_trace_anchors:
+    - pattern_id: "EXT-API_GATEWAY"
+      anchor_kind: "plan_step_archetype"
+      scope: "cross_cutting"

@@ -1,0 +1,82 @@
+pattern_id: EXT-OBSERVABILITY_3_PILLARS
+name: "Observability \u201C3 pillars\u201D"
+summary: Metrics + logs + traces as default
+intent: Metrics + logs + traces as default
+context: Microservices and async flows where debugging spans many components and failures are partial.
+problem: Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+forces_tradeoffs: Signal quality vs cost/volume; cardinality vs queryability; instrumentation effort vs MTTR reduction.
+solution_structure_behavior: A foundational observability model that treats metrics, logs, and traces as complementary signals.
+  Together they enable fast detection (metrics), detailed diagnosis (logs), and causal path analysis (traces), especially
+  when correlated via shared IDs and consistent metadata.
+consequences: Faster detection and lower MTTR; increased telemetry costs and governance requirements.
+implementation_notes: Standardize correlation IDs, structured logs, tracing, and SLOs; alert on user impact; sample intelligently.
+examples_known_uses: Production incident response, performance tuning, auditing critical flows.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A foundational observability model that treats metrics, logs, and traces as complementary signals. Together
+  they enable fast detection (metrics), detailed diagnosis (logs), and causal path analysis (traces), especially when correlated
+  via shared IDs and consistent metadata.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-OBSERVABILITY_3_PILLARS
+  minimum_evidence:
+  - Without consistent telemetry, issues are hard to detect, triage, and remediate quickly.
+  definition_of_done:
+  - Verify that a foundational observability model that treats metrics, logs, and traces as complementary signals.
+  capabilities_needed:
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: obs.pillars_scope
+    description: Which observability pillars are implemented end-to-end and where tracing is applied.
+    options:
+    - option_id: logs_metrics_traces
+      summary: Logs, metrics, and traces across boundaries with consistent correlation fields.
+      notes: ''
+    - option_id: logs_metrics_only
+      summary: Logs and metrics are primary; traces limited or absent.
+      notes: ''
+    - option_id: critical_path_traces
+      summary: All pillars exist, but tracing is focused on critical paths and key dependencies.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: logs_metrics_traces
+  human_questions:
+  - question_key: obs_pillars_scope
+    question_id: Q-EXT-OBS-01
+    question: What observability pillars scope will you implement?
+    description: Select the scope of logs/metrics/traces and how correlation is achieved across boundaries.
+    option_set_id: obs.pillars_scope
+    specialization_notes:
+    - Warranted when reliability requires measurable signals and fast diagnosis across service boundaries.
+    anchors:
+    - caf_pattern: EXT-OBSERVABILITY_3_PILLARS
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-observability_3_pillars.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-OBSERVABILITY_3_PILLARS
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

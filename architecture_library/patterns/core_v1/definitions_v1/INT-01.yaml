@@ -1,0 +1,165 @@
+pattern_id: INT-01
+name: External Integration Adapter Boundary
+summary: Isolate external dependencies behind internal ports and dedicated adapters
+  so the core remains stable and testable.
+intent: Isolate external dependencies behind internal ports and dedicated adapters
+  so the core remains stable and testable.
+context: This pattern applies whenever the system interacts with external services,
+  third-party SDKs, infrastructure APIs, or inbound callbacks that require translation.
+problem: Without an explicit adapter boundary for external interfaces, the core domain
+  becomes coupled to external protocols and contract shapes, making integrations brittle
+  and forcing upstream change handling into business logic.
+forces_tradeoffs: '- Protocol/contract isolation vs duplicating mapping code.
+
+  - Stable internal models vs frequent external contract changes.
+
+  - Adapter complexity (retries, timeouts, mapping) vs keeping integrations minimal.'
+solution_structure_behavior: 'Introduces module roles: integration_ports; integration_adapters;
+  core_callers
+
+
+  Allowed dependencies: core_callers may depend on integration_ports; integration_adapters
+  may depend on integration_ports and external SDKs; core_callers must not depend
+  on integration_adapters or external SDKs.
+
+
+  Assembly contract: integration_ports define the required capabilities in stack-neutral
+  terms. integration_adapters implement those ports and translate external data structures
+  to internal types. app_composition_root binds each port to exactly one adapter implementation
+  per environment.'
+consequences: 'This pattern keeps the core independent of volatile external APIs and
+  creates deterministic tasks for integration work: define a port, implement an adapter,
+  bind it.'
+implementation_notes: See required evidence hooks, structural validations, and plan
+  step archetypes in this definition. Legacy pattern IDs from core inventory (ASM-*/BND-*/DAT-*)
+  are not yet published as core_v1 definitions; related_patterns point to canonical
+  implemented core IDs only.
+examples_known_uses: Typical in systems integrating with third-party APIs or legacy
+  services where protocol translation and contract mapping must not leak into the
+  domain.
+related_patterns: |
+  complements: PST-01
+  complements: SVC-01
+extended_definition: |
+  # External Integration Adapter Boundary (INT-01)
+
+  PATTERN_ID: INT-01
+  NAME: External Integration Adapter Boundary
+  CATEGORY: integration
+  INTENT: Isolate external dependencies behind internal ports and dedicated adapters so the core remains stable and testable.
+  APPLIES_WHEN: This pattern applies whenever the system interacts with external services, third-party SDKs, infrastructure APIs, or inbound callbacks that require translation.
+  INTRODUCES_MODULE_ROLES: integration_ports; integration_adapters; core_callers
+  ALLOWED_DEPENDENCIES: core_callers may depend on integration_ports; integration_adapters may depend on integration_ports and external SDKs; core_callers must not depend on integration_adapters or external SDKs.
+  ASSEMBLY_CONTRACT: integration_ports define the required capabilities in stack-neutral terms. integration_adapters implement those ports and translate external data structures to internal types. app_composition_root binds each port to exactly one adapter implementation per environment.
+
+  REQUIRED_EVIDENCE_HOOKS:
+  \
+    - E-INT-01-01: The design or spec enumerates external integrations and names the corresponding internal ports.
+  - E-INT-01-02: The module plan identifies integration_adapters as the only location where external SDK or protocol details are permitted.
+
+  \
+    STRUCTURAL_VALIDATIONS:
+  - V-INT-01-01: The module plan includes integration_ports and integration_adapters roles and forbids core_callers from depending on external SDKs.
+  - V-INT-01-02: For each declared integration port, the plan includes an adapter role instance bound in the composition root.
+
+  PLAN_STEP_ARCHETYPES:
+  \
+    - STEP_TITLE_TEMPLATE: Define integration ports for declared external interactions
+    REQUIRED_CAPABILITIES: integration_boundary_design
+    WRITE_SET: docs_architecture
+    DELIVERABLES: port_contracts
+    EVIDENCE_REQUIRED: E-INT-01-01
+    VALIDATIONS: V-INT-01-01
+  - STEP_TITLE_TEMPLATE: Implement adapters and bind ports in the composition root
+    REQUIRED_CAPABILITIES: integration_adapter_implementation
+    WRITE_SET: infra_boundary
+    DELIVERABLES: adapter_implementations; binding_entries
+    EVIDENCE_REQUIRED: E-INT-01-02
+    VALIDATIONS: V-INT-01-02
+
+  JUSTIFICATION: This pattern keeps the core independent of volatile external APIs and creates deterministic tasks for integration work: define a port, implement an adapter, bind it.
+  VERSION: v1
+  \
+    VERSION_HISTORY:
+  - v1: Initial release.
+core:
+  category: integration
+  applies_when: This pattern applies whenever the system interacts with external services,
+    third-party SDKs, infrastructure APIs, or inbound callbacks that require translation.
+  introduces_module_roles: integration_ports; integration_adapters; core_callers
+  allowed_dependencies: core_callers may depend on integration_ports; integration_adapters
+    may depend on integration_ports and external SDKs; core_callers must not depend
+    on integration_adapters or external SDKs.
+  assembly_contract: integration_ports define the required capabilities in stack-neutral
+    terms. integration_adapters implement those ports and translate external data
+    structures to internal types. app_composition_root binds each port to exactly
+    one adapter implementation per environment.
+  required_evidence_hooks:
+  - 'E-INT-01-01: The design or spec enumerates external integrations and names the
+    corresponding internal ports.'
+  - 'E-INT-01-02: The module plan identifies integration_adapters as the only location
+    where external SDK or protocol details are permitted.'
+  structural_validations:
+  - 'V-INT-01-01: The module plan includes integration_ports and integration_adapters
+    roles and forbids core_callers from depending on external SDKs.'
+  - 'V-INT-01-02: For each declared integration port, the plan includes an adapter
+    role instance bound in the composition root.'
+  plan_step_archetypes:
+  - "- STEP_TITLE_TEMPLATE: Define integration ports for declared external interactions\n\
+    \  REQUIRED_CAPABILITIES: integration_boundary_design\n  WRITE_SET: docs_architecture\n\
+    \  DELIVERABLES: port_contracts\n  EVIDENCE_REQUIRED: E-INT-01-01\n  VALIDATIONS:\
+    \ V-INT-01-01"
+  - "- STEP_TITLE_TEMPLATE: Implement adapters and bind ports in the composition root\n\
+    \  REQUIRED_CAPABILITIES: integration_adapter_implementation\n  WRITE_SET: infra_boundary\n\
+    \  DELIVERABLES: adapter_implementations; binding_entries\n  EVIDENCE_REQUIRED:\
+    \ E-INT-01-02\n  VALIDATIONS: V-INT-01-02\n\nJUSTIFICATION: This pattern keeps\
+    \ the core independent of volatile external APIs and creates deterministic tasks\
+    \ for integration work: define a port, implement an adapter, bind it.\nVERSION:\
+    \ v1"
+  justification: 'This pattern keeps the core independent of volatile external APIs
+    and creates deterministic tasks for integration work: define a port, implement
+    an adapter, bind it.'
+  version: v1
+  version_history:
+  - 'v1: Initial release.'
+  source_path: architecture_library/patterns/core_v1/patterns/pattern_int_01_v1.md
+caf:
+  layer: core
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: core_patterns_are_normative
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: core_pattern
+    anchor_id: INT-01
+  minimum_evidence:
+  - This pattern applies whenever the system interacts with external services, third-party
+    SDKs, infrastructure APIs, or inbound callbacks that require translation.
+  definition_of_done:
+  - 'Verify that V-INT-01-01: The module plan includes integration_ports and integration_adapters
+    roles and forbids core_callers from depending on external SDKs.'
+  - 'Verify that V-INT-01-02: For each declared integration port, the plan includes
+    an adapter role instance bound in the composition root.'
+  - 'Verify evidence hook is satisfied: E-INT-01-01: The design or spec enumerates
+    external integrations and names the corresponding internal ports.'
+  - 'Verify evidence hook is satisfied: E-INT-01-02: The module plan identifies integration_adapters
+    as the only location where external SDK or protocol details are permitted.'
+  capabilities_needed:
+  - integration_boundary_design
+  - integration_adapter_implementation
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: core_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/core_v1/definitions_v1/INT-01.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: INT-01
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

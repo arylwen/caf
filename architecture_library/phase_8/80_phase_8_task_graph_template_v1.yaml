@@ -1,0 +1,32 @@
+schema_version: phase8_task_graph_v1
+
+tasks:
+  - task_id: TG-010
+    title: "Define domain model skeleton"
+    steps:
+      - \"Identify declared resources and required fields from specs.\"
+      - \"Define domain entities and value objects; keep transport/persistence concerns separate.\"
+      - \"Align naming, ownership, and boundaries to the selected runtime shape.\"
+    depends_on: []
+    required_capabilities:
+      - domain_modeling
+    inputs:
+      - path: "reference_architectures/<instance>/spec/playbook/application_spec_v1.md"
+        required: true
+    definition_of_done:
+      - "A domain model is defined for each declared resource, with fields aligned to the system spec."
+      - "The model layer is structured to support persistence (no in-memory-only logic baked into model definitions)."
+      - "The implementation is consistent with the selected runtime shape and does not assume an un-declared framework."
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - "Does the domain model correctly reflect the resources/fields declared in the spec, without missing required fields?"
+        - "Are there correctness issues (broken imports, dead code paths, inconsistent naming) that will prevent runtime or tests from executing?"
+        - "Does the model layer avoid embedding transport concerns (HTTP/router code) or persistence wiring that should live elsewhere?"
+        - "Are there obvious security issues (e.g., accepting untrusted input without validation) given the layer's responsibility?"
+        - "Is the change compatible with the repo's packaging/runtime setup (imports, module paths, dependency declarations)?"
+      focus_areas: ["correctness", "architecture_alignment"]
+    trace_anchors:
+      - pattern_id: VAL-01
+        anchor_kind: "plan_step_archetype"
+        anchor_ref: "Domain constraints and validation"

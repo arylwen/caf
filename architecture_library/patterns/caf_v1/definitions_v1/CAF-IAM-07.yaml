@@ -1,0 +1,245 @@
+pattern_id: CAF-IAM-07
+name: Policy Delegation and Enforcement Boundaries
+summary: Policy in Contura systems is defined, delegated, and enforced across planes with **explicit boundaries**.
+intent: Policy in Contura systems is defined, delegated, and enforced across planes with **explicit boundaries**.
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+  refines: CAF-IAM-01
+  complements: CAF-IAM-GOV-04
+extended_definition: '## Policy Delegation and Enforcement Boundaries
+
+
+  Policy in Contura systems is defined, delegated, and enforced across planes with **explicit boundaries**.
+
+
+  This section clarifies **how policy intent moves**, **where it may be enforced**, and **where authority must not reside**.
+
+
+  ---
+
+
+  ### Policy Intent Ownership Pattern
+
+
+  All authoritative policy intent is owned by the Control Plane.
+
+
+  Under this pattern:
+
+
+  - Policy intent defines *what is allowed*, *what is restricted*, and *under which conditions*
+
+  - Policy intent is authored, versioned, and governed centrally
+
+  - Policy intent applies across systems and planes
+
+  - Policy intent is independent of enforcement mechanisms
+
+
+  Downstream systems must not redefine or reinterpret policy intent.
+
+
+  ---
+
+
+  ### Explicit Policy Delegation Pattern
+
+
+  Policy enforcement authority is delegated explicitly from the Control Plane.
+
+
+  Under this pattern:
+
+
+  - Delegation boundaries are defined and auditable
+
+  - Delegation specifies *what may be enforced* and *within which scope*
+
+  - Delegation is contextual (tenant, principal type, workflow)
+
+  - Absence of delegation implies absence of authority
+
+
+  No system may assume enforcement authority implicitly.
+
+
+  ---
+
+
+  ### Delegated Enforcement Pattern
+
+
+  Application and Data Plane systems enforce policy strictly within delegated boundaries.
+
+
+  Under this pattern:
+
+
+  - Enforcement logic applies policy intent to runtime operations
+
+  - Enforcement does not introduce new policy semantics
+
+  - Enforcement outcomes are deterministic and observable
+
+  - Enforcement failures do not alter policy intent or governance state
+
+
+  Enforcement applies rules; it does not create them.
+
+
+  ---
+
+
+  ### Revocation and Change Propagation Pattern
+
+
+  Policy delegation is revocable and subject to change.
+
+
+  Under this pattern:
+
+
+  - Policy changes originate in the Control Plane
+
+  - Delegated enforcement reacts to updated policy intent
+
+  - Cached or derived policy state is refreshable and bounded
+
+  - Revocation of delegation takes effect without requiring downstream redeployment
+
+
+  Delegation is conditional, not permanent.
+
+
+  ---
+
+
+  ### No Transitive Authority Pattern
+
+
+  Delegated enforcement authority is not transitive.
+
+
+  Under this pattern:
+
+
+  - Downstream systems may not re-delegate policy authority further
+
+  - Enforcement authority cannot be escalated or broadened
+
+  - Possession of policy context does not imply authority to delegate it
+
+
+  Authority does not propagate implicitly.
+
+
+  ---
+
+
+  ### Policy Signals vs Control Signals Pattern
+
+
+  Policy evaluation outcomes are not control intent.
+
+
+  Under this pattern:
+
+
+  - Policy allow/deny outcomes affect runtime behavior only
+
+  - Authorization failures do not trigger lifecycle or governance changes
+
+  - Policy signals are not interpreted as control directives
+
+  - Control intent remains explicit and centrally governed
+
+
+  Policy constrains behavior; control directs the system.
+
+
+  ---
+
+
+  **Normative statement:**
+
+
+  > Policy intent is centrally governed, explicitly delegated, and locally enforced; no plane may assume, reinterpret, or
+  propagate policy authority beyond its delegated boundaries.'
+source_documents:
+- path: architecture_library/22_contura_identity_access_pattern_guide_v1.md
+  section_heading: Policy Delegation and Enforcement Boundaries
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - This section clarifies **how policy intent moves**, **where it may be enforced**, and **where authority must not reside**.
+  - '- Policy intent defines *what is allowed*, *what is restricted*, and *under which conditions* - Policy intent is authored,
+    versioned, and governed centrally - Policy intent applies across systems and planes - Policy intent is independent of
+    enforcement mechanisms Downstream systems must not redefine or reinterpret policy intent.'
+  - '- Enforcement logic applies policy intent to runtime operations - Enforcement does not introduce new policy semantics
+    - Enforcement outcomes are deterministic and observable - Enforcement failures do not alter policy intent or governance
+    state Enforcement applies rules'
+  definition_of_done:
+  - Verify that this section clarifies **how policy intent moves**, **where it may be enforced**, and **where authority must
+    not reside**.
+  - Verify that - Policy intent defines *what is allowed*, *what is restricted*, and *under which conditions* - Policy intent
+    is authored, versioned, and governed centrally - Policy intent applies across systems and planes - Policy intent is independent
+    of enforcement mechanisms Downstream systems must not redefine or reinterpret policy intent.
+  capabilities_needed:
+  - authn
+  - authz_policy
+  - identity_model
+  - audit_observability
+  - control_plane_governance
+  - data_plane_enforcement
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: iam.policy_enforcement_distribution
+    summary: Choose among bounded variants for `iam.policy_enforcement_distribution` (or use `custom`).
+    options:
+    - option_id: pdp_in_control_pep_in_app
+      status: defer
+      summary: Policy decision in Control Plane; enforcement points in Application Plane.
+    - option_id: embedded_governed_library
+      status: defer
+      summary: Governed policy library embedded in Application Plane (policies authored/governed centrally).
+    - option_id: external_pdp_service
+      status: defer
+      summary: Dedicated PDP service boundary shared across planes (explicit contract and telemetry).
+    - option_id: custom
+      status: defer
+      summary: Custom (describe your approach; prefer adopting a bounded variant when possible).
+      notes: ''
+    default_option_id: pdp_in_control_pep_in_app
+  human_questions:
+  - question_id: Q-CAF-IAM-07-01
+    topic: iam.policy_enforcement_distribution
+    question: Which option best matches your intended choice for `iam.policy_enforcement_distribution` and what constraints/rejection
+      conditions apply?
+    status: open
+    answer: {}
+    option_set_id: iam.policy_enforcement_distribution

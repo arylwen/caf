@@ -1,0 +1,86 @@
+pattern_id: EXT-LANDING_ZONE
+name: Landing Zone
+summary: Standard org/accounts, network, logging, security baseline
+intent: 'Provide standardized cloud foundation: accounts/subscriptions, networking, security, logging, and guardrails.'
+context: Organizations with multiple teams/accounts/subscriptions needing consistent security, networking, and cost controls.
+problem: Without standards, teams reinvent foundations and drift from security/cost best practices.
+forces_tradeoffs: Standardization vs flexibility; speed vs governance; up-front platform work vs long-term savings.
+solution_structure_behavior: A standardized cloud foundation that sets up accounts/projects, networking, IAM, logging, and
+  security baselines to support scalable, governed adoption. Landing zones codify guardrails and shared services so teams
+  can deploy safely and consistently from day one.
+consequences: Faster onboarding and safer defaults; requires platform ownership and continuous improvement.
+implementation_notes: Codify guardrails, provide templates, centralize logging/security, and use tagging/budgets for cost
+  visibility.
+examples_known_uses: Enterprise cloud foundations, multi-account orgs, platform engineering enablement.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A standardized cloud foundation that sets up accounts/projects, networking, IAM, logging, and security
+  baselines to support scalable, governed adoption. Landing zones codify guardrails and shared services so teams can deploy
+  safely and consistently from day one.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-LANDING_ZONE
+  minimum_evidence:
+  - Organizations with multiple teams/accounts/subscriptions needing consistent security, networking, and cost controls.
+  - Without standards, teams reinvent foundations and drift from security/cost best practices.
+  definition_of_done:
+  - Verify that a standardized cloud foundation that sets up accounts/projects, networking, IAM, logging, and security baselines
+    to support scalable, governed adoption.
+  capabilities_needed:
+  - observability_emit
+  - backup_restore
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: ops.landing_zone_governance_model
+    description: Governance model for accounts/projects, network baselines, and guardrails provided by the landing zone.
+    options:
+    - option_id: centralized_governance
+      summary: Central governance defines accounts/projects, networks, and guardrails; teams consume via self-service.
+      notes: ''
+    - option_id: federated_projects
+      summary: 'Federated model: teams own projects/accounts within centrally defined guardrails.'
+      notes: ''
+    - option_id: single_project_with_guardrails
+      summary: Single shared environment with strong guardrails and namespaces for teams.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: centralized_governance
+  human_questions:
+  - question_key: ops_landing_zone_governance_model
+    question_id: Q-EXT-LZ-01
+    question: What is the landing zone governance model?
+    description: Select how governance, networking, and baseline guardrails are provided and owned across teams.
+    option_set_id: ops.landing_zone_governance_model
+    specialization_notes:
+    - Warranted when multi-team delivery requires shared baselines for networking, identity, security, and cost governance.
+    anchors:
+    - caf_pattern: EXT-LANDING_ZONE
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-landing_zone.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-LANDING_ZONE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

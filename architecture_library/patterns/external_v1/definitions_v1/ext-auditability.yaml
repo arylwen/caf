@@ -1,0 +1,80 @@
+pattern_id: EXT-AUDITABILITY
+name: Auditability
+summary: Strong logs + traceability
+intent: Strong logs + traceability
+context: Systems handling sensitive data and multiple services/identities across networks and environments.
+problem: Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+forces_tradeoffs: Security depth vs developer friction; least privilege vs operational agility; privacy vs usability.
+solution_structure_behavior: The ability to reconstruct who did what, when, and why across systems. Auditability relies on tamper-resistant logs, change histories, and traceable workflows (deploys, config changes, data access), supporting incident response, compliance, and accountability.
+consequences: Reduced blast radius and better compliance; requires governance, tooling, and ongoing hygiene.
+implementation_notes: Centralize identity, enforce least privilege, store secrets in a vault, keep services private by default, and automate policy checks.
+examples_known_uses: Enterprise SaaS, healthcare/finance workloads, multi-tenant platforms.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: The ability to reconstruct who did what, when, and why across systems. Auditability relies on tamper-resistant logs, change histories, and traceable workflows (deploys, config changes, data access), supporting incident response, compliance, and accountability.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: control
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-AUDITABILITY
+  minimum_evidence:
+  - Systems handling sensitive data and multiple services/identities across networks and environments.
+  - Implicit trust, broad permissions, and ad-hoc secret handling create high breach impact and compliance risk.
+  definition_of_done:
+  - Verify that the ability to reconstruct who did what, when, and why across systems.
+  capabilities_needed:
+  - identity_access
+  - observability_emit
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+
+  kind: decision_pattern
+  decision_prompts:
+  - "Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets), and evidence anchors."
+  option_sets:
+  - option_set_id: ops.audit_event_scope
+    description: "What events are captured in audit logs and how broad the audit surface should be."
+    default_option_id: security_plus_admin_actions
+    options:
+    - option_id: security_events_only
+      summary: "Audit security-sensitive events (authn/authz failures, privilege changes, access)."
+      notes: ''
+    - option_id: security_plus_admin_actions
+      summary: "Audit security events plus privileged admin/operator actions."
+      notes: ''
+    - option_id: security_plus_business_events
+      summary: "Audit security events plus key business actions requiring traceability."
+      notes: ''
+    - option_id: custom
+      summary: "Custom (fill fields)."
+      notes: ''
+  human_questions:
+  - question_key: ops_audit_event_scope
+    question_id: Q-EXT-AUDIT-01
+    question: "What audit event scope is required (security only vs broader)?"
+    description: "Select the audit log scope to meet governance/compliance and traceability needs."
+    option_set_id: ops.audit_event_scope
+    specialization_notes:
+    - "Use when compliance, forensics, or enterprise governance requires auditable action histories."
+    anchors:
+    - caf_pattern: EXT-AUDITABILITY
+promotions:
+  semantic_inputs:
+    - source_path: "architecture_library/patterns/external_v1/definitions_v1/ext-auditability.yaml"
+      scope: "cross_cutting"
+  required_trace_anchors:
+    - pattern_id: "EXT-AUDITABILITY"
+      anchor_kind: "plan_step_archetype"
+      scope: "cross_cutting"

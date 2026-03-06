@@ -1,0 +1,89 @@
+pattern_id: EXT-TIMEOUT_DEADLINES
+name: Timeout + Deadlines
+summary: Bound latency; propagate deadlines downstream
+intent: Bound end-to-end latency by enforcing timeouts and propagating deadlines across calls.
+context: Distributed systems with unreliable networks and variable load; async workflows and integrations.
+problem: Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under
+  spikes.
+forces_tradeoffs: Consistency vs availability; throughput vs ordering; retry aggressiveness vs dependency protection; simplicity
+  vs correctness.
+solution_structure_behavior: A practice of enforcing maximum durations for requests and propagating a deadline budget across
+  service calls. Timeouts prevent indefinite resource consumption and help systems fail fast; combined with cancellation and
+  retries, they improve tail latency and overall stability.
+consequences: More resilient and scalable workflows; more components and operational complexity (queues, topics, retries,
+  replays).
+implementation_notes: Design for at-least-once delivery, idempotency, backoff+jitter, DLQs, and clear ownership for replay/compensation.
+examples_known_uses: Order/payment workflows, event streams, background processing, third-party integration pipelines.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A practice of enforcing maximum durations for requests and propagating a deadline budget across service
+  calls. Timeouts prevent indefinite resource consumption and help systems fail fast; combined with cancellation and retries,
+  they improve tail latency and overall stability.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-TIMEOUT_DEADLINES
+  minimum_evidence:
+  - Distributed systems with unreliable networks and variable load
+  - Synchronous chaining and naive retries cause cascading failures, duplicate side effects, and poor elasticity under spikes.
+  definition_of_done:
+  - Verify that timeouts prevent indefinite resource consumption and help systems fail fast
+  capabilities_needed:
+  - policy_enforcement
+  - eventing
+  - resilience_retry
+  - resilience_timeouts
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: resilience.timeout_deadline_model
+    description: How timeouts and deadlines are modeled and propagated across calls.
+    options:
+    - option_id: end_to_end_deadline_propagation
+      summary: Propagate an end-to-end deadline (budget) across hops; each hop respects remaining budget.
+      notes: ''
+    - option_id: hop_by_hop_timeouts_only
+      summary: Use local hop-by-hop timeouts without explicit deadline propagation.
+      notes: ''
+    - option_id: mixed_deadline_plus_local_timeouts
+      summary: Propagate deadlines for critical paths plus local timeouts for non-critical calls.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: mixed_deadline_plus_local_timeouts
+  human_questions:
+  - question_key: resilience_timeout_deadline_model
+    question_id: Q-EXT-TIMEOUT-01
+    question: What timeout/deadline model should be used across calls?
+    description: Select whether to use end-to-end deadline propagation, hop-by-hop timeouts, or a mixed approach.
+    option_set_id: resilience.timeout_deadline_model
+    specialization_notes:
+    - Use when the system has chained calls or user-facing latency targets that require explicit timeout budgeting.
+    anchors:
+    - caf_pattern: EXT-TIMEOUT_DEADLINES
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-timeout_deadlines.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-TIMEOUT_DEADLINES
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

@@ -1,0 +1,66 @@
+pattern_id: EXT-GOLDEN_PATH_TEMPLATES
+name: Golden Path Templates
+summary: Opinionated starter kits
+intent: Provide opinionated templates so teams can ship safely and consistently with
+  minimal setup.
+context: Organizations with multiple teams/accounts/subscriptions needing consistent
+  security, networking, and cost controls.
+problem: Without standards, teams reinvent foundations and drift from security/cost
+  best practices.
+forces_tradeoffs: Standardization vs flexibility; speed vs governance; up-front platform
+  work vs long-term savings.
+solution_structure_behavior: Opinionated, curated templates and tooling that provide
+  a ‘best default’ way to build common services (CI/CD, observability, security, deployment).
+  Golden paths reduce cognitive load and accelerate delivery while embedding standards,
+  with an exception process for specialized needs.
+consequences: Faster onboarding and safer defaults; requires platform ownership and
+  continuous improvement.
+implementation_notes: Codify guardrails, provide templates, centralize logging/security,
+  and use tagging/budgets for cost visibility.
+examples_known_uses: Enterprise cloud foundations, multi-account orgs, platform engineering
+  enablement.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: Opinionated, curated templates and tooling that provide a ‘best
+  default’ way to build common services (CI/CD, observability, security, deployment).
+  Golden paths reduce cognitive load and accelerate delivery while embedding standards,
+  with an exception process for specialized needs.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-GOLDEN_PATH_TEMPLATES
+  minimum_evidence:
+  - Organizations with multiple teams/accounts/subscriptions needing consistent security,
+    networking, and cost controls.
+  - Without standards, teams reinvent foundations and drift from security/cost best
+    practices.
+  definition_of_done:
+  - Verify that opinionated, curated templates and tooling that provide a ‘best default’
+    way to build common services (CI/CD, observability, security, deployment).
+  capabilities_needed:
+  - observability_emit
+  - backup_restore
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: external_pattern
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-golden_path_templates.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-GOLDEN_PATH_TEMPLATES
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

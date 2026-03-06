@@ -1,0 +1,70 @@
+pattern_id: CAF-INC-01
+name: Severity Levels (Operational)
+summary: '- **SEV-0 (Critical):** Confirmed cross-tenant data exposure or cross-tenant action. - **SEV-1 (High):** Strong indicator of imminent exposure/action; containment required. - **SEV-2 (Medium):** Tenancy control gap wi...'
+intent: '- **SEV-0 (Critical):** Confirmed cross-tenant data exposure or cross-tenant action.'
+context: See extended_definition (source section) for applicability constraints and assumptions.
+problem: See extended_definition (source section) for the motivating problem and risks.
+forces_tradeoffs: See extended_definition (source section) for trade-offs and constraints.
+solution_structure_behavior: See extended_definition (source section) for required structure and behavior.
+consequences: See extended_definition (source section) for benefits, liabilities, and side effects.
+implementation_notes: See extended_definition (source section) for implementation guidance and guardrails.
+examples_known_uses: Not specified in source section.
+related_patterns: |
+  depends_on: CTX-01
+  depends_on: OBS-01
+  depends_on: POL-01
+extended_definition: '## 1. Severity Levels (Operational)
+
+
+  - **SEV-0 (Critical):** Confirmed cross-tenant data exposure or cross-tenant action.
+
+  - **SEV-1 (High):** Strong indicator of imminent exposure/action; containment required.
+
+  - **SEV-2 (Medium):** Tenancy control gap with limited blast radius; fix prioritized.
+
+  - **SEV-3 (Low):** Hygiene/observability gaps; schedule fix.
+
+
+  > Note: Operational severity correlates with checklist severity (P0/P1/...), but
+
+  > includes business impact (volume, sensitivity, customer impact).'
+source_documents:
+- path: architecture_library/32_contura_multi_tenancy_incident_classification_v1.md
+  section_heading: 1. Severity Levels (Operational)
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: both
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor_policy: requires_explicit_design_decision
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - '## 1.'
+  - Severity Levels (Operational) - **SEV-0 (Critical):** Confirmed cross-tenant data exposure or cross-tenant action.
+  definition_of_done:
+  - Verify that containment required.
+  capabilities_needed:
+  - data_classification
+  - data_observability_lineage
+  - ai_data_constraints
+  - incident_response
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  - No assumption of multi-tenancy unless explicitly stated by the spec/design.
+  - No assumption of multi-region or global deployment unless explicitly stated by the spec/design.
+  kind: checklist
+promotions:
+  semantic_inputs:
+    - source_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-INC-01.yaml"
+      scope: "cross_cutting"
+  required_trace_anchors:
+    - pattern_id: "CAF-INC-01"
+      anchor_kind: "plan_step_archetype"
+      scope: "cross_cutting"

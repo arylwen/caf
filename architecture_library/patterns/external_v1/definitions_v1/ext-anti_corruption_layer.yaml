@@ -1,0 +1,97 @@
+pattern_id: EXT-ANTI_CORRUPTION_LAYER
+name: Anti-corruption Layer
+summary: Adapter layer to isolate domain from external systems
+intent: Protect your domain model by translating/isolating external system concepts
+  at the boundary.
+context: Integrations with clearinghouses, payers, legacy ERPs, or third-party APIs
+  with incompatible models or semantics.
+problem: External schemas and behaviors leak into your core domain, increasing coupling
+  and making future change expensive.
+forces_tradeoffs: Purity of domain vs additional translation code; correctness vs
+  performance; short-term delivery vs long-term maintainability.
+solution_structure_behavior: A boundary layer that translates between external systems’
+  models/protocols and your internal domain model. It prevents foreign concepts from
+  leaking into core code by providing mapping, validation, and normalization, which
+  reduces coupling and makes future replacements easier.
+consequences: Keeps domain clean and change-friendly; adds mapping/validation overhead
+  and requires careful contract testing.
+implementation_notes: Define a canonical internal model. Implement adapters/mappers
+  + contract tests. Track external versioning explicitly.
+examples_known_uses: EDI/HL7 adapters; payment provider adapters; legacy DB schema
+  translation layer.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A boundary layer that translates between external systems’ models/protocols
+  and your internal domain model. It prevents foreign concepts from leaking into core
+  code by providing mapping, validation, and normalization, which reduces coupling
+  and makes future replacements easier.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-ANTI_CORRUPTION_LAYER
+  minimum_evidence:
+  - Integrations with clearinghouses, payers, legacy ERPs, or third-party APIs with
+    incompatible models or semantics.
+  - External schemas and behaviors leak into your core domain, increasing coupling
+    and making future change expensive.
+  definition_of_done:
+  - Verify that it prevents foreign concepts from leaking into core code by providing
+    mapping, validation, and normalization, which reduces coupling and makes future
+    replacements easier.
+  capabilities_needed:
+  - eventing
+  - integration_translation_boundary
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+kind: decision_pattern
+decision_prompts:
+- Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+  and evidence anchors.
+option_sets:
+- option_set_id: integration.anti_corruption_scope
+  description: "Scope and placement of the anti-corruption layer translation/validation boundary."
+  options:
+  - option_id: boundary_adapter_only
+    summary: "Use ACL strictly at the integration boundary (adapters/mappers) with no domain leakage."
+    notes: ''
+  - option_id: shared_translation_lib
+    summary: "Central translation library used by multiple integrations, still isolated from core domain."
+    notes: ''
+  - option_id: staged_migration_strangler
+    summary: "ACL supports staged migration/strangling of legacy semantics with parallel models."
+    notes: ''
+  - option_id: custom
+    summary: "Custom (fill fields)."
+    notes: ''
+  default_option_id: boundary_adapter_only
+human_questions:
+- question_key: integration_anti_corruption_scope
+  question_id: Q-EXT-ACL-01
+  question: "What scope and placement will the anti-corruption layer have?"
+  description: "Select how the ACL boundary is implemented and how translation/validation responsibilities are scoped."
+  option_set_id: integration.anti_corruption_scope
+  specialization_notes:
+  - "Warranted when external system schemas/semantics would otherwise leak into core domain code."
+  anchors:
+  - caf_pattern: EXT-ANTI_CORRUPTION_LAYER
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-anti_corruption_layer.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-ANTI_CORRUPTION_LAYER
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting

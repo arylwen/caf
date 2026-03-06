@@ -1,0 +1,103 @@
+pattern_id: CAF-RES-ID-01
+name: Resource Identifier Strategy (Opaque vs Natural Key)
+summary: Select a stable identifier strategy for tenant-scoped resources and define addressing semantics.
+intent: Provide a low-friction, explicit decision about resource identifiers that downstream code and APIs can rely on.
+context: You are defining tenant-scoped REST resources and need stable identifiers for linking, caching, and auditing.
+problem: Without an explicit identifier strategy, APIs and persistence drift (IDs change, addressing is inconsistent, and
+  cross-cutting concerns cannot anchor on a stable key).
+forces_tradeoffs:
+- Opaque server-assigned IDs simplify evolution but can reduce human readability.
+- Natural keys can be meaningful but are hard to change and must be immutable and unique per tenant.
+- Addressing must remain stable across versions and environments.
+solution_structure_behavior:
+- 'Choose an identifier strategy per resource: opaque server-assigned or natural key.'
+- Define the identifier type (uuid/ulid/string/int) and the external addressing scheme.
+- Ensure tenant scope is explicit in addressing and persistence constraints.
+consequences:
+- Downstream tasks can generate consistent API routes, DB keys/indexes, and audit references.
+- Natural keys impose immutability/uniqueness constraints that must be enforced.
+- Opaque IDs require lookup surfaces (list/search) for human-friendly navigation.
+implementation_notes:
+- If using natural keys, enforce uniqueness per tenant and immutability at the API and persistence layers.
+- If using opaque IDs, ensure IDs are generated server-side and never accepted from untrusted clients without validation.
+examples_known_uses:
+- Tenant-scoped widgets or documents addressed as /tenants/{tenant_id}/widgets/{widget_id}.
+related_patterns: |
+  complements: CAF-POL-01
+  complements: CAF-TCTX-01
+extended_definition: See option_sets for common decision candidates; adapt per resource.
+source_documents:
+- path: architecture_library/04_contura_architecture_glossary_v1.md
+  note: General terminology around identifiers and addressing.
+caf:
+  layer: caf
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: REQUIRES_HUMAN_DECISION_ID
+  minimum_evidence:
+  - Spec/design defines a tenant-scoped resource with external addressing.
+  decision_prompts:
+  - Record an explicit decision for each resource identifier strategy and addressing scheme.
+  definition_of_done:
+  - Verify that resource identifiers are stable and tenant-scoped.
+  - Verify that addressing scheme is consistent with tenant context carrier decision.
+  capabilities_needed:
+  - api_routing
+  - persistence_schema
+  forbidden_assumptions:
+  - No persistence technology or API framework selection implied by this pattern.
+  kind: decision_pattern
+  option_sets:
+  - option_set_id: resource.identifier_strategy
+    description: Common tenant-scoped resource identifier + addressing candidates.
+    options:
+    - option_id: opaque_server_uuid_path
+      summary: Opaque server-assigned UUID; tenant-scoped REST path.
+      id_kind: opaque_server_assigned
+      id_type: uuid
+      addressing_scheme: /tenants/{tenant_id}/<resource_plural>/{resource_id}
+    - option_id: opaque_server_ulid_path
+      summary: Opaque server-assigned ULID; tenant-scoped REST path.
+      id_kind: opaque_server_assigned
+      id_type: ulid
+      addressing_scheme: /tenants/{tenant_id}/<resource_plural>/{resource_id}
+    - option_id: natural_key_path
+      summary: Natural key per tenant; tenant-scoped REST path.
+      id_kind: natural_key
+      id_type: string
+      addressing_scheme: /tenants/{tenant_id}/<resource_plural>/{resource_key}
+    - option_id: custom
+      summary: Custom (fill fields).
+      id_kind: ''
+      id_type: ''
+      addressing_scheme: ''
+    default_option_id: opaque_server_uuid_path
+  human_questions:
+  - question_key: primary_resource_identifier
+    question_id: Q-AP-RES-IDENT-01
+    question: What is the stable identifier strategy and addressing scheme for the primary resource (tenant-scoped id semantics)?
+    description: Select the identifier strategy for the primary application resource; specialize placeholders to that resource.
+    option_set_id: resource.identifier_strategy
+    specialization_notes:
+    - Specialize <resource_plural> placeholders to the resource name from application_spec_v1.md (e.g., widgets).
+    - 'If multiple resources exist, either: (a) emit one question per resource, or (b) emit one question for the highest-risk
+      / externally-addressable resource.'
+    anchors:
+    - caf_pattern: CAF-RES-ID-01
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-RES-ID-01.yaml
+    scope: per_resource
+  required_trace_anchors:
+  - pattern_id: CAF-RES-ID-01
+    anchor_kind: plan_step_archetype
+    scope: per_resource

@@ -1,0 +1,85 @@
+pattern_id: EXT-STATELESS_SERVICE
+name: Stateless Service
+summary: Scale horizontally; no server-side session
+intent: Scale horizontally; no server-side session
+context: Services that must scale, deploy frequently, and run reliably with predictable operational burden.
+problem: Manual server management and stateful designs hinder scaling, resilience, and deployment velocity.
+forces_tradeoffs: Operational simplicity vs flexibility/control; portability vs managed constraints; cost vs performance.
+solution_structure_behavior: A service design where each request is self-contained and does not rely on server-local session
+  state. Any required state is stored externally (databases, caches, tokens), enabling easy horizontal scaling, simpler failover,
+  and more predictable behavior under load.
+consequences: Improved scale and reliability when done well; requires discipline around state, networking, and observability.
+implementation_notes: Prefer statelessness, externalize state, standardize health checks, and automate deployments and rollbacks.
+examples_known_uses: Domain microservices, async workers, and integration services.
+related_patterns: |
+  depends_on: OBS-01
+  complements: CFG-01
+  complements: CTX-01
+  complements: POL-01
+extended_definition: A service design where each request is self-contained and does not rely on server-local session state.
+  Any required state is stored externally (databases, caches, tokens), enabling easy horizontal scaling, simpler failover,
+  and more predictable behavior under load.
+caf:
+  layer: external
+  verifiability: plan_ready
+  plane: both
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-EXT-STATELESS_SERVICE
+  minimum_evidence:
+  - Services that must scale, deploy frequently, and run reliably with predictable operational burden.
+  - Manual server management and stateful designs hinder scaling, resilience, and deployment velocity.
+  definition_of_done:
+  - Verify that a service design where each request is self-contained and does not rely on server-local session state.
+  capabilities_needed:
+  - observability_emit
+  - caching
+  - stateless_service_design
+  forbidden_assumptions:
+  - No cloud vendor or product selection implied by this pattern.
+  kind: decision_pattern
+  decision_prompts:
+  - Record an explicit design decision adopting or rejecting this pattern, including scope, required choices (option sets),
+    and evidence anchors.
+  option_sets:
+  - option_set_id: service.state_management_strategy
+    description: How state is handled to preserve stateless service properties and horizontal scalability.
+    options:
+    - option_id: external_state_only
+      summary: All durable state is externalized; services remain stateless between requests.
+      notes: ''
+    - option_id: session_affinity_allowed
+      summary: Session affinity allowed for short-lived state with explicit constraints and expiry.
+      notes: ''
+    - option_id: mixed
+      summary: Stateless by default; limited stateful exceptions with explicit justification and boundaries.
+      notes: ''
+    - option_id: custom
+      summary: Custom (fill fields).
+      notes: ''
+    default_option_id: mixed
+  human_questions:
+  - question_key: service_state_management_strategy
+    question_id: Q-EXT-SLS-01
+    question: How will service state be managed to remain stateless?
+    description: Select the state management strategy to preserve stateless service behavior and scalability.
+    option_set_id: service.state_management_strategy
+    specialization_notes:
+    - Warranted when services must scale horizontally and stateful coupling would reduce resiliency and elasticity.
+    anchors:
+    - caf_pattern: EXT-STATELESS_SERVICE
+promotions:
+  semantic_inputs:
+  - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-stateless_service.yaml
+    scope: cross_cutting
+  required_trace_anchors:
+  - pattern_id: EXT-STATELESS_SERVICE
+    anchor_kind: plan_step_archetype
+    scope: cross_cutting
