@@ -1,0 +1,107 @@
+schema_version: "phase8_abp_pbp_resolution_v1"
+instance_name: "codex-saas"
+derived_at: "2026-03-11T20:41:43.768Z"
+generated_from:
+  profile_parameters_resolved: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+  abp_catalog: "architecture_library/phase_8/98b_phase_8_architecture_binding_pattern_catalog_v1.yaml"
+  pbp_catalog: "architecture_library/phase_8/81_phase_8_plane_binding_pattern_catalog_v1.yaml"
+selected_architecture_style:
+  style_key: "clean_architecture"
+  abp_id: "ABP-CLEAN-01"
+  manifest_path: "architecture_library/phase_8/abp/styles/ABP-CLEAN-01/abp_manifest_v1.yaml"
+  role_ids:
+    - "composition_root"
+    - "inbound_adapters"
+    - "application_use_cases"
+    - "domain_core"
+    - "outbound_ports"
+    - "outbound_adapters"
+planes:
+  -
+    plane_id: "CP"
+    pbp_manifest_path: "architecture_library/phase_8/pbp/planes/CP/pbp_manifest_v1.yaml"
+    scaffold_directories:
+      - "code/CP/"
+    static_role_binding_keys:
+      - "cp_plane_scaffold_readme"
+      - "cp_entrypoint_stub"
+    selected_abp_role_bindings:
+      status: "present"
+      role_paths:
+        -
+          role_id: "composition_root"
+          path_template: "bootstrap/"
+        -
+          role_id: "inbound_adapters"
+          path_template: "interfaces/inbound/"
+        -
+          role_id: "application_use_cases"
+          path_template: "application/"
+        -
+          role_id: "domain_core"
+          path_template: "domain/"
+        -
+          role_id: "outbound_ports"
+          path_template: "application/ports/"
+        -
+          role_id: "outbound_adapters"
+          path_template: "interfaces/outbound/"
+  -
+    plane_id: "AP"
+    pbp_manifest_path: "architecture_library/phase_8/pbp/planes/AP/pbp_manifest_v1.yaml"
+    scaffold_directories:
+      - "code/AP/"
+    static_role_binding_keys:
+      - "ap_plane_scaffold_readme"
+    selected_abp_role_bindings:
+      status: "present"
+      role_paths:
+        -
+          role_id: "composition_root"
+          path_template: "bootstrap/"
+        -
+          role_id: "inbound_adapters"
+          path_template: "interfaces/inbound/"
+        -
+          role_id: "application_use_cases"
+          path_template: "application/"
+        -
+          role_id: "domain_core"
+          path_template: "domain/"
+        -
+          role_id: "outbound_ports"
+          path_template: "application/ports/"
+        -
+          role_id: "outbound_adapters"
+          path_template: "interfaces/outbound/"
+  -
+    plane_id: "DP"
+    pbp_manifest_path: "architecture_library/phase_8/pbp/planes/DP/pbp_manifest_v1.yaml"
+    scaffold_directories:
+      - "code/DP/"
+    static_role_binding_keys:
+      - "dp_plane_scaffold_readme"
+    selected_abp_role_bindings:
+      status: "absent"
+      role_paths: []
+  -
+    plane_id: "AI"
+    pbp_manifest_path: "architecture_library/phase_8/pbp/planes/AI/pbp_manifest_v1.yaml"
+    scaffold_directories:
+      - "code/AI/"
+    static_role_binding_keys:
+      - "ai_plane_scaffold_readme"
+    selected_abp_role_bindings:
+      status: "absent"
+      role_paths: []
+  -
+    plane_id: "ST"
+    pbp_manifest_path: "architecture_library/phase_8/pbp/planes/ST/pbp_manifest_v1.yaml"
+    scaffold_directories:
+      - "code/ST/"
+    static_role_binding_keys:
+      - "st_plane_scaffold_readme"
+    selected_abp_role_bindings:
+      status: "absent"
+      role_paths: []
+notes: "Derived mechanically from architecture.architecture_style and the Phase 8 ABP/PBP catalogs. Does not activate planes."

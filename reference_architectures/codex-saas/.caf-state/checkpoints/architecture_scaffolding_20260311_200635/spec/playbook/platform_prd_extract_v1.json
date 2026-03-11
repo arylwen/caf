@@ -1,0 +1,99 @@
+{
+  "schema_version": "prd_extracted_v1",
+  "sections": {
+    "product_framing": "### One-liner\n\nA compliance-first execution platform that evaluates every request before any side effects, executes actions only through a platform-owned worker identity, and produces an audit trail for every decision and outcome.\n\n### Target users / customers\n\n- Security and compliance leads who need guardrails and evidence\n- Platform engineers who own approvals and execution controls\n- Auditors who need traceability and exportable records\n\n### Problem statement\n\nTeams want to automate work, but approvals are inconsistent, policies are scattered, and evidence is incomplete. The platform must provide a single governed path from request to decision to execution and evidence.\n\n### Value proposition\n\nCentral policy lifecycle with approval, deterministic evaluation before execution, controlled execution identity, and immediate evidence for review and export.\n\n---",
+    "scope": "### In scope\n\n- Central policy catalog with versioning and lifecycle (draft, review, active, retired)\n- Evaluate every request before execution; denied requests return reasons\n- Execute allowed requests via a platform-owned worker identity\n- Record evidence for request, decision, execution, and outcome\n- Tenant administration and tenant-scoped retention and deletion controls\n\n### Out of scope\n\n- A general-purpose workflow programming environment\n- Distributed event-bus orchestration as the default posture\n- Data lake analytics and BI dashboards\n\n### Assumptions\n\n- First release is single-region and keeps the runtime simple\n- Shared storage is acceptable as long as tenant separation is enforced everywhere\n\n### Dependencies\n\n- Organization identity provider for authentication (OIDC or SAML)\n- Notification channel (email or chat) in a later phase\n\n---",
+    "quality_attributes": "| Attribute | Target / SLO | Measurement / Evidence | Notes |\n| --- | --- | --- | --- |\n| Availability | 99.9 percent | Uptime checks and incident log | Single region initially |\n| Latency | p95 300ms for evaluation calls | API metrics | Keep evaluation deterministic |\n| Security | Least privilege and audit trail | Security checklist and scan results | Admin actions audited |\n| Privacy | Tenant separation | Access logs and data inventory | Tenant-scoped exports |\n\n---",
+    "constraints": "| Constraint | Type (Business/Tech/Legal) | Rationale | Notes |\n| --- | --- | --- | --- |\n| Evaluate every request before execution | Business | Guardrails are core value | Denials include reasons |\n| Execute only via platform-owned worker identity | Security | Prevent direct end-user side effects | Maintain attribution |\n| Tenant separation in data access layer | Tech | Avoid cross-tenant leaks | Tenant key required |\n| Evidence captured for request, decision, outcome | Compliance | Traceability | Evidence is immediate |\n\n---"
+  },
+  "posture": {
+    "format": "table",
+    "questions": [
+      {
+        "question_id": "PP-01",
+        "question": "PP-01",
+        "answer": "MVP"
+      },
+      {
+        "question_id": "PP-02",
+        "question": "PP-02",
+        "answer": "Confidential"
+      },
+      {
+        "question_id": "PP-03",
+        "question": "PP-03",
+        "answer": "Multi-tenant"
+      },
+      {
+        "question_id": "PP-04",
+        "question": "PP-04",
+        "answer": "SSO"
+      },
+      {
+        "question_id": "PP-05",
+        "question": "PP-05",
+        "answer": "API-first"
+      },
+      {
+        "question_id": "PP-06",
+        "question": "PP-06",
+        "answer": "Agentic"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "capability_id": "CAP-001",
+      "capability_name": "Manage policies and approvals",
+      "slug": "cap-001-manage-policies-and-approvals",
+      "fields": {
+        "actor": "Policy Admin",
+        "trigger": "Policy Admin creates a new policy, updates an existing policy version, or promotes a policy to active.",
+        "main_flow": "1. Policy Admin creates or edits a policy in the central policy catalog.\n2. The platform validates required policy fields.\n3. Policy Admin submits the policy version for review.\n4. An approver reviews the change, requests edits, or approves.\n5. On approval, the policy version becomes active and is used for subsequent request evaluations.",
+        "postconditions": "- A policy version is stored with author, reviewer, timestamps, and status.\n- The active policy set is updated.\n- An audit record exists for the change and approval decision.",
+        "domain_entities": "- Policy\n- Policy Version\n- Approval Decision\n- Policy Change Audit Record\n\n---"
+      },
+      "raw_body": "#### Actor\n\nPolicy Admin\n\n#### Trigger\n\nPolicy Admin creates a new policy, updates an existing policy version, or promotes a policy to active.\n\n#### Main Flow\n\n1. Policy Admin creates or edits a policy in the central policy catalog.\n2. The platform validates required policy fields.\n3. Policy Admin submits the policy version for review.\n4. An approver reviews the change, requests edits, or approves.\n5. On approval, the policy version becomes active and is used for subsequent request evaluations.\n\n#### Postconditions\n\n- A policy version is stored with author, reviewer, timestamps, and status.\n- The active policy set is updated.\n- An audit record exists for the change and approval decision.\n\n#### Domain Entities\n\n- Policy\n- Policy Version\n- Approval Decision\n- Policy Change Audit Record\n\n---"
+    },
+    {
+      "capability_id": "CAP-002",
+      "capability_name": "Evaluate and run a request",
+      "slug": "cap-002-evaluate-and-run-a-request",
+      "fields": {
+        "actor": "Requestor",
+        "trigger": "Requestor submits a run request for an allowed action.",
+        "main_flow": "1. Requestor submits a run request describing the desired action and target.\n2. The platform authenticates the requestor and resolves tenant, roles, and permissions.\n3. The platform evaluates the request against the active policy set.\n4. If evaluation denies the request, the platform returns a denial with reasons and records evidence.\n5. If evaluation allows the request, the platform invokes the platform-owned automation worker to execute the action.\n6. The automation worker performs the action and returns success or failure.\n7. The platform records the outcome and returns a synchronous response to the requestor.",
+        "postconditions": "- Every request has a decision record with reasons.\n- Allowed requests have an execution record with outcome and timestamps.\n- Evidence is available immediately for review and export.\n- Actions are executed only through the platform-owned automation worker identity.",
+        "domain_entities": "- Run Request\n- Evaluation Result\n- Execution Record\n- Evidence Record\n\n---"
+      },
+      "raw_body": "#### Actor\n\nRequestor\n\n#### Trigger\n\nRequestor submits a run request for an allowed action.\n\n#### Main Flow\n\n1. Requestor submits a run request describing the desired action and target.\n2. The platform authenticates the requestor and resolves tenant, roles, and permissions.\n3. The platform evaluates the request against the active policy set.\n4. If evaluation denies the request, the platform returns a denial with reasons and records evidence.\n5. If evaluation allows the request, the platform invokes the platform-owned automation worker to execute the action.\n6. The automation worker performs the action and returns success or failure.\n7. The platform records the outcome and returns a synchronous response to the requestor.\n\n#### Postconditions\n\n- Every request has a decision record with reasons.\n- Allowed requests have an execution record with outcome and timestamps.\n- Evidence is available immediately for review and export.\n- Actions are executed only through the platform-owned automation worker identity.\n\n#### Domain Entities\n\n- Run Request\n- Evaluation Result\n- Execution Record\n- Evidence Record\n\n---"
+    },
+    {
+      "capability_id": "CAP-003",
+      "capability_name": "Review evidence and export",
+      "slug": "cap-003-review-evidence-and-export",
+      "fields": {
+        "actor": "Auditor",
+        "trigger": "Auditor opens an execution record or requests an export for a time range.",
+        "main_flow": "1. Auditor searches for executions by tenant, user, policy, action type, and time range.\n2. Auditor opens an execution record to view the request, decision, and outcome.\n3. Auditor requests an export of selected records.\n4. The platform produces an export artifact and records the export event as evidence.",
+        "postconditions": "- Evidence is viewable as a complete chain: request, decision, execution, outcome.\n- An export artifact is produced and tied to the requestor identity.\n- Export events are recorded as evidence.",
+        "domain_entities": "- Evidence Record\n- Export Request\n- Export Artifact\n\n---"
+      },
+      "raw_body": "#### Actor\n\nAuditor\n\n#### Trigger\n\nAuditor opens an execution record or requests an export for a time range.\n\n#### Main Flow\n\n1. Auditor searches for executions by tenant, user, policy, action type, and time range.\n2. Auditor opens an execution record to view the request, decision, and outcome.\n3. Auditor requests an export of selected records.\n4. The platform produces an export artifact and records the export event as evidence.\n\n#### Postconditions\n\n- Evidence is viewable as a complete chain: request, decision, execution, outcome.\n- An export artifact is produced and tied to the requestor identity.\n- Export events are recorded as evidence.\n\n#### Domain Entities\n\n- Evidence Record\n- Export Request\n- Export Artifact\n\n---"
+    },
+    {
+      "capability_id": "CAP-004",
+      "capability_name": "Tenant administration and data lifecycle",
+      "slug": "cap-004-tenant-administration-and-data-lifecycle",
+      "fields": {
+        "actor": "Tenant Admin",
+        "trigger": "Tenant Admin updates tenant settings, retention rules, or requests tenant-scoped deletion.",
+        "main_flow": "1. Tenant Admin creates or updates tenant settings.\n2. Tenant Admin sets retention rules for evidence and execution records.\n3. Tenant Admin requests deletion for tenant-scoped data.\n4. The platform performs deletion and records what was deleted and when.\n5. Tenant Admin can request a tenant-scoped backup export.",
+        "postconditions": "- Tenant configuration changes have an audit trail.\n- Retention rules are enforced for tenant-scoped records.\n- Deletions are recorded as evidence.\n- Backup export is tenant-scoped.",
+        "domain_entities": "- Tenant\n- Tenant Setting\n- Retention Rule\n- Deletion Request\n- Backup Export\n\n---"
+      },
+      "raw_body": "#### Actor\n\nTenant Admin\n\n#### Trigger\n\nTenant Admin updates tenant settings, retention rules, or requests tenant-scoped deletion.\n\n#### Main Flow\n\n1. Tenant Admin creates or updates tenant settings.\n2. Tenant Admin sets retention rules for evidence and execution records.\n3. Tenant Admin requests deletion for tenant-scoped data.\n4. The platform performs deletion and records what was deleted and when.\n5. Tenant Admin can request a tenant-scoped backup export.\n\n#### Postconditions\n\n- Tenant configuration changes have an audit trail.\n- Retention rules are enforced for tenant-scoped records.\n- Deletions are recorded as evidence.\n- Backup export is tenant-scoped.\n\n#### Domain Entities\n\n- Tenant\n- Tenant Setting\n- Retention Rule\n- Deletion Request\n- Backup Export\n\n---"
+    }
+  ],
+  "source_prd_path": "reference_architectures/codex-saas/product/PLATFORM_PRD.md"
+}

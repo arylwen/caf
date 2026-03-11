@@ -1,16 +1,27 @@
-# CAF_TRACE: generated_by=Contura Architecture Framework (CAF) | task_id=TG-40-persistence-widget | capability=persistence_implementation | instance=codex-saas | trace_anchor=pattern_obligation_id:OBL-AP-RESOURCE-WIDGET-PERSISTENCE
-import os
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF); task_id=TG-40-persistence-workspaces; capability=persistence_implementation; instance=codex-saas; trace_anchor=pattern_obligation_id:OBL-PERSISTENCE-workspaces
+from __future__ import annotations
 
-from .in_memory_widget_repository import InMemoryWidgetRepository
-from .postgres_widget_repository import PostgresWidgetRepository
-from .repository_protocol import WidgetRepository
+from ..application.ports.resource_access_interfaces import (
+    ReportsAccessInterface,
+    SubmissionsAccessInterface,
+    WorkspacesAccessInterface,
+)
+from .postgres_adapter import require_postgres_database_url
+from .postgres_reports_repository import PostgresReportsRepository
+from .postgres_submissions_repository import PostgresSubmissionsRepository
+from .postgres_workspaces_repository import PostgresWorkspacesRepository
 
-_memory_repo = InMemoryWidgetRepository()
+
+def build_reports_repository() -> ReportsAccessInterface:
+    require_postgres_database_url()
+    return PostgresReportsRepository()
 
 
-def get_widget_repository() -> WidgetRepository:
-    database_url = os.getenv("DATABASE_URL", "").lower()
-    if database_url.startswith("postgresql://") or database_url.startswith("postgres://"):
-        return PostgresWidgetRepository()
-    return _memory_repo
+def build_submissions_repository() -> SubmissionsAccessInterface:
+    require_postgres_database_url()
+    return PostgresSubmissionsRepository()
 
+
+def build_workspaces_repository() -> WorkspacesAccessInterface:
+    require_postgres_database_url()
+    return PostgresWorkspacesRepository()

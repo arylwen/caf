@@ -1,0 +1,210 @@
+{
+  "schema_version": "architecture_shape_parameters_proposed_rationale_v1",
+  "source_prd_path": "reference_architectures/codex-saas/product/PLATFORM_PRD.resolved.md",
+  "template_instances": [
+    {
+      "template_id": "CP",
+      "template_version": "v1",
+      "pins": {
+        "CP-1": {
+          "selected_value": "Declarative + Evaluative",
+          "confidence": 0.93,
+          "rationale": "The platform maintains centrally managed policy artifacts and evaluates each request before any execution.",
+          "evidence": ["PRD:SEC:scope", "PRD:CAP:CAP-002:main_flow"]
+        },
+        "CP-2": {
+          "selected_value": "Authoritative Lifecycle Owner",
+          "confidence": 0.92,
+          "rationale": "Policy lifecycle ownership and status transitions are explicitly controlled within the platform.",
+          "evidence": ["PRD:CAP:CAP-001:postconditions"]
+        },
+        "CP-3": {
+          "selected_value": "Human, Service, and Agent Identity Governance",
+          "confidence": 0.9,
+          "rationale": "The PRD requires requestor identity resolution plus controlled worker identity execution and tenant admin controls.",
+          "evidence": ["PRD:CAP:CAP-002:main_flow", "PRD:CAP:CAP-004:postconditions"]
+        },
+        "CP-4": {
+          "selected_value": "Centralized Policy Authoring",
+          "confidence": 0.96,
+          "rationale": "Policy authoring, review, approval, and activation are modeled as centralized lifecycle operations.",
+          "evidence": ["PRD:CAP:CAP-001:main_flow"]
+        },
+        "CP-5": {
+          "selected_value": "Centralized Safety Gate Orchestration",
+          "confidence": 0.91,
+          "rationale": "Every run request is evaluated against active policy before side effects and then routed through controlled execution.",
+          "evidence": ["PRD:CAP:CAP-002:main_flow"]
+        },
+        "CP-6": {
+          "selected_value": "Unified Governance Integration",
+          "confidence": 0.89,
+          "rationale": "Governance requirements span policy, execution controls, evidence, retention, and deletion under one platform posture.",
+          "evidence": ["PRD:SEC:constraints", "PRD:CAP:CAP-004:postconditions"]
+        }
+      }
+    },
+    {
+      "template_id": "AP",
+      "template_version": "v1",
+      "pins": {
+        "AP-1": {
+          "selected_value": "Ingress-Bound Context",
+          "confidence": 0.88,
+          "rationale": "Execution starts from a submitted run request that defines the action context.",
+          "evidence": ["PRD:CAP:CAP-002:trigger"]
+        },
+        "AP-2": {
+          "selected_value": "Inline Enforcement",
+          "confidence": 0.9,
+          "rationale": "Policy evaluation and permission resolution are applied during request handling before execution.",
+          "evidence": ["PRD:CAP:CAP-002:main_flow"]
+        },
+        "AP-3": {
+          "selected_value": "Pre-Execution Evaluation",
+          "confidence": 0.98,
+          "rationale": "The PRD explicitly requires evaluation before execution for all requests.",
+          "evidence": ["PRD:SEC:constraints"]
+        },
+        "AP-4": {
+          "selected_value": "Pre-Invocation Safety Gates",
+          "confidence": 0.9,
+          "rationale": "Denied requests are blocked with reasons and only allowed requests proceed to invocation.",
+          "evidence": ["PRD:CAP:CAP-002:main_flow"]
+        },
+        "AP-5": {
+          "selected_value": "Agent Invocation Only",
+          "confidence": 0.95,
+          "rationale": "Actions must execute only through the platform-owned automation worker identity.",
+          "evidence": ["PRD:SEC:constraints", "PRD:CAP:CAP-002:postconditions"]
+        },
+        "AP-6": {
+          "selected_value": "Synchronous Emission",
+          "confidence": 0.87,
+          "rationale": "Request handling returns a synchronous response and records decision and outcome in-line.",
+          "evidence": ["PRD:CAP:CAP-002:main_flow", "PRD:CAP:CAP-002:postconditions"]
+        }
+      }
+    },
+    {
+      "template_id": "DP",
+      "template_version": "v1",
+      "pins": {
+        "DP-1": {
+          "selected_value": "Logical Isolation (Enforced)",
+          "confidence": 0.92,
+          "rationale": "Tenant separation is a hard platform requirement across runtime and data behavior.",
+          "evidence": ["PRD:SEC:scope", "PRD:SEC:constraints"]
+        },
+        "DP-2": {
+          "selected_value": "Data-Access-Layer Enforcement",
+          "confidence": 0.93,
+          "rationale": "The PRD directly requires tenant separation in the data access layer.",
+          "evidence": ["PRD:SEC:constraints"]
+        },
+        "DP-3": {
+          "selected_value": "Access + Retention + Lineage Enforcement",
+          "confidence": 0.9,
+          "rationale": "The platform enforces access decisions while tenant admin controls retention and deletion with evidence lineage.",
+          "evidence": ["PRD:CAP:CAP-004:main_flow", "PRD:CAP:CAP-004:postconditions"]
+        },
+        "DP-4": {
+          "selected_value": "Data Plane Hosts Inputs/Outputs Only",
+          "confidence": 0.78,
+          "rationale": "Operational records focus on request, decision, execution, and outcomes as governed payloads and evidence.",
+          "evidence": ["PRD:CAP:CAP-002:postconditions"]
+        },
+        "DP-5": {
+          "selected_value": "Inline Evidence Emission",
+          "confidence": 0.9,
+          "rationale": "Evidence is required to be immediate and complete for review and export.",
+          "evidence": ["PRD:CAP:CAP-003:postconditions"]
+        }
+      }
+    },
+    {
+      "template_id": "AI",
+      "template_version": "v1",
+      "pins": {
+        "AI-1": {
+          "selected_value": "Single-Principal Agent Identity",
+          "confidence": 0.95,
+          "rationale": "Execution is constrained to a platform-owned automation worker identity.",
+          "evidence": ["PRD:SEC:constraints", "PRD:CAP:CAP-002:postconditions"]
+        },
+        "AI-2": {
+          "selected_value": "Policy-Derived Authority",
+          "confidence": 0.94,
+          "rationale": "Allowed actions derive from active policy lifecycle decisions and run-time policy evaluation.",
+          "evidence": ["PRD:CAP:CAP-001:postconditions", "PRD:CAP:CAP-002:main_flow"]
+        },
+        "AI-3": {
+          "selected_value": "Pre-Invocation Evaluation Only",
+          "confidence": 0.97,
+          "rationale": "The platform requires deterministic policy evaluation before any invocation side effects.",
+          "evidence": ["PRD:SEC:constraints"]
+        },
+        "AI-4": {
+          "selected_value": "Session-Scoped Context Only",
+          "confidence": 0.71,
+          "rationale": "Request handling resolves tenant, roles, and permissions per submitted run request context.",
+          "evidence": ["PRD:CAP:CAP-002:main_flow"]
+        },
+        "AI-5": {
+          "selected_value": "Pre-Action Safety Gates",
+          "confidence": 0.9,
+          "rationale": "The control flow blocks denied requests and allows execution only after policy checks pass.",
+          "evidence": ["PRD:CAP:CAP-002:main_flow", "PRD:SEC:constraints"]
+        },
+        "AI-6": {
+          "selected_value": "Synchronous Evidence Emission",
+          "confidence": 0.88,
+          "rationale": "Decision and outcome evidence is produced immediately and exposed for audit workflows.",
+          "evidence": ["PRD:CAP:CAP-002:postconditions", "PRD:CAP:CAP-003:postconditions"]
+        }
+      }
+    },
+    {
+      "template_id": "ST",
+      "template_version": "v1",
+      "pins": {
+        "ST-1": {
+          "selected_value": "Shared Storage with Logical Isolation",
+          "confidence": 0.93,
+          "rationale": "The assumptions explicitly accept shared storage when tenant separation is enforced.",
+          "evidence": ["PRD:SEC:scope"]
+        },
+        "ST-2": {
+          "selected_value": "Tenant-Keyed Primary Addressing",
+          "confidence": 0.9,
+          "rationale": "Tenant key requirements in constraints imply tenant-keyed primary addressing.",
+          "evidence": ["PRD:SEC:constraints"]
+        },
+        "ST-3": {
+          "selected_value": "Tenant-Partitioned Placement",
+          "confidence": 0.86,
+          "rationale": "Tenant separation and tenant-scoped lifecycle operations require partitioned placement boundaries.",
+          "evidence": ["PRD:SEC:constraints", "PRD:CAP:CAP-004:trigger"]
+        },
+        "ST-4": {
+          "selected_value": "Retention + Hard Deletion",
+          "confidence": 0.96,
+          "rationale": "Tenant admin sets retention rules and requests deletion, with recorded completion evidence.",
+          "evidence": ["PRD:CAP:CAP-004:main_flow", "PRD:CAP:CAP-004:postconditions"]
+        },
+        "ST-5": {
+          "selected_value": "Tenant-Scoped Backup and Restore",
+          "confidence": 0.91,
+          "rationale": "The platform supports tenant-scoped backup export under tenant administration controls.",
+          "evidence": ["PRD:CAP:CAP-004:postconditions"]
+        },
+        "ST-6": {
+          "selected_value": "Inline Evidence Emission",
+          "confidence": 0.89,
+          "rationale": "Evidence and export events are generated as part of the execution and audit flow.",
+          "evidence": ["PRD:CAP:CAP-003:postconditions"]
+        }
+      }
+    }
+  ]
+}

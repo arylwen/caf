@@ -1,32 +1,38 @@
-# CAF_TRACE: generated_by=Contura Architecture Framework (CAF) | task_id=TG-TBP-TBP-PG-01-postgres_persistence_wiring | capability=postgres_persistence_wiring | instance=codex-saas | trace_anchor=pattern_obligation_id:O-TBP-PG-01-app-adapter-hook
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF); task_id=TG-TBP-TBP-PG-01-postgres_persistence_wiring; capability=postgres_persistence_wiring; instance=codex-saas; trace_anchor=pattern_obligation_id:O-TBP-PG-01-app-adapter-hook
+from __future__ import annotations
+
 import os
-
-import psycopg
-
-
-def resolve_database_url() -> str:
-    value = os.getenv("DATABASE_URL", "")
-    if value:
-        return value
-    user = os.getenv("POSTGRES_USER", "codex")
-    password = os.getenv("POSTGRES_PASSWORD", "codex")
-    host = os.getenv("POSTGRES_HOST", "postgres")
-    port = os.getenv("POSTGRES_PORT", "5432")
-    database = os.getenv("POSTGRES_DB", "codex")
-    return f"postgresql://{user}:{password}@{host}:{port}/{database}"
+from urllib.parse import urlparse
 
 
-def execute(statement: str, params: tuple = ()) -> None:
-    with psycopg.connect(resolve_database_url()) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(statement, params)
-        conn.commit()
+def require_postgres_database_url() -> str:
+    database_url = os.environ.get("DATABASE_URL", "").strip()
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is required for postgres persistence")
+    parsed = urlparse(database_url)
+    if parsed.scheme not in {"postgres", "postgresql"}:
+        raise RuntimeError("DATABASE_URL scheme must be postgres:// or postgresql://")
+    return database_url
 
 
-def query(statement: str, params: tuple = ()) -> list[dict]:
-    with psycopg.connect(resolve_database_url()) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(statement, params)
-            columns = [item.name for item in cursor.description] if cursor.description else []
-            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+def get_connection():
+    database_url = require_postgres_database_url()
+    try:
+        import psycopg
+    except ImportError as exc:
+        raise RuntimeError("psycopg is required to use postgres persistence") from exc
+    return psycopg.connect(database_url)
 
+
+def get_pool():
+    database_url = require_postgres_database_url()
+    try:
+        from psycopg_pool import ConnectionPool
+    except ImportError as exc:
+        raise RuntimeError("psycopg_pool is required to create a postgres connection pool") from exc
+    return ConnectionPool(conninfo=database_url)
+
+
+def connect():
+    # Backward-compatible adapter alias for repositories already calling connect().
+    return get_connection()

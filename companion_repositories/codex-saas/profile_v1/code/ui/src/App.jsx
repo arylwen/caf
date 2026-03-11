@@ -1,64 +1,74 @@
-// CAF_TRACE: generated_by=Contura Architecture Framework (CAF) | task_id=TG-15-ui-shell | capability=ui_frontend_scaffolding | instance=codex-saas | trace_anchor=pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-source
-import { useEffect, useState } from "react";
+// CAF_TRACE: generated_by=Contura Architecture Framework (CAF); task_id=TG-15-ui-shell; capability=ui_frontend_scaffolding; instance=codex-saas; trace_anchor=pattern_obligation_id:OBL-UI-SHELL
+import { useMemo, useState } from "react";
 
-import { createWidget, listWidgets } from "./api.js";
+import PolicyAdminPage from "./pages/policy_admin.jsx";
+import ReportsPage from "./pages/reports.jsx";
+import SubmissionsPage from "./pages/submissions.jsx";
+import WorkspacesPage from "./pages/workspaces.jsx";
 
-const EMPTY_FORM = { name: "", description: "", content: "" };
+const NAV_ITEMS = [
+  { key: "dashboard", label: "Dashboard" },
+  { key: "policy-admin", label: "Policy Admin" },
+  { key: "workspaces", label: "Workspaces" },
+  { key: "submissions", label: "Submissions" },
+  { key: "reports", label: "Reports" },
+];
+
+function RouteContent({ routeKey, tenantId, principalId }) {
+  const context = useMemo(() => ({ tenantId, principalId }), [tenantId, principalId]);
+  if (routeKey === "policy-admin") {
+    return <PolicyAdminPage tenantId={context.tenantId} principalId={context.principalId} />;
+  }
+  if (routeKey === "workspaces") {
+    return <WorkspacesPage tenantId={context.tenantId} principalId={context.principalId} />;
+  }
+  if (routeKey === "submissions") {
+    return <SubmissionsPage tenantId={context.tenantId} principalId={context.principalId} />;
+  }
+  if (routeKey === "reports") {
+    return <ReportsPage tenantId={context.tenantId} principalId={context.principalId} />;
+  }
+  return (
+    <p>
+      Dashboard scaffold for tenant operators. Use navigation to access policy, workspace, submission, and report
+      pages.
+    </p>
+  );
+}
 
 export default function App() {
-  const [widgets, setWidgets] = useState([]);
-  const [form, setForm] = useState(EMPTY_FORM);
-
-  useEffect(() => {
-    listWidgets().then(setWidgets);
-  }, []);
-
-  async function onCreate(event) {
-    event.preventDefault();
-    const created = await createWidget(form);
-    setWidgets((current) => [...current, created]);
-    setForm(EMPTY_FORM);
-  }
+  const [routeKey, setRouteKey] = useState("dashboard");
+  const [tenantId] = useState("tenant-demo");
+  const [principalId] = useState("principal-demo");
 
   return (
-    <main style={{ margin: "2rem auto", maxWidth: "64rem", fontFamily: "system-ui" }}>
-      <h1>Widget Console</h1>
-      <p>React SPA shell for local candidate execution.</p>
-      <section>
-        <h2>Create Widget</h2>
-        <form onSubmit={onCreate} style={{ display: "grid", gap: "0.75rem", maxWidth: "32rem" }}>
-          <input
-            required
-            placeholder="Name"
-            value={form.name}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-          />
-          <input
-            required
-            placeholder="Description"
-            value={form.description}
-            onChange={(event) => setForm({ ...form, description: event.target.value })}
-          />
-          <textarea
-            required
-            placeholder="Content"
-            value={form.content}
-            onChange={(event) => setForm({ ...form, content: event.target.value })}
-          />
-          <button type="submit">Create</button>
-        </form>
-      </section>
-      <section>
-        <h2>Widgets</h2>
-        <ul>
-          {widgets.map((widget) => (
-            <li key={widget.id}>
-              <strong>{widget.name}</strong> - {widget.description}
-            </li>
-          ))}
-        </ul>
+    <main style={{ fontFamily: "system-ui, sans-serif", margin: "2rem auto", maxWidth: "960px" }}>
+      <h1>codex-saas UI shell</h1>
+      <p>
+        Minimal SPA scaffold aligned to web_spa/react pins. Navigation and API seams are staged for
+        downstream page tasks.
+      </p>
+      <nav style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        {NAV_ITEMS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => setRouteKey(item.key)}
+            style={{
+              border: routeKey === item.key ? "2px solid #0f172a" : "1px solid #64748b",
+              borderRadius: "999px",
+              padding: "0.4rem 0.8rem",
+              background: routeKey === item.key ? "#e2e8f0" : "#f8fafc",
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <section style={{ marginTop: "1rem" }}>
+        <h2>{NAV_ITEMS.find((item) => item.key === routeKey)?.label}</h2>
+        <RouteContent routeKey={routeKey} tenantId={tenantId} principalId={principalId} />
       </section>
     </main>
   );
 }
-

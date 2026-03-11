@@ -29,6 +29,8 @@ lifecycle:
     - "bypass_refusal_conditions"
     - "write_outside_allowed_paths"
     - "alter_security_or_safety_posture_without_explicit_choice"
+architecture:
+  architecture_style: "clean_architecture"
 platform:
   infra_target: "local"
   packaging: "docker_compose"
@@ -62,10 +64,11 @@ database:
 ui:
   present: true
   kind: "web_spa"
-  framework_preference: "react"
+  framework: "react"
   deployment_preference: "separate_ui_service"
 deployment:
   mode: "docker_compose"
+  stack_name: "codex-saas"
 planes:
   cp:
     runtime_shape: "api_service_http"
@@ -79,14 +82,19 @@ meta:
   notes: "Initialized by caf-saas-init."
   derived_by: "tools/caf/guardrails_v1.mjs"
   derived_policy_id: "PM-default-implementation_scaffolding"
-  derived_at: "2026-03-06T02:39:56.334Z"
+  derived_at: "2026-03-11T20:41:43.753Z"
   derived_from_pins:
     evolution_stage: "stage_0_local_prototype"
     generation_phase: "implementation_scaffolding"
+    architecture_style: "clean_architecture"
     infra_target: "local"
     packaging: "docker_compose"
     runtime_language: "python"
     database_engine: "postgres"
     schema_management_strategy: "code_bootstrap"
+    ui_present: true
+    ui_kind: "web_spa"
+    ui_framework: "react"
+    ui_deployment_preference: "separate_ui_service"
   derived_plane_runtime_shapes:
     source: "architect_choice"

@@ -5,222 +5,257 @@
 
 ### Multi-tenancy
 
-- Required: yes; AP requests must carry tenant context resolved at ingress.
-- Tenant isolation: enforce tenant-scoped access checks inline before agent invocation and data operations.
-- Required identity attribute: principal identity plus tenant membership must be present for authorization decisions.
+- Required: Application requests must carry tenant context resolved at ingress and cannot proceed when tenant context is missing.
+- Tenant isolation: Application reads/writes must remain tenant-scoped and use fail-closed enforcement across API and persistence boundaries.
+- Required identity attribute: Every action must be attributable to a single execution principal bound to tenant context.
 
 ### Identity (core)
 
-- Required: yes; execution is bound to a single principal identity per session.
+- Required: Authorization must be policy-derived and enforced inline before protected operations and before agent/tool invocation.
 - Notes: AuthN/Z mechanism is intentionally unspecified at this stage unless pinned elsewhere.
+
+### Execution and evidence
+
+- Agent execution is invocation-only in the app plane and must run behind pre-invocation safety gates.
+- Evidence for execution outcomes and governance-relevant actions must be emitted synchronously.
+
+### Runtime shape constraints
+
+- App-plane runtime shape is pinned to `api_service_http`.
+- Design artifacts must stay compatible with local `docker_compose` orchestration for this phase.
 <!-- CAF_MANAGED_BLOCK: intent_derived_app_plane_constraints_v1 END -->
 
-<!-- ARCHITECT_EDIT_BLOCK: ui_requirements_v1 START -->
-## User interface requirements (architect-edit; marketing-default)
+<!-- ARCHITECT_EDIT_BLOCK: ui_product_surface_v1 START -->
+## User interface product surface (architect-edit)
 
-(YAML. This section is used to ground UI-driven pattern candidates such as BFF/API composition.)
+Use this section to describe the **product-facing experience**, not implementation details.
+Write down what a human user should be able to do and what screens or flows need to exist.
 
-```yaml
-ui:
-  present: true
-  kind: web_spa
-  framework_preference: react
-  deployment_preference: separate_ui_service  # options: separate_ui_service | served_by_application_plane
-  notes: "Marketing demo default: include a React SPA UI."
-```
-<!-- ARCHITECT_EDIT_BLOCK: ui_requirements_v1 END -->
+How to use this block:
+
+1. Keep the language product-facing.
+2. Describe actors, journeys, and screens.
+3. Avoid framework/runtime choices here; those belong in `spec/guardrails/profile_parameters.yaml`.
+4. It is acceptable to keep the starter example below for a first CAF run and then refine it later.
+
+Starter example (replace or adapt):
+
+- The product includes a browser-based UI for tenant operators and reviewers.
+- The primary navigation includes: Dashboard, Workspaces, Submissions, Review Queue, Reports, and Settings.
+- A user can create a workspace, submit an item for review, inspect the review result, and export a report.
+- Operators can filter work by tenant, status, owner, and date range.
+- Keep the UX lightweight for local/demo runs: straightforward forms, list/detail pages, and clear status labels are enough.
+- The UI does not need rich collaboration features in the first iteration; correctness and visible end-to-end flow matter more than polish.
+<!-- ARCHITECT_EDIT_BLOCK: ui_product_surface_v1 END -->
 
 <!-- CAF_MANAGED_BLOCK: caf_decision_pattern_candidates_v1 START -->
 
-### H-1: CAF-PLANE-01 - Tri-Plane Separation (Control/Application/Data) (confidence: high)
+### H-1: CAF-TCTX-01 - Tenant Context Propagation (Normative) (confidence: high)
+- **Plane:** both
+- **Rationale:** Preserve immutable tenant context from ingress through cross-plane interactions.
+- **Evidence:**
+- E1 [pattern_definition] Canonical pattern definition for tenant context propagation. cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-TCTX-01.yaml
+- E2 [pinned_input] pin_ref: AP-1=Ingress-Bound Context; pin_ref: AI-4=Session-Scoped Context Only. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### H-2: CAF-MTEN-01 - Multi-Tenancy as First-Class Architectural Concern (confidence: high)
+- **Plane:** both
+- **Rationale:** Keep tenant isolation and tenant-scoped addressing explicit in CP/AP/DP design.
+- **Evidence:**
+- E1 [pattern_definition] Canonical multi-tenancy pattern definition. cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-01.yaml
+- E2 [pinned_input] pin_ref: DP-1=Logical Isolation (Enforced); pin_ref: ST-2=Tenant-Keyed Primary Addressing. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### H-3: CAF-IAM-01 - Identity Principal Taxonomy (Platform/Tenant/Service/Agent) (confidence: high)
+- **Plane:** control
+- **Rationale:** Control-plane governance needs explicit principal classes and tenant-bound authority.
+- **Evidence:**
+- E1 [pattern_definition] Canonical identity taxonomy pattern definition. cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-01.yaml
+- E2 [pinned_input] pin_ref: CP-3=Human, Service, and Agent Identity Governance; pin_ref: AI-1=Single-Principal Agent Identity. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### H-4: CAF-POL-01 - Policy as a First-Class System Artifact (confidence: high)
+- **Plane:** control
+- **Rationale:** Policy authoring, versioning, and evaluation are control-plane responsibilities in this instance.
+- **Evidence:**
+- E1 [pattern_definition] Canonical policy artifact pattern definition. cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-01.yaml
+- E2 [pinned_input] pin_ref: CP-1=Declarative + Evaluative; pin_ref: CP-4=Centralized Policy Authoring. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### H-5: CAF-PLANE-01 - Tri-Plane Separation (Control/Application/Data) (confidence: high)
+- **Plane:** both
+- **Rationale:** The instance posture requires explicit CP/AP/DP boundaries and responsibilities.
+- **Evidence:**
+- E1 [pattern_definition] Canonical tri-plane separation definition. cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-PLANE-01.yaml
+- E2 [pinned_input] pin_ref: CP-6=Unified Governance Integration; pin_ref: DP-4=Data Plane Hosts Inputs/Outputs Only. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### H-6: CAF-XPLANE-01 - Allowed Cross-Plane Interaction Patterns (confidence: high)
+- **Plane:** both
+- **Rationale:** Cross-plane calls must remain constrained and auditable for policy-governed execution.
+- **Evidence:**
+- E1 [pattern_definition] Canonical cross-plane interaction pattern definition. cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-XPLANE-01.yaml
+- E2 [pinned_input] pin_ref: AI-6=Synchronous Evidence Emission; pin_ref: AP-6=Synchronous Emission. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### M-7: CTX-01 - Request Context and Propagation (confidence: medium)
+- **Plane:** both
+- **Rationale:** Request-scoped tenant and identity context must flow consistently across boundaries.
+- **Evidence:**
+- E1 [pattern_definition] Core request context propagation definition. cite: architecture_library/patterns/core_v1/definitions_v1/CTX-01.yaml
+- E2 [pinned_input] pin_ref: AP-1=Ingress-Bound Context; pin_ref: AI-2=Policy-Derived Authority. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### M-8: PST-01 - Persistence Boundary via Repositories (confidence: medium)
+- **Plane:** application
+- **Rationale:** Application persistence should stay behind repository boundaries for tenant-safe data access.
+- **Evidence:**
+- E1 [pattern_definition] Core persistence boundary definition. cite: architecture_library/patterns/core_v1/definitions_v1/PST-01.yaml
+- E2 [pinned_input] pin_ref: DP-2=Data-Access-Layer Enforcement; pin_ref: ST-3=Tenant-Partitioned Placement. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### M-9: EXT-API_GATEWAY - API Gateway (confidence: medium)
+- **Plane:** control
+- **Rationale:** External ingress policy enforcement and routing for CP->AP traffic need a stable edge boundary.
+- **Evidence:**
+- E1 [pattern_definition] External API gateway pattern definition. cite: architecture_library/patterns/external_v1/definitions_v1/ext-api_gateway.yaml
+- E2 [pinned_input] pin_ref: AP-2=Inline Enforcement; pin_ref: CP-4=Centralized Policy Authoring. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### M-10: EXT-BACKEND_FOR_FRONTEND_BFF - Backend-for-Frontend (BFF) (confidence: medium)
+- **Plane:** application
+- **Rationale:** The pinned React SPA surface benefits from an application-plane facade tuned for UI workflows.
+- **Evidence:**
+- E1 [pattern_definition] External BFF pattern definition. cite: architecture_library/patterns/external_v1/definitions_v1/ext-backend_for_frontend_bff.yaml
+- E2 [pinned_input] pin_ref: AP-5=Agent Invocation Only; pin_ref: AP-6=Synchronous Emission. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### M-11: EXT-ANTI_CORRUPTION_LAYER - Anti-Corruption Layer (confidence: medium)
+- **Plane:** both
+- **Rationale:** Graph expansion suggests adapter isolation where cross-boundary models can drift.
+- **Evidence:**
+- E1 [pattern_definition] External anti-corruption layer definition. cite: architecture_library/patterns/external_v1/definitions_v1/ext-anti_corruption_layer.yaml
+- E2 [derived_rails_or_posture] generation_phase=implementation_scaffolding and refusal_posture=fail_closed favor explicit adapter seams. cite: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+
+### M-12: EXT-API_COMPOSITION_AGGREGATOR - API Composition / Aggregator (confidence: medium)
+- **Plane:** application
+- **Rationale:** Graph expansion adds a composition option for SPA-facing read models without coupling core domain boundaries.
+- **Evidence:**
+- E1 [pattern_definition] External API composition pattern definition. cite: architecture_library/patterns/external_v1/definitions_v1/ext-api_composition_aggregator.yaml
+- E2 [derived_rails_or_posture] ui.present=true and ui.kind=web_spa support composition endpoints in application design. cite: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+
+### M-13: EXT-AUDITABILITY - Auditability (confidence: medium)
+- **Plane:** both
+- **Rationale:** Graph expansion aligns with required synchronous evidence trails across governed actions.
+- **Evidence:**
+- E1 [pattern_definition] External auditability pattern definition. cite: architecture_library/patterns/external_v1/definitions_v1/ext-auditability.yaml
+- E2 [pinned_input] pin_ref: AI-6=Synchronous Evidence Emission; pin_ref: DP-5=Inline Evidence Emission. cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+
+### M-14: EXT-BULKHEAD_ISOLATION - Bulkhead Isolation (confidence: medium)
+- **Plane:** both
+- **Rationale:** Graph expansion indicates isolation boundaries to contain failures in cross-service interactions.
+- **Evidence:**
+- E1 [pattern_definition] External bulkhead isolation definition. cite: architecture_library/patterns/external_v1/definitions_v1/ext-bulkhead_isolation.yaml
+- E2 [derived_rails_or_posture] fail_closed posture and api_service_http runtime shape justify explicit failure-containment seams. cite: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+
+### H-15: CAF-AI-01  -  AI Safety and Governance Separation Across Planes (confidence: high)
 **Plane:** both
 **Evidence:**
-- E1 [pinned_input] CP and AP are both pinned to api_service_http while DP responsibilities remain distinct (pin_ref: CP-6=Unified Governance Integration; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] DP is pinned to host inputs/outputs while AP is pinned to agent invocation responsibilities (pin_ref: DP-4=Data Plane Hosts Inputs/Outputs Only; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [derived_rails_or_posture] Generation phase remains implementation_scaffolding with no architecture-shape mutation allowed (rail_ref: lifecycle.generation_phase=implementation_scaffolding; cite: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml)
-**Rationale:** The active pins enforce explicit separation of CP/AP/DP ownership.
+- E1 [pinned_input] Safety gate orchestration is centrally governed by control plane. (pin_ref: CP-5=Centralized Safety Gate Orchestration; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E2 [pinned_input] App plane must run pre-invocation safety checks before AI execution. (pin_ref: AP-4=Pre-Invocation Safety Gates; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E3 [pinned_input] Agent execution is invocation-only and pre-action gated. (pin_ref: AP-5=Agent Invocation Only; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E4 [pinned_input] Tool invocation requires pre-invocation evaluation and pre-action safety gates. (pin_ref: AI-3=Pre-Invocation Evaluation Only; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E5 [pinned_input] Safety gates must run before side-effect actions. (pin_ref: AI-5=Pre-Action Safety Gates; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E6 [pattern_definition] CAF AI separation pattern defines governance-vs-execution boundary responsibilities. (ref: none; cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-AI-01.yaml)
+**Rationale:** The pinned model separates AI governance control from application invocation behavior. This pattern preserves that separation and prevents implicit bypasses.
+**Implications:**
+- Separate safety-gate definition lifecycle (CP) from invocation enforcement (AP).
+- Add explicit gate outcome artifacts to execution traces.
+**Open questions:**
+- None.
 
-### H-2: CAF-TCTX-01 - Tenant Context Propagation (Normative) (confidence: high)
+### M-16: CAF-COMP-01  -  Evidence Generation & Traceability (confidence: medium)
 **Plane:** both
 **Evidence:**
-- E1 [pinned_input] Tenant context is established at ingress and immutable through AP execution (pin_ref: AP-1=Ingress-Bound Context; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] Agent context is constrained to session-scoped retrieval and tenant-scoped data (pin_ref: AI-4=Session-Scoped Context Only; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [pinned_input] Data access must enforce tenant scope at the access boundary (pin_ref: DP-2=Data-Access-Layer Enforcement; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Tenant context propagation is mandatory across AP, AI, and DP boundaries.
+- E1 [pinned_input] Application execution emits synchronous evidence. (pin_ref: AP-6=Synchronous Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E2 [pinned_input] Data and storage paths require inline evidence and lineage/retention governance. (pin_ref: DP-3=Access + Retention + Lineage Enforcement; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E3 [pinned_input] Data-plane and storage operations emit inline evidence. (pin_ref: DP-5=Inline Evidence Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E4 [pinned_input] Storage lifecycle includes hard deletion and evidence on lifecycle events. (pin_ref: ST-4=Retention + Hard Deletion; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E5 [pattern_definition] Evidence pattern aligns with cross-plane traceability obligations. (ref: none; cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-COMP-01.yaml)
+**Rationale:** Multiple pins require evidence as a normal operational artifact, not an afterthought. This pattern keeps auditability and traceability consistent across planes.
+**Implications:**
+- Add evidence event taxonomy and required fields to design backlog.
+- Tie policy/safety outcomes to trace records by correlation IDs.
+**Open questions:**
+- None.
 
-### H-3: CAF-MTEN-01 - Multi-Tenancy as First-Class Architectural Concern (confidence: high)
+### M-17: CAF-AIOBS-01  -  AI Observability Hooks (confidence: medium)
 **Plane:** both
 **Evidence:**
-- E1 [pinned_input] Isolation model is logical and fail-closed for tenant access (pin_ref: DP-1=Logical Isolation (Enforced); cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] Storage is tenant-keyed and tenant-partitioned by default (pin_ref: ST-2=Tenant-Keyed Primary Addressing; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [pinned_input] Storage placement explicitly partitions by tenant identity (pin_ref: ST-3=Tenant-Partitioned Placement; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Multi-tenancy must be explicit in contracts and persistence boundaries.
+- E1 [pinned_input] Agent decisions and tool invocations emit synchronous evidence. (pin_ref: AI-6=Synchronous Evidence Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E2 [pinned_input] Application execution emits inline telemetry/evidence. (pin_ref: AP-6=Synchronous Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E3 [pattern_definition] AI observability hooks pattern defines trace hook points around prompts, retrieval, and actions. (ref: none; cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-AIOBS-01.yaml)
+**Rationale:** Evidence requirements already exist in pins, and AI-specific hook placement is needed to maintain end-to-end auditability. This pattern adds that observability granularity without changing core architecture choices.
+**Implications:**
+- Define hook event points for AI invocation lifecycle.
+- Map AI hook artifacts to governance evidence streams.
+**Open questions:**
+- None.
 
-### H-4: CAF-AI-01 - AI Safety and Governance Separation Across Planes (confidence: high)
-**Plane:** both
-**Evidence:**
-- E1 [pinned_input] Tool invocation requires pre-invocation evaluation and safety gates (pin_ref: AI-3=Pre-Invocation Evaluation Only; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] Safety gate definitions and escalation are centrally orchestrated by CP (pin_ref: CP-5=Centralized Safety Gate Orchestration; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [pinned_input] AP enforces safety checks before invocation at runtime boundaries (pin_ref: AP-4=Pre-Invocation Safety Gates; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Governance and runtime enforcement responsibilities are intentionally split across planes.
-
-### H-5: CAF-IAM-02 - Identity and Context Propagation (confidence: high)
-**Plane:** both
-**Evidence:**
-- E1 [pinned_input] Agent identity is single-principal per execution session (pin_ref: AI-1=Single-Principal Agent Identity; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] Authority is policy-derived from identity and tenant context (pin_ref: AI-2=Policy-Derived Authority; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [pinned_input] CP governs identity lifecycle for human, service, and agent principals (pin_ref: CP-3=Human, Service, and Agent Identity Governance; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Identity and context fields must remain explicit at cross-plane boundaries.
-
-### H-6: POL-01 - Policy Enforcement Boundary (confidence: high)
+### M-18: CAF-IAM-GOV-04  -  Identity Governance Separation for Policy Runtime (confidence: medium)
 **Plane:** control
 **Evidence:**
-- E1 [pinned_input] Policy authoring/versioning is centralized in CP (pin_ref: CP-4=Centralized Policy Authoring; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] AP evaluates policy before execution starts (pin_ref: AP-3=Pre-Execution Evaluation; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [derived_rails_or_posture] Refusal posture is fail_closed and forbids bypassing safety/policy gates (rail_ref: refusal_posture=fail_closed; cite: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml)
-**Rationale:** Policy intent ownership and enforcement points must be explicit and auditable.
+- E1 [pinned_input] Identity governance spans principal lifecycle at control-plane scope. (pin_ref: CP-3=Human, Service, and Agent Identity Governance; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E2 [pinned_input] Runtime authority is policy-derived and tenant-bound. (pin_ref: AI-2=Policy-Derived Authority; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E3 [pattern_definition] Graph-expanded IAM governance pattern refines runtime identity-policy coupling boundaries. (ref: none; cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-GOV-04.yaml)
+**Rationale:** This graph-expanded candidate strengthens identity-to-policy governance links already required by pins. It complements baseline IAM and policy candidates with clearer governance/runtime separation.
+**Implications:**
+- Add explicit identity-governance to policy-binding interface contracts.
+- Separate identity lifecycle admin responsibilities from runtime policy decision flow.
+**Open questions:**
+- None.
 
-### H-7: OBS-01 - Observability Boundary (confidence: high)
-**Plane:** control
-**Evidence:**
-- E1 [pinned_input] AI decisions and actions require synchronous evidence emission (pin_ref: AI-6=Synchronous Evidence Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] AP emits telemetry and evidence inline with execution flow (pin_ref: AP-6=Synchronous Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [pinned_input] DP and storage access events are also synchronously auditable (pin_ref: DP-5=Inline Evidence Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Cross-plane operations require a shared observability envelope and correlation semantics.
-
-### H-8: CAF-XPLANE-01 - Allowed Cross-Plane Interaction Patterns (confidence: high)
+### M-19: CAF-COMP-02  -  Evidence Schema Consistency Across Planes (confidence: medium)
 **Plane:** both
 **Evidence:**
-- E1 [pinned_input] CP governance integration requires controlled interaction contracts into AP and DP surfaces (pin_ref: CP-6=Unified Governance Integration; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] DP is constrained to data responsibilities while AP handles invocation flows (pin_ref: DP-4=Data Plane Hosts Inputs/Outputs Only; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [pinned_input] AP enforces inline authorization for all request/workflow execution (pin_ref: AP-2=Inline Enforcement; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Cross-plane interaction modes must be explicit, bounded, and deny unsupported crossings.
+- E1 [pinned_input] Retention and hard deletion obligations require durable evidence semantics. (pin_ref: ST-4=Retention + Hard Deletion; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E2 [pinned_input] Tenant-scoped backup/restore requires tenant-safe audit surfaces. (pin_ref: ST-5=Tenant-Scoped Backup and Restore; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E3 [pattern_definition] Graph-expanded evidence pattern refines schema consistency for cross-plane traceability. (ref: none; cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-COMP-02.yaml)
+**Rationale:** Existing evidence obligations need consistent schemas to remain queryable and enforceable across lifecycle events. This graph-expanded refinement improves interoperability of evidence artifacts.
+**Implications:**
+- Standardize evidence schema versioning and field naming across planes.
+- Include retention/deletion evidence events in the common schema.
+**Open questions:**
+- None.
 
-### H-9: CTX-01 - Request Context and Propagation (confidence: high)
+### M-20: CAF-COH-02  -  Canonical Term Registry for Cross-Plane Contracts (confidence: medium)
 **Plane:** both
 **Evidence:**
-- E1 [pinned_input] Ingress establishes immutable tenant context for each AP request (pin_ref: AP-1=Ingress-Bound Context; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] CP lifecycle authority requires context carriers that support auditable transitions (pin_ref: CP-2=Authoritative Lifecycle Owner; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [pinned_input] Policy/evaluation model in CP requires stable context metadata across boundaries (pin_ref: CP-1=Declarative + Evaluative; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Request context propagation is foundational for tenancy, policy, and traceability.
+- E1 [pinned_input] Control-plane declarative/evaluative governance relies on stable, shared contract language. (pin_ref: CP-1=Declarative + Evaluative; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E2 [derived_rails_or_posture] Refusal posture is fail-closed, which benefits from unambiguous term definitions in guardrail and evidence flows. (rail_ref: refusal_posture=fail_closed; cite: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml:refusal_posture)
+- E3 [pattern_definition] Graph-expanded coherence pattern strengthens canonical terminology controls. (ref: none; cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-COH-02.yaml)
+**Rationale:** Cross-plane governance and evidence flows become brittle when terms drift. This candidate improves consistency without introducing new technology choices.
+**Implications:**
+- Establish a canonical glossary reference in architecture/design docs.
+- Tie term registry updates to policy/evidence schema reviews.
+**Open questions:**
+- None.
 
-### H-10: VAL-01 - Validation and Error Handling Boundary (confidence: high)
+### M-21: CAF-MTEN-AGOBS-01  -  Tenant-Scoped Auditability for Multi-Tenant Operations (confidence: medium)
 **Plane:** both
 **Evidence:**
-- E1 [pinned_input] AP inline enforcement requires deterministic validation before side effects (pin_ref: AP-2=Inline Enforcement; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] AI invocations require pre-invocation checks and fail-closed rejection behavior (pin_ref: AI-3=Pre-Invocation Evaluation Only; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [derived_rails_or_posture] Placeholder leakage is disallowed under fail_closed guardrails (rail_ref: refusal_posture=fail_closed; cite: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml)
-**Rationale:** Validation and error contracts must be explicit at ingress and cross-plane boundaries.
-
-### M-11: PST-01 - Persistence Boundary via Repositories (confidence: medium)
-**Plane:** application
-**Evidence:**
-- E1 [pinned_input] Tenant scope must be enforced at data access boundaries (pin_ref: DP-2=Data-Access-Layer Enforcement; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] Tenant-keyed addressing is required for persisted objects (pin_ref: ST-2=Tenant-Keyed Primary Addressing; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E3 [derived_rails_or_posture] Runtime pins are Python/FastAPI with Postgres for implementation scaffolding (rail_ref: runtime.framework=fastapi; cite: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml)
-**Rationale:** Repository boundaries isolate persistence concerns while preserving tenant guarantees.
-
-### M-12: CAF-EDGE-01 - Backend-for-Frontend (BFF) / API Composition Boundary (confidence: medium)
-**Plane:** both
-**Evidence:**
-- E1 [spec_excerpt] UI requirements specify `web_spa` with `separate_ui_service`, signaling a dedicated UI-facing boundary (ref: ui_requirements_v1; cite: reference_architectures/codex-saas/spec/playbook/application_spec_v1.md)
-- E2 [pinned_input] AP runtime shape is api_service_http, compatible with API composition at the UI edge (pin_ref: planes.ap.runtime_shape=api_service_http; cite: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml)
-**Rationale:** A BFF/API composition boundary stabilizes UI contracts without changing plane authority.
-
-### M-13: CAF-IAM-01 - Identity Principal Taxonomy (Platform/Tenant/Service/Agent) (confidence: medium)
-**Plane:** control
-**Evidence:**
-- E1 [pinned_input] CP governs identities for human, service, and agent principals (pin_ref: CP-3=Human, Service, and Agent Identity Governance; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] AP authorization depends on explicit principal and tenant membership context (pin_ref: AP-2=Inline Enforcement; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Principal taxonomy should be explicit to keep policy and audit behavior deterministic.
-
-### M-14: CAF-MTEN-ANTI-01 - Multi-Tenant Isolation Anti-Patterns to Avoid (confidence: medium)
-**Plane:** both
-**Evidence:**
-- E1 [pinned_input] Tenant-scoped backup/restore is required and cannot leak cross-tenant state (pin_ref: ST-5=Tenant-Scoped Backup and Restore; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] Retention and hard deletion obligations require tenant-specific lifecycle enforcement (pin_ref: ST-4=Retention + Hard Deletion; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Explicit anti-pattern guidance prevents accidental cross-tenant operations.
-
-### M-15: CAF-MTEN-AGOBS-01 - Multi-Tenant Agent Observability Boundaries (confidence: medium)
-**Plane:** both
-**Evidence:**
-- E1 [pinned_input] AP and AI both require synchronous telemetry/evidence emission (pin_ref: AP-6=Synchronous Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] DP and storage evidence signals must remain tenant-scoped (pin_ref: ST-6=Inline Evidence Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Observability boundaries must enforce tenant-safe audit and correlation behavior.
-
-### M-16: EXT-BACKEND_FOR_FRONTEND_BFF - Backend-for-Frontend (BFF) (confidence: medium)
-**Plane:** application
-**Evidence:**
-- E1 [spec_excerpt] UI signal explicitly calls for a React web SPA with separate UI deployment, which maps to a UI-specific facade pattern (ref: ui_requirements_v1; cite: reference_architectures/codex-saas/spec/playbook/application_spec_v1.md)
-- E2 [pinned_input] AP runtime shape is HTTP service and supports a separate BFF boundary in implementation scaffolding (pin_ref: AP-5=Agent Invocation Only; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** The instance has direct UI signals requiring a dedicated frontend-oriented API facade.
-
-### M-17: EXT-API_COMPOSITION_AGGREGATOR - API Composition / Aggregator (confidence: medium)
-**Plane:** application
-**Evidence:**
-- E1 [spec_excerpt] The UI is deployed as a separate service, which benefits from composition of CP/AP data into UI-facing contracts (ref: ui_requirements_v1; cite: reference_architectures/codex-saas/spec/playbook/application_spec_v1.md)
-- E2 [pinned_input] CP/AP split plus synchronous API surfaces imply explicit composition at boundary edges (pin_ref: CP-6=Unified Governance Integration; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** API composition is needed to prevent UI coupling to internal plane contracts.
-
-### M-18: EXT-API_GATEWAY - API Gateway (confidence: medium)
-**Plane:** control
-**Evidence:**
-- E1 [pinned_input] CP centrally authors policy and governs safety orchestration, which requires a stable ingress policy boundary (pin_ref: CP-4=Centralized Policy Authoring; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [spec_excerpt] Tenant context is required at ingress for AP requests, favoring an ingress gateway that validates/request-shapes context (ref: intent_derived_app_plane_constraints_v1; cite: reference_architectures/codex-saas/spec/playbook/application_spec_v1.md)
-**Rationale:** An API gateway pattern grounds ingress policy/context enforcement without changing pinned runtime.
-
-### M-19: EXT-AUDITABILITY - Auditability (confidence: medium)
-**Plane:** both
-**Evidence:**
-- E1 [pinned_input] Synchronous evidence emission is required across AI/AP/DP/ST paths (pin_ref: AI-6=Synchronous Evidence Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-- E2 [pinned_input] DP governance includes lineage and retention constraints, requiring durable audit trails (pin_ref: DP-3=Access + Retention + Lineage Enforcement; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml)
-**Rationale:** Auditability is directly required by the pinned evidence and lineage obligations.
+- E1 [pinned_input] Data-plane governance requires inline evidence for access/enforcement outcomes. (pin_ref: DP-5=Inline Evidence Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E2 [pinned_input] Storage lifecycle events emit inline evidence for auditability. (pin_ref: ST-6=Inline Evidence Emission; cite: reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml:template_instances)
+- E3 [pattern_definition] Graph-expanded multi-tenant observability pattern refines tenant-scoped audit hooks. (ref: none; cite: architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-AGOBS-01.yaml)
+**Rationale:** Tenant isolation needs tenant-scoped audit traces to be operationally enforceable. This graph-expanded candidate complements baseline MTEN and evidence patterns with observability detail.
+**Implications:**
+- Add tenant-scoped audit query requirements to reporting capabilities.
+- Require tenant key and principal key in all governance evidence events.
+**Open questions:**
+- None.
 
 <!-- CAF_MANAGED_BLOCK: caf_decision_pattern_candidates_v1 END -->
 
 <!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 START -->
 ## Decision resolutions (architect-edit; optional)
 
-(YAML. Optional local approvals for application-plane decisions. System spec is canonical if conflicts exist.)
+Use this YAML block only for local application-plane decisions you want to record explicitly.
+If you are just trying CAF for the first time, it is fine to leave this empty.
 
 ```yaml
 schema_version: decision_resolutions_v1
 decisions:
   - evidence_hook_id: H-1
-    pattern_id: CAF-PLANE-01
-    status: adopt
-    anchors:
-      - anchor_type: caf_pattern_requirement
-        anchor_id: CAF-PLANE-01
-        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-PLANE-01.yaml"
-      - anchor_type: guardrail_ref
-        anchor_id: ""
-        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "The pinned three-plane responsibilities and runtime-shape declarations require explicit tri-plane separation as a first-order architectural boundary."
-    resolved_values:
-      questions:
-        - question_id: Q-CP-AP-SURFACE-01
-          question: "What is the primary CP↔AP contract surface (sync HTTP APIs, async events/messages, or a mixed approach)?"
-          description: "Select the primary integration surface between Control Plane and Application Plane for governance and coordination flows."
-          option_set_id: cp_ap.contract_surface
-          options:
-            - option_id: synchronous_http
-              status: defer
-              summary: "CP↔AP calls via HTTP APIs."
-              payload: {}
-            - option_id: async_events
-              status: defer
-              summary: "CP↔AP coordination via async events/messages."
-              payload: {}
-            - option_id: mixed
-              status: adopt
-              summary: "Mix: sync for enforcement, async for lifecycle and audit."
-              payload: {}
-            - option_id: custom
-              status: defer
-              summary: "Custom (fill notes)."
-              payload: {}
-  - evidence_hook_id: H-2
     pattern_id: CAF-TCTX-01
     status: adopt
     anchors:
@@ -230,7 +265,7 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "The pins require deterministic tenant context carriage across AP, AI, and DP boundaries, which aligns directly with normative tenant context propagation."
+    rationale: "The pins require deterministic tenant and session context handling, so explicit propagation rules are foundational. This pattern grounds those constraints into enforceable cross-plane contracts."
     resolved_values:
       questions:
         - question_id: Q-AP-TENANT-CARRIER-01
@@ -300,7 +335,7 @@ decisions:
               status: defer
               summary: "Custom (fill fields)."
               payload: {}
-  - evidence_hook_id: H-3
+  - evidence_hook_id: H-2
     pattern_id: CAF-MTEN-01
     status: adopt
     anchors:
@@ -310,7 +345,7 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Multi-tenant isolation and tenant-keyed storage are explicit architecture-shape pins and should be captured as a foundational concern."
+    rationale: "The architecture shape pins encode strict tenant isolation and tenant-scoped storage semantics. A first-class multi-tenancy pattern is needed to keep these invariants explicit across control, application, and data boundaries."
     resolved_values:
       questions:
         - question_id: Q-MTEN-ISO-MODE-01
@@ -339,7 +374,72 @@ decisions:
               summary: "Custom (describe your isolation approach; prefer adopting an existing mode when possible)."
               notes: ""
               payload: {}
+  - evidence_hook_id: H-3
+    pattern_id: CAF-IAM-01
+    status: adopt
+    anchors:
+      - anchor_type: caf_pattern_requirement
+        anchor_id: CAF-IAM-01
+        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-01.yaml"
+      - anchor_type: guardrail_ref
+        anchor_id: ""
+        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+    rationale: "Identity constraints require a clear principal taxonomy to avoid ambiguous authority and ownership. This pattern grounds identity classification and governance responsibilities in the control plane."
+    resolved_values:
+      questions:
+        - question_id: Q-CAF-IAM-01-AUTO-01
+          question: "Select an option for iam.principal_taxonomy_scope."
+          description: ""
+          option_set_id: iam.principal_taxonomy_scope
+          options:
+            - option_id: minimal_tenant_and_service
+              status: defer
+              summary: "Minimal taxonomy: tenant user + service principals."
+              payload: {}
+            - option_id: standard_platform_tenant_service
+              status: adopt
+              summary: "Standard taxonomy: platform user + tenant user + service principals."
+              payload: {}
+            - option_id: full_including_agent
+              status: defer
+              summary: "Full taxonomy: platform user + tenant user + service + agent principals."
+              payload: {}
+            - option_id: custom
+              status: defer
+              summary: "Custom (describe your approach; prefer adopting a bounded variant when possible)."
+              notes: ""
+              payload: {}
   - evidence_hook_id: H-4
+    pattern_id: CAF-POL-01
+    status: adopt
+    anchors:
+      - anchor_type: caf_pattern_requirement
+        anchor_id: CAF-POL-01
+        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-POL-01.yaml"
+      - anchor_type: guardrail_ref
+        anchor_id: ""
+        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+    rationale: "Multiple pins converge on policy-first authority and enforcement behavior. Treating policy as a first-class artifact keeps decision paths auditable and deterministic across phases."
+    resolved_values:
+      questions:
+        - question_id: Q-AP-POLICY-POINTS-01
+          question: "Which operations require policy gating (list/get/create/update/delete), and what decision inputs are required?"
+          description: "Select default policy gating posture for CRUD ops; specialize resource_id token to the actual resource id field."
+          option_set_id: policy_gating.default_crud
+          options:
+            - option_id: gate_all_ops
+              status: adopt
+              summary: "Gate all CRUD operations."
+              payload: {}
+            - option_id: gate_write_only
+              status: defer
+              summary: "Gate write operations; list may be ungated; gate get."
+              payload: {}
+            - option_id: custom
+              status: defer
+              summary: "Custom policy gates (fill fields)."
+              payload: {}
+  - evidence_hook_id: H-15
     pattern_id: CAF-AI-01
     status: adopt
     anchors:
@@ -349,7 +449,7 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Safety and policy pins demand explicit CP governance boundaries separate from AP execution behavior."
+    rationale: "The pinned model separates AI governance control from application invocation behavior. This pattern preserves that separation and prevents implicit bypasses."
     resolved_values:
       questions:
         - question_id: Q-AI-PART-01
@@ -378,166 +478,40 @@ decisions:
               notes: ""
               payload: {}
   - evidence_hook_id: H-5
-    pattern_id: CAF-IAM-02
+    pattern_id: CAF-PLANE-01
     status: adopt
     anchors:
       - anchor_type: caf_pattern_requirement
-        anchor_id: CAF-IAM-02
-        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-02.yaml"
+        anchor_id: CAF-PLANE-01
+        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-PLANE-01.yaml"
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "The pinned identity taxonomy and authority model require explicit identity/context propagation across planes."
+    rationale: "The pins explicitly assign responsibilities by plane and restrict data-plane behavior. This pattern turns those assignments into enforceable architectural boundaries."
     resolved_values:
       questions:
-        - question_id: Q-CAF-IAM-02-01
-          question: "Which option best matches your intended choice for `iam.identity_context_propagation` and what constraints/rejection conditions apply?"
-          description: ""
-          option_set_id: iam.identity_context_propagation
+        - question_id: Q-CP-AP-SURFACE-01
+          question: "What is the primary CP↔AP contract surface (sync HTTP APIs, async events/messages, or a mixed approach)?"
+          description: "Select the primary integration surface between Control Plane and Application Plane for governance and coordination flows."
+          option_set_id: cp_ap.contract_surface
           options:
-            - option_id: verified_token_claims
+            - option_id: synchronous_http
+              status: defer
+              summary: "CP↔AP calls via HTTP APIs."
+              payload: {}
+            - option_id: async_events
+              status: defer
+              summary: "CP↔AP coordination via async events/messages."
+              payload: {}
+            - option_id: mixed
               status: adopt
-              summary: "Propagate identity and tenant context via verified token claims at ingress."
-              payload: {}
-            - option_id: signed_gateway_header
-              status: defer
-              summary: "Propagate identity context via a trusted gateway signed header (not client-controlled)."
-              payload: {}
-            - option_id: mtls_client_cert_identity
-              status: defer
-              summary: "Propagate service identity via mTLS client cert identity (service-to-service)."
+              summary: "Mix: sync for enforcement, async for lifecycle and audit."
               payload: {}
             - option_id: custom
               status: defer
-              summary: "Custom (describe your approach; prefer adopting a bounded variant when possible)."
-              notes: ""
+              summary: "Custom (fill notes)."
               payload: {}
   - evidence_hook_id: H-6
-    pattern_id: POL-01
-    status: adopt
-    anchors:
-      - anchor_type: caf_pattern_requirement
-        anchor_id: POL-01
-        anchor_path: "architecture_library/patterns/core_v1/definitions_v1/POL-01.yaml"
-      - anchor_type: guardrail_ref
-        anchor_id: ""
-        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "CP policy ownership and AP pre-execution enforcement together imply a clear policy enforcement boundary."
-    resolved_values: {}
-  - evidence_hook_id: H-7
-    pattern_id: OBS-01
-    status: adopt
-    anchors:
-      - anchor_type: caf_pattern_requirement
-        anchor_id: OBS-01
-        anchor_path: "architecture_library/patterns/core_v1/definitions_v1/OBS-01.yaml"
-      - anchor_type: guardrail_ref
-        anchor_id: ""
-        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Synchronous evidence pins across AI/AP/DP/ST require an explicit cross-plane observability boundary."
-    resolved_values: {}
-  - evidence_hook_id: H-10
-    pattern_id: VAL-01
-    status: adopt
-    anchors:
-      - anchor_type: caf_pattern_requirement
-        anchor_id: VAL-01
-        anchor_path: "architecture_library/patterns/core_v1/definitions_v1/VAL-01.yaml"
-      - anchor_type: guardrail_ref
-        anchor_id: ""
-        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Pre-execution evaluation and fail-closed rails require explicit validation/error boundaries."
-    resolved_values: {}
-  - evidence_hook_id: M-12
-    pattern_id: CAF-EDGE-01
-    status: adopt
-    anchors:
-      - anchor_type: caf_pattern_requirement
-        anchor_id: CAF-EDGE-01
-        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-EDGE-01.yaml"
-      - anchor_type: guardrail_ref
-        anchor_id: ""
-        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "UI signal and AP runtime posture support introducing a dedicated composition boundary without changing pinned platform choices."
-    resolved_values:
-      questions:
-        - question_id: Q-CAF-EDGE-01-01
-          question: "If internal interactions are async, how will the UI-facing boundary bridge async completion?"
-          description: "Choose polling via job handles, callbacks/webhooks, or a hybrid approach."
-          option_set_id: edge.async_bridge_strategy
-          options:
-            - option_id: job_handle_polling
-              status: adopt
-              summary: "Return a job handle and provide status polling endpoints."
-              notes: ""
-              payload: {}
-            - option_id: callbacks_webhooks
-              status: defer
-              summary: "Use callbacks/webhooks for completion and state transitions."
-              notes: ""
-              payload: {}
-            - option_id: hybrid
-              status: defer
-              summary: "Support both polling and callbacks/webhooks."
-              notes: ""
-              payload: {}
-        - question_id: Q-EDGE-SHAPE-01
-          question: "What is the UI-facing boundary shape (BFF service, gateway composition, embedded adapter, or custom)?"
-          description: "Select the boundary shape used to stabilize UI contracts while hiding internal plane contracts."
-          option_set_id: edge.boundary_shape
-          options:
-            - option_id: bff_service
-              status: adopt
-              summary: "Separate deployable BFF/API composition service."
-              payload: {}
-            - option_id: gateway_composition
-              status: defer
-              summary: "Composition at an API gateway layer (if available) without leaking internal contracts."
-              payload: {}
-            - option_id: embedded_adapter
-              status: defer
-              summary: "Embedded adapter layer within the UI host/runtime (still a contract boundary)."
-              payload: {}
-            - option_id: custom
-              status: defer
-              summary: "Custom shape (document details)."
-              payload: {}
-  - evidence_hook_id: M-13
-    pattern_id: CAF-IAM-01
-    status: adopt
-    anchors:
-      - anchor_type: caf_pattern_requirement
-        anchor_id: CAF-IAM-01
-        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-01.yaml"
-      - anchor_type: guardrail_ref
-        anchor_id: ""
-        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Identity governance pins support explicit principal taxonomy to stabilize authorization and context contracts."
-    resolved_values:
-      questions:
-        - question_id: Q-CAF-IAM-01-AUTO-01
-          question: "Select an option for iam.principal_taxonomy_scope."
-          description: ""
-          option_set_id: iam.principal_taxonomy_scope
-          options:
-            - option_id: minimal_tenant_and_service
-              status: defer
-              summary: "Minimal taxonomy: tenant user + service principals."
-              payload: {}
-            - option_id: standard_platform_tenant_service
-              status: adopt
-              summary: "Standard taxonomy: platform user + tenant user + service principals."
-              payload: {}
-            - option_id: full_including_agent
-              status: defer
-              summary: "Full taxonomy: platform user + tenant user + service + agent principals."
-              payload: {}
-            - option_id: custom
-              status: defer
-              summary: "Custom (describe your approach; prefer adopting a bounded variant when possible)."
-              notes: ""
-              payload: {}
-  - evidence_hook_id: H-8
     pattern_id: CAF-XPLANE-01
     status: adopt
     anchors:
@@ -547,7 +521,7 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Cross-plane interactions must be explicit and constrained to preserve pinned authority and data boundaries."
+    rationale: "Cross-plane boundaries are explicit in the pins, but allowed interaction paths still need architectural codification. This pattern prevents boundary drift as more features are scaffolded."
     resolved_values:
       questions:
         - question_id: Q-XPLANE-MODE-01
@@ -575,40 +549,154 @@ decisions:
               summary: "Custom (fill fields)."
               notes: ""
               payload: {}
-  - evidence_hook_id: M-14
-    pattern_id: CAF-MTEN-ANTI-01
+  - evidence_hook_id: M-17
+    pattern_id: CAF-AIOBS-01
     status: adopt
     anchors:
       - anchor_type: caf_pattern_requirement
-        anchor_id: CAF-MTEN-ANTI-01
-        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-MTEN-ANTI-01.yaml"
+        anchor_id: CAF-AIOBS-01
+        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-AIOBS-01.yaml"
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "The tenant retention and lineage pins justify explicitly documenting anti-patterns that violate isolation or lifecycle controls."
+    rationale: "Evidence requirements already exist in pins, and AI-specific hook placement is needed to maintain end-to-end auditability. This pattern adds that observability granularity without changing core architecture choices."
     resolved_values:
       questions:
-        - question_id: Q-CAF-MTEN-ANTI-01-01
-          question: "How will implicit tenancy be prevented and explicit tenancy binding be enforced?"
-          description: "Choose runtime validation, build-time guardrails, or both."
-          option_set_id: tenancy.binding_enforcement
+        - question_id: Q-CAF-AIOBS-01-01
+          question: "Which observability hook level will you adopt for AI/agent runs?"
+          description: ""
+          option_set_id: ai_observability.hook_level
           options:
-            - option_id: runtime_validation
+            - option_id: minimal
               status: defer
-              summary: "Runtime validation of explicit tenant context on every boundary crossing."
-              notes: ""
+              summary: "Minimal request/response telemetry (IDs, timing, outcome)."
               payload: {}
-            - option_id: compile_time_guardrails
+            - option_id: tools
               status: defer
-              summary: "Compile-time or build-time guardrails to prevent missing tenant binding."
-              notes: ""
+              summary: "Include tool invocation telemetry (names, timings, outcomes)."
               payload: {}
-            - option_id: both
+            - option_id: trace_metadata
               status: adopt
-              summary: "Combine runtime validation and compile/build guardrails."
+              summary: "Include structured trace metadata (no full reasoning content)."
+              payload: {}
+            - option_id: full_trace
+              status: defer
+              summary: "Capture full trace content (requires strict redaction and access controls)."
+              payload: {}
+            - option_id: custom
+              status: defer
+              summary: "Custom (fill fields)."
+              payload: {}
+  - evidence_hook_id: M-18
+    pattern_id: CAF-IAM-GOV-04
+    status: adopt
+    anchors:
+      - anchor_type: caf_pattern_requirement
+        anchor_id: CAF-IAM-GOV-04
+        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-GOV-04.yaml"
+      - anchor_type: guardrail_ref
+        anchor_id: ""
+        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+    rationale: "This graph-expanded candidate strengthens identity-to-policy governance links already required by pins. It complements baseline IAM and policy candidates with clearer governance/runtime separation."
+    resolved_values:
+      questions:
+        - question_id: Q-IAM-INTENT-01
+          question: "What policy intent model is used (RBAC, ABAC, hybrid)?"
+          description: "Select how policy intent is represented for authorization decisions."
+          option_set_id: iam.policy_intent_model
+          options:
+            - option_id: rbac
+              status: defer
+              summary: "Role-based policy intent (roles map to permissions)."
               notes: ""
               payload: {}
-  - evidence_hook_id: M-15
+            - option_id: abac
+              status: defer
+              summary: "Attribute-based policy intent (attributes drive decisions)."
+              notes: ""
+              payload: {}
+            - option_id: hybrid
+              status: adopt
+              summary: "Hybrid role + attribute intent with explicit precedence rules."
+              notes: ""
+              payload: {}
+            - option_id: custom
+              status: defer
+              summary: "Custom (fill fields)."
+              notes: ""
+              payload: {}
+  - evidence_hook_id: M-19
+    pattern_id: CAF-COMP-02
+    status: adopt
+    anchors:
+      - anchor_type: caf_pattern_requirement
+        anchor_id: CAF-COMP-02
+        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-COMP-02.yaml"
+      - anchor_type: guardrail_ref
+        anchor_id: ""
+        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+    rationale: "Existing evidence obligations need consistent schemas to remain queryable and enforceable across lifecycle events. This graph-expanded refinement improves interoperability of evidence artifacts."
+    resolved_values:
+      questions:
+        - question_id: Q-CAF-COMP-02-01
+          question: "How should compliance anti-patterns be enforced?"
+          description: "Choose advisory-only, warn-then-gate, or fail-closed enforcement."
+          option_set_id: compliance.anti_pattern_enforcement_mode
+          options:
+            - option_id: advisory_only
+              status: defer
+              summary: "Detect and report anti-patterns; do not block."
+              notes: ""
+              payload: {}
+            - option_id: warn_then_gate
+              status: adopt
+              summary: "Warn during scaffolding; fail closed at gate checks if unresolved."
+              notes: ""
+              payload: {}
+            - option_id: fail_closed
+              status: defer
+              summary: "Fail closed immediately on detected anti-patterns."
+              notes: ""
+              payload: {}
+  - evidence_hook_id: M-20
+    pattern_id: CAF-COH-02
+    status: adopt
+    anchors:
+      - anchor_type: caf_pattern_requirement
+        anchor_id: CAF-COH-02
+        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-COH-02.yaml"
+      - anchor_type: guardrail_ref
+        anchor_id: ""
+        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+    rationale: "Cross-plane governance and evidence flows become brittle when terms drift. This candidate improves consistency without introducing new technology choices."
+    resolved_values:
+      questions:
+        - question_id: Q-CAF-COH-02-01
+          question: "How strictly should plane responsibility boundaries be enforced?"
+          description: "Choose strict separation, contracted exceptions, allowlisted shared components, or custom."
+          option_set_id: planes.responsibility_integrity_mode
+          options:
+            - option_id: strict_separation
+              status: adopt
+              summary: "Strict plane separation; violations are treated as errors and blocked."
+              notes: ""
+              payload: {}
+            - option_id: contracted_exceptions
+              status: defer
+              summary: "Allow exceptions only when explicitly contracted and reviewed."
+              notes: ""
+              payload: {}
+            - option_id: allowlisted_shared_components
+              status: defer
+              summary: "Allow a limited allowlist of shared components with clear ownership."
+              notes: ""
+              payload: {}
+            - option_id: custom
+              status: defer
+              summary: "Custom (describe your approach; prefer adopting a bounded variant when possible)."
+              notes: ""
+              payload: {}
+  - evidence_hook_id: M-21
     pattern_id: CAF-MTEN-AGOBS-01
     status: adopt
     anchors:
@@ -618,7 +706,7 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Tenant-safe observability constraints across AP/AI/DP/ST support a dedicated multi-tenant observability boundary pattern."
+    rationale: "Tenant isolation needs tenant-scoped audit traces to be operationally enforceable. This graph-expanded candidate complements baseline MTEN and evidence patterns with observability detail."
     resolved_values:
       questions:
         - question_id: Q-CAF-MTEN-AGOBS-01-01
@@ -641,7 +729,40 @@ decisions:
               summary: "Full trace capture with mandatory redaction/PII controls."
               notes: ""
               payload: {}
-  - evidence_hook_id: M-11
+  - evidence_hook_id: M-16
+    pattern_id: CAF-COMP-01
+    status: adopt
+    anchors:
+      - anchor_type: caf_pattern_requirement
+        anchor_id: CAF-COMP-01
+        anchor_path: "architecture_library/patterns/caf_v1/definitions_v1/CAF-COMP-01.yaml"
+      - anchor_type: guardrail_ref
+        anchor_id: ""
+        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+    rationale: "Multiple pins require evidence as a normal operational artifact, not an afterthought. This pattern keeps auditability and traceability consistent across planes."
+    resolved_values:
+      questions:
+        - question_id: Q-CAF-COMP-01-01
+          question: "Where and how is compliance evidence persisted as an immutable byproduct of normal operation?"
+          description: "Choose an append-only stream, an immutable store, or both."
+          option_set_id: compliance_evidence.persistence_strategy
+          options:
+            - option_id: append_only_event_stream
+              status: defer
+              summary: "Persist evidence to an append-only event stream (durable, ordered)."
+              notes: ""
+              payload: {}
+            - option_id: immutable_evidence_store
+              status: defer
+              summary: "Persist evidence to an immutable evidence store with retention controls."
+              notes: ""
+              payload: {}
+            - option_id: stream_plus_immutable_store
+              status: adopt
+              summary: "Use an event stream plus an immutable store (preferred for audit readiness)."
+              notes: ""
+              payload: {}
+  - evidence_hook_id: M-8
     pattern_id: PST-01
     status: adopt
     anchors:
@@ -651,9 +772,9 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Tenant-scoped data enforcement and tenant-keyed persistence align with an explicit repository boundary in AP."
+    rationale: "The shape pins require strict tenant-scoped DAL enforcement. Repository boundaries reduce accidental bypass and localize data access obligations."
     resolved_values: {}
-  - evidence_hook_id: H-9
+  - evidence_hook_id: M-7
     pattern_id: CTX-01
     status: adopt
     anchors:
@@ -663,9 +784,9 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Governance and ingress-bound context pins imply explicit request context propagation structures across boundaries."
+    rationale: "Context propagation is required to make tenant and principal constraints enforceable at every boundary. This pattern operationalizes context continuity across control and application interactions."
     resolved_values: {}
-  - evidence_hook_id: M-16
+  - evidence_hook_id: M-10
     pattern_id: EXT-BACKEND_FOR_FRONTEND_BFF
     status: adopt
     anchors:
@@ -675,7 +796,7 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "The instance has direct UI signals requiring a dedicated frontend-oriented API facade."
+    rationale: "The pinned React SPA surface benefits from an application-plane facade tuned for UI workflows."
     resolved_values:
       questions:
         - question_id: Q-EXT-BFF-01
@@ -703,7 +824,19 @@ decisions:
               summary: "Custom (fill fields)."
               notes: ""
               payload: {}
-  - evidence_hook_id: M-17
+  - evidence_hook_id: M-11
+    pattern_id: EXT-ANTI_CORRUPTION_LAYER
+    status: defer
+    anchors:
+      - anchor_type: caf_pattern_requirement
+        anchor_id: EXT-ANTI_CORRUPTION_LAYER
+        anchor_path: "architecture_library/patterns/external_v1/definitions_v1/ext-anti_corruption_layer.yaml"
+      - anchor_type: guardrail_ref
+        anchor_id: ""
+        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+    rationale: "Graph expansion suggests adapter isolation where cross-boundary models can drift."
+    resolved_values: {}
+  - evidence_hook_id: M-12
     pattern_id: EXT-API_COMPOSITION_AGGREGATOR
     status: adopt
     anchors:
@@ -713,7 +846,7 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "API composition is needed to prevent UI coupling to internal plane contracts."
+    rationale: "Graph expansion adds a composition option for SPA-facing read models without coupling core domain boundaries."
     resolved_values:
       questions:
         - question_id: Q-EXT-AGG-01
@@ -741,45 +874,7 @@ decisions:
               summary: "Custom (fill fields)."
               notes: ""
               payload: {}
-  - evidence_hook_id: M-18
-    pattern_id: EXT-API_GATEWAY
-    status: adopt
-    anchors:
-      - anchor_type: caf_pattern_requirement
-        anchor_id: EXT-API_GATEWAY
-        anchor_path: "architecture_library/patterns/external_v1/definitions_v1/ext-api_gateway.yaml"
-      - anchor_type: guardrail_ref
-        anchor_id: ""
-        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "An API gateway pattern grounds ingress policy/context enforcement without changing pinned runtime."
-    resolved_values:
-      questions:
-        - question_id: Q-EXT-API-GW-01
-          question: "Where are API gateway policies enforced and how are responsibilities distributed?"
-          description: "Select the enforcement/responsibility distribution for API policy enforcement at the ingress boundary."
-          option_set_id: ingress.api_gateway_policy_placement
-          options:
-            - option_id: gateway_enforces_most_policies
-              status: defer
-              summary: "Gateway enforces most cross-cutting policies; services focus on business logic and service-level authorization."
-              notes: ""
-              payload: {}
-            - option_id: shared_gateway_and_services
-              status: adopt
-              summary: "Default: implement the gateway inside the Control Plane ingress boundary (no standalone gateway product). CP enforces baseline policies; services enforce additional policies with explicit boundaries."
-              notes: "Use this default when the stack does not pin a gateway product/technology. Treat the CP ingress boundary as the gateway responsibility boundary and evolve later if needed."
-              payload: {}
-            - option_id: services_enforce_gateway_routes_only
-              status: defer
-              summary: "Gateway provides routing/versioning; services enforce most policies."
-              notes: ""
-              payload: {}
-            - option_id: custom
-              status: defer
-              summary: "Custom (fill fields)."
-              notes: ""
-              payload: {}
-  - evidence_hook_id: M-19
+  - evidence_hook_id: M-13
     pattern_id: EXT-AUDITABILITY
     status: adopt
     anchors:
@@ -789,7 +884,7 @@ decisions:
       - anchor_type: guardrail_ref
         anchor_id: ""
         anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    rationale: "Auditability is directly required by the pinned evidence and lineage obligations."
+    rationale: "Graph expansion aligns with required synchronous evidence trails across governed actions."
     resolved_values:
       questions:
         - question_id: Q-EXT-AUDIT-01
@@ -817,43 +912,147 @@ decisions:
               summary: "Custom (fill fields)."
               notes: ""
               payload: {}
+  - evidence_hook_id: M-14
+    pattern_id: EXT-BULKHEAD_ISOLATION
+    status: adopt
+    anchors:
+      - anchor_type: caf_pattern_requirement
+        anchor_id: EXT-BULKHEAD_ISOLATION
+        anchor_path: "architecture_library/patterns/external_v1/definitions_v1/ext-bulkhead_isolation.yaml"
+      - anchor_type: guardrail_ref
+        anchor_id: ""
+        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+    rationale: "Graph expansion indicates isolation boundaries to contain failures in cross-service interactions."
+    resolved_values:
+      questions:
+        - question_id: Q-EXT-BULKHEAD-01
+          question: "What bulkhead strategy is used (pools, processes, or services)?"
+          description: "Select how capacity is partitioned to isolate failure domains and prevent cross-impact."
+          option_set_id: resilience.bulkhead_strategy
+          options:
+            - option_id: pool_partitioning
+              status: adopt
+              summary: "Partition thread/connection pools or work queues to isolate tenants/dependencies."
+              notes: ""
+              payload: {}
+            - option_id: process_isolation
+              status: defer
+              summary: "Use separate worker processes/executors per class of work or dependency."
+              notes: ""
+              payload: {}
+            - option_id: service_isolation
+              status: defer
+              summary: "Isolate into separate services to enforce stronger failure domain separation."
+              notes: ""
+              payload: {}
+            - option_id: custom
+              status: defer
+              summary: "Custom (fill fields)."
+              notes: ""
+              payload: {}
+  - evidence_hook_id: M-9
+    pattern_id: EXT-API_GATEWAY
+    status: adopt
+    anchors:
+      - anchor_type: caf_pattern_requirement
+        anchor_id: EXT-API_GATEWAY
+        anchor_path: "architecture_library/patterns/external_v1/definitions_v1/ext-api_gateway.yaml"
+      - anchor_type: guardrail_ref
+        anchor_id: ""
+        anchor_path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
+    rationale: "External ingress policy enforcement and routing for CP->AP traffic need a stable edge boundary."
+    resolved_values:
+      questions:
+        - question_id: Q-EXT-API-GW-01
+          question: "Where are API gateway policies enforced and how are responsibilities distributed?"
+          description: "Select the enforcement/responsibility distribution for API policy enforcement at the ingress boundary."
+          option_set_id: ingress.api_gateway_policy_placement
+          options:
+            - option_id: gateway_enforces_most_policies
+              status: defer
+              summary: "Gateway enforces most cross-cutting policies; services focus on business logic and service-level authorization."
+              notes: ""
+              payload: {}
+            - option_id: shared_gateway_and_services
+              status: adopt
+              summary: "Default: implement the gateway inside the Control Plane ingress boundary (no standalone gateway product). CP enforces baseline policies; services enforce additional policies with explicit boundaries."
+              notes: "Use this default when the stack does not pin a gateway product/technology. Treat the CP ingress boundary as the gateway responsibility boundary and evolve later if needed."
+              payload: {}
+            - option_id: services_enforce_gateway_routes_only
+              status: defer
+              summary: "Gateway provides routing/versioning; services enforce most policies."
+              notes: ""
+              payload: {}
+            - option_id: custom
+              status: defer
+              summary: "Custom (fill fields)."
+              notes: ""
+              payload: {}
 ```
 <!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 END -->
 
-<!-- ARCHITECT_EDIT_BLOCK: domain_and_resources_v1 START -->
-## Domain
+<!-- ARCHITECT_EDIT_BLOCK: domain_and_capabilities_v1 START -->
+## Product domain and capabilities (architect-edit)
 
-(Example only  -  replace with your real domain/resources.)
+Use this section to describe the **business-facing application behavior**.
+Do not try to fully normalize entities here; the detailed application-plane domain model belongs in `spec/playbook/application_domain_model_v1.md`.
 
-This application manages widgets with a name, description, and content (all text).
+What to capture here:
 
-## Resources
+- what the product helps users accomplish
+- the main business objects users talk about
+- the major user-visible operations
+- any important business constraints the application must respect
 
-### Widget
+Starter example (replace or adapt):
 
-Fields:
+This product helps tenant teams submit items for automated review, inspect findings, and publish final reports.
 
-- name: text (required)
-- description: text (required)
-- content: text (required)
+Main business objects:
 
-Operations:
+- Workspace: a tenant-scoped container for review activity
+- Submission: an item a user sends into the review flow
+- Review: the current evaluation state and findings for a submission
+- Report: an exported or shareable outcome summarizing the review result
 
-- list
-- get
-- create
-- update
-- delete
-<!-- ARCHITECT_EDIT_BLOCK: domain_and_resources_v1 END -->
+User-visible capabilities:
+
+- create and manage workspaces
+- submit an item for review
+- list and inspect submissions by status
+- review findings and mark a submission as approved or rejected
+- export a report for downstream use
+
+Business constraints:
+
+- every business object is tenant-scoped
+- status changes must be visible to the user
+- reports must be reproducible from the final approved review state
+- destructive actions should be limited and intentional in the first release
+
+Move these details into `application_domain_model_v1.md` when you want fields, invariants, and persistence intent.
+<!-- ARCHITECT_EDIT_BLOCK: domain_and_capabilities_v1 END -->
 
 <!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 START -->
 ## Open questions (architect-edit)
 
-(Unresolved questions discovered during scaffolding.)
+Use this section for unresolved questions that should remain visible to the human architect.
+
+Starter examples:
+
+- Do we need draft autosave for submissions, or is explicit save enough for the first release?
+- Should reports be regenerated on demand or stored as immutable snapshots?
+- Are review decisions single-step, or do they require multi-person approval later?
 <!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 END -->
 
 <!-- ARCHITECT_EDIT_BLOCK: notes_and_constraints_v1 START -->
 ## Notes / constraints (optional)
 
-(Add any domain constraints, invariants, or nonfunctional requirements relevant to the application plane.)
+Use this section for compact application-plane constraints that matter architecturally.
+
+Starter examples:
+
+- Prefer simple CRUD + workflow progression over advanced collaboration in the first version.
+- Optimize for clear end-to-end demonstration of the product flow rather than UI sophistication.
+- Keep terminology stable across UI, APIs, and domain model artifacts.
 <!-- ARCHITECT_EDIT_BLOCK: notes_and_constraints_v1 END -->

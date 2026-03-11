@@ -1,5 +1,0 @@
-# CAF_TRACE: generated_by=Contura Architecture Framework (CAF) | task_id=TG-90-runtime-wiring | capability=runtime_wiring | instance=codex-saas | trace_anchor=pattern_obligation_id:OBL-RUNTIME-WIRING
-fastapi==0.115.0
-uvicorn==0.30.6
-psycopg[binary]==3.2.1
-

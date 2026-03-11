@@ -72,5 +72,5 @@ technology_choices_resolved:
       persistence_orm: "sqlalchemy_orm"
 meta:
   derived_by: "tools/caf/guardrails_v1.mjs"
-  derived_at: "2026-03-06T02:39:56.333Z"
+  derived_at: "2026-03-11T20:41:43.752Z"
   rules_source: "tools/caf/config/technology_choice_rules_v1.yaml"

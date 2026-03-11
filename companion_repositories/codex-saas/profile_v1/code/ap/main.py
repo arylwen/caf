@@ -1,13 +1,7 @@
-# CAF_TRACE: generated_by=Contura Architecture Framework (CAF) | task_id=TG-20-api-boundary-widget | capability=api_boundary_implementation | instance=codex-saas | trace_anchor=pattern_obligation_id:O-TBP-FASTAPI-01-composition-root
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF); task_id=TG-20-api-boundary-workspaces; capability=api_boundary_implementation; instance=codex-saas; trace_anchor=pattern_obligation_id:O-TBP-FASTAPI-01-composition-root
 from fastapi import FastAPI
 
-from .api.widget_router import router as widget_router
+from .interfaces.inbound.http_router import router as ap_router
 
-app = FastAPI(title="codex-saas-application-plane")
-app.include_router(widget_router, prefix="/api")
-
-
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok", "plane": "ap"}
-
+app = FastAPI(title="codex-saas-ap", version="0.1.0-candidate")
+app.include_router(ap_router, prefix="/ap")

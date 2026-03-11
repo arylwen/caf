@@ -1,0 +1,76 @@
+schema_version: "technology_choice_validation_v1"
+instance_name: "codex-saas"
+context:
+  generation_phase: "implementation_scaffolding"
+  runtime_language: "python"
+  runtime_shape: "api_service_http"
+  persistence_orm: "sqlalchemy_orm"
+technology_choices_resolved:
+  platform.framework:
+    status: "adopt"
+    selected: "fastapi"
+    effective: "fastapi"
+    allowed_values:
+      - "fastapi"
+      - "django"
+      - "drf"
+    source: "architect_choice"
+    constraints:
+      runtime_language: "python"
+      runtime_shape: "api_service_http"
+      generation_phase: "implementation_scaffolding"
+  platform.persistence_orm:
+    status: "adopt"
+    selected: "sqlalchemy_orm"
+    effective: "sqlalchemy_orm"
+    allowed_values:
+      - "none"
+      - "sqlalchemy_orm"
+      - "sqlalchemy_core"
+      - "raw_sql"
+    source: "architect_choice"
+    constraints:
+      runtime_language: "python"
+      runtime_shape: "api_service_http"
+  platform.auth_mode:
+    status: "adopt"
+    selected: "mock"
+    effective: "mock"
+    allowed_values:
+      - "mock"
+      - "api_key"
+      - "jwt"
+      - "oidc"
+    source: "architect_choice"
+    constraints:
+      runtime_language: "python"
+      runtime_shape: "api_service_http"
+  platform.eventing_backend:
+    status: "adopt"
+    selected: "mock_in_memory"
+    effective: "mock_in_memory"
+    allowed_values:
+      - "mock_in_memory"
+      - "queue_in_memory"
+      - "rabbitmq"
+      - "cloud_pubsub"
+    source: "architect_choice"
+    constraints:
+      runtime_language: "python"
+      runtime_shape: "api_service_http"
+  platform.schema_management_strategy:
+    status: "adopt"
+    selected: "code_bootstrap"
+    effective: "code_bootstrap"
+    allowed_values:
+      - "code_bootstrap"
+      - "alembic_migrations"
+    source: "architect_choice"
+    constraints:
+      runtime_language: "python"
+      runtime_shape: "api_service_http"
+      persistence_orm: "sqlalchemy_orm"
+meta:
+  derived_by: "tools/caf/guardrails_v1.mjs"
+  derived_at: "2026-03-11T20:06:35.824Z"
+  rules_source: "tools/caf/config/technology_choice_rules_v1.yaml"

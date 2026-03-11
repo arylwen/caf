@@ -1,0 +1,60 @@
+schema_version: "phase8_plane_domain_model_v1"
+plane_scope: "system"
+generated_from:
+  inputs:
+    - "reference_architectures/codex-saas/spec/playbook/system_spec_v1.md"
+    - "reference_architectures/codex-saas/spec/playbook/system_domain_model_v1.md"
+domain:
+  summary: "Control-plane model for policy governance, execution records, and auditable evidence."
+  bounded_contexts:
+    - context_id: "POLICY_GOVERNANCE"
+      name: "Policy and Governance"
+      description: "Platform-owned policy lifecycle and approval records."
+      aggregates:
+        - aggregate_id: "POLICY"
+          name: "Policy"
+          description: "Named governance artifact with platform ownership."
+          canonical:
+            term_id: "policy"
+            status: "exact"
+            matched_by: "architect_selected"
+          persistence:
+            required: true
+            storage_intent: "catalog_registry"
+            notes: "Control-plane lifecycle and activation state."
+          entities:
+            - entity_id: "POLICY_VERSION"
+              name: "Policy Version"
+              description: "Immutable versioned snapshot of policy content."
+              fields:
+                - name: "policy_version_id"
+                  type: "identifier"
+                  required: true
+                - name: "policy_id"
+                  type: "identifier"
+                  required: true
+                - name: "activation_state"
+                  type: "enum(draft|approved|active|superseded)"
+                  required: true
+            - entity_id: "APPROVAL_DECISION"
+              name: "Approval Decision"
+              description: "Auditable approval or rejection record."
+              fields:
+                - name: "approval_decision_id"
+                  type: "identifier"
+                  required: true
+                - name: "subject_id"
+                  type: "identifier"
+                  required: true
+                - name: "decision"
+                  type: "enum(approved|rejected)"
+                  required: true
+  use_cases:
+    - use_case_id: "UC-APPROVEPOLICY"
+      title: "Approve a policy change"
+      intent: "An authorized actor approves or rejects a new policy version."
+      primary_context_id: "POLICY_GOVERNANCE"
+      touches_entities:
+        - "Policy"
+        - "Policy Version"
+        - "Approval Decision"

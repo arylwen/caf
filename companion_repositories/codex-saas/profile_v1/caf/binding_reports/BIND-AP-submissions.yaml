@@ -1,0 +1,13 @@
+schema_version: caf_interface_binding_report_v1
+binding_id: BIND-AP-submissions
+status: closed
+closed_by:
+  task_id: TG-90-runtime-wiring
+evidence:
+  consumer_artifact_paths:
+    - code/AP/interfaces/inbound/submissions_router.py
+  provider_artifact_paths:
+    - code/AP/persistence/postgres_submissions_repository.py
+    - code/AP/persistence/repository_factory.py
+  assembler_artifact_paths:
+    - code/AP/bootstrap/runtime_wiring.py

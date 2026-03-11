@@ -5,27 +5,16 @@ contracts:
     materiality:
       is_material: true
       indicators:
-        - tenant context propagation
-        - policy and safety governance
-        - control to application lifecycle coordination
+        - "CP policy and safety decisions directly constrain AP execution."
+        - "Tenant and identity context must cross CP/AP boundary deterministically."
     contract_form: FORM_B_EMBEDDED_SECTION
     contract_ref:
       path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
-      section_heading: Plane Integration Contract (CP ↔ AP)
+      section_heading: Plane Integration Contract (CP <-> AP)
     anchors:
-      - anchor_type: caf_pattern
-        anchor_ref: CAF-TCTX-01
-      - anchor_type: caf_pattern
-        anchor_ref: CAF-PLANE-01
-      - anchor_type: core_pattern
-        anchor_ref: POL-01
-      - anchor_type: rail
-        anchor_ref: lifecycle.generation_phase=implementation_scaffolding
+      - anchor_type: design_decision
+        anchor_ref: "system_spec_v1.md:decision_resolutions_v1"
     justification:
-      why_this_form: >-
-        The CP to AP contract is material and best expressed inline with control
-        plane governance and runtime choices to keep decisions and enforcement
-        semantics in one source.
+      why_this_form: "The CP/AP contract is materially coupled to control-plane policy lifecycle and is managed inline with CP design."
       why_not_alternatives:
-        - Standalone document adds duplication risk during implementation scaffolding.
-        - Registry-only form is insufficient because concrete contract choices are required.
+        - "A separate contract file would duplicate the same runtime-shape and contract-surface choices."
