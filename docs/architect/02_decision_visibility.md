@@ -4,13 +4,13 @@ This doc targets question (1): **“What architecture decisions did we make, and
 
 CAF models “decisions” as:
 
-- **pins** (explicit intent) + **patterns** (explicit options) + **decision options** (bounded choices)
+- **pins** (explicit architerctural intent) + **patterns** (explicit options) + **decision options** (bounded choices)
 
 ## How CAF answers (high level)
 
-1) You provide intent (PRD, pins, profile parameters).
+1) You provide intent (PRD, architectural intent pins, technology profile parameters).
 2) CAF retrieves **candidate patterns** (semantic step) and records grounded evidence.
-3) CAF gates the result (deterministic) and materializes a stable decision scaffold.
+3) CAF gates the result (deterministic) and materializes a stable architectural decision set scaffold.
 4) The architect **adopts / defers / rejects** patterns and selects options for decision patterns.
 5) CAF extracts adopted options and promotes them into obligations.
 

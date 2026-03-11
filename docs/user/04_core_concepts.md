@@ -1,5 +1,9 @@
 # Core concepts
 
+![CAF operating loop](../images/caf_operating_loop.svg)
+
+*CAF is an operating loop: intent becomes decisions, decisions become work, work becomes candidate outputs, and the resulting state stays queryable.*
+
 ## Pins
 
 Pins are human-declared architectural intent (constraints and priorities).
@@ -25,6 +29,7 @@ Think of an obligation as:
 - written so it can be planned and validated (not a vague principle)
 
 Obligations are how CAF turns a decision into concrete work.
+
 ## Capabilities
 
 Capabilities are the **types of work** CAF knows how to plan and validate across projects.
@@ -38,6 +43,7 @@ In practice:
 
 - **Patterns** define *what must be true* (obligations).
 - **Capabilities** help CAF organize *how the work happens* (task graph coverage).
+
 ## Task graph + backlog
 
 CAF decomposes obligations and capabilities into a task graph and backlog entries.
@@ -58,3 +64,14 @@ The goal is to make “what to fix next” explicit and auditable.
 - **Capability** — A reusable type of work that helps ensure obligations are planned and satisfied.
 - **Gate** — A deterministic contract check that blocks progress on mismatch.
 - **Feedback packet** — A structured failure report telling you what to fix next.
+
+## Next
+
+[Instances, phases, and state](05_instances_phases_and_state.md) — See where the concepts on this page show up in a real CAF instance.
+
+## Related
+
+- [PRD workflow](12_prd_workflow.md) — Follow how requirement text becomes pins, decisions, and later obligations.
+- [Architecture library](06_architecture_library.md) — Browse the reusable patterns and rules that CAF retrieves and applies.
+- [Skills, runners, and command surface](07_skills_runners_and_command_surface.md) — Understand how CAF routes work across command and execution surfaces.
+

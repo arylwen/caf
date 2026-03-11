@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Node.js (CAF helper scripts are Node-based; no `npm install` required)
-- A model runner that supports the `/caf ...` command surface
+- A coding assistant that supports the `/caf ...` command surface
   - Runner shims are included in this repo for Claude/Codex/Copilot/Antigravity-style runners
 
 ## Repo layout you should keep

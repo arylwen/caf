@@ -64,8 +64,8 @@ check_packets
 run_skill "${SKILLS_DIR}/caf-arch/SKILL.md" "instance_name=${INSTANCE_NAME}"
 check_packets
 
-# Step 3: next apply=true
-run_skill "${SKILLS_DIR}/caf-next/SKILL.md" "instance_name=${INSTANCE_NAME}\napply=true"
+# Step 3: next apply
+run_skill "${SKILLS_DIR}/caf-next/SKILL.md" "instance_name=${INSTANCE_NAME}\napply"
 check_packets
 
 # Step 4: arch again

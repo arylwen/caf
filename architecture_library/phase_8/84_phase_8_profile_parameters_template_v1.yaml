@@ -5,13 +5,20 @@
 # Architects should edit ONLY the pinned UX knobs:
 # - lifecycle.evolution_stage
 # - lifecycle.generation_phase
+# - architecture.architecture_style
 # - platform.infra_target
 # - platform.packaging
 # - platform.runtime_language
 # - platform.database_engine
+# - ui.present / ui.kind / ui.framework / ui.deployment_preference (when a browser UI is in scope)
+#
+# Canonical source of supported pinned values for this file:
+# - architecture_library/phase_8/84_phase_8_profile_parameters_template_v1.yaml
+# Starter templates under architecture_library/phase_8/profile_templates/* must remain aligned to this file.
 #
 # Everything else is derived by CAF into:
 # - reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml
+#   - includes the canonical deployment identity (`deployment.stack_name`), derived from `instance_name`
 #
 schema_version: "phase8_profile_parameters_v1"
 instance_name: "{{instance_name}}"
@@ -33,6 +40,13 @@ lifecycle:
   # - pre_production
   # - production_hardening
   generation_phase: "architecture_scaffolding"
+
+architecture:
+  # architecture_style (allowed values):
+  # - clean_architecture
+  # - layered_architecture
+  # - custom
+  architecture_style: "clean_architecture"
 
 platform:
   # infra_target (allowed values):
@@ -67,6 +81,23 @@ platform:
   # - sqlite
   # - none
   database_engine: "postgres"
+
+ui:
+  # UI pins are machine-consumed. Product-facing UI description belongs in application_spec_v1.md.
+  present: true
+
+  # kind (allowed values):
+  # - web_spa
+  kind: "web_spa"
+
+  # framework (allowed values):
+  # - react
+  framework: "react"
+
+  # deployment_preference (allowed values):
+  # - separate_ui_service
+  # - served_by_application_plane
+  deployment_preference: "separate_ui_service"
 
 meta:
   # Optional metadata. If present, values MUST be non-empty (CAF rejects empty strings as placeholders).

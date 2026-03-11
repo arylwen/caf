@@ -158,6 +158,16 @@ artifacts:
   phase_name: implementation_profiles_and_companion_artifacts
   role: executable
   kind: schema
+- path: phase_8/87a_phase_8_plane_domain_models_and_persistence_compilation_contract_v1.md
+  phase_id: 8
+  phase_name: implementation_profiles_and_companion_artifacts
+  role: normative
+  kind: document
+- path: phase_8/87b_phase_8_plane_domain_model_schema_v1.yaml
+  phase_id: 8
+  phase_name: implementation_profiles_and_companion_artifacts
+  role: executable
+  kind: schema
 - path: phase_8/89_phase_8_instance_evolution_policy_v1.md
   phase_id: 8
   phase_name: implementation_profiles_and_companion_artifacts

@@ -294,6 +294,10 @@ const layout = getInstanceLayout(repoRoot, instanceName);
   } else {
     contractLines.push(`- pins vs resolved: ${staleness.stale ? `stale (${staleness.reason})` : 'not stale (all pinned keys match)'}`);
   }
+  const deploymentStackName = normalizeYamlScalar(resolvedObj?.deployment?.stack_name);
+  if (deploymentStackName) {
+    contractLines.push(`- deployment.stack_name: ${'`'}${deploymentStackName}${'`'}`);
+  }
   contractLines.push('');
   contractLines.push('## Observable artifacts');
   contractLines.push(`- \`reference_architectures/${instanceName}/spec/playbook/architecture_shape_parameters.yaml\`: ${fileExists(shapePath) ? 'present' : 'missing'}`);
@@ -306,7 +310,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
   contractLines.push('## Allowed commands and next steps');
   contractLines.push('- `/caf saas <name>`');
   contractLines.push('- `/caf arch <name>`');
-  contractLines.push('- `/caf next <name> [apply=true]`');
+  contractLines.push('- `/caf next <name> [apply]`');
   contractLines.push('- `/caf build <name>`');
   contractLines.push('');
   contractLines.push('## Recommendation');

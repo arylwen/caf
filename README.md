@@ -3,15 +3,17 @@
   Contura Architecture Framework (CAF)
 </h1>
 
-CAF (Contura Architecture Framework) turns vibe coding into **intentional architecture**.
+Most AI coding flows jump from prompt to code. CAF keeps architecture in the loop.
 
-CAF is built for teams who want to answer stakeholder questions like:
+CAF turns PRDs into architecture, project plans, and candidate code through orchestrated, governed AI generation.
 
-1) **“What architecture decisions did we make, and why?”**
-2) **“For this product/architecture intent, how big is the work?”**
-3) **“If we change X, what features/architectural intent does it impact?”**
+CAF gives teams three durable answers:
 
----
+1) **Why does this decision exist?**
+2) **How much work does it imply?**
+3) **What breaks if it changes?**
+
+CAF supports Claude Code, Codex, and Antigravity coding agents and provides a single command surface (`/caf ...`).
 
 ## Quick start (ask-first)
 
@@ -20,78 +22,45 @@ git clone github.com/arylwen/caf
 /caf ask For codex-saas, what architecture decisions did we make, and why?
 ```
 
-(For the full workflow to create new instances, see **Quickstart (generate an instance)** below.)
+Use the canonical `codex-saas` sample to understand CAF before generating anything new.
 
----
-
-## Questions you can ask (with example prompts)
-
-CAF is designed so your assistant can answer questions **without guessing**:
-
-- use `/caf ask <question...>`
-- mention the instance name in the question (or omit it to use the default sample instance)
-
-### 1. Architectural decision process (visibility)
-
-Ask your assistant:
+Questions you can ask right away:
 
 - `/caf ask Summarize the main features of the codex-saas reference architecture.`
-- `/caf ask Summarize the patterns selected for codex-saas and the architectural intent (pins) that drove them.`
-
-### 2. Work visibility (cost / size of change)
-
-Ask your assistant:
-
-- `/caf ask Given pin CP-4, what obligations and tasks are implied?`
-- `/caf ask For intent tenant_context_propagation, what work is implied (tasks, dependencies, inputs)?`
-
-### 3. Risk / impact assessment
-
-Ask your assistant:
-
+- `/caf ask Which patterns were selected for codex-saas, and which pins drove them?`
+- `/caf ask Given pin CP-4, what work is implied?`
 - `/caf ask If we change code/ap/widgets/service.py, what intent/work is most likely impacted?`
 
-Note: CAF is strongest at **intent → work** impact (pins → patterns → obligations → tasks). File-level impact becomes much stronger after `/caf build`, when you can inspect the generated companion workspace.
+## Quick start (create your own instance)
 
----
-
-## Quickstart (generate an instance)
-
-These commands create a fresh SaaS instance, derive architecture + planning artifacts, advance phases, and generate **candidate** code.
-
-CAF supports Claude Code, Codex, and Antigravity coding agents and provides a single command surface (`/caf ...`).
+Replace `<instance>` with your own name.
 
 ```text
-/caf saas hello-saas
-/caf arch hello-saas
-/caf next hello-saas apply=true
-/caf arch hello-saas
-/caf plan hello-saas
-/caf build hello-saas
+/caf saas <instance>
+/caf prd <instance>           # default next step: resolve PRD and promote a lifecycle-ready shape
+/caf arch <instance>
+/caf next <instance> apply
+/caf arch <instance>
+/caf plan <instance>
+/caf build <instance>
 ```
-
----
-
-## Docs
-
-- User docs (public): [`docs/user/README.md`](docs/user/README.md)
-- Pattern browsing: [`docs/patterns/README.md`](docs/patterns/README.md)
-
----
 
 ## What you get (and what you don’t)
 
-- CAF produces **architecture and design specification, backlog and project plan, and candidate code**.
+- CAF produces **architecture, project plans, and candidate code**.
 - CAF is **not** a “ship-to-prod” generator: outputs are **candidate-only** and require human review.
+- CAF is **fail-closed**: if inputs are missing or ambiguous, it emits a feedback packet instead of guessing.
 
-Notes:
+## Where to go next
 
-- CAF is **fail-closed**: if inputs are missing/ambiguous, it emits a feedback packet instead of guessing.
-- Output is **candidate-only** (not production-ready).
-- **Review the agent permissions in .vscode/settings.json and .claude/settings.local.json and make sure they meet your security requirements before running the agent.**
-- **Safety rule (agents):** CAF workflows should **not** run any `git` commands (read or write). Treat the working tree as the source of truth.
+- New to CAF: [`docs/user/01_what_is_caf.md`](docs/user/01_what_is_caf.md)
+- PRD-first lifecycle: [`docs/user/15_prd_first_lifecycle.md`](docs/user/15_prd_first_lifecycle.md)
+- User docs: [`docs/user/README.md`](docs/user/README.md)
+- Architect docs: [`docs/architect/README.md`](docs/architect/README.md)
+- Maintainer docs: [`docs/maintainer/README.md`](docs/maintainer/README.md)
+- Pattern browsing: [`docs/patterns/README.md`](docs/patterns/README.md)
 
----
+For the visual mental models and deeper mechanics, start in `docs/user/`, `docs/architect/`, and `docs/maintainer/`.
 
 ## Repo landmarks
 
@@ -107,3 +76,8 @@ Generated at runtime (typically **gitignored**; may not exist until you run CAF)
 
 - `reference_architectures/<instance>/` — generated architecture artifacts (do not hand-edit outside `ARCHITECT_EDIT_BLOCK`)
 - `companion_repositories/<instance>/` — generated candidate code workspace
+
+## Notes
+
+- **Review the agent permissions in `.vscode/settings.json` and `.claude/settings.local.json` and make sure they meet your security requirements before running the agent.**
+- **Safety rule (agents):** CAF workflows should **not** run any `git` commands (read or write). Treat the working tree as the source of truth.

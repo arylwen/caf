@@ -14,6 +14,7 @@ description: "Execute the Application Architect Task Graph by dispatching tasks 
 ## Inputs
 
 - instance_name (required)
+- wave_index (optional positional selector; escape hatch only — normal usage is `/caf build <instance>` with automatic wave selection)
 
 ## Required scripted gates (fail-closed; token-saver)
 
@@ -36,7 +37,7 @@ Rules:
 
 ## Deterministic dispatch procedure (fail-closed)
 
-After gates succeed, you MUST execute the Task Graph deterministically (do not invent orchestration).
+After gates succeed, you MUST execute the Task Graph deterministically (do not invent alternate orchestration and do not stop merely because there is no scripted dispatcher helper).
 
 ### Step 1 — Ensure a derived task plan exists (mechanical)
 
@@ -83,9 +84,58 @@ This manifest is a derived view (like `task_plan_v1.md`) that:
 
 If the helper exits non-zero and wrote a feedback packet under the instance, STOP and print only the feedback packet path.
 
+### Step 2c — Stateful wave selection (mechanical; required)
+
+CAF owns normal build-wave selection. The default user command is:
+
+- `/caf build <instance_name>`
+
+Run:
+
+- `node tools/caf/build_wave_state_v1.mjs <instance_name>` when `wave_index` is omitted
+- `node tools/caf/build_wave_state_v1.mjs <instance_name> <wave_index>` when the explicit escape hatch is used
+
+This helper is authoritative for wave selection and `.caf-state` refresh. Do not reimplement its logic in-band.
+
+Helper contract:
+- It computes waves from `task_graph_v1.yaml` using the topological algorithm from Step 2.
+- It treats companion evidence as authoritative progress:
+  - `companion_repositories/<instance_name>/profile_v1/caf/task_reports/<task_id>.md`
+  - `companion_repositories/<instance_name>/profile_v1/caf/reviews/<task_id>.md`
+- It refreshes `reference_architectures/<instance_name>/.caf-state/build_wave_state_v1.json` on every run.
+- It treats companion task evidence older than the current `task_graph_v1.yaml` as stale and ignores it for wave completion / resume decisions.
+- On success it prints JSON describing:
+  - `execution_mode` (`full_run` or `wave_only`)
+  - `selected_wave_index`
+  - `total_tasks`
+  - `total_waves`
+  - `completed`
+  - `message`
+- On failure it writes a blocker feedback packet and prints only that packet path.
+
+Policy enforced by the helper:
+- If total task count is **10 or fewer**:
+  - normal mode is `full_run`
+  - explicit `wave_index` remains allowed as an escape hatch
+- If total task count is **greater than 10**:
+  - omitted `wave_index` is normal; CAF automatically selects the earliest incomplete wave
+  - rerunning `/caf build <instance_name>` resumes the current incomplete wave or advances to the next pending wave
+  - explicit `wave_index` is allowed only as an escape hatch; it MUST fail closed if it skips an earlier incomplete wave
+
+Selection rule:
+- In `wave_only` mode, dispatch ONLY the tasks in the selected wave.
+- In `full_run` mode, dispatch all tasks in wave order.
+
+Packet quality rule:
+- Do NOT emit a vague blocker such as “manual orchestration required” or “no canonical scripted dispatcher.”
+- Any packet emitted under this step MUST explain exactly which rerun command is required.
+
 ### Step 3 — Dispatch wave-by-wave (context-minimizing)
 
-For each task in wave order:
+For each task in the selected execution set:
+
+- full-run mode: all tasks in wave order
+- wave-only mode: only the tasks in the selected wave, still in lexicographic task_id order
 
 1) Dispatch the task to the worker skill implied by its `required_capabilities`.
 2) Immediately run `worker-code-reviewer` for that task’s artifacts (fail-closed).
@@ -102,12 +152,30 @@ For each task in wave order:
 
 On any worker/review failure: write a feedback packet and STOP.
 
+After the selected execution set succeeds, rerun the same helper command from Step 2c to refresh `.caf-state` from the newly written evidence.
+
+Completion messaging rule:
+- If `completed=true`, report that all work is complete.
+- If `execution_mode=wave_only` and `completed=false`, report:
+  - `current wave X out of Y completed`
+  - `next step: /caf build <instance_name>`
+- Do not require the user to remember or type the next wave number during normal usage.
+
 ### Step 4 — Build post-gate: runnable candidate integrity (mechanical; fail-closed)
 
-After ALL tasks have completed successfully, run:
+After ALL tasks in the selected execution set have completed successfully, run:
 
 - `node tools/caf/build_postgate_companion_runnable_v1.mjs <instance_name>`
 
-This post-gate is mechanical only. It MUST fail-closed if the companion repo is not minimally runnable (common issues: invalid compose service nodes like `ui: null`, stray root entrypoints like `profile_v1/main.py`).
+Run this post-gate:
+- after the full graph in full-run mode, or
+- in wave-only mode only after runtime wiring has completed (either in the selected wave or a prior completed wave)
+
+Wave-mode defer rule:
+- If runtime wiring has not completed yet, missing companion runnable surfaces (for example `docker/compose.candidate.yaml`) are expected.
+- In that case, the scripted helper may return success with a defer/skip message instead of blocking.
+- Do NOT write a feedback packet merely because runnable surfaces are absent before runtime wiring.
+
+This post-gate is mechanical only. Once runtime wiring has completed, it MUST fail-closed if the companion repo is not minimally runnable (common issues: invalid compose service nodes like `ui: null`, stray root entrypoints like `profile_v1/main.py`, or compose `name:` not matching `deployment.stack_name` from the resolved guardrails view).
 
 If the helper exits non-zero and wrote a feedback packet, STOP and print only the newest feedback packet path.

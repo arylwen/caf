@@ -34,6 +34,10 @@ This planner MUST write (overwrite when `overwrite=true`):
 - `reference_architectures/<name>/design/playbook/pattern_obligations_v1.yaml`
 - `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
 
+The `/caf plan` workflow MUST also produce (mechanical post-plan derivation; not hand-authored by this planner):
+
+- `reference_architectures/<name>/design/playbook/interface_binding_contracts_v1.yaml`
+
 Optional (search-friendly indexes; non-authoritative mirrors):
 
 - `reference_architectures/<name>/design/playbook/pattern_obligations_index_v1.tsv`
@@ -48,9 +52,14 @@ Instance inputs:
 - `reference_architectures/<name>/spec/playbook/architecture_shape_parameters.yaml`
 - `reference_architectures/<name>/spec/playbook/system_spec_v1.md`
 - `reference_architectures/<name>/spec/playbook/application_spec_v1.md`
+- `reference_architectures/<name>/design/playbook/application_domain_model_v1.yaml`
+- `reference_architectures/<name>/design/playbook/system_domain_model_v1.yaml`
 - `reference_architectures/<name>/design/playbook/application_design_v1.md`
 - `reference_architectures/<name>/design/playbook/control_plane_design_v1.md`
 - `reference_architectures/<name>/design/playbook/contract_declarations_v1.yaml`
+
+Do NOT require `reference_architectures/<name>/design/playbook/interface_binding_contracts_v1.yaml` as a planning input.
+That file is generated mechanically after `task_graph_v1.yaml` is emitted by the scripted post-plan phase.
 
 Normative library references:
 
@@ -78,9 +87,13 @@ If missing or invalid: write a feedback packet instructing the architect to reru
 - `production_hardening`
 
 3) Resource completeness gate:
-- `application_spec_v1.md` MUST contain a `## Resources` section.
-- It MUST contain at least one `### <ResourceName>`.
-- Each resource MUST include an `Operations:` list.
+- `design/playbook/application_domain_model_v1.yaml` is the authoritative planner-facing source for application resources.
+- Parse it as YAML and derive resource completeness in this order:
+  1. preferred: `api_candidates.resources[*]`
+  2. fallback: entity names from `domain.bounded_contexts[*].aggregates[*].entities[*].name`
+  3. last resort only when the application domain model is incomplete: a narrative `## Resources` section in `application_spec_v1.md` or the `ARCHITECT_EDIT_BLOCK: domain_and_resources_v1` bridge in the spec source
+- Refuse only if all three sources are empty/absent for an active application plane.
+- Do NOT require `application_spec_v1.md` to carry a canonical `## Resources` section; that was a older posture.
 
 4) Human choice-point gate:
 - If any architect-edit option set is present in the plane designs, each set MUST have exactly one adopted option.
@@ -128,9 +141,14 @@ Require these inputs exist before any planning work:
 - `reference_architectures/<name>/spec/playbook/system_spec_v1.md`
 - `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml`
 - `reference_architectures/<name>/spec/guardrails/tbp_resolution_v1.yaml`
+- `reference_architectures/<name>/design/playbook/application_domain_model_v1.yaml`
+- `reference_architectures/<name>/design/playbook/system_domain_model_v1.yaml`
 - `reference_architectures/<name>/design/playbook/application_design_v1.md`
 - `reference_architectures/<name>/design/playbook/control_plane_design_v1.md`
 - `reference_architectures/<name>/design/playbook/contract_declarations_v1.yaml`
+
+Do NOT require `reference_architectures/<name>/design/playbook/interface_binding_contracts_v1.yaml` as a planning input.
+That file is generated mechanically after `task_graph_v1.yaml` is emitted by the scripted post-plan phase.
 
 If any are missing:
 - write a feedback packet: `BP-YYYYMMDD-planning-missing-design-bundle.md`
@@ -142,6 +160,9 @@ If any are missing:
 Read the required inputs and extract only what is explicitly present:
 
 A) Planning pattern payloads (fail-closed)
+- Treat `planning_pattern_payload_v1` as a **script-owned design → planning handoff** materialized by `tools/caf/materialize_planning_pattern_payload_v1.mjs` during `/caf arch <name>`.
+- `/caf plan <name>` MUST run the deterministic handoff preflight `node tools/caf/design_postgate_planning_coherence_v1.mjs <name>` before this worker is invoked.
+- After that preflight passes, consume the payload blocks as present/authoritative. Do **not** invent a bespoke planner packet claiming the blocks are missing unless the files actually lack the CAF markers / YAML fence.
 - In both:
   - `application_design_v1.md`
   - `control_plane_design_v1.md`
@@ -155,7 +176,8 @@ A) Planning pattern payloads (fail-closed)
   - `required_trace_anchors` (list; may be empty)
   - `required_role_bindings` (list; may be empty)
   - `plane_placements` (list; may be empty)
-- If `promotions` is `{}` or any key is missing, FAIL-CLOSED with a feedback packet indicating that design-stage promotion union did not materialize (rerun `/caf arch <name>` after fixing producer behavior).
+- Empty `promotions.*` lists are valid. Missing keys are not.
+- If the blocks are actually missing, unparseable, or `promotions` is `{}` / missing any required key, FAIL-CLOSED by surfacing the CAF-owned packet from the deterministic handoff preflight and STOP. Do **not** author a second planner-specific packet that contradicts the files.
 
 
 
@@ -188,7 +210,7 @@ C) Domain model + API candidates (preferred)
 
 C2) Resource list fallback (only when domain_model is missing/incomplete)
 
-- From `application_spec_v1.md`, locate the `## Resources` section (or `ARCHITECT_EDIT_BLOCK: domain_and_resources_v1` if present).
+- From `application_spec_v1.md`, treat any `## Resources` section or `ARCHITECT_EDIT_BLOCK: domain_and_resources_v1` only as a narrative fallback, not the canonical planner-facing source.
 - Extract a deterministic list of resource names.
 - If the list is empty, allow an empty list (do not refuse).
 
@@ -220,14 +242,17 @@ F) Adopted decision options (fail-closed)
   - If any are missing: FAIL-CLOSED (design/pattern adoption drift). The feedback packet MUST list the missing pattern ids and instruct the architect to rerun `/caf arch <name>` after resolving the adoption drift.
 - Record the adopted option’s `summary` and `payload` (verbatim) for grounding; do not reinterpret.
 
-G) UI requirements (optional; fail-closed when present but invalid)
+G) Resolved UI pins (optional; fail-closed when required but invalid)
 
-- From `reference_architectures/<name>/spec/playbook/application_spec_v1.md`, locate `ARCHITECT_EDIT_BLOCK: ui_requirements_v1`.
-- If the YAML contains `ui.present: true`, record:
+- From `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml`, read the resolved `ui` object.
+- If `ui.present: true`, record:
   - `ui.kind`
-  - `ui.framework_preference`
+  - `ui.framework`
   - `ui.deployment_preference`
-- If the YAML block is present but cannot be parsed, FAIL-CLOSED.
+- Technology/runtime choices MUST come only from this resolved `ui` object.
+- Separately, read `reference_architectures/<name>/spec/playbook/application_spec_v1.md` → `ARCHITECT_EDIT_BLOCK: ui_product_surface_v1` as narrative grounding for shell/navigation/page wording.
+- Treat `ui_product_surface_v1` as product-surface intent only; it MUST NOT override or duplicate technology pins.
+- If the resolved file is missing or the `ui` object cannot be read when required, FAIL-CLOSED.
 
 ### Step 2 — Emit `pattern_obligations_v1.yaml`
 
@@ -341,6 +366,10 @@ If `lifecycle.generation_phase == implementation_scaffolding`, emit:
   - capability_id: `repo_documentation`
   - plane_scope: `cross_plane`
   - description: `Produce a practical operator README for the companion repo (start/run/test/env) grounded in pins + TBPs.`
+
+This obligation is mandatory in `implementation_scaffolding`.
+Do **not** treat it as optional, advisory, or postprocess-repairable.
+If omitted, planning output is incomplete and should be rejected by gates rather than repaired by helper scripts.
 
 
 8) TBP extension obligations (when present)
@@ -457,6 +486,7 @@ Output serialization safety (critical; prevents LLM output-token exhaustion):
 - Required capability ids MUST come from `80_phase_8_worker_capability_catalog_v1.yaml`.
 - Every task MUST include a first-class `steps:` array (5–12 items). Each step is a short imperative verb phrase.
 - YAML output MUST use ASCII quotes only (`"` / `'`). Do not emit smart quotes.
+- Any scalar that contains `: ` MUST be quoted or rephrased so the emitted YAML remains parseable. This applies to `title`, `description`, and any list-item scalar text.
 
 Planning promotions + references (required; no new decisions):
 
@@ -490,6 +520,7 @@ Non-negotiable planning integrity (fail-closed):
 A) Plane runtime scaffold tasks
 - `TG-00-CP-runtime-scaffold` → `plane_runtime_scaffolding`
 - `TG-00-AP-runtime-scaffold` → `plane_runtime_scaffolding`
+- Never emit older runtime scaffold capability ids `runtime_scaffolding_cp` or `runtime_scaffolding_ap` in new planning output. Those ids are transitional aliases only.
 
 B) Contract scaffolding tasks (two per boundary)
 - `TG-00-CONTRACT-<boundary_id>-AP` → `contract_scaffolding`
@@ -513,16 +544,27 @@ Derivation rules (deterministic; no new decisions):
     - `mixed` → `mixed`
     - `async_events` → `async_events`
     - `synchronous_api` → `synchronous_http`
+    - `synchronous_http` → `synchronous_http`
   - If no adopted surface choice can be located deterministically, set `contract_surface:custom`.
+- These anchors are part of the planner's required output. Do NOT rely on a hidden repair/postprocess step to fill them later.
 
-C) Policy tasks (when applicable)
-- `TG-00-CP-policy-surface` → `policy_enforcement`
-- `TG-00-AP-policy-enforcement` → `policy_enforcement`
+C) Policy / auth / tenant-context task (when applicable)
+- `TG-35-policy-enforcement-core` → `policy_enforcement`
 
-D) Auth task (when applicable)
-- `TG-00-AP-auth-mode` → `policy_enforcement`
+Planner rule (canonical; deterministic):
+- Emit one combined policy task when the selected patterns/obligations require any of:
+  - CP policy surface semantics
+  - AP policy enforcement
+  - AP auth mode
+  - tenant-context propagation / conflict handling
+- The combined task MUST cover those obligations in one task rather than splitting them into separate CP/AP/auth tasks.
+- Older split policy task ids (`TG-00-CP-policy-surface`, `TG-00-AP-policy-enforcement`, `TG-00-AP-auth-mode`) are transitional-only and MUST NOT appear in new planning output.
 
-E) Per-API-surface-candidate tasks (when applicable)
+Dependency rule (deterministic):
+- `TG-35-policy-enforcement-core` depends on every emitted contract scaffolding task.
+- If any `TG-20-api-boundary-*` tasks exist, it also depends on the lexicographically first emitted `TG-20-api-boundary-*` task so policy enforcement lands after at least one concrete AP ingress exists.
+
+D) Per-API-surface-candidate tasks (when applicable)
 
 For each `R` in `resource_names`:
 
@@ -535,7 +577,7 @@ Dependencies (minimal, deterministic):
 - `service-facade` has no required dependency beyond runtime scaffold (it owns the per-resource domain/service shape).
 - `api-boundary` depends on `service-facade`.
 - `persistence` depends on `service-facade`.
-- `AP-policy-enforcement` depends on contract scaffolding tasks if any exist.
+- `TG-35-policy-enforcement-core` depends on all emitted contract scaffolding tasks; if any AP boundary tasks exist, it also depends on the lexicographically first emitted `TG-20-api-boundary-*` task.
 
 ### TG-40 persistence task rails (mandatory)
 
@@ -560,25 +602,31 @@ Required semantic review question (minimum):
 
 E2) UI tasks (generic, data-driven; when applicable)
 
-If UI requirements were recorded (Step 1G) and `ui.present: true`:
+If resolved UI pins were recorded (Step 1G) and `ui.present: true`:
 
-- UI tasks are NOT derived from pattern obligations. They are derived ONLY from `ui_requirements_v1` + the authoritative UI task seeds.
-- When `ui.present: true`, you MUST emit at least the UI-01 seed task (`TG-15-ui-shell`) on the first pass, even if the UI block uses marketing-default values.
+- UI tasks are NOT derived from pattern obligations. They are derived ONLY from resolved `ui.*` pins in `profile_parameters_resolved.yaml` + the authoritative UI task seeds.
+- However, UI seed matching MAY reference the canonical adopted pattern set from `system_spec_v1.md:decision_resolutions_v1` when the seed file declares adopted-pattern conditions.
+- When `ui.present: true`, you MUST emit at least the UI-01 seed task (`TG-15-ui-shell`) on the first pass, even if the UI pins use defaulted values.
 
 - Load `architecture_library/phase_8/80_phase_8_ui_task_seeds_v1.yaml`.
 - Evaluate each `seed.when` clause using only:
   - the recorded `ui.*` values
-  - pinned values present in `architecture_shape_parameters.yaml` (by pin key, e.g., `CP-4`)
+  - canonical adopted pattern ids from `system_spec_v1.md:decision_resolutions_v1 (status: adopt)` when a seed declares `required_adopted_patterns_all` / `required_adopted_patterns_any`
+  - pinned values present in `architecture_shape_parameters.yaml` only when a seed explicitly declares pin conditions
 - Emit tasks from matching seeds.
 
 Rules (non-negotiable):
 - Seeds are authoritative. Do not invent additional UI tasks.
-- If a seed declares `per_resource: true`, expand it deterministically for every `R` in `resource_names`.
+- If a seed declares `per_resource: true`, expand it deterministically for every `R` in `resource_names`; do not collapse per-resource pages into `TG-15-ui-shell`.
+- If a seed declares `required_adopted_patterns_all`, only match when **all** listed pattern ids are adopted in `system_spec_v1.md`.
+- If a seed declares `required_adopted_patterns_any`, only match when **at least one** listed pattern id is adopted in `system_spec_v1.md`.
 - If a seed declares `required_pins_all`, only match when **all** listed pins exist (key present) in the instance pins.
 - UI tasks MUST be additive (they do not replace AP/CP tasks).
 - UI tasks MUST include at least one trace anchor that grounds them to either:
+  - `selected_pattern:<PATTERN_ID>` (for adopted-pattern-triggered seeds), or
   - `pinned_input:<PIN_KEY>` (for pin-triggered seeds), or
-  - `architect_edit:ui_requirements_v1` (for UI-requirements-triggered seeds).
+  - `pinned_input:ui.present` (for UI-triggered seeds driven by resolved profile parameters).
+- When `ui_product_surface_v1` is present and non-placeholder, use it to refine task titles, steps, DoD wording, and review questions for the already-authoritative UI tasks; do not invent extra task ids from prose alone.
 
 F) Cross-cutting decision option tasks (when applicable)
 
@@ -654,10 +702,14 @@ If `lifecycle.generation_phase == implementation_scaffolding`, emit one document
 
 - `TG-92-tech-writer-readme` → `repo_documentation`
 
+This task is mandatory in `implementation_scaffolding` whenever the companion repository is in scope.
+Do **not** rely on post-plan scripts to create this task if the planner omitted it.
+
 Inputs (required=true):
 - `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml`
 - `reference_architectures/<name>/spec/guardrails/tbp_resolution_v1.yaml`
 - `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
+- `reference_architectures/<name>/design/playbook/interface_binding_contracts_v1.yaml`
 
 Dependencies (minimal, deterministic):
 - If `TG-90-runtime-wiring` exists: depend on it.
@@ -803,26 +855,23 @@ Batching reminder (token discipline):
 - If you are using an LLM runner with strict output token caps, you MUST NOT dump the task graph into the response.
 - Always write/append `task_graph_v1.yaml` in ≤3-task batches until complete.
 
-### Step 3.5 — Emit backlog view `task_backlog_v1.md` (derived)
+### Step 3.5 — Backlog ownership boundary (required)
 
-Write a human-readable backlog view derived from `task_graph_v1.yaml` to:
+Do **not** emit `task_backlog_v1.md` in this planner step.
 
-- `reference_architectures/<name>/design/playbook/task_backlog_v1.md`
+Backlog projection is instruction-owned by the dedicated post-plan worker:
 
-Rules:
+- `skills/worker-task-backlog-projector/SKILL.md`
 
-- The backlog view MUST be a pure projection of the Task Graph (no new decisions).
-- Include one section per task, in execution-order-friendly grouping:
-  - `## <task_id>: <short title>`
-  - Capability (one line)
-  - Dependencies (task_id list)
-  - Definition of Done (bullets, copied verbatim)
-  - Semantic review questions (bullets)
-  - Story/Steps/References (from `semantic_review.constraints_notes`, copied verbatim)
-  - Trace anchors (bullets; include obligation ids where present)
-- Keep it concise: aim for 10–25 lines per task.
-- References MAY list the task's `inputs[].path` (copied verbatim). Do not add new paths.
+Why:
+- `task_backlog_v1.md` is a human-facing derived view, not a planner-owned source artifact.
+- The backlog must remain a pure projection of `task_graph_v1.yaml`.
+- Centralizing backlog emission in the dedicated worker avoids drift where the planner writes a plan-shaped file into the backlog path.
 
+Planner output boundary here:
+- Emit `task_graph_v1.yaml` and `task_graph_index_v1.tsv`.
+- Do **not** write or overwrite `reference_architectures/<name>/design/playbook/task_backlog_v1.md`.
+- The backlog will be emitted later by `/caf plan` finalization via `caf-arch-postprocess`.
 
 
 I) Pattern structural validation tasks (required)
@@ -839,6 +888,9 @@ For each such obligation `OBL-PAT-<pattern_id>` emit exactly one task:
   - `reference_architectures/<name>/design/playbook/application_design_v1.md`
   - `reference_architectures/<name>/design/playbook/control_plane_design_v1.md`
   - `reference_architectures/<name>/design/playbook/contract_declarations_v1.yaml`
+
+Do NOT require `reference_architectures/<name>/design/playbook/interface_binding_contracts_v1.yaml` as a planning input.
+That file is generated mechanically after `task_graph_v1.yaml` is emitted by the scripted post-plan phase.
   - `<definition_path>` (resolved from retrieval surface; required)
   - plus any cross-cutting promoted inputs already required on all tasks
 
@@ -880,3 +932,16 @@ The packet MUST list:
 - the files read
 - the task ids present
 
+
+G) Minimal interface binding contracts (required when consumer/provider/assembler closure loops exist)
+- Do not hand-author `reference_architectures/<name>/design/playbook/interface_binding_contracts_v1.yaml`; it is generated mechanically after `task_graph_v1.yaml` is emitted by the scripted post-plan phase.
+- The planner's responsibility is to emit the required `interface_binding_hints[]` on the relevant tasks in `task_graph_v1.yaml`.
+- When the task graph includes a consumer/provider/assembler loop that must preserve an explicit required/provided interface across waves, emit per-task `interface_binding_hints[]` so the generator can derive the binding contracts mechanically.
+- Keep each hinted binding minimal:
+  - `binding_key`
+  - `participant` (`consumer` | `provider` | `assembler`)
+  - `semantic_role`
+  - `required_interface_name` and `required_interface_description` on the consumer hint
+  - optional `binding_id`, `provider_binding_kind`, `assembler_binding_action`
+- Ensure the consumer, provider, and assembler tasks each take `interface_binding_contracts_v1.yaml` as a required input in the task graph (older `seam_contracts_v1.yaml` references remain tolerated only during migration).
+- Ensure the assembler task depends on both the consumer and provider tasks for every declared interface binding.

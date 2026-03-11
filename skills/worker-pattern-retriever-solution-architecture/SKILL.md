@@ -79,7 +79,7 @@ Run steps in order:
 - `node tools/caf/prefilter_semantic_candidates_v1.mjs <instance_name> --profile=solution_architecture --limit=180`
 
 2) Build/refresh retrieval context blob (mandatory):
-- `node tools/caf/build_retrieval_context_blob_v1.mjs <instance_name> --profile=solution_architecture`
+- `node tools/caf/retrieval_preflight_v1.mjs <instance_name> --profile=solution_architecture`
 
 3) Semantic retrieval/ranking (LLM-owned; mandatory)
 - Input: `reference_architectures/<instance_name>/design/playbook/retrieval_context_blob_solution_architecture_v1.md`

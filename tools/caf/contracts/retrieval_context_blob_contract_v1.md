@@ -56,12 +56,15 @@ The blob MUST be emitted with the following **exact** heading order:
 4. `## PINS_SUMMARY`
 5. `## GUARDRAILS_SUMMARY`
 6. `## ARCHITECT_DECISIONS`
-7. `## SPEC_SIGNAL`
-8. `## DOMAIN_RESOURCES` (solution_architecture only)
-9. `## UI_SIGNAL` (only if present)
-10. `### BRIDGE_ECHO (canonical phrases)`
+7. `## Pin-derived system constraints (CAF-managed)`
+8. `## Technology posture (CAF-managed)`
+9. `## SPEC_SIGNAL`
+10. `## DOMAIN_RESOURCES` (solution_architecture only)
+11. `## UI_SIGNAL` (only if present)
+12. `### BRIDGE_ECHO (canonical phrases)`
 
 Notes:
+
 - Pins are allowed to dominate length; they are the highest-signal retrieval input.
 - The script is responsible for normalization and truncation behavior.
 
@@ -70,6 +73,7 @@ Notes:
 Caps are **enforced by the script** to prevent unstable truncation.
 
 Targets (not exact):
+
 - `arch_scaffolding`: ≤ 60k chars, ≤ 400 bullets
 - `solution_architecture`: ≤ 80k chars, ≤ 520 bullets
 
@@ -109,3 +113,9 @@ The blob MUST NOT:
 - decide which patterns are relevant;
 - encode bespoke inclusion logic ("if pin X then pattern Y");
 - introduce architecture choices.
+
+## MP-20 retrieval semantics
+
+- `tools/caf/retrieval_preflight_v1.mjs` is the explicit retrieval **pre-gate**. It must rebuild the blob from the current spec/guardrails state before semantic retrieval.
+- `tools/caf/build_retrieval_context_blob_v1.mjs` is responsible for semantic-readiness fail-closed checks on upstream CAF-managed blocks.
+- `tools/caf/retrieval_gate_v1.mjs` is the retrieval **post-gate**. It validates that required retrieval outputs exist and that CAF-managed sections were propagated into the blob; it must not reinterpret benign phrases like `TODO comments` as placeholder evidence.

@@ -15,20 +15,28 @@
 - Notes: AuthN/Z mechanism is intentionally unspecified at this stage unless pinned elsewhere.
 <!-- CAF_MANAGED_BLOCK: intent_derived_app_plane_constraints_v1 END -->
 
-<!-- ARCHITECT_EDIT_BLOCK: ui_requirements_v1 START -->
-## User interface requirements (architect-edit; marketing-default)
+<!-- ARCHITECT_EDIT_BLOCK: ui_product_surface_v1 START -->
+## User interface product surface (architect-edit)
 
-(YAML. This section is used to ground UI-driven pattern candidates such as BFF/API composition.)
+Use this section to describe the **product-facing experience**, not implementation details.
+Write down what a human user should be able to do and what screens or flows need to exist.
 
-```yaml
-ui:
-  present: true
-  kind: web_spa
-  framework_preference: react
-  deployment_preference: separate_ui_service  # options: separate_ui_service | served_by_application_plane
-  notes: "Marketing demo default: include a React SPA UI."
-```
-<!-- ARCHITECT_EDIT_BLOCK: ui_requirements_v1 END -->
+How to use this block:
+
+1. Keep the language product-facing.
+2. Describe actors, journeys, and screens.
+3. Avoid framework/runtime choices here; those belong in `spec/guardrails/profile_parameters.yaml`.
+4. It is acceptable to keep the starter example below for a first CAF run and then refine it later.
+
+Starter example (replace or adapt):
+
+- The product includes a browser-based UI for tenant operators and reviewers.
+- The primary navigation includes: Dashboard, Workspaces, Submissions, Review Queue, Reports, and Settings.
+- A user can create a workspace, submit an item for review, inspect the review result, and export a report.
+- Operators can filter work by tenant, status, owner, and date range.
+- Keep the UX lightweight for local/demo runs: straightforward forms, list/detail pages, and clear status labels are enough.
+- The UI does not need rich collaboration features in the first iteration; correctness and visible end-to-end flow matter more than polish.
+<!-- ARCHITECT_EDIT_BLOCK: ui_product_surface_v1 END -->
 
 <!-- CAF_MANAGED_BLOCK: caf_decision_pattern_candidates_v1 START -->
 ## CAF decision pattern candidates (advisory; grounded)
@@ -54,7 +62,8 @@ For each candidate, emit exactly:
 <!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 START -->
 ## Decision resolutions (architect-edit; optional)
 
-(YAML. Optional local approvals for application-plane decisions. System spec is canonical if conflicts exist.)
+Use this YAML block only for local application-plane decisions you want to record explicitly.
+If you are just trying CAF for the first time, it is fine to leave this empty.
 
 ```yaml
 schema_version: decision_resolutions_v1
@@ -62,40 +71,68 @@ decisions: []
 ```
 <!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 END -->
 
-<!-- ARCHITECT_EDIT_BLOCK: domain_and_resources_v1 START -->
-## Domain
+<!-- ARCHITECT_EDIT_BLOCK: domain_and_capabilities_v1 START -->
+## Product domain and capabilities (architect-edit)
 
-(Example only  -  replace with your real domain/resources.)
+Use this section to describe the **business-facing application behavior**.
+Do not try to fully normalize entities here; the detailed application-plane domain model belongs in `spec/playbook/application_domain_model_v1.md`.
 
-This application manages widgets with a name, description, and content (all text).
+What to capture here:
 
-## Resources
+- what the product helps users accomplish
+- the main business objects users talk about
+- the major user-visible operations
+- any important business constraints the application must respect
 
-### Widget
+Starter example (replace or adapt):
 
-Fields:
+This product helps tenant teams submit items for automated review, inspect findings, and publish final reports.
 
-- name: text (required)
-- description: text (required)
-- content: text (required)
+Main business objects:
 
-Operations:
+- Workspace: a tenant-scoped container for review activity
+- Submission: an item a user sends into the review flow
+- Review: the current evaluation state and findings for a submission
+- Report: an exported or shareable outcome summarizing the review result
 
-- list
-- get
-- create
-- update
-- delete
-<!-- ARCHITECT_EDIT_BLOCK: domain_and_resources_v1 END -->
+User-visible capabilities:
+
+- create and manage workspaces
+- submit an item for review
+- list and inspect submissions by status
+- review findings and mark a submission as approved or rejected
+- export a report for downstream use
+
+Business constraints:
+
+- every business object is tenant-scoped
+- status changes must be visible to the user
+- reports must be reproducible from the final approved review state
+- destructive actions should be limited and intentional in the first release
+
+Move these details into `application_domain_model_v1.md` when you want fields, invariants, and persistence intent.
+<!-- ARCHITECT_EDIT_BLOCK: domain_and_capabilities_v1 END -->
 
 <!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 START -->
 ## Open questions (architect-edit)
 
-(Unresolved questions discovered during scaffolding.)
+Use this section for unresolved questions that should remain visible to the human architect.
+
+Starter examples:
+
+- Do we need draft autosave for submissions, or is explicit save enough for the first release?
+- Should reports be regenerated on demand or stored as immutable snapshots?
+- Are review decisions single-step, or do they require multi-person approval later?
 <!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 END -->
 
 <!-- ARCHITECT_EDIT_BLOCK: notes_and_constraints_v1 START -->
 ## Notes / constraints (optional)
 
-(Add any domain constraints, invariants, or nonfunctional requirements relevant to the application plane.)
+Use this section for compact application-plane constraints that matter architecturally.
+
+Starter examples:
+
+- Prefer simple CRUD + workflow progression over advanced collaboration in the first version.
+- Optimize for clear end-to-end demonstration of the product flow rather than UI sophistication.
+- Keep terminology stable across UI, APIs, and domain model artifacts.
 <!-- ARCHITECT_EDIT_BLOCK: notes_and_constraints_v1 END -->

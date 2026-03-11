@@ -24,7 +24,7 @@ Detect and report **CAF framework drift** (CAF library + scaffolding that produc
 - meta indexes under `architecture_library/__meta/**`
 
 This skill is **fail-closed**:
-- If drift is detected: write a feedback packet to `technical_notes/feedback_packets/` and stop.
+- If drift is detected: write a feedback packet to `feedback_packets/caf/` and stop.
 - If no drift: print a single-line success message.
 
 Do **not** print packet contents.
@@ -46,7 +46,7 @@ A) **No drift**
 
 B) **Drift detected (fail-closed)**
 - Write a feedback packet:
-  - `technical_notes/feedback_packets/BP-YYYYMMDD-drift-eval-caf.md`
+  - `feedback_packets/caf/BP-YYYYMMDD-drift-eval-caf.md`
 - Print only:
   - `CAF drift-eval: FAIL (feedback packet written to <path>).`
 
@@ -102,7 +102,8 @@ Flag placeholders like `<...>` in any file under:
 - `skills/**`
 - `.agent/workflows/**`
 - `.codex/skills/**`
-- `technical_notes/**`
+- `docs/maintainer/**`
+- `docs/dev/maintainer/**`
 
 **Allowed placeholder locations (only):**
 - files with `template` in the filename
@@ -158,8 +159,6 @@ and meta-pattern guidance under `architecture_library/patterns/caf_meta_v1/**`).
 Targets (producer skills):
 - `skills/caf-solution-architect/SKILL.md`
 - `skills/caf-system-architect/SKILL.md`
-- `skills/caf-app-designer/SKILL.md`
-- `skills/caf-platform-designer/SKILL.md`
 
 Checks:
 

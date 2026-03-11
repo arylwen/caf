@@ -1,6 +1,6 @@
 # CAF CLI pipeline helpers (context-reset)
 
-These scripts replace the removed `/caf demo` orchestration skill.
+These scripts are runner-specific context-reset helpers for multi-step CAF flows. They are not part of the public `/caf` command canon.
 
 ## Why these exist
 
@@ -35,7 +35,7 @@ tools\caf\cli\run_caf_flow_v1.cmd <instance_name>
 
 1) `caf-saas` (initialize instance)
 2) `caf-arch` (phase-correct compile)
-3) `caf-next` with `apply=true` (advance phase)
+3) `caf-next` with `apply` (advance phase)
 4) `caf-arch` again (phase-correct compile)
 5) `caf-build-candidate`
 

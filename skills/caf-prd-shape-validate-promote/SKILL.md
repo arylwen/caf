@@ -36,7 +36,7 @@ On PASS (auto-promote default policy):
 
 - Write/overwrite authoritative:
   - `reference_architectures/<instance_name>/spec/playbook/architecture_shape_parameters.yaml`
-  - Content MUST be an exact byte-for-byte copy of the proposed YAML.
+  - Content MUST preserve the validated pins and stamp lifecycle provenance under `meta.lifecycle_shape_status: "prd_promoted"`.
 
 On FAIL:
 
@@ -127,7 +127,8 @@ For each pin, `rationale.selected_value` MUST equal the proposed YAML pin value 
 
 If (and only if) all checks pass:
 
-- Copy `architecture_shape_parameters.proposed.yaml` to `architecture_shape_parameters.yaml` (overwrite).
+- Promote the validated YAML to `architecture_shape_parameters.yaml` (overwrite).
+- Stamp lifecycle provenance metadata so downstream lifecycle gates can distinguish PRD-promoted shape from the bootstrap seed.
 
 No other files are modified.
 

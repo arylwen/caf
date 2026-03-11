@@ -54,4 +54,7 @@ template_instances:
       ST-6: "Inline Evidence Emission"
 
 meta:
+  lifecycle_shape_status: "seeded_template_default"
+  lifecycle_shape_source: "caf-saas-init"
+  lifecycle_shape_contract: "phase_8_prd_lifecycle_integration_v1"
   notes: "Pinned values mirror the intentionally_boring_saas Phase 7 reference implementation example."

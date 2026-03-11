@@ -112,6 +112,7 @@ function readProfileConfigSubset(profilesPath, profileName) {
       max_opened_definitions_for_graph: 0,
       seed_confidence_min: 'MED',
     },
+    exclude_candidate_ids: [],
   };
 
   // Parse include_namespaces list
@@ -122,6 +123,19 @@ function readProfileConfigSubset(profilesPath, profileName) {
         const tt = block[k].trim();
         if (!tt.startsWith('- ')) break;
         cfg.include_namespaces.push(tt.slice(2).trim());
+      }
+    }
+  }
+
+
+  // Parse exclude_candidate_ids list
+  for (let j = 0; j < block.length; j++) {
+    const t = block[j].trim();
+    if (t === 'exclude_candidate_ids:') {
+      for (let k = j + 1; k < block.length; k++) {
+        const tt = block[k].trim();
+        if (!tt.startsWith('- ')) break;
+        cfg.exclude_candidate_ids.push(tt.slice(2).trim());
       }
     }
   }
@@ -329,6 +343,7 @@ function main() {
   const openListTarget = Math.max(1, reserveSlots) * Math.max(1, oversampleFactor);
   const relationKinds = (graphCfg.relation_kinds ?? []).map((k) => String(k).trim()).filter(Boolean);
   const includeNamespaces = (view.include_namespaces ?? []).map(String);
+  const excludedCandidateIds = new Set((view.exclude_candidate_ids ?? []).map(String).filter(Boolean));
 
   // Phase/profile policy: allow traversal across the full typed adjacency graph, but ensure
   // the emitted open-list respects the profile's intended namespace scope.
@@ -390,6 +405,7 @@ function main() {
         relation_kinds: relationKinds,
         include_namespaces: includeNamespaces,
         deny_namespaces: denyNamespaces,
+        exclude_candidate_ids: Array.from(excludedCandidateIds),
       },
       seeds,
       candidates: [],
@@ -496,12 +512,14 @@ function main() {
 
   const suppressed = {
     by_namespace: Object.create(null),
+    by_reason: Object.create(null),
     examples: [],
   };
 
   function noteSuppressed(ns, id, reason) {
     const key = String(ns || 'unknown');
     suppressed.by_namespace[key] = (suppressed.by_namespace[key] ?? 0) + 1;
+    suppressed.by_reason[reason] = (suppressed.by_reason[reason] ?? 0) + 1;
     if (suppressed.examples.length < 12) suppressed.examples.push({ namespace: key, id, reason });
   }
 
@@ -531,15 +549,19 @@ function main() {
 
       const tgtRec = byId.get(tgtId);
       if (!tgtRec) continue;
+      const hop = cur.hop + 1;
+      const kindWeight = KIND_WEIGHT[kind] ?? 0;
+      const pathEdges = [...cur.pathEdges, { from: cur.id, kind, to: tgtId }];
+      if (excludedCandidateIds.has(tgtId)) {
+        noteSuppressed(tgtRec.namespace, tgtId, 'excluded_candidate_id');
+        queue.push({ id: tgtId, hop, fromSeed: cur.fromSeed, pathEdges });
+        continue;
+      }
       if (denySet.has(tgtRec.namespace)) {
         noteSuppressed(tgtRec.namespace, tgtId, 'denied_namespace');
         continue;
       }
       if (includeNamespaces.length > 0 && !includeNamespaces.includes(tgtRec.namespace)) continue;
-
-      const hop = cur.hop + 1;
-      const kindWeight = KIND_WEIGHT[kind] ?? 0;
-      const pathEdges = [...cur.pathEdges, { from: cur.id, kind, to: tgtId }];
 
       if (!isExcludedTarget) {
         const cand = {
@@ -637,6 +659,7 @@ function main() {
       relation_kinds: relationKinds,
       include_namespaces: includeNamespaces,
       deny_namespaces: denyNamespaces,
+      exclude_candidate_ids: Array.from(excludedCandidateIds),
     },
     seeds,
     candidates: selected.map((c) => ({
@@ -657,6 +680,7 @@ function main() {
   traceLines.push('');
   traceLines.push(`Instance: ${instance}`);
   traceLines.push(`Surface: architecture_library/patterns/retrieval_surface_v1/pattern_graph_surface_v1.jsonl`);
+  if (excludedCandidateIds.size > 0) traceLines.push(`Excluded candidate ids: ${Array.from(excludedCandidateIds).join(', ')}`);
   traceLines.push('');
   traceLines.push('## Config');
   traceLines.push('```yaml');
@@ -670,6 +694,7 @@ function main() {
       relation_kinds: relationKinds,
       include_namespaces: includeNamespaces,
       deny_namespaces: denyNamespaces,
+      exclude_candidate_ids: Array.from(excludedCandidateIds),
     }).trimEnd()
   );
   traceLines.push('```');

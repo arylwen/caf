@@ -1,0 +1,48 @@
+schema_version: phase8_architecture_binding_pattern_v1
+abp_id: ABP-CLEAN-01
+style_key: clean_architecture
+name: Clean Architecture
+plane_neutral: true
+summary: Plane-neutral Clean Architecture style with explicit use-case, domain, and adapter roles.
+roles:
+  - role_id: composition_root
+    summary: Runtime assembly point that wires inbound adapters, use cases, and outbound adapters.
+  - role_id: inbound_adapters
+    summary: Entry surfaces that translate external requests/messages into application use cases.
+  - role_id: application_use_cases
+    summary: Application orchestration boundary that coordinates domain behavior and ports.
+  - role_id: domain_core
+    summary: Domain rules and invariants independent of framework and infrastructure code.
+  - role_id: outbound_ports
+    summary: Stable abstractions for dependencies required by application/domain logic.
+  - role_id: outbound_adapters
+    summary: Concrete implementations of outbound ports for persistence and external systems.
+dependency_rules:
+  - from_role: inbound_adapters
+    to_role: application_use_cases
+    rule: allowed
+  - from_role: application_use_cases
+    to_role: domain_core
+    rule: allowed
+  - from_role: application_use_cases
+    to_role: outbound_ports
+    rule: allowed
+  - from_role: outbound_adapters
+    to_role: outbound_ports
+    rule: allowed
+  - from_role: composition_root
+    to_role: inbound_adapters
+    rule: allowed
+  - from_role: composition_root
+    to_role: application_use_cases
+    rule: allowed
+  - from_role: composition_root
+    to_role: outbound_adapters
+    rule: allowed
+invariants:
+  - id: ABP-CLEAN-INV-01
+    text: domain_core must not import framework or infrastructure modules.
+  - id: ABP-CLEAN-INV-02
+    text: application_use_cases coordinate work through explicit ports rather than direct infrastructure dependencies.
+  - id: ABP-CLEAN-INV-03
+    text: composition_root is the binding point; runtime assembly must not leak into domain_core.

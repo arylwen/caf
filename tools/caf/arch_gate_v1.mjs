@@ -27,11 +27,17 @@ import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { parseYamlString } from './lib_yaml_v2.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
+import { SHAPE_LIFECYCLE_STATUS, getShapeLifecycleStatus } from './lib_shape_lifecycle_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { runValidateInstance } from './validate_instance_v1.mjs';
 import { runGuardrails } from './guardrails_v1.mjs';
 import { runDeriveContract } from './derive_contract_v1.mjs';
-import { listFeedbackPacketFilesSync, listBlockingFeedbackPacketFilesSync } from './lib_feedback_packets_v1.mjs';
+import {
+  listFeedbackPacketFilesSync,
+  listBlockingFeedbackPacketFilesSync,
+  markPendingFeedbackPacketsStaleSync,
+  renderFeedbackPacketV1,
+} from './lib_feedback_packets_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 
@@ -103,6 +109,24 @@ function nowStampYYYYMMDD() {
 
 function fileExists(p) {
   return existsSync(p);
+}
+
+function listArchitectureScaffoldingDeliverables(layout) {
+  return [
+    path.join(layout.specPlaybookDir, 'system_spec_v1.md'),
+    path.join(layout.specPlaybookDir, 'application_spec_v1.md'),
+    path.join(layout.specPlaybookDir, 'application_domain_model_v1.md'),
+    path.join(layout.specPlaybookDir, 'system_domain_model_v1.md'),
+    path.join(layout.specPlaybookDir, 'semantic_candidate_subset_arch_scaffolding_v1.jsonl'),
+    path.join(layout.specPlaybookDir, 'grounded_candidate_records_arch_scaffolding_v1.md'),
+    path.join(layout.specMetaDir, 'spec_traceability_mindmap_v3.md'),
+  ];
+}
+
+function listPresentArchitectureScaffoldingDeliverables(repoRoot, layout) {
+  return listArchitectureScaffoldingDeliverables(layout)
+    .filter((absPath) => fileExists(absPath))
+    .map((absPath) => safeRel(repoRoot, absPath));
 }
 
 function listFiles(dir) {
@@ -267,7 +291,7 @@ async function safeDeleteResolvedOnly(repoRoot, resolvedAbsPath, instanceRootAbs
   await fs.unlink(t);
 }
 
-async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines) {
+async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines, severity = 'blocker') {
   const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
   await ensureDir(packetsDir);
 
@@ -280,7 +304,7 @@ async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstra
     title: 'caf-arch-gate',
     instanceName,
     stuckAt: 'tools/caf/arch_gate_v1.mjs',
-    severity: 'blocker',
+    severity,
     status: 'pending',
     observedConstraint,
     gapType: 'Stale derived view | Pinned input mismatch',
@@ -341,6 +365,7 @@ async function readPinsAndResolved(repoRoot, pinsPath, resolvedPath) {
   return {
     pins: parsePinsFromYamlObj(pinsObj),
     resolved: parseResolvedFromYamlObj(resolvedObj),
+    resolvedObj,
   };
 }
 
@@ -367,6 +392,9 @@ const layout = getInstanceLayout(repoRoot, instanceName);
   const guardrailsDir = layout.specGuardrailsDir;
   const pinsPath = path.join(guardrailsDir, 'profile_parameters.yaml');
   const resolvedPath = path.join(guardrailsDir, 'profile_parameters_resolved.yaml');
+  const shapePath = path.join(layout.specPlaybookDir, 'architecture_shape_parameters.yaml');
+  const productPrdPath = path.join(instRoot, 'product', 'PRD.md');
+  const platformPrdPath = path.join(instRoot, 'product', 'PLATFORM_PRD.md');
 
   // Write guardrails: may only write inside instance root.
   REPO_ROOT_ABS = path.resolve(repoRoot);
@@ -425,7 +453,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
 
   // Postcondition: pins ↔ resolved coherence with one deterministic retry.
   {
-    const { pins, resolved } = await readPinsAndResolved(repoRoot, pinsPath, resolvedPath);
+    const { pins, resolved, resolvedObj } = await readPinsAndResolved(repoRoot, pinsPath, resolvedPath);
     let mismatches = comparePinnedVsResolved(pins, resolved);
     if (mismatches.length > 0) {
       // Deterministic recovery: delete only the derived resolved view, rerun Guardrails once.
@@ -446,6 +474,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
 
       const reread = await readPinsAndResolved(repoRoot, pinsPath, resolvedPath);
       mismatches = comparePinnedVsResolved(reread.pins, reread.resolved);
+      resolvedObj.deployment = reread.resolvedObj?.deployment || resolvedObj.deployment;
     }
 
     if (mismatches.length > 0) {
@@ -468,10 +497,118 @@ const layout = getInstanceLayout(repoRoot, instanceName);
       die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 31);
     }
 
-    // Ship blocker: prevent accidental regeneration of architecture_scaffolding after a checkpoint exists.
+    const deploymentStackName = normalizeScalar(resolvedObj?.deployment?.stack_name);
+    if (!deploymentStackName) {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        'arch-gate-missing-deployment-stack-name',
+        'Guardrails resolved view is missing deployment.stack_name after derivation',
+        [
+          'Inspect tools/caf/guardrails_v1.mjs and the deployment identity contract, then rerun caf arch <name>.',
+          'The resolved view must carry the canonical deployment identity for all IaC surfaces.',
+        ],
+        [
+          safeRel(repoRoot, resolvedPath),
+          `instance_name=${instanceName}`,
+        ]
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 31);
+    }
+
+    if (normalizeScalar(resolved.generation_phase) === 'architecture_scaffolding') {
+      if (!fileExists(shapePath)) {
+        const fp = await writeFeedbackPacket(
+          repoRoot,
+          instanceName,
+          'arch-prd-shape-missing',
+          'Architecture scaffolding requires spec/playbook/architecture_shape_parameters.yaml to exist',
+          [
+            'Preferred: run /caf prd <name> so CAF can validate and promote a lifecycle-ready architecture shape.',
+            'Architect-edited alternative: create or restore spec/playbook/architecture_shape_parameters.yaml, then rerun /caf arch <name>.',
+          ],
+          [
+            `phase=${normalizeScalar(resolved.generation_phase)}`,
+            `missing=${safeRel(repoRoot, shapePath)}`,
+          ]
+        );
+        die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 32);
+      }
+
+      let shapeObj = null;
+      try {
+        shapeObj = parseYamlString(await readUtf8(shapePath), safeRel(repoRoot, shapePath));
+      } catch (e) {
+        const fp = await writeFeedbackPacket(
+          repoRoot,
+          instanceName,
+          'arch-prd-shape-unreadable',
+          'Architecture scaffolding requires a readable architecture shape file',
+          [
+            'Fix the YAML syntax in spec/playbook/architecture_shape_parameters.yaml, or rerun /caf prd <name> to regenerate/promote a valid shape.',
+            'Then rerun /caf arch <name>.',
+          ],
+          [
+            safeRel(repoRoot, shapePath),
+            `yaml_error=${String(e?.message ?? e)}`,
+          ]
+        );
+        die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 32);
+      }
+
+      const shapeStatus = getShapeLifecycleStatus(shapeObj);
+      if (shapeStatus === SHAPE_LIFECYCLE_STATUS.SEEDED_TEMPLATE_DEFAULT) {
+        const fp = await writeFeedbackPacket(
+          repoRoot,
+          instanceName,
+          'arch-prd-shape-not-ready',
+          'Architecture scaffolding is still using the bootstrap seeded template default for architecture_shape_parameters.yaml. For the default command flow, CAF surfaces this as advisory and continues.',
+          [
+            'Recommended command-only path: run /caf prd <name> (promote=true by default) before relying on the first /caf arch output as your stable architecture baseline.',
+            'If architecture scaffolding looks off, review the PRD source docs, rerun /caf prd <name>, and then rerun /caf arch <name>.',
+            'See docs/user/15_prd_first_lifecycle.md for the PRD-first lifecycle and operator guidance.',
+          ],
+          [
+            `phase=${normalizeScalar(resolved.generation_phase)}`,
+            `shape_status=${shapeStatus}`,
+            safeRel(repoRoot, shapePath),
+            `product_prd=${fileExists(productPrdPath) ? 'present' : 'missing'}:${safeRel(repoRoot, productPrdPath)}`,
+            `platform_prd=${fileExists(platformPrdPath) ? 'present' : 'missing'}:${safeRel(repoRoot, platformPrdPath)}`,
+          ],
+          'advisory'
+        );
+        console.log(`Warning: Wrote advisory feedback packet: ${safeRel(repoRoot, fp)}`);
+      }
+    }
+
+    // Ship blocker: prevent accidental regeneration of architecture_scaffolding after deliverables already exist.
     // Rationale: rerunning scaffolding in-place has a high chance of mixing derived artifacts with stale deliverables.
     // Update flows are intentionally explicit (reset + rerun), not implicit.
     if (normalizeScalar(resolved.generation_phase) === 'architecture_scaffolding') {
+      const presentDeliverables = listPresentArchitectureScaffoldingDeliverables(repoRoot, layout);
+      if (presentDeliverables.length > 0) {
+        const fp = await writeFeedbackPacket(
+          repoRoot,
+          instanceName,
+          'arch-overwrite-architecture-scaffolding-not-supported',
+          'Architecture scaffolding deliverables are already present; regenerating architecture_scaffolding in-place is not supported',
+          [
+            'Preferred: advance the state machine and continue forward.',
+            '  - /caf next <name> apply',
+            '  - /caf arch <name> (design stage)',
+            '  - /caf plan <name> (planning stage)',
+            'If you truly need to regenerate architecture scaffolding, perform an explicit reset first:',
+            '  - node tools/caf/architecture_scaffolding_reset_v1.mjs <name> overwrite',
+            '  - then rerun /caf arch <name>',
+          ],
+          [
+            `phase=${normalizeScalar(resolved.generation_phase)}`,
+            ...presentDeliverables.slice(0, 20),
+          ]
+        );
+        die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 32);
+      }
+
       const checkpointRoot = path.join(instRoot, '.caf-state', 'checkpoints');
       const hasArchScaffoldCheckpoint = (() => {
         try {
@@ -480,7 +617,6 @@ const layout = getInstanceLayout(repoRoot, instanceName);
         } catch (e) {
           const code = String(e?.code ?? '').toUpperCase();
           if (code === 'ENOENT') return false;
-          // Fail-closed: unreadable checkpoints dir is treated as "checkpoint exists".
           return true;
         }
       })();
@@ -493,7 +629,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
           'Architecture scaffolding was already checkpointed; regenerating architecture_scaffolding in-place is not supported',
           [
             'Preferred: advance the state machine (checkpoint + phase transition) and proceed forward.',
-            '  - /caf next <name> apply=true',
+            '  - /caf next <name> apply',
             '  - /caf arch <name> (design stage)',
             '  - /caf plan <name> (planning stage)',
             'If you truly need to regenerate scaffolding, perform an explicit reset first (destructive to derived outputs):',

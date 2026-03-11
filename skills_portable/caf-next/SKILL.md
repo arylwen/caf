@@ -3,7 +3,7 @@ name: caf-next
 description: >
   User-initiated phase advancement advisor/applier for a CAF instance.
   Fail-closed: recommends the next sensible generation_phase based on observable artifacts
-  (state machine predicates), and if apply=true, edits only profile_parameters.yaml.
+  (state machine predicates), and when apply is requested, edits only profile_parameters.yaml.
 ---
 
 > **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
@@ -21,14 +21,14 @@ Provide a low-friction, **user-initiated** way to advance `lifecycle.generation_
 This skill may act as an “expert” in the *derivation state machine* by:
 - inspecting observable artifacts under `reference_architectures/<name>/`
 - determining whether a phase advance is **sensible** (prerequisites satisfied)
-- printing what it recommends (and what it changed, if apply=true)
+- printing what it recommends (and what it changed, if apply is requested)
 
 This skill MUST NOT introduce new architecture decisions. It may only recommend and (optionally) update
 the single pinned key `lifecycle.generation_phase`.
 
 ## Inputs
 - Instance name: `<name>`
-- Optional: `apply=true|false` (default: false)
+- Optional: literal token `apply` (omit it for dry-run preview)
 
 ## Reads (authoritative)
 - `reference_architectures/<name>/spec/guardrails/profile_parameters.yaml`
@@ -43,8 +43,8 @@ Additional reads (for state predicates; informational):
 - `reference_architectures/<name>/feedback_packets/` (presence of non-advisory packets indicates fail-closed latch; packets containing `Severity: advisory` are warnings only)
 
 ## Writes
-- Always (apply=false or apply=true): write/update `reference_architectures/<name>/spec/guardrails/derivation_cascade_contract_v1.md` (Markdown; strict headings; see below).
-- If `apply=true`: update `reference_architectures/<name>/spec/guardrails/profile_parameters.yaml` ONLY by changing `lifecycle.generation_phase`.
+- Always: write/update `reference_architectures/<name>/spec/guardrails/derivation_cascade_contract_v1.md` (Markdown; strict headings; see below).
+- If `apply` is present: update `reference_architectures/<name>/spec/guardrails/profile_parameters.yaml` ONLY by changing `lifecycle.generation_phase`.
 - Otherwise: no other writes.
 
 ### Derivation cascade contract (v1) — strict Markdown
@@ -57,9 +57,9 @@ Required headings (in this order):
 4. `## Derived view status` — whether `profile_parameters_resolved.yaml` exists; if it appears stale vs pins (see checks below).
 5. `## Observable artifacts` — existence list for the key state predicates files (playbook specs/design/task graph; feedback packets latch).
 6. `## State predicates` — brief pass/fail list of the phase-specific prerequisites evaluated.
-7. `## Allowed commands and next steps` — include full syntax lines for `/caf saas <name>`, `/caf arch <name>`, `/caf next <name> [apply=true]`, `/caf build <name>`.
+7. `## Allowed commands and next steps` — include full syntax lines for `/caf saas <name>`, `/caf arch <name>`, `/caf next <name> [apply]`, `/caf build <name>`.
 8. `## Recommendation` — recommended next phase (or no change) and why, citing predicates.
-9. `## Changes applied` — if apply=true and phase changed, record old→new; else state 'no changes'.
+9. `## Changes applied` — if `apply` is present and phase changed, record old→new; else state `no changes`.
 
 **No YAML/JSON/TSV** in this file. Use bullets and short quoted snippets only.
 
@@ -98,7 +98,7 @@ artifacts for the current phase are missing.
 ### State-machine-aware recommendation (expert mode)
 
 Use the descriptive predicates in:
-- `technical_notes/TN-005_phase_8_derivation_state_machine_working_v1.md`
+- `docs/dev/maintainer/TN-005_phase_8_derivation_state_machine_working_v1.md`
 
 as a guide, and compute a recommendation using only observable artifact facts.
 
@@ -130,7 +130,7 @@ artifacts (and which command typically produces them), then stop.
   - the exact file path to edit
   - what predicates were satisfied / missing (brief list)
 
-If `apply=true`:
+If `apply` is present:
 - If recommended next phase differs from current, update the phase and confirm the write occurred.
 - If recommended is “no change”, do not edit the file; print that nothing was changed.
 

@@ -3,6 +3,7 @@ name: worker-python-packaging
 description: >
   Deterministically materialize Python package marker files (__init__.py) required
   for importable candidate code packages per TBP-PY-01.
+status: active
 ---
 
 > **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.

@@ -19,20 +19,21 @@ Use **one** command:
 - `/caf saas <instance_name>`
 - `/caf arch <instance_name>`
 - `/caf plan <instance_name>`
-- `/caf next <instance_name> [apply=true|false]`
-- `/caf build <instance_name>`
+- `/caf next <instance_name> [apply]`
+- `/caf build <instance_name> [wave_index]`
 - `/caf prd <instance_name> [promote=true|false]`
 
 Examples:
 
-- /caf ask Summarize the main features of the cdx-saas reference architecture.
+- /caf ask Summarize the main features of the codex-saas reference architecture.
 
 - `/caf saas hello-saas`
 - `/caf arch hello-saas`
 - `/caf plan hello-saas`
 - `/caf next hello-saas`
-- `/caf next hello-saas apply=true`
+- `/caf next hello-saas apply`
 - `/caf build hello-saas`
+- `/caf build hello-saas 0`
 - `/caf prd hello-saas`
 
 ## Routing rules (deterministic)
@@ -43,14 +44,14 @@ Examples:
 
 Canonical skills (authoritative):
 
-- `help` → `skills_portable/caf-help/SKILL.md`
-- `ask` → `skills_portable/caf-ask/SKILL.md`
-- `saas` → `skills_portable/caf-saas/SKILL.md`
-- `arch` → `skills_portable/caf-arch/SKILL.md`
-- `plan` → `skills_portable/caf-plan/SKILL.md`
-- `next` → `skills_portable/caf-next/SKILL.md`
-- `build` → `skills_portable/caf-build-candidate/SKILL.md`  *(current canonical build skill; invoked via router)*
-- `prd` → `skills_portable/caf-prd/SKILL.md`
+- `help` → `skills/caf-help/SKILL.md`
+- `ask` → `skills/caf-ask/SKILL.md`
+- `saas` → `skills/caf-saas/SKILL.md`
+- `arch` → `skills/caf-arch/SKILL.md`
+- `plan` → `skills/caf-plan/SKILL.md`
+- `next` → `skills/caf-next/SKILL.md`
+- `build` → `skills/caf-build-candidate/SKILL.md`  *(current canonical build skill; invoked via router)*
+- `prd` → `skills/caf-prd/SKILL.md`
 
 ## Global invariants (router-enforced)
 
@@ -59,11 +60,11 @@ Canonical skills (authoritative):
 
 ## No ad-hoc scripts (router-enforced)
 
-CAF workflows MUST remain portable.
+CAF workflows MUST avoid ad-hoc scripting. This default skillpack may invoke explicitly named Node helpers under `tools/caf/` when a sub-skill requires them.
 
 **Forbidden:** ad-hoc inline PowerShell/bash scripts, multi-line command blocks, pipelines that construct arrays/objects, function definitions, or loops.
 
-**Allowed:** portable, single-line shell/file operations only. This skillpack is instruction-only: do NOT invoke node helper scripts.
+**Allowed (maintainer-only token savers; mechanical only):** a small, explicitly named set of Node helpers under `tools/caf/` may be invoked *only when referenced by the target sub-skill* (e.g., `seed_saas_v1.mjs`, `companion_init_v1.mjs`, `next_v1.mjs`, `validate_instance_v1.mjs`).
 
 During routed workflows:
 - Treat `tools/**` as **read-only**.
@@ -86,26 +87,29 @@ If a step seems to “need scripting,” treat that as a CAF design bug and fail
 ### `/caf saas <instance_name>`
 
 - `instance_name` is required.
+- Do NOT validate that `reference_architectures/<instance_name>/` exists. `/caf saas` is the creator command and will initialize the instance directory if missing.
 
 ### `/caf arch <instance_name>`
 
 - `instance_name` is required.
 
-### `/caf next <instance_name> [apply=true|false]`
+### `/caf next <instance_name> [apply]`
 
 - `instance_name` is required.
 - `apply` is optional.
-  - Default: `apply=false`
-  - Accept values: `apply=true` or `apply=false`.
+  - Omit it to preview the recommended next phase.
+  - Include the literal token `apply` to checkpoint and advance.
 
-### `/caf build <instance_name>`
+### `/caf build <instance_name> [wave_index]`
 
 - `instance_name` is required.
+- `wave_index` is optional at the router level, but build policy may make it required for larger task graphs.
+- Do not invent a different multi-wave control surface. The canonical operator-managed form is `/caf build <instance_name> <wave_index>`.
+- In build wave mode, prior-wave completion evidence is read from `companion_repositories/<instance_name>/profile_v1/caf/task_reports/` and `companion_repositories/<instance_name>/profile_v1/caf/reviews/`, not from `reference_architectures/<instance_name>/`.
 
 ### `/caf prd <instance_name> [promote=true|false]`
 
 - `instance_name` is required.
 - `promote` is optional.
-  - Default: `promote=true`
+  - Default: `promote=false`
   - Accept values: `promote=true` or `promote=false`.
-

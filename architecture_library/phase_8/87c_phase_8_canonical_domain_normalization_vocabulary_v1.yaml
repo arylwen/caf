@@ -1,0 +1,60 @@
+schema_version: phase8_canonical_domain_normalization_vocabulary_v1
+notes: |
+  Small, optional normalization vocabulary for plane-domain-model derivation.
+  This vocabulary is advisory metadata only. It MUST NOT replace the source entity name,
+  and planning/build MUST NOT require every entity to normalize to a canonical term.
+terms:
+  - term_id: tenant
+    plane_scope: both
+    aliases: [tenant, organization, workspace]
+  - term_id: tenant_setting
+    plane_scope: system
+    aliases: [tenant setting, tenant configuration, tenant config]
+  - term_id: retention_rule
+    plane_scope: system
+    aliases: [retention rule, retention policy]
+  - term_id: deletion_request
+    plane_scope: system
+    aliases: [deletion request, erase request]
+  - term_id: policy
+    plane_scope: system
+    aliases: [policy, rule set]
+  - term_id: policy_version
+    plane_scope: system
+    aliases: [policy version, versioned policy]
+  - term_id: approval_decision
+    plane_scope: system
+    aliases: [approval decision, review decision]
+  - term_id: run_request
+    plane_scope: system
+    aliases: [run request, execution request, action request]
+  - term_id: evaluation_result
+    plane_scope: system
+    aliases: [evaluation result, decision result, authorization result]
+  - term_id: execution_record
+    plane_scope: system
+    aliases: [execution record, run record, operation record]
+  - term_id: evidence_record
+    plane_scope: system
+    aliases: [evidence record, audit record, audit event]
+  - term_id: export_request
+    plane_scope: system
+    aliases: [export request]
+  - term_id: export_artifact
+    plane_scope: system
+    aliases: [export artifact, export file]
+  - term_id: collection
+    plane_scope: application
+    aliases: [collection, group]
+  - term_id: tag
+    plane_scope: application
+    aliases: [tag, label]
+  - term_id: permission
+    plane_scope: application
+    aliases: [permission, access rule]
+  - term_id: versioned_record
+    plane_scope: application
+    aliases: [version, revision]
+  - term_id: change_event
+    plane_scope: application
+    aliases: [change event, activity event, audit event]

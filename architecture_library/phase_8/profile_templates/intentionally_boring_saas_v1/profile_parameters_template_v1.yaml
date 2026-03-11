@@ -1,4 +1,8 @@
 # reference_architectures/{{instance_name}}/guardrails/profile_parameters.yaml
+# Supported pinned values and canonical comments live in:
+# - architecture_library/phase_8/84_phase_8_profile_parameters_template_v1.yaml
+# Keep this starter template aligned to that canonical file.
+# CAF derives the canonical deployment identity into profile_parameters_resolved.yaml as `deployment.stack_name` (sourced from `instance_name`).
 schema_version: "phase8_profile_parameters_v1"
 instance_name: "{{instance_name}}"
 
@@ -10,6 +14,9 @@ lifecycle:
   evolution_stage: "stage_0_local_prototype"
   generation_phase: "architecture_scaffolding"
 
+architecture:
+  architecture_style: "clean_architecture"
+
 platform:
   infra_target: "local"
   packaging: "docker_compose"
@@ -20,6 +27,12 @@ platform:
   schema_management_strategy: "code_bootstrap"
   auth_mode: "mock"
   eventing_backend: "mock_in_memory"
+
+ui:
+  present: true
+  kind: "web_spa"
+  framework: "react"
+  deployment_preference: "separate_ui_service"
 
 # Optional: plane runtime shape pins.
 # If omitted, CAF derives defaults deterministically.

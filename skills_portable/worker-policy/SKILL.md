@@ -21,6 +21,12 @@ status: active
 
 This worker MUST accept Make-Skill requests for the following Task Graph task_ids:
 
+Canonical combined policy task:
+
+- `TG-35-policy-enforcement-core`
+
+Legacy compatibility task_ids (still accepted for older throwaway instances):
+
 - `TG-00-CP-policy-surface`
 - `TG-00-AP-policy-enforcement`
 - `TG-00-AP-auth-mode`
@@ -45,17 +51,23 @@ Optional (if present, use for grounding; do not invent):
 
 This skill is **Definition-of-Done driven**. Do NOT rely on deterministic output paths.
 
-Implement the smallest coherent scaffolding that satisfies the task's `definition_of_done`, typically:
+Implement the smallest coherent scaffolding that satisfies the task's `definition_of_done`.
 
-- CP policy surface: a documented and callable policy endpoint/surface contract that AP can consult (even if stubbed).
-- AP policy enforcement: a policy client + an enforcement hook at the API/service boundary.
-- Auth mode: a minimal auth identity binding (mock acceptable) that can supply a principal/tenant context.
+Task-shape semantics:
+
+- For canonical `TG-35-policy-enforcement-core`, implement the combined policy slice in one task:
+  - CP policy surface semantics that AP can consult (even if stubbed),
+  - AP policy enforcement hooks at request/workflow boundaries,
+  - auth/identity binding that supplies principal + tenant context, and
+  - explicit tenant-context precedence / conflict rejection behavior.
+- For legacy split task_ids, implement only the slice named by that task while keeping outputs compatible with later consolidation into the combined policy slice.
 
 Constraints:
 
 - Do not introduce new architectural choices. Follow pins + adopted choice points.
 - Keep implementation minimal but coherent (no "README-only" completion).
 - Ensure any examples are realistic and do not contain placeholders (TBD/TODO/...).
+- When implementing the canonical combined task, do not split responsibility back into multiple pseudo-tasks; produce one coherent policy/auth/context slice and report it under the requested `task_id`.
 
 ## Task report (required)
 

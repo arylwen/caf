@@ -95,14 +95,28 @@ Authoritative instance surfaces (ship rule):
 
    - Follow: `skills/worker-task-backlog-projector/SKILL.md`
    - Use `overwrite=true`.
+   - This worker is the canonical writer for `task_backlog_v1.md` during planning finalization.
+   - If a stale or wrong file already exists at the backlog path (including a task-plan-shaped file), replace it rather than merging with it.
 
    Postcondition (fail-closed):
    - Require `reference_architectures/<name>/design/playbook/task_backlog_v1.md` exists.
+   - Require the first markdown heading is exactly `# Task Backlog (v1)`.
 
    Projection integrity check (fail-closed; deterministic):
-   - Parse task ids from `task_graph_v1.yaml` (`tasks[*].task_id`).
-   - Require each task_id string appears at least once in `task_backlog_v1.md`.
-   - If any are missing: write a feedback packet and STOP.
+   - Run: `node tools/caf/backlog_integrity_check.mjs <name>`
+   - Require each task_id from `task_graph_v1.yaml` appears as a backlog section header.
+   - Require each backlog section contains the canonical fields:
+     - `Capability:`
+     - `Dependencies:`
+     - `Definition of Done:`
+     - `Steps:`
+     - `Gates:`
+     - `Semantic review questions:`
+     - `Story/References:`
+     - `Trace anchors:`
+     - `Inputs:`
+   - Require the backlog file is not task-plan-shaped and is not byte-identical to `task_plan_v1.md` when that file exists.
+   - If any check fails: write a feedback packet and STOP.
 
    2b. Emit traceability mindmap (required; fail-closed)
 

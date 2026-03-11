@@ -21,6 +21,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { parseYamlString } from './lib_yaml_v2.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
+import { getShapeLifecycleStatus } from './lib_shape_lifecycle_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { createSpecCheckpoint } from './lib_checkpoint_v1.mjs';
 import { listBlockingFeedbackPacketFilesSync, markPendingFeedbackPacketsStaleSync, renderFeedbackPacketV1 } from './lib_feedback_packets_v1.mjs';
@@ -354,7 +355,7 @@ async function main() {
     die('Usage: node tools/caf/next_v1.mjs <instance_name> [apply|--apply]', 2);
   }
   const instanceName = args[0];
-  const apply = args.includes('apply') || args.includes('apply=true') || args.includes('--apply') || args.includes('--apply=true');
+  const apply = args.includes('apply') || args.includes('--apply');
   if (!NAME_RE.test(instanceName)) {
     die(`Invalid instance_name: ${instanceName}`, 2);
   }
@@ -368,6 +369,7 @@ async function main() {
   WRITE_ALLOWED_ROOTS = [path.resolve(instRoot)];
   const pinsPath = path.join(layout.specGuardrailsDir, 'profile_parameters.yaml');
   const resolvedPath = path.join(layout.specGuardrailsDir, 'profile_parameters_resolved.yaml');
+  const shapePath = path.join(layout.specPlaybookDir, 'architecture_shape_parameters.yaml');
   const contractPath = path.join(layout.specGuardrailsDir, 'derivation_cascade_contract_v1.md');
   const packetsDir = path.join(instRoot, 'feedback_packets');
 
@@ -391,13 +393,22 @@ async function main() {
       [path.relative(repoRoot, pinsPath)]
     );
     // Write a minimal contract noting missing pins.
-    const content = `# Derivation cascade contract (v1)\n\n## Instance\n- name: \`${instanceName}\`\n- pins: \`${path.relative(repoRoot, pinsPath)}\`\n\n## Pinned inputs\n- missing (pins file not found)\n\n## Derived view status\n- unknown (pins missing)\n\n## Observable artifacts\n- pins: missing\n\n## State predicates\n- cannot evaluate (pins missing)\n\n## Allowed commands and next steps\n- /caf saas <name>\n- /caf arch <name>\n- /caf next <name> [apply=true|false]\n- /caf build <name>\n\n## Recommendation\n- Recommended next phase: no change (missing pins file).\n\n## Changes applied\n- No changes applied.\n`;
+    const content = `# Derivation cascade contract (v1)\n\n## Instance\n- name: \`${instanceName}\`\n- pins: \`${path.relative(repoRoot, pinsPath)}\`\n\n## Pinned inputs\n- missing (pins file not found)\n\n## Derived view status\n- unknown (pins missing)\n\n## Observable artifacts\n- pins: missing\n\n## State predicates\n- cannot evaluate (pins missing)\n\n## Allowed commands and next steps\n- /caf saas <name>\n- /caf prd <name>\n- /caf arch <name>\n- /caf next <name> [apply]\n- /caf build <name>\n\n## Recommendation\n- Recommended next phase: no change (missing pins file).\n\n## Changes applied\n- No changes applied.\n`;
     await ensureDir(path.dirname(contractPath));
     await writeUtf8(contractPath, content);
     die(`Missing required input. Wrote feedback packet: ${path.relative(repoRoot, fp)}`, 3);
   }
 
   pinsText = await readUtf8(pinsPath);
+  let shapeStatus = '(missing)';
+  if (fileExists(shapePath)) {
+    try {
+      const shapeObj = parseYamlString(await readUtf8(shapePath), shapePath);
+      shapeStatus = getShapeLifecycleStatus(shapeObj) || '(unmarked)';
+    } catch {
+      shapeStatus = '(unreadable)';
+    }
+  }
   const pinned = parsePinsMinimal(pinsText);
 
   const missingPinned = [];
@@ -465,7 +476,7 @@ async function main() {
   }
 
   // Observable artifacts (phase-scoped; deterministic)
-  const rel = (p) => path.relative(repoRoot, p).replace('/\/g', '/');
+  const rel = (p) => path.relative(repoRoot, p).replace(/\\/g, '/');
   const specPlaybookDir = layout.specPlaybookDir;
   const designPlaybookDir = layout.designPlaybookDir;
 
@@ -686,11 +697,11 @@ if (curPhase === 'architecture_scaffolding') {
   const st = runGuardrailsOverwrite(instanceName);
   if (st !== 0) {
     const pkt = await writeFeedbackPacket(
-      layout,
+      repoRoot,
       instanceName,
       'next-guardrails-derivation-failed',
-      'Guardrails derivation failed after phase advance; pins ↔ resolved may be incoherent',
       [
+        'Guardrails derivation failed after phase advance; pins ↔ resolved may be incoherent',
         `Re-run: node tools/caf/guardrails_v1.mjs ${instanceName} --overwrite`,
         `Then re-run: node tools/caf/next_v1.mjs ${instanceName} --apply`,
       ],
@@ -840,6 +851,7 @@ if (curPhase === 'architecture_scaffolding') {
   contractLines.push('');
   contractLines.push('## Derived view status');
   contractLines.push(`- \`profile_parameters_resolved.yaml\`: ${resolvedPresent ? 'present' : 'missing'}`);
+  contractLines.push(`- \`architecture_shape_parameters.yaml\` lifecycle status: ${shapeStatus}`);
   if (!resolvedPresent) {
     contractLines.push('- pins vs resolved: unknown (resolved view missing)');
   } else {
@@ -863,8 +875,9 @@ if (curPhase === 'architecture_scaffolding') {
   contractLines.push('');
   contractLines.push('## Allowed commands and next steps');
   contractLines.push('- `/caf saas <name>`');
+  contractLines.push('- `/caf prd <name>`');
   contractLines.push('- `/caf arch <name>`');
-  contractLines.push('- `/caf next <name> [apply=true|false]`');
+  contractLines.push('- `/caf next <name> [apply]`');
   contractLines.push('- `/caf build <name>`');
   contractLines.push('');
   contractLines.push('## Recommendation');
@@ -872,7 +885,7 @@ if (curPhase === 'architecture_scaffolding') {
     contractLines.push(`- Recommended next phase: \`no change\` (current: \`${curPhase}\`).`);
     contractLines.push(`- Why: ${recWhy}`);
     if (staleReport) {
-      contractLines.push('- Next: run `/caf arch <name>`; if resolved remains stale, delete the resolved file and rerun `/caf arch <name>`.`');
+      contractLines.push('- Next: run `/caf arch <name>`; if resolved remains stale, delete the resolved file and rerun `/caf arch <name>`.');
     }
   } else {
     contractLines.push(`- Recommended next phase: \`${recommended}\` (${recWhy})`);
@@ -919,7 +932,7 @@ if (curPhase === 'architecture_scaffolding') {
 
   if (recommended !== curPhase && !applied) {
     console.log('- status: phase advance is recommended, but not applied.');
-    console.log(`- next step: /caf next ${instanceName} apply=true`);
+    console.log(`- next step: /caf next ${instanceName} apply`);
     console.log(`- after that: /caf arch ${instanceName}`);
   } else if (applied) {
     console.log(`- applied: ${oldPhase} -> ${recommended}`);

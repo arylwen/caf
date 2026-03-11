@@ -5,7 +5,7 @@ This folder contains **non-normative** CAF library metadata and library-improvem
 ## Conventions
 
 - `architecture_library/__meta/` is the **single** canonical meta root.
-- The legacy `architecture_library/_meta/` folder has been removed.
+- The previous `architecture_library/_meta/` folder has been removed.
 
 ## Contents
 

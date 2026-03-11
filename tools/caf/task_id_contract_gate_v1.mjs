@@ -13,6 +13,7 @@
  *   - runtime_wiring
  *   - unit_test_scaffolding
  *   - ui_frontend_scaffolding (coarse)
+ *   - policy_enforcement
  *
  * Contract:
  * - No architecture decisions.
@@ -93,7 +94,8 @@ async function writeFeedbackPacket(repoRoot, instanceName, observedConstraint, d
     ...driftItems.map((x) => `- ${x}`),
     '',
     `## Minimal Fix Proposal`,
-    `- Regenerate design/playbook/task_graph_v1.yaml using canonical task_id naming contracts per capability (TG-20-*, TG-90-*, TG-TBP-*, TG-10-OPTIONS-*).`,
+    `- Regenerate design/playbook/task_graph_v1.yaml using canonical task_id naming contracts per capability (for example TG-20-*, TG-35-policy-enforcement-core, TG-90-*, TG-TBP-*, TG-10-OPTIONS-*).`,
+    `- Legacy policy split task ids remain accepted for backward compatibility only; new planning output MUST use TG-35-policy-enforcement-core when policy/auth/context obligations are present.`,
     `- Do not emit sequential TG-01/TG-02/TG-03 ids for worker-dispatched capabilities unless the worker explicitly documents compatibility.`,
     '',
     `## Evidence`,
@@ -158,6 +160,14 @@ function checkTaskId(capabilityId, taskId) {
       || id === 'TG-18-ui-policy-admin'
       || /^TG-25-ui-page-[A-Za-z0-9_-]+$/.test(id);
     return ok ? null : 'Expected TG-15-ui-shell, TG-18-ui-policy-admin, or TG-25-ui-page-<resource_key>';
+  }
+
+  if (capabilityId === 'policy_enforcement') {
+    const ok = id === 'TG-35-policy-enforcement-core'
+      || id === 'TG-00-CP-policy-surface'
+      || id === 'TG-00-AP-policy-enforcement'
+      || id === 'TG-00-AP-auth-mode';
+    return ok ? null : 'Expected canonical TG-35-policy-enforcement-core (legacy TG-00 policy/auth task_ids are accepted only for backward compatibility)';
   }
 
   // Not enforced.

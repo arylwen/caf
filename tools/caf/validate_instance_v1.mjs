@@ -22,6 +22,8 @@ import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { fileURLToPath } from 'node:url';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { computeExpectedUiTaskIds, taskIdsFromTaskGraphObj } from './lib_ui_seed_expectations_v1.mjs';
+import { loadPlaneDomainModelViews } from './lib_plane_domain_models_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 
@@ -412,6 +414,7 @@ async function validateInstanceMain(argv) {
     if (!fileExists(resolvedPath)) missingBuild.push(safeRel(repoRoot, resolvedPath));
 
     const tbpPath = path.join(guardrailsDir, 'tbp_resolution_v1.yaml');
+    const abpPbpPath = path.join(guardrailsDir, 'abp_pbp_resolution_v1.yaml');
     const taskGraphPath = path.join(designPlaybookDir, 'task_graph_v1.yaml');
 
     const obligationsPath = path.join(designPlaybookDir, 'pattern_obligations_v1.yaml');
@@ -421,6 +424,8 @@ async function validateInstanceMain(argv) {
       path.join(designPlaybookDir, 'application_design_v1.md'),
       path.join(designPlaybookDir, 'control_plane_design_v1.md'),
       path.join(designPlaybookDir, 'contract_declarations_v1.yaml'),
+      path.join(designPlaybookDir, 'application_domain_model_v1.yaml'),
+      path.join(designPlaybookDir, 'system_domain_model_v1.yaml'),
       // Pinned inputs remain under spec/playbook.
       path.join(specPlaybookDir, 'architecture_shape_parameters.yaml'),
     ];
@@ -431,8 +436,10 @@ async function validateInstanceMain(argv) {
       requiredPlaybook.push(taskGraphPath);
     }
 
+    if (!fileExists(abpPbpPath)) missingBuild.push(safeRel(repoRoot, abpPbpPath));
+    if (!fileExists(tbpPath)) missingBuild.push(safeRel(repoRoot, tbpPath));
+
     if (mode === 'build') {
-      if (!fileExists(tbpPath)) missingBuild.push(safeRel(repoRoot, tbpPath));
       requiredPlaybook.push(taskGraphPath);
     }
     for (const p of requiredPlaybook) {
@@ -653,7 +660,7 @@ async function validateInstanceMain(argv) {
       const fp = await writeFeedbackPacket(
         repoRoot,
         instanceName,
-        'preflight-build-taskgraph-invalid',
+        mode === 'build' ? 'preflight-build-taskgraph-invalid' : 'preflight-plan-taskgraph-invalid',
         'Task Graph v1 failed minimal validation checks',
         mode === 'build'
           ? ['Regenerate the task graph via /caf plan <name> (planning), then rerun /caf build <name>.']
@@ -666,16 +673,65 @@ async function validateInstanceMain(argv) {
       die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 21);
     }
 
+try {
+  const systemSpecPath = path.join(specPlaybookDir, 'system_spec_v1.md');
+  const planeViews = await loadPlaneDomainModelViews({ designPlaybookDir });
+  if (fileExists(systemSpecPath) && planeViews.application) {
+    const expectedUi = await computeExpectedUiTaskIds({
+      repoRoot,
+      resolvedObj,
+      systemSpecText: await readUtf8(systemSpecPath),
+      applicationDomainModelObj: planeViews.application.obj || {},
+      shapeObj,
+    });
+    if (expectedUi.uiPresent) {
+      const presentTaskIds = taskIdsFromTaskGraphObj(tg);
+      const missingUiTasks = expectedUi.expected.map((x) => x.taskId).filter((id) => !presentTaskIds.has(id));
+      if (missingUiTasks.length > 0) {
+        const fp = await writeFeedbackPacket(
+          repoRoot,
+          instanceName,
+          mode === 'build' ? 'preflight-build-ui-seed-coverage-missing' : 'preflight-plan-ui-seed-coverage-missing',
+          'Task Graph is missing one or more authoritative UI seed tasks implied by resolved UI pins, adopted patterns, and resource names',
+          [
+            'Regenerate the task graph via /caf plan <name>; evaluate architecture_library/phase_8/80_phase_8_ui_task_seeds_v1.yaml against profile_parameters_resolved.yaml, adopted patterns from system_spec_v1.md, and resource names from application_domain_model_v1.yaml.',
+            'Do not collapse per-resource pages or policy-admin pages into TG-15-ui-shell.',
+            mode === 'build' ? 'Then rerun /caf build <name>.' : 'Then rerun /caf plan <name> after fixing the planner output.',
+          ],
+          [
+            safeRel(repoRoot, taskGraphPath),
+            safeRel(repoRoot, systemSpecPath),
+            safeRel(repoRoot, planeViews.application.path),
+            ...missingUiTasks.slice(0, 20).map((id) => `missing_task: ${id}`),
+          ]
+        );
+        die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 22);
+      }
+    }
+  }
+} catch (e) {
+  if (e instanceof CafExit) throw e;
+  const fp = await writeFeedbackPacket(
+    repoRoot,
+    instanceName,
+    mode === 'build' ? 'preflight-build-ui-seed-coverage-parse' : 'preflight-plan-ui-seed-coverage-parse',
+    'Unable to validate UI seed coverage deterministically',
+    ['Fix the UI seed inputs (system spec, domain model, or task graph) and rerun planning/build validation.'],
+    [String(e && e.message ? e.message : e)]
+  );
+  die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 22);
+}
+
     const contractAnchorIssues = validateContractScaffoldTraceAnchors(tg);
     if (contractAnchorIssues.length > 0) {
       const fp = await writeFeedbackPacket(
         repoRoot,
         instanceName,
-        'preflight-build-contract-trace-anchors-missing',
+        mode === 'build' ? 'preflight-build-contract-trace-anchors-missing' : 'preflight-plan-contract-trace-anchors-missing',
         'Contract scaffolding tasks are missing required trace anchors needed by worker-contract-scaffolder',
         [
-          'Run /caf plan <name> to regenerate the planning task graph (contract_ref_* anchors must be present on contract tasks).',
-          mode === 'build' ? 'Then rerun /caf build <name>.' : 'Then rerun /caf plan <name>.',
+          'Regenerate the planning task graph via /caf plan <name>; every TG-00-CONTRACT-* task must include contract_boundary_id, contract_ref_path, contract_ref_section, and contract_surface.',
+          mode === 'build' ? 'Then rerun /caf build <name>.' : 'This is a producer-side planning defect; fix the planner output, then rerun /caf plan <name>.',
         ],
         [
           safeRel(repoRoot, taskGraphPath),

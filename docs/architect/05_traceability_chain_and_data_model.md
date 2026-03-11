@@ -2,6 +2,10 @@
 
 This doc explains the **objects** CAF uses to make the three architect questions answerable.
 
+![CAF traceability chain](../images/caf_traceability_chain.svg)
+
+*CAF preserves traceability from requirements to implementation by linking requirements, architecture decisions, pattern choices, obligations, tasks, and code into a single inspectable chain.*
+
 ## Objects (with canonical responsibilities)
 
 ### Pins
@@ -59,3 +63,13 @@ This is a deterministic selection of the smallest artifact set needed to answer:
 - impact assessment
 
 See: [`06_caf_ask_internals.md`](06_caf_ask_internals.md)
+
+## Next
+
+[CAF ask internals](06_caf_ask_internals.md) — See how CAF assembles a bounded context pack from the traceability surfaces described here.
+
+## Related
+
+- [Decision visibility](02_decision_visibility.md) — Focus on the artifacts used to answer “what did we decide?”.
+- [Work visibility and sizing](03_work_visibility_sizing.md) — Focus on the artifacts used to answer “what work exists and how big is it?”.
+- [Impact assessment](04_impact_assessment.md) — Focus on the artifacts used to answer “what does this change affect?”.

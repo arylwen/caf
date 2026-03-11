@@ -55,12 +55,11 @@ If any requirement fails: write a feedback packet and stop.
    - Follow: `skills/caf-guardrails/SKILL.md`
    - Use `overwrite=true`.
 
-4) Refresh design briefs (rerun-safe CAF-managed blocks only):
+4) Refresh design bundle (rerun-safe CAF-managed blocks only):
 
    If `lifecycle.generation_phase == implementation_scaffolding`:
 
-   - Follow: `skills/caf-app-designer/SKILL.md` (overwrite=true)
-   - Follow: `skills/caf-platform-designer/SKILL.md` (overwrite=true)
+   - Follow: `skills/caf-solution-architect/SKILL.md` (overwrite=true)
 
 5) Refresh companion-repo architecture docs (cache-aware pipeline):
 

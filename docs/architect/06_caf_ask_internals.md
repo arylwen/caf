@@ -5,6 +5,10 @@ CAF’s `/caf ask` is intentionally **mechanical**:
 - it does *not* reason about your architecture
 - it classifies question intent and assembles the smallest stable context pack
 
+![CAF two retrieval surfaces](../images/caf_two_retrieval_surfaces.svg)
+
+*`/caf ask` works across CAF’s two retrieval surfaces: reusable architecture knowledge and compact instance-specific context packs derived from the current state.*
+
 Implementation:
 
 - `tools/caf/ask_v1.mjs`
@@ -54,3 +58,13 @@ If you add a new question class, do it in a drift-resistant way:
 - include only bounded artifacts (or capped excerpts)
 
 This keeps the token footprint predictable while maintaining answer quality.
+
+## Next
+
+[Patterns to obligations to tasks](07_patterns_to_obligations_to_tasks.md) — Follow how the ask context ultimately ties back to adopted patterns and downstream work.
+
+## Related
+
+- [Gates and fail-closed](08_gates_and_fail_closed.md) — See how CAF stops progression when the required evidence for an answer or downstream step is missing.
+- [Architect workflows](10_architect_workflows.md) — Apply the ask surfaces in the main architect-facing review loops.
+- [Maintainer command surfaces and routing](../maintainer/05_command_surfaces_and_routing.md) — Connect the architect-facing ask behavior to the maintainer-owned routing surface.

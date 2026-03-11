@@ -34,6 +34,11 @@ Every feedback packet MUST be in exactly one status:
 2. `stale` — when a `/caf` command starts, all *existing* `pending` packets MUST be marked `stale`.
 3. `resolved` — when the issue is fixed. A resolved packet MUST NOT be deleted.
 
+### Resolution rule (normative)
+
+When a deterministic gate or scripted helper can prove that the blocking condition no longer exists, it SHOULD mark its own matching packet(s) `Status: resolved` automatically.
+Manual packet-status edits by agents or human operators are allowed only as an exceptional fallback and MUST NOT be the primary recovery path.
+
 ### Command start rule (normative)
 
 At the beginning of any `/caf <command>` run:
@@ -100,6 +105,8 @@ Each packet MUST include these sections (headings must match exactly):
 ## Evidence
 
 ## Autonomous agent guidance
+
+## Human operator guidance
 ```
 
 ### Section semantics (normative)
@@ -108,7 +115,10 @@ Each packet MUST include these sections (headings must match exactly):
 - **Evidence** MUST list concrete file paths and locators (headings, YAML paths, line ranges, block ids).
 - **Autonomous agent guidance** MUST specify deterministic remediation steps:
   - concrete file edits (or deletions),
-  - and the exact `/caf` command to rerun.
+  - and whether the agent should continue in-place or rerun an exact `/caf` command.
+- **Human operator guidance** MUST specify the recovery path for a human operator:
+  - if reset + rerun is the correct recovery, name the exact reset helper and the exact `/caf` command,
+  - if a packet is advisory-only, name the exact diagnostic script commands and state that they are advisory.
 
 ---
 

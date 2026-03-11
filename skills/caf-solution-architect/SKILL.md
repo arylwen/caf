@@ -23,7 +23,7 @@ Ship blockers (anti-circularity):
   - After a reset/wipe step, missing design artifacts are expected and are the reason this skill must run.
 - **Do not perform "freshness" or "existence" preflight checks as a substitute for execution.**
   - You may inspect existing outputs only to apply minimal edits *after* you have decided to run this skill and produce the required artifacts.
-- **Do not use cross-instance templates** (e.g., copying from `cdx-saas`) to satisfy required outputs.
+- **Do not use cross-instance templates** (e.g., copying from another instance) to satisfy required outputs.
 
 Optional interactive checkpoint (allowed; preferred over shortcuts):
 
@@ -84,9 +84,9 @@ Hard rules:
 - `contract_ref.path` MUST be a repo-root-relative filesystem path that resolves to an existing file.
   - Do NOT use instance-relative paths like `design/playbook/...`.
   - For embedded CP↔AP FORM_B contracts, use: `reference_architectures/<name>/design/playbook/control_plane_design_v1.md`.
-- DO NOT emit the legacy shape (`schema_version:` or `contracts:` as a mapping).
+- DO NOT emit the older non-canonical shape (`schema_version:` or `contracts:` as a mapping).
 - `contracts` MUST be a list (`contracts: []`), even when empty.
-- If you encounter a legacy/non-canonical file, overwrite it to the canonical shape.
+- If you encounter a older/non-canonical file, overwrite it to the canonical shape.
   - Do not attempt partial conversions unless you can populate all required fields deterministically.
 
 Minimum valid scaffold (allowed ONLY when no material contracts are expressed yet):
@@ -140,18 +140,18 @@ Ship blockers (tight leash; required for `/caf plan`):
 - Use canonical option ids:
   - runtime shapes: `api_service_http | worker_service_events | library_embedded | custom`
   - contract surface: `synchronous_http | async_events | mixed | custom`
-    - Compatibility allowance: `synchronous_api` MAY appear in legacy instances; prefer `synchronous_http` going forward.
+    - Older-instance allowance: `synchronous_api` MAY appear in older instances; prefer `synchronous_http` going forward.
 
 Template guidance (preferred):
 - Start from `architecture_library/phase_8/templates/plane_integration_contract_v1.template.md` and paste the choices/open-questions blocks into the CP design doc.
-- Do NOT emit the reduced/legacy shape (`version: 1` + `choices.contract_surface` only). That shape is not plan-readable.
+- Do NOT emit the reduced/older non-canonical shape (`version: 1` + `choices.contract_surface` only). That shape is not plan-readable.
 
 
 
 Rerun-safety:
 - Architect edit blocks MUST be preserved verbatim.
 - The designer-managed block may be regenerated deterministically to reflect adopted resolutions and resolved posture.
-Default option ergonomics (marketing-first):
+Default option ergonomics (default flow):
 - When you populate any `options:` list by copying from a pattern `caf.option_sets[]` entry, if that option set declares `default_option_id`, set exactly that option to `status: adopt` and leave the rest as `status: defer` in the initial scaffold.
 - This is still a human-signal: it lives inside ARCHITECT_EDIT_BLOCKs and the architect may flip it.
 

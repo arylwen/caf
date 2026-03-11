@@ -2,7 +2,8 @@
 name: caf-arch-architecture-scaffolding
 description: >
   Internal sub-skill for caf-arch. Produces/refreshes pinned Layer-8 derived view
-  and scaffolds the system/application specifications (architecture_scaffolding phase).
+  and scaffolds the architect-edit system/application specs + plane domain model sources
+  (architecture_scaffolding phase).
   No new user-facing commands.
 ---
 

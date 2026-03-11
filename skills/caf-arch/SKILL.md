@@ -23,7 +23,8 @@ Run:
 
 Notes:
 - The gate performs deterministic preflight + guardrails derivation. It does **not** delete derived artifacts automatically.
-- After an `architecture_scaffolding` checkpoint exists, regenerating scaffolding in-place is blocked; use `/caf next` (preferred) or an explicit reset helper.
+- During `architecture_scaffolding`, the gate still checks whether `spec/playbook/architecture_shape_parameters.yaml` is only a seeded template default. For the default command flow, that condition emits an advisory feedback packet and continues.
+- After architecture scaffolding deliverables exist, regenerating architecture scaffolding in-place is blocked; use `/caf next` (preferred) or an explicit reset helper.
 - Append the environement appropriate command equivalent with ;echo "EXIT:$?" to the command to capture exit code for gate failure detection.
 
 Rules:
@@ -46,10 +47,15 @@ After the scripted gate succeeds:
 
 - If `generation_phase == architecture_scaffolding`:
   - Invoke: `skills/caf-arch-architecture-scaffolding/SKILL.md`
-  - Invoke: `skills/caf-arch-postprocess/SKILL.md`
+  - Run (required; fail-closed; do not print invocation): `node tools/caf/arch_postprocess_v1.mjs <name>`
+    - If it exits non-zero, STOP and surface only the printed feedback packet path.
+  - Run (warning-only; do not print invocation): `node tools/caf/derived_views_advisory_gate_v1.mjs <name>`
+    - If it prints a feedback packet path, surface it as an advisory warning and continue.
 
 - Otherwise (`implementation_scaffolding | pre_production | production_hardening`):
   - Invoke: `skills/caf-arch-implementation-scaffolding/SKILL.md` *(design-only)*
+  - Run (warning-only; do not print invocation): `node tools/caf/derived_views_advisory_gate_v1.mjs <name>`
+    - If it prints a feedback packet path, surface it as an advisory warning and continue.
   - STOP (planning is performed by `/caf plan <name>`)
 
 Stop.
@@ -59,7 +65,7 @@ Stop.
 After a successful run of `/caf arch <name>`, emit **only** a short, phase-correct next-step hint (no extra commentary):
 
 - If `generation_phase == architecture_scaffolding`:
-  - Next step: `/caf next <name> apply=true` (advance to solution architecture), then `/caf arch <name>`
+  - Next step: `/caf next <name> apply` (advance to solution architecture), then `/caf arch <name>`
   - **Do not** recommend `/caf plan` at this stage.
 
 - Otherwise (design/implementation scaffolding and later):

@@ -6,6 +6,10 @@ CAF patterns are meant to be **browseable** outside of any single run, so you ca
 - “What does this pattern usually depend on?”
 - “What other patterns does this refine/complement?”
 
+![CAF two retrieval surfaces](../images/caf_two_retrieval_surfaces.svg)
+
+*The pattern browser is one of CAF’s two retrieval surfaces: reusable architecture knowledge that can be explored before or outside a specific instance run.*
+
 ## Recommended browsing flow
 
 1. Start with the **family taxonomy**:
@@ -45,4 +49,3 @@ This regenerates:
 If you are reviewing scope or risks, pattern families are a good way to anchor conversations (IAM, POL, MTEN, Observability, Delivery).
 
 Ask: *Which families are we adopting, and what obligations do they imply?*
-

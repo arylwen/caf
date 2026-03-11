@@ -33,7 +33,7 @@ call :check_packets
 call :run_skill "%REPO_ROOT%\%SKILLS_DIR%\caf-arch\SKILL.md" "instance_name=%INSTANCE_NAME%"
 call :check_packets
 
-call :run_skill "%REPO_ROOT%\%SKILLS_DIR%\caf-next\SKILL.md" "instance_name=%INSTANCE_NAME%^^napply=true"
+call :run_skill "%REPO_ROOT%\%SKILLS_DIR%\caf-next\SKILL.md" "instance_name=%INSTANCE_NAME%^^napply"
 call :check_packets
 
 call :run_skill "%REPO_ROOT%\%SKILLS_DIR%\caf-arch\SKILL.md" "instance_name=%INSTANCE_NAME%"

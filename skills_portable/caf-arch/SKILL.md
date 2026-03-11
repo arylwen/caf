@@ -157,7 +157,7 @@ This file is the **single “what state am I in?”** source for downstream diag
 
 3d) Canonical atom normalization validation (fail-closed)
 
-Run the validator worker to ensure the resolved guardrails use a single canonical atom vocabulary and do not conflict with legacy spine fields:
+Run the validator worker to ensure the resolved guardrails use a single canonical atom vocabulary and do not conflict with older spine fields:
 
 - Follow: `skills/worker-atom-normalization-validator/SKILL.md`
 
@@ -172,13 +172,15 @@ If this validator emits a non-advisory feedback packet: STOP immediately (do not
 
   - 4b. Scaffolding-only re-derivation + retrieval are handled by `caf-arch-architecture-scaffolding`.
 
-  - 4c. Always emit the traceability mindmap (even in architecture_scaffolding) by invoking:
+  - 4c. Always emit architecture-scaffolding derived views deterministically by running:
 
-    - Follow: `skills/caf-arch-postprocess/SKILL.md`
+    - `node tools/caf/arch_postprocess_v1.mjs <name>`
 
-    Use `overwrite=true`.
+    This helper writes the spec traceability mindmap plus the scripted retrieval reports.
 
-    If `lifecycle.generation_phase == architecture_scaffolding`, this postprocess run will emit **mindmap only** and then `/caf arch` MUST STOP (do not proceed to planning or companion repo initialization).
+    If it exits non-zero, STOP and surface only the printed feedback packet path.
+
+    If `lifecycle.generation_phase == architecture_scaffolding`, this postprocess run completes the scaffolding phase and then `/caf arch` MUST STOP (do not proceed to planning or companion repo initialization).
 
 5) Generation phase processing
 
@@ -267,9 +269,9 @@ Rules (deterministic, fail-closed):
 
 After successful planning + semantic checks in this run, emit derived, human-facing views.
 
-- Follow: `skills/caf-arch-postprocess/SKILL.md`
+- Run: `node tools/caf/arch_postprocess_v1.mjs <name>`
 
-Use `overwrite=true`.
+Use it only when the current phase is `architecture_scaffolding`; for later phases this helper is a no-op.
 
 This step MUST NOT introduce new decisions.
 
@@ -352,7 +354,7 @@ Never echo file contents.
 After successful completion, include a short "Next steps" section (2–5 bullets) that:
 - tells the user which ARCHITECT_EDIT_BLOCKs to review/flip (if any were emitted/updated)
 - recommends re-running /caf arch after flips
-- recommends running `/caf next <name>` to see the suggested next phase, then `/caf next <name> apply=true` to advance (user-initiated)
+- recommends running `/caf next <name>` to see the suggested next phase, then `/caf next <name> apply` to advance (user-initiated)
 - recommends running `/caf build <name>` once phase/pins are ready
 Do NOT include concrete command examples; the workflow will render them.
 
@@ -363,7 +365,7 @@ NOTE: Any “what phase/stage am I in?” statement in diagnostics MUST cite `de
 After a successful run of `/caf arch <name>`, emit **only** a short, phase-correct next-step hint (no extra commentary):
 
 - If `generation_phase == architecture_scaffolding`:
-  - Next step: `/caf next <name> apply=true` (advance to solution architecture), then `/caf arch <name>`
+  - Next step: `/caf next <name> apply` (advance to solution architecture), then `/caf arch <name>`
   - **Do not** recommend `/caf plan` at this stage.
 
 - Otherwise (design/implementation scaffolding and later):

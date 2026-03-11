@@ -20,6 +20,8 @@ import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { parseYamlString } from './lib_yaml_v2.mjs';
+import { computeExpectedUiTaskIds } from './lib_ui_seed_expectations_v1.mjs';
+import { loadPlaneDomainModelViews, extractResourceKeysFromApplicationDomainModel, extractPersistedAggregateRecordsFromPlaneDomainModel } from './lib_plane_domain_models_v1.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
@@ -113,6 +115,22 @@ function taskCoversObligation(taskObj, obligationId) {
   return false;
 }
 
+function validateRuntimeWiringClosureOrder(tgObj) {
+  const byId = taskById(tgObj);
+  const runtimeTask = byId.get('TG-90-runtime-wiring');
+  if (!runtimeTask) return [];
+
+  const deps = new Set(ensureArray(runtimeTask?.depends_on).map((x) => asString(x).trim()).filter(Boolean));
+  const requiredPersistenceTaskIds = Array.from(byId.keys())
+    .filter((id) => /^TG-40-persistence-(?:cp-)?[A-Za-z0-9_-]+$/.test(id))
+    .sort();
+
+  const missing = requiredPersistenceTaskIds.filter((id) => !deps.has(id));
+  return missing.map((id) =>
+    `TG-90-runtime-wiring: missing depends_on ${id} (interface binding assembly must occur after persistence surfaces exist)`
+  );
+}
+
 async function writeFeedbackPacket(repoRoot, instanceName, issues, missingTaskIds, missingCoverage) {
   const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
   await ensureDir(packetsDir);
@@ -147,7 +165,8 @@ async function writeFeedbackPacket(repoRoot, instanceName, issues, missingTaskId
     '',
     '## Evidence',
     `- File: reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`,
-    `- File: reference_architectures/${instanceName}/design/playbook/domain_model_v1.yaml`,
+    `- File: reference_architectures/${instanceName}/design/playbook/application_domain_model_v1.yaml`,
+    `- File: reference_architectures/${instanceName}/design/playbook/system_domain_model_v1.yaml`,
     `- File: reference_architectures/${instanceName}/design/playbook/contract_declarations_v1.yaml`,
     '',
     '## Autonomous agent guidance',
@@ -175,8 +194,8 @@ async function main() {
   const resolvedPath = path.join(layout.specGuardrailsDir, 'profile_parameters_resolved.yaml');
   const taskGraphPath = path.join(layout.designPlaybookDir, 'task_graph_v1.yaml');
   const obligationsPath = path.join(layout.designPlaybookDir, 'pattern_obligations_v1.yaml');
-  const domainModelPath = path.join(layout.designPlaybookDir, 'domain_model_v1.yaml');
   const contractsPath = path.join(layout.designPlaybookDir, 'contract_declarations_v1.yaml');
+  const systemSpecPath = path.join(layout.specPlaybookDir, 'system_spec_v1.md');
 
   if (!existsSync(resolvedPath) || !existsSync(taskGraphPath) || !existsSync(obligationsPath)) {
     // Other gates will report better packets; keep quiet.
@@ -195,12 +214,12 @@ async function main() {
 
   let tg;
   let ob;
-  let dm = null;
   let contracts = null;
+  let planeViews = { application: null, system: null };
   try {
     tg = parseYamlString(await fs.readFile(taskGraphPath, { encoding: 'utf-8' }), taskGraphPath) || {};
     ob = parseYamlString(await fs.readFile(obligationsPath, { encoding: 'utf-8' }), obligationsPath) || {};
-    if (existsSync(domainModelPath)) dm = parseYamlString(await fs.readFile(domainModelPath, { encoding: 'utf-8' }), domainModelPath);
+    planeViews = await loadPlaneDomainModelViews({ designPlaybookDir: layout.designPlaybookDir });
     if (existsSync(contractsPath)) contracts = parseYamlString(await fs.readFile(contractsPath, { encoding: 'utf-8' }), contractsPath);
   } catch {
     // playbook gate will catch parse errors
@@ -241,18 +260,22 @@ async function main() {
     missingTaskIds.push('TG-00-AP-runtime-scaffold (required when OBL-PLANE-AP-RUNTIME-SCAFFOLD exists)');
   }
 
-  const resources = ensureArray(dm?.api_candidates?.resources);
-  for (const r of resources) {
-    const key = normalizeKey(r?.name);
-    if (!key) continue;
+  const appResourceKeys = extractResourceKeysFromApplicationDomainModel(planeViews?.application?.obj || {});
+  for (const key of appResourceKeys) {
     const want = [
       `TG-20-api-boundary-${key}`,
       `TG-30-service-facade-${key}`,
       `TG-40-persistence-${key}`,
     ];
     for (const w of want) {
-      if (!allTaskIds.has(w)) missingTaskIds.push(`${w} (required for api_candidates.resources name=${asString(r?.name).trim()})`);
+      if (!allTaskIds.has(w)) missingTaskIds.push(`${w} (required for application_domain_model_v1 resource=${key})`);
     }
+  }
+
+  const systemPersisted = extractPersistedAggregateRecordsFromPlaneDomainModel(planeViews?.system?.obj || {});
+  for (const rec of systemPersisted) {
+    const want = `TG-40-persistence-cp-${rec.key}`;
+    if (!allTaskIds.has(want)) missingTaskIds.push(`${want} (required for system_domain_model_v1 persisted aggregate=${rec.aggregateName || rec.aggregateId || rec.key})`);
   }
 
   const contractArr = ensureArray(contracts?.contracts);
@@ -267,6 +290,7 @@ async function main() {
 
   const requireRuntimeWiring = !!resolved?.candidate_enforcement_bar?.runnable_policy?.require_runtime_wiring;
   const requireUnit = !!resolved?.candidate_enforcement_bar?.test_policy?.require_unit;
+  issues.push(...validateRuntimeWiringClosureOrder(tg));
   if (requireRuntimeWiring && !allTaskIds.has('TG-90-runtime-wiring')) {
     missingTaskIds.push('TG-90-runtime-wiring (required by candidate_enforcement_bar.runnable_policy.require_runtime_wiring=true)');
   }
@@ -275,8 +299,24 @@ async function main() {
   }
 
   const uiPresent = !!resolved?.ui?.present;
-  if (uiPresent && !allTaskIds.has('TG-15-ui-shell')) {
-    missingTaskIds.push('TG-15-ui-shell (required when ui.present=true)');
+  if (uiPresent) {
+    if (!allTaskIds.has('TG-15-ui-shell')) missingTaskIds.push('TG-15-ui-shell (required when ui.present=true)');
+    if (existsSync(systemSpecPath)) {
+      try {
+        const expectedUi = await computeExpectedUiTaskIds({
+          repoRoot,
+          resolvedObj: resolved,
+          systemSpecText: await fs.readFile(systemSpecPath, { encoding: 'utf-8' }),
+          applicationDomainModelObj: planeViews?.application?.obj || {},
+          shapeObj: null,
+        });
+        for (const item of expectedUi.expected) {
+          if (!allTaskIds.has(item.taskId)) missingTaskIds.push(`${item.taskId} (required by UI seed ${item.seedId}; ${item.reason})`);
+        }
+      } catch {
+        // validation preflight will surface parse errors with better diagnostics
+      }
+    }
   }
 
   // 3) Obligation coverage: every obligation_id must be referenced by at least one task anchor.

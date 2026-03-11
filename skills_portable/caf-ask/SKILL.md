@@ -23,9 +23,9 @@ This is best-effort and must remain instruction-only.
 - List folders under `reference_architectures/`.
 - Choose the instance whose folder name best matches the question using case-insensitive matching and common separators:
   - treat spaces / `_` / `-` as equivalent
-  - example: “cdx saas” → `cdx-saas`
+  - example: “codex saas” → `codex-saas`
 - If no match is found:
-  - default to `cdx-saas` if present
+  - default to `codex-saas` if present
   - else pick the first instance folder
 
 ### 2) Intent classification (keyword-only)

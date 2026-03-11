@@ -23,16 +23,24 @@
 import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parseYamlString } from './lib_yaml_v2.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine, cafMarkdownStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
 
-function die(msg, code = 1) {
-  process.stderr.write(`${msg}\n`);
-  process.exit(code);
+class CafFailClosed extends Error {
+  constructor(message, exitCode = 1) {
+    super(message);
+    this.exitCode = exitCode;
+  }
 }
+
+function die(msg, code = 1) {
+  throw new CafFailClosed(String(msg ?? ''), code);
+}
+
 
 function nowDateYYYYMMDD() {
   const d = new Date();
@@ -94,6 +102,31 @@ function extractYamlFence(blockText) {
   }
   if (endLine < 0) return null;
   return lines.slice(startLine, endLine).join('\n');
+}
+
+function extractArchitectEditBody(text, blockName) {
+  const start = `<!-- ARCHITECT_EDIT_BLOCK: ${blockName} START -->`;
+  const end = `<!-- ARCHITECT_EDIT_BLOCK: ${blockName} END -->`;
+  const s = String(text ?? '').indexOf(start);
+  if (s < 0) return null;
+  const e = String(text ?? '').indexOf(end, s);
+  if (e < 0) return null;
+  return String(text ?? '').slice(s + start.length, e).trim();
+}
+
+function extractUiProductSurface(appText) {
+  const body = extractArchitectEditBody(appText, 'ui_product_surface_v1');
+  if (!body) return [];
+  const lines = body
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('(') && !l.startsWith('Suggested content:') && !l.startsWith('Example:'));
+  const bullets = [];
+  for (const line of lines) {
+    if (/^[-*]\s+/.test(line)) bullets.push(`- ${capLineLen(line.replace(/^[-*]\s+/, ''), 160)}`);
+  }
+  const cleaned = bullets.filter((l) => !/Who the UI is for|Key journeys\/pages|Navigation\/shell expectations|Any product-level UX constraints/i.test(l));
+  return cleaned.slice(0, 12);
 }
 
 function extractTechPostureBullets(systemSpecText, profile) {
@@ -332,6 +365,7 @@ function renderGuardrailsSummary(railsResolved, profile) {
     addAtom('runtime.framework', railsResolved?.runtime?.framework);
     addAtom('database.engine', railsResolved?.database?.engine);
     addAtom('deployment.mode', railsResolved?.deployment?.mode);
+    addAtom('deployment.stack_name', railsResolved?.deployment?.stack_name);
     addAtom('plane.runtime_shape', railsResolved?.plane?.runtime_shape);
     if (atoms.length > 0) {
       lines.push(`- atoms:`);
@@ -482,17 +516,8 @@ function extractPinDerivedConstraintsSection(systemSpecText, profile) {
   return bullets;
 }
 
-function extractUiSignal(appSpecText) {
-  const blk = extractBlock(
-    appSpecText,
-    '<!-- ARCHITECT_EDIT_BLOCK: ui_requirements_v1 START -->',
-    '<!-- ARCHITECT_EDIT_BLOCK: ui_requirements_v1 END -->'
-  );
-  if (!blk) return null;
-  const y = extractYamlFence(blk);
-  if (!y) return null;
-  const parsed = parseYamlString(y, '(build_retrieval_context_blob_v1:yaml_block)');
-  const ui = parsed?.ui;
+function extractUiSignalFromResolved(railsObj) {
+  const ui = railsObj?.ui;
   if (!ui || typeof ui !== 'object') return null;
   const lines = [];
   const present = ui?.present;
@@ -502,7 +527,7 @@ function extractUiSignal(appSpecText) {
     if (s) lines.push(`- ui.${k}: ${s}`);
   };
   add('kind', ui?.kind);
-  add('framework_preference', ui?.framework_preference);
+  add('framework', ui?.framework);
   add('deployment_preference', ui?.deployment_preference);
   return lines.length > 0 ? lines : null;
 }
@@ -580,8 +605,8 @@ function validateCaps(rendered, caps) {
   return { ok: chars <= caps.maxChars && bullets <= caps.maxBullets, chars, bullets };
 }
 
-async function main() {
-  const args = parseArgs(process.argv);
+export async function internal_main(argv = process.argv.slice(2)) {
+  const args = parseArgs(['node', 'build_retrieval_context_blob_v1.mjs', ...(Array.isArray(argv) ? argv : [])]);
   const instanceName = args._[0];
   const profile = args.profile;
   if (!instanceName || !profile) {
@@ -763,10 +788,17 @@ async function main() {
     blobLines.push('');
   }
 
-  const ui = extractUiSignal(appText);
+  const ui = extractUiSignalFromResolved(railsObj);
   if (ui) {
     blobLines.push('## UI_SIGNAL');
     blobLines.push(...ui);
+    blobLines.push('');
+  }
+
+  const uiProductSurface = extractUiProductSurface(appText);
+  if (uiProductSurface.length > 0) {
+    blobLines.push('## UI_PRODUCT_SURFACE');
+    blobLines.push(...uiProductSurface);
     blobLines.push('');
   }
 
@@ -825,7 +857,7 @@ async function main() {
       ...(pinConstraints ? { 'Pin-derived system constraints (CAF-managed)': [safeRel(repoRoot, systemSpecPath)] } : {}),
       SPEC_SIGNAL: [safeRel(repoRoot, systemSpecPath), safeRel(repoRoot, appSpecPath)],
       ...((profile === 'solution_architecture' || profile === 'implementation_scaffolding') ? { DOMAIN_RESOURCES: [safeRel(repoRoot, appSpecPath)] } : {}),
-      ...(ui ? { UI_SIGNAL: [safeRel(repoRoot, appSpecPath)] } : {}),
+      ...(ui ? { UI_SIGNAL: [safeRel(repoRoot, railsPath)] } : {}),
       BRIDGE_ECHO: ['tools/caf/build_retrieval_context_blob_v1.mjs'],
     },
   };
@@ -838,6 +870,23 @@ async function main() {
   process.stdout.write(`${safeRel(repoRoot, outPath)}\n`);
 }
 
-main().catch((e) => {
-  die(String(e?.stack || e?.message || e), 99);
-});
+function isEntrypoint() {
+  try {
+    const argv1 = process.argv[1] ? path.resolve(process.argv[1]) : '';
+    if (!argv1) return true;
+    return import.meta.url === pathToFileURL(argv1).href;
+  } catch {
+    return true;
+  }
+}
+
+if (isEntrypoint()) {
+  internal_main(process.argv.slice(2)).catch((e) => {
+    if (e && typeof e === 'object' && 'exitCode' in e) {
+      process.stderr.write(String(e.message || e) + "\n");
+      process.exit(Number(e.exitCode || 1));
+    }
+    process.stderr.write(String(e?.stack || e?.message || e) + "\n");
+    process.exit(99);
+  });
+}

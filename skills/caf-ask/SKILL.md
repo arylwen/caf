@@ -29,8 +29,8 @@ Provide a launch-grade **ask-first** UX:
 
 Examples (no backticks required):
 
-- `/caf ask Summarize the main features of the cdx-saas reference architecture.`
-- `/caf ask Which patterns were selected for cdx-saas, and which pins drove them?`
+- `/caf ask Summarize the main features of the codex-saas reference architecture.`
+- `/caf ask Which patterns were selected for codex-saas, and which pins drove them?`
 - `/caf ask For pin CP-4, what obligations and tasks are implied?`
 - `/caf ask If we change code/ap/widgets/service.py, what intent/work is most likely impacted?`
 
@@ -46,7 +46,7 @@ Pick:
 
 - `instance_name`: the CAF instance the user is asking about.
   - If the question mentions an instance in natural language, map it to an existing folder under `reference_architectures/`.
-  - If unclear, default to `cdx-saas` if present; otherwise use the first instance folder under `reference_architectures/`.
+  - If unclear, default to `codex-saas` if present; otherwise use the first instance folder under `reference_architectures/`.
 
 - `intent` (exactly one):
   - `feature_summary`

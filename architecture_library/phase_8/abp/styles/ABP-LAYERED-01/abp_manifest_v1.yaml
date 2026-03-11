@@ -1,0 +1,45 @@
+schema_version: phase8_architecture_binding_pattern_v1
+abp_id: ABP-LAYERED-01
+style_key: layered_architecture
+name: Layered Architecture
+plane_neutral: true
+summary: Plane-neutral layered style with presentation, application, domain, and data-access roles.
+roles:
+  - role_id: composition_root
+    summary: Runtime assembly point for layer wiring.
+  - role_id: presentation_layer
+    summary: Entry and presentation surfaces such as controllers, pages, or request handlers.
+  - role_id: application_services
+    summary: Service-level orchestration and application logic.
+  - role_id: domain_model
+    summary: Core business rules and domain objects.
+  - role_id: data_access_layer
+    summary: Persistence-facing layer for repositories and storage access concerns.
+  - role_id: integration_adapters
+    summary: External system integration implementations outside the domain model.
+dependency_rules:
+  - from_role: presentation_layer
+    to_role: application_services
+    rule: allowed
+  - from_role: application_services
+    to_role: domain_model
+    rule: allowed
+  - from_role: application_services
+    to_role: data_access_layer
+    rule: allowed
+  - from_role: application_services
+    to_role: integration_adapters
+    rule: allowed
+  - from_role: composition_root
+    to_role: presentation_layer
+    rule: allowed
+  - from_role: composition_root
+    to_role: application_services
+    rule: allowed
+invariants:
+  - id: ABP-LAYERED-INV-01
+    text: presentation_layer should not bypass application_services for primary business flows.
+  - id: ABP-LAYERED-INV-02
+    text: domain_model should remain free of framework-specific presentation concerns.
+  - id: ABP-LAYERED-INV-03
+    text: data_access_layer should not become the place where cross-layer business policy is invented.

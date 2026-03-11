@@ -22,11 +22,12 @@ This command is intentionally **mechanical** and must not introduce new architec
 
 ## Inputs
 - Instance name: `<name>`
-- Optional: `apply=true|false` (default: false)
+- Optional: literal token `apply` (omit it for dry-run preview)
 
 ## Reads (authoritative)
 - `reference_architectures/<name>/spec/guardrails/profile_parameters.yaml`
 - `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` (if present; informational)
+- `reference_architectures/<name>/spec/playbook/architecture_shape_parameters.yaml` (lifecycle provenance; informational)
 
 Additional reads (for state predicates; informational):
 - `reference_architectures/<name>/spec/playbook/system_spec_v1.md`
@@ -40,7 +41,7 @@ Additional reads (for state predicates; informational):
 
 ## Writes
 - Always: `reference_architectures/<name>/spec/guardrails/derivation_cascade_contract_v1.md`
-- If `apply=true`: update `reference_architectures/<name>/spec/guardrails/profile_parameters.yaml` ONLY by changing `lifecycle.generation_phase`.
+- If `apply` is present: update `reference_architectures/<name>/spec/guardrails/profile_parameters.yaml` ONLY by changing `lifecycle.generation_phase`.
 - Coarse checkpoint (v1): when applying a phase advance out of `architecture_scaffolding`, snapshot `spec/` under:
   - `reference_architectures/<name>/.caf-state/checkpoints/architecture_scaffolding_<UTCSTAMP>/`
 
@@ -66,14 +67,14 @@ Additional reads (for state predicates; informational):
 On success, print only two lines:
 
 1) Summary (single line):
-- If `apply=false`:
-  - `caf-next: recommended <phase> (apply=false; mode=dry-run).`
-- If `apply=true`:
+- If `apply` is omitted:
+  - `caf-next: recommended <phase> (mode=dry-run; applied=no).`
+- If `apply` is present:
   - After running the helper, open `derivation_cascade_contract_v1.md` and read `## Changes applied`.
   - If it contains an `Updated lifecycle.generation_phase` bullet, then:
-    - `caf-next: recommended <phase> (apply=true; applied=yes).`
+    - `caf-next: recommended <phase> (mode=apply; applied=yes).`
   - Otherwise:
-    - `caf-next: recommended <phase> (apply=true; applied=no).`
+    - `caf-next: recommended <phase> (mode=apply; applied=no).`
 
 2) Contract path (single line, explicit verb):
 - Always:

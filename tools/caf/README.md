@@ -15,6 +15,7 @@ This folder is intentionally separate from `tools/caf/` (which contains instance
 - `tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md`
 - `tools/caf/contracts/decision_candidates_block_parsing_contract_v1.md`
 - `tools/caf/contracts/retrieval_context_blob_contract_v1.md`
+- `tools/caf/contracts/deployment_identity_contract_v1.md`
 
 ## What scripts MAY do (mechanical only)
 
@@ -45,7 +46,7 @@ the file system work to reduce token cost.
   - Intended for maintainer/agent diagnostics when verifying option_set_id adoption.
 
 
-- `guardrails_v1.mjs`: derive Guardrails (profile_parameters_resolved + TBP resolution) deterministically from pinned inputs and data files.
+- `guardrails_v1.mjs`: derive Guardrails (profile_parameters_resolved + TBP resolution) deterministically from pinned inputs and data files, including the canonical derived deployment identity (`deployment.stack_name`).
   - Usage: `node tools/caf/guardrails_v1.mjs <instance_name> [--overwrite]`
   - This is invoked by `skills/caf-guardrails`.
 
@@ -60,7 +61,7 @@ the file system work to reduce token cost.
   - Usage: `node tools/caf/pattern_obligation_gate_v1.mjs <instance_name>`
   - Intended to be invoked by `skills/caf-arch` when available.
 
-- `planning_invariant_gate_v1.mjs`: producer-side planning invariant check (planning outputs exist + obligations trace anchors + enforcement-bar capability coverage).
+- `planning_invariant_gate_v1.mjs`: producer-side planning invariant check (planning outputs exist + contract/task trace anchors + enforcement-bar capability coverage).
   - Usage: `node tools/caf/planning_invariant_gate_v1.mjs <instance_name>`
   - Intended to be invoked immediately after `caf-application-architect` returns.
 
@@ -81,13 +82,14 @@ the file system work to reduce token cost.
 
 
 - `validate_instance_v1.mjs`: deterministic instance preflight validator (mechanical).
+- Planning/runtime-scaffold compatibility: `plane_runtime_scaffolding` is the canonical capability id. Legacy `runtime_scaffolding_cp` and `runtime_scaffolding_ap` are accepted as compatibility aliases for existing throwaway instances.
   - Usage: `node tools/caf/validate_instance_v1.mjs <instance_name> [--mode=arch|build]`
   - Intended to be invoked as a **preflight** inside `caf-arch` and `caf-build-candidate` when available.
 
 - `build_gate_v1.mjs`: deterministic caf-build-candidate gate (required artifacts + rail sanity).
   - Usage: `node tools/caf/build_gate_v1.mjs <instance_name>`
 
-- `build_postgate_companion_runnable_v1.mjs`: deterministic post-gate for runnable candidate integrity (compose sanity + common stray entrypoints).
+- `build_postgate_companion_runnable_v1.mjs`: deterministic post-gate for runnable candidate integrity (compose sanity + common stray entrypoints). Compose naming is validated against `deployment.stack_name` from the resolved guardrails view.
   - Usage: `node tools/caf/build_postgate_companion_runnable_v1.mjs <instance_name>`
   - Intended to run after all build tasks complete; writes a feedback packet and fails closed on common non-runnable outputs.
 
@@ -99,6 +101,10 @@ the file system work to reduce token cost.
 - `atom_normalization_validator_v1.mjs`: validate canonical atoms are approved and legacy spine pins do not conflict.
   - Usage: `node tools/caf-meta/atom_normalization_validator_v1.mjs <instance_name>`
 
+- `retrieval_preflight_v1.mjs`: retrieval pre-gate helper (materialize retrieval blob from current spec/guardrails before semantic retrieval).
+  - Usage: `node tools/caf/retrieval_preflight_v1.mjs <instance_name> --profile=<profile>`
+  - Rationale: makes the MP-20 retrieval pre-gate explicit instead of relying on skill text to remember the blob-build prerequisite.
+
 - `graph_expand_candidates_v1.mjs`: deterministic BFS graph expansion over retrieval-surface `relations[]`.
   - Usage: `node tools/caf/graph_expand_candidates_v1.mjs <instance_name> --profile=<profile> --seeds=<id1,id2,...>`
   - Writes an open list YAML and a human-readable trace under `reference_architectures/<instance>/spec/playbook/`.
@@ -109,7 +115,7 @@ the file system work to reduce token cost.
 - Candidate block parsing (shared):
   - `tools/caf/lib_caf_decision_candidates_v1.mjs` (resilient parser for `caf_decision_pattern_candidates_v1` blocks)
   - Contract: `tools/caf/contracts/decision_candidates_block_parsing_contract_v1.md`
-- `retrieval_gate_v1.mjs`: deterministic post-retrieval gate (required debug artifacts + shards + non-compacted candidate records).
+- `retrieval_gate_v1.mjs`: deterministic post-retrieval gate (required debug artifacts + shards + non-compacted candidate records + propagated CAF-managed retrieval sections).
   - Usage: `node tools/caf/retrieval_gate_v1.mjs <instance_name> --profile=<profile>`
   - Writes a feedback packet and exits non-zero on invariant violations.
 
@@ -168,3 +174,28 @@ Rules:
 Maintainer switch (out-of-band; does not touch `skills/**`):
 
 - `node tools/caf/skillpack_select_v1.mjs --set=default|portable`
+
+
+## Interface binding contracts (v1)
+
+CAF can carry minimal required/provided interface intent across waves with a planner-owned artifact:
+
+- `reference_architectures/<name>/design/playbook/interface_binding_contracts_v1.yaml`
+
+The contract stays intentionally small and style-neutral:
+
+- `required_interface.consumer.task_id` — the task that declares the required interface
+- `provider.task_id` — the task that materializes the implementation or adapter
+- `assembler.task_id` — the assembly/composition task that binds the consumer to the provider explicitly
+
+Build evidence is written under:
+
+- `companion_repositories/<name>/profile_v1/caf/binding_reports/<binding_id>.yaml`
+
+The planner/build gates fail closed when a declared interface binding does not line up with the task graph, or when assembler work completes without explicit binding evidence.
+
+Planner emission is mechanical: the planner should emit per-task `interface_binding_hints[]` in `task_graph_v1.yaml`, and `tools/caf/gen_interface_binding_contracts_v1.mjs` derives `interface_binding_contracts_v1.yaml` from those hints plus `abp_pbp_resolution_v1.yaml`. Legacy AP task-id fallback remains only as a temporary compatibility path while older instances are still being regenerated.
+
+Important ordering rule: `interface_binding_contracts_v1.yaml` is a post-plan derived artifact. The instruction-owned planner must not require it as a Step 0 planning input; the planner emits `task_graph_v1.yaml` and `interface_binding_hints[]`, then the scripted post-plan phase derives the binding-contract file and attaches it as a required input on each bound consumer/provider/assembler task.
+
+Runnable post-gate behavior also tightens production binding discipline: once an interface binding contract applies, consumer/provider/assembler artifacts must not retain silent local demo/in-memory/default fallbacks unless they are explicitly marked `CAF_TEST_ONLY` and kept out of production runtime paths.

@@ -107,7 +107,8 @@ function findDuplicateVersionFamilies(files) {
         v.path.startsWith('architecture_library/') ||
         v.path.startsWith('skills/') ||
         v.path.startsWith('tools/') ||
-        v.path.startsWith('technical_notes/')
+        v.path.startsWith('docs/maintainer/') ||
+        v.path.startsWith('docs/dev/maintainer/')
       )
     )
     .sort((a, b) => a.base.localeCompare(b.base));

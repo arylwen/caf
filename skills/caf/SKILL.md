@@ -19,20 +19,21 @@ Use **one** command:
 - `/caf saas <instance_name>`
 - `/caf arch <instance_name>`
 - `/caf plan <instance_name>`
-- `/caf next <instance_name> [apply=true|false]`
-- `/caf build <instance_name>`
+- `/caf next <instance_name> [apply]`
+- `/caf build <instance_name> [wave_index]`
 - `/caf prd <instance_name> [promote=true|false]`
 
 Examples:
 
-- /caf ask Summarize the main features of the cdx-saas reference architecture.
+- /caf ask Summarize the main features of the codex-saas reference architecture.
 
 - `/caf saas hello-saas`
 - `/caf arch hello-saas`
 - `/caf plan hello-saas`
 - `/caf next hello-saas`
-- `/caf next hello-saas apply=true`
+- `/caf next hello-saas apply`
 - `/caf build hello-saas`
+- `/caf build hello-saas 0`
 - `/caf prd hello-saas`
 
 ## Routing rules (deterministic)
@@ -92,17 +93,19 @@ If a step seems to “need scripting,” treat that as a CAF design bug and fail
 
 - `instance_name` is required.
 
-### `/caf next <instance_name> [apply=true|false]`
+### `/caf next <instance_name> [apply]`
 
 - `instance_name` is required.
 - `apply` is optional.
-  - Default: `apply=false`
-  - Accept values: `apply=true` or `apply=false`.
+  - Omit it to preview the recommended next phase.
+  - Include the literal token `apply` to checkpoint and advance.
 
-### `/caf build <instance_name>`
+### `/caf build <instance_name> [wave_index]`
 
 - `instance_name` is required.
-
+- `wave_index` is optional at the router level, but build policy may make it required for larger task graphs.
+- Do not invent a different multi-wave control surface. The canonical operator-managed form is `/caf build <instance_name> <wave_index>`.
+- In build wave mode, prior-wave completion evidence is read from `companion_repositories/<instance_name>/profile_v1/caf/task_reports/` and `companion_repositories/<instance_name>/profile_v1/caf/reviews/`, not from `reference_architectures/<instance_name>/`.
 
 ### `/caf prd <instance_name> [promote=true|false]`
 

@@ -2,31 +2,37 @@ schema_version: phase8_task_graph_v1
 
 tasks:
   - task_id: TG-010
-    title: "Define domain model skeleton"
+    title: "Define plane domain model skeletons"
     steps:
-      - \"Identify declared resources and required fields from specs.\"
-      - \"Define domain entities and value objects; keep transport/persistence concerns separate.\"
-      - \"Align naming, ownership, and boundaries to the selected runtime shape.\"
+      - "Keep `application_spec_v1.md` and `system_spec_v1.md` lean; externalize detailed entity modeling into plane-specific domain model sources."
+      - "Define application-plane domain structure in `application_domain_model_v1.md` and system/control-plane structure in `system_domain_model_v1.md` when in scope."
+      - "Normalize the source documents into planner-visible derived YAML views without mixing application and system ownership in one overloaded source file."
     depends_on: []
     required_capabilities:
       - domain_modeling
     inputs:
       - path: "reference_architectures/<instance>/spec/playbook/application_spec_v1.md"
         required: true
+      - path: "reference_architectures/<instance>/spec/playbook/system_spec_v1.md"
+        required: true
+      - path: "reference_architectures/<instance>/spec/playbook/application_domain_model_v1.md"
+        required: false
+      - path: "reference_architectures/<instance>/spec/playbook/system_domain_model_v1.md"
+        required: false
     definition_of_done:
-      - "A domain model is defined for each declared resource, with fields aligned to the system spec."
-      - "The model layer is structured to support persistence (no in-memory-only logic baked into model definitions)."
-      - "The implementation is consistent with the selected runtime shape and does not assume an un-declared framework."
+      - "Detailed entity modeling is externalized into plane-specific domain model sources instead of overloading the narrative specs."
+      - "Derived application/system domain model views are structurally consistent with the selected runtime and plane contracts."
+      - "Persisted entities are planner-visible in the correct plane and do not rely on in-memory-only assumptions."
     semantic_review:
       severity_threshold: blocker
       review_questions:
-        - "Does the domain model correctly reflect the resources/fields declared in the spec, without missing required fields?"
+        - "Do the plane-specific domain models correctly reflect the declared product/system semantics without mixing application and system ownership?"
+        - "Are persisted entities visible in the correct plane so planning can emit real persistence work?"
+        - "Do the domain models avoid embedding transport/framework code or implementation wiring that belongs elsewhere?"
         - "Are there correctness issues (broken imports, dead code paths, inconsistent naming) that will prevent runtime or tests from executing?"
-        - "Does the model layer avoid embedding transport concerns (HTTP/router code) or persistence wiring that should live elsewhere?"
-        - "Are there obvious security issues (e.g., accepting untrusted input without validation) given the layer's responsibility?"
         - "Is the change compatible with the repo's packaging/runtime setup (imports, module paths, dependency declarations)?"
       focus_areas: ["correctness", "architecture_alignment"]
     trace_anchors:
-      - pattern_id: VAL-01
+      - pattern_id: PST-01
         anchor_kind: "plan_step_archetype"
-        anchor_ref: "Domain constraints and validation"
+        anchor_ref: "Plane-owned persistence visibility"

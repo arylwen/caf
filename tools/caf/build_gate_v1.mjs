@@ -184,6 +184,7 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
   const resolvedPath = path.join(layout.specGuardrailsDir, 'profile_parameters_resolved.yaml');
   const pinsPath = path.join(layout.specGuardrailsDir, 'profile_parameters.yaml');
   const tbpPath = path.join(layout.specGuardrailsDir, 'tbp_resolution_v1.yaml');
+  const abpPbpPath = path.join(layout.specGuardrailsDir, 'abp_pbp_resolution_v1.yaml');
   const taskGraphPath = path.join(layout.designPlaybookDir, 'task_graph_v1.yaml');
 
   // Build prerequisites: design bundle must exist.
@@ -191,11 +192,14 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
     path.join(layout.designPlaybookDir, 'application_design_v1.md'),
     path.join(layout.designPlaybookDir, 'control_plane_design_v1.md'),
     path.join(layout.designPlaybookDir, 'contract_declarations_v1.yaml'),
+    path.join(layout.designPlaybookDir, 'application_domain_model_v1.yaml'),
+    path.join(layout.designPlaybookDir, 'system_domain_model_v1.yaml'),
   ];
 
   const missing = [];
   if (!fileExists(resolvedPath)) missing.push(safeRel(repoRoot, resolvedPath));
   if (!fileExists(tbpPath)) missing.push(safeRel(repoRoot, tbpPath));
+  if (!fileExists(abpPbpPath)) missing.push(safeRel(repoRoot, abpPbpPath));
   if (!fileExists(taskGraphPath)) missing.push(safeRel(repoRoot, taskGraphPath));
   for (const p of requiredPlaybook) {
     if (!fileExists(p)) missing.push(safeRel(repoRoot, p));
@@ -229,6 +233,19 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
   }
 
   const phase = normalizeScalar(get(resolvedObj, ['lifecycle', 'generation_phase']));
+  const deploymentStackName = normalizeScalar(get(resolvedObj, ['deployment', 'stack_name']));
+  if (!deploymentStackName) {
+    const fp = await writeFeedbackPacket(
+      repoRoot,
+      instanceName,
+      'build-missing-deployment-stack-name',
+      'deployment.stack_name is missing from the derived guardrails view',
+      ['Rerun /caf arch <name> to regenerate guardrails/profile_parameters_resolved.yaml with the canonical deployment identity, then rerun caf build <name>.'],
+      [`File: ${safeRel(repoRoot, resolvedPath)}`]
+    );
+    die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 12);
+  }
+
   const okPhases = ['implementation_scaffolding', 'pre_production', 'production_hardening'];
   if (!okPhases.includes(phase)) {
     const fp = await writeFeedbackPacket(

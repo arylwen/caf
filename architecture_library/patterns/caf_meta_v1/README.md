@@ -39,6 +39,10 @@ This folder is primarily **maintainer-facing**. If you are using CAF to generate
 - `meta_vs_domain_classification_rule_v1.md`
 - `caf_feedback_packet_protocol_meta_pattern_v1.md`
 - `caf_command_surface_meta_patterns_v1.md`
+- `caf_skill_portability_and_adapter_shim_meta_patterns_v1.md`
+- `caf_library_assets_and_candidate_outputs_meta_patterns_v1.md`
+- `caf_promotions_and_obligations_meta_patterns_v1.md`
+- `caf_fail_closed_permission_checkpoint_meta_pattern_v1.md`
 - `caf_crew_model_meta_patterns_v1.md`
 - `caf_lifecycle_axes_meta_patterns_v1.md`
 - `caf_derivation_cascade_meta_patterns_v1.md`
@@ -54,3 +58,7 @@ For GitHub-friendly browsing of patterns by family (and a machine-friendly index
 
 - `docs/patterns/pattern_taxonomy_v1.md`
 - `docs/pattern_index_v1.json`
+
+## Public maintainer entry point
+
+For a curated public maintainer-facing navigation surface, start in `docs/maintainer/README.md`.

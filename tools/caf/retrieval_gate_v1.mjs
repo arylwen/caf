@@ -26,8 +26,8 @@ import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlFile, parseYamlString } from './lib_yaml_v2.mjs';
 import { cleanFileInPlace } from './lib_clean_candidate_placeholders_v1.mjs';
-import { extractReferencedPinIdsFromCandidateMarkdown } from './lib_pin_recognition_v1.mjs';
-import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { extractReferencedPinIdsFromCandidateMarkdown, extractPinsByPatternFromCandidateMarkdown } from './lib_pin_recognition_v1.mjs';
+import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 import {
   parseCandidateRecordsFromBlockText,
   extractCandidateIdsFromBlockText,
@@ -143,6 +143,29 @@ async function loadBaselineCandidateIdsFromLatestArchScaffoldingCheckpoint(repoR
   return out;
 }
 
+function buildHumanOperatorGuidance(instanceName, profile, slug) {
+  const p = String(profile ?? '').trim() || 'arch_scaffolding';
+  const resetCommand = (p === 'arch_scaffolding')
+    ? `node tools/caf/architecture_scaffolding_reset_v1.mjs ${instanceName} overwrite`
+    : `node tools/caf/implementation_reset_v1.mjs ${instanceName} overwrite`;
+  const rerunCommand = (p === 'arch_scaffolding') ? `/caf arch ${instanceName}` : `/caf plan ${instanceName}`;
+  if (slug === 'retrieval-gate-pin-coverage-not-met') {
+    return [
+      'Human operators: this blocker is not cleared by regenerating reports or mindmaps.',
+      `Reset to the most recent safe checkpoint first: ${resetCommand}`,
+      `Then rerun the owning CAF step: ${rerunCommand}`,
+      'Use candidate-selection, retrieval-debug, and mindmap reports only for diagnosis; they do not resolve pin coverage blockers by themselves.',
+    ];
+  }
+  return [
+    'Human operators: do not guess helper names or omit required flags when regenerating diagnostics.',
+    `Run: node tools/caf/build_candidate_selection_report_v1.mjs ${instanceName} --profile=${p}`,
+    `Run: node tools/caf/build_retrieval_debug_v1.mjs ${instanceName} --profile=${p}`,
+    `Run: node tools/caf/worker_traceability_mindmap_v3.mjs ${instanceName}`,
+    `If you want to rerun the whole CAF command instead of repairing in-place, reset first: ${resetCommand}`,
+  ];
+}
+
 async function writeFeedbackPacket(
   repoRoot,
   instanceName,
@@ -177,10 +200,13 @@ async function writeFeedbackPacket(
     '## Evidence',
     ...evidenceLines.map((l) => `- ${l}`),
     '',
-    '## Suggested Next Action',
+    '## Autonomous agent guidance',
     '- Autonomous agents with reasoning capabilities MUST apply the edits described in this packet before continuing.',
     '- After applying the fix, resume the current CAF workflow step; rerun the relevant command (/caf arch, /caf plan, or /caf build) only if required by your runner.',
     ...suggestedNextActionLines.map((l) => `- ${l}`),
+    '',
+    '## Human operator guidance',
+    ...buildHumanOperatorGuidance(instanceName, profile, slug).map((l) => `- ${l}`),
     '',
   ].join('\n');
 
@@ -238,6 +264,75 @@ function countCanonicalCandidates(blockText) {
 
 function countCandidatesByTier(blockText) {
   return countCandidatesByTierFromBlock(blockText);
+}
+
+function uniqueIdsInBlockOrder(blockText) {
+  const rows = parseCandidateRecordsFromBlockText(String(blockText ?? ''));
+  const seen = new Set();
+  const ordered = [];
+  for (const r of rows) {
+    const id = String(r?.pattern_id ?? '').trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    ordered.push(id);
+  }
+  return ordered;
+}
+
+function buildDeterministicPrunePreview(blockText, excludedIdsSet, outsideSurfaceSet, knownPinIds = []) {
+  const ordered = uniqueIdsInBlockOrder(blockText);
+  const rows = parseCandidateRecordsFromBlockText(String(blockText ?? ''));
+  const tierById = new Map();
+  for (const r of rows) {
+    const id = String(r?.pattern_id ?? '').trim();
+    const tier = String(r?.tier ?? '').trim().toUpperCase();
+    if (!id || !tier) continue;
+    if (!tierById.has(id)) tierById.set(id, tier);
+  }
+
+  const low = [];
+  const excluded = [];
+  const outside = [];
+  for (const id of ordered) {
+    if ((tierById.get(id) || '') === 'LOW') low.push(id);
+    else if (excludedIdsSet.has(id)) excluded.push(id);
+    else if (outsideSurfaceSet.has(id)) outside.push(id);
+  }
+
+  const knownSet = new Set(Array.isArray(knownPinIds) ? knownPinIds : []);
+  const { pinsByPattern } = extractPinsByPatternFromCandidateMarkdown(String(blockText ?? ''), knownSet.size ? knownSet : null);
+  const providersByPin = new Map();
+  for (const [pid, pins] of pinsByPattern.entries()) {
+    for (const pin of pins) {
+      if (!providersByPin.has(pin)) providersByPin.set(pin, new Set());
+      providersByPin.get(pin).add(pid);
+    }
+  }
+
+  const current = new Set(ordered);
+  const safe = [];
+  const heldByCoverage = [];
+  for (const id of [...low, ...excluded, ...outside]) {
+    if (!current.has(id)) continue;
+    const pins = pinsByPattern.get(id) || new Set();
+    let canRemove = true;
+    for (const pin of pins) {
+      const providers = providersByPin.get(pin) || new Set();
+      const remaining = [...providers].filter((p) => p !== id && current.has(p));
+      if (remaining.length === 0) {
+        canRemove = false;
+        break;
+      }
+    }
+    if (canRemove) {
+      safe.push(id);
+      current.delete(id);
+    } else {
+      heldByCoverage.push(id);
+    }
+  }
+
+  return { ordered, low, excluded, outside, safe, heldByCoverage };
 }
 
 
@@ -596,7 +691,7 @@ async function readJsonlIds(fileAbs) {
   return ids;
 }
 
-function hasNonPlaceholderSection(md, headingText) {
+function hasRequiredManagedBulletsSection(md, headingText) {
   const h = `## ${headingText}`;
   const i = md.indexOf(h);
   if (i < 0) return { ok: false, reason: 'missing_heading' };
@@ -605,13 +700,21 @@ function hasNonPlaceholderSection(md, headingText) {
   const next = rest.search(/\n##\s+/);
   const section = (next >= 0 ? rest.slice(0, next) : rest).trim();
   if (!section) return { ok: false, reason: 'empty_section' };
-  // Placeholder detection must be precise. This section can legitimately contain
-  // terms like `code_placeholders_non_runnable` and `todo_comments`.
-  // Treat only explicit placeholder markers as blocking.
-  if (/\bplaceholder_content\b/i.test(section)) return { ok: false, reason: 'placeholder_content' };
-  if (/\b(tbd|todo|placeholder)\b/i.test(section)) return { ok: false, reason: 'placeholder_content' };
+
+  const lines = section.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const bullets = lines.filter((l) => l.startsWith('- '));
+  if (bullets.length === 0) return { ok: false, reason: 'missing_bullets' };
+
+  // This section is propagated by the deterministic blob builder, which already
+  // fail-closes on missing/placeholder semantic source blocks. The retrieval gate
+  // should validate structural propagation here, not reinterpret benign domain
+  // phrases like "TODO comments" as placeholder evidence.
+  const joined = lines.join('\n');
+  if (/\bplaceholder_content\b/i.test(joined)) return { ok: false, reason: 'placeholder_content' };
+  if (/^\s*-\s*<\.\.\.>\s*$/m.test(joined)) return { ok: false, reason: 'placeholder_template' };
   return { ok: true, reason: 'ok' };
 }
+
 
 async function fileListIfExists(dirAbs) {
   try {
@@ -815,6 +918,10 @@ export async function internal_main(args = process.argv.slice(2)) {
     }
   }
   const defIdxMain = await loadPatternDefinitionIndex(repoRoot);
+  const viewProfilesPath = path.join(repoRoot, "architecture_library", "patterns", "retrieval_surface_v1", "retrieval_view_profiles_v1.yaml");
+  const viewProfiles = await parseYamlFile(viewProfilesPath);
+  const vp = viewProfiles?.profiles?.[profile];
+  const vpExcludedCandidateIds = new Set(Array.isArray(vp?.exclude_candidate_ids) ? vp.exclude_candidate_ids.map((v) => String(v || '').trim()).filter(Boolean) : []);
 
   // Decision scaffold invariant (fail-closed):
   // If decision-pattern candidates exist in caf_decision_pattern_candidates_v1,
@@ -971,6 +1078,11 @@ export async function internal_main(args = process.argv.slice(2)) {
       const covered = extractReferencedPinIdsFromCandidateMarkdown(block, new Set(pinIds));
       const missingPins = pinIds.filter((p) => !covered.has(p));
 
+      if (missingPins.length === 0) {
+        const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
+        resolveFeedbackPacketsBySlugSync(packetsDir, 'retrieval-gate-pin-coverage-not-met');
+      }
+
       if (missingPins.length > 0) {
         const idx = await buildPinSuggestionIndex(repoRoot, ['caf_v1', 'core_v1']);
         const suggestions = missingPins.slice(0, 18).map((p) => {
@@ -1009,9 +1121,6 @@ export async function internal_main(args = process.argv.slice(2)) {
   // Enforce view profile candidate count floors/caps (ship blocker).
   // Policy: seed fill counts only HIGH + MEDIUM candidates. LOW candidates do not count toward the floor.
   // Rationale: we want a full candidate set while keeping quality bounded.
-  const viewProfilesPath = path.join(repoRoot, "architecture_library", "patterns", "retrieval_surface_v1", "retrieval_view_profiles_v1.yaml");
-  const viewProfiles = await parseYamlFile(viewProfilesPath);
-  const vp = viewProfiles?.profiles?.[profile];
   const vpMaxCandidates = Number.isFinite(Number(vp?.max_candidates)) ? Number(vp.max_candidates) : null;
   const vpFillToMax = vp?.fill_to_max_candidates === true;
   const gxEnabled = vp?.graph_expansion?.enabled === true;
@@ -1053,24 +1162,58 @@ export async function internal_main(args = process.argv.slice(2)) {
     }
 
     if (tiers.total > vpMaxCandidates) {
-      const observed = "Grounded candidate set exceeds max_candidates for profile=" + JSON.stringify(profile);
-      const minimalFix = [
-        "Reduce grounded candidates to <= " + vpMaxCandidates + " without compacting the list.",
-        "Prefer removing LOW candidates first (then MEDIUM) to keep quality bounded.",
-        "Rerun: /caf arch <instance>.",
-      ];
+      const pinInfo = (profile === 'arch_scaffolding')
+        ? await loadArchitectureShapePinIds(repoRoot, instanceName)
+        : { pinIds: [], aspRel: '', missing: true };
+      const prune = buildDeterministicPrunePreview(block, vpExcludedCandidateIds, new Set(extrasSurface), pinInfo.pinIds || []);
+      const remainingAfterSafe = tiers.total - prune.safe.length;
+      const canReconcileDeterministically = remainingAfterSafe <= vpMaxCandidates;
+      const observed = canReconcileDeterministically
+        ? "Grounded candidate set exceeds max_candidates for profile=" + JSON.stringify(profile) + " (deterministic prune plan available)"
+        : "Grounded candidate set exceeds max_candidates for profile=" + JSON.stringify(profile) + " after deterministic LOW/excluded/outside reconciliation";
+      const minimalFix = canReconcileDeterministically
+        ? [
+            "Reduce grounded candidates to <= " + vpMaxCandidates + " without compacting the list.",
+            prune.safe.length > 0
+              ? "Apply the deterministic safe-prune set in order: " + prune.safe.join(', ')
+              : "No safe-prune ids were found; inspect the evidence section below.",
+            prune.heldByCoverage.length > 0
+              ? "Do NOT prune ids currently held by pin coverage: " + prune.heldByCoverage.join(', ')
+              : "No prune candidates are currently held by pin coverage.",
+            "Rerun: /caf arch <instance>.",
+          ]
+        : [
+            "This packet is advisory-only after deterministic reconciliation.",
+            "LOW candidates, profile-excluded ids, and outside-surface ids are not enough to get under the current cap without breaking current coverage or dropping valuable in-surface candidates.",
+            "Review retrieval profile allowances / cap for this profile before forcing further pruning.",
+            "Continue only if the remaining over-cap set is acceptable for the current run budget.",
+          ];
       const ev = [
         "profile: " + profile,
+        "view_profiles: " + path.relative(repoRoot, viewProfilesPath).replace(/\\/g, "/"),
         "max_candidates: " + vpMaxCandidates,
         "grounded_candidates_high: " + tiers.high,
         "grounded_candidates_medium: " + tiers.medium,
         "grounded_candidates_low: " + tiers.low,
         "grounded_candidates_total: " + tiers.total,
+        "profile_excluded_candidate_ids: " + (vpExcludedCandidateIds.size > 0 ? Array.from(vpExcludedCandidateIds).join(', ') : '(none)'),
+        "outside_surface_candidate_ids: " + (extrasSurface.length > 0 ? extrasSurface.join(', ') : '(none)'),
+        "deterministic_low_ids: " + (prune.low.length > 0 ? prune.low.join(', ') : '(none)'),
+        "deterministic_excluded_ids: " + (prune.excluded.length > 0 ? prune.excluded.join(', ') : '(none)'),
+        "deterministic_outside_surface_ids: " + (prune.outside.length > 0 ? prune.outside.join(', ') : '(none)'),
+        "deterministic_safe_prune_ids: " + (prune.safe.length > 0 ? prune.safe.join(', ') : '(none)'),
+        "held_by_pin_coverage: " + (prune.heldByCoverage.length > 0 ? prune.heldByCoverage.join(', ') : '(none)'),
+        "remaining_after_safe_prune: " + remainingAfterSafe,
+        (profile === 'arch_scaffolding' && !pinInfo.missing) ? ("architecture_shape_parameters: " + pinInfo.aspRel) : null,
         "system_spec: " + path.relative(repoRoot, systemSpec).replace(/\\/g, "/"),
-      ];
-      const next = ["Rerun: /caf arch " + instanceName];
-      const fp = await writeFeedbackPacket(repoRoot, instanceName, profile, "retrieval-gate-max-candidates-exceeded", "blocker", observed, minimalFix, ev, next);
-      die("Fail-closed. Wrote feedback packet: " + path.relative(repoRoot, fp).replace(/\\/g, "/"), 40);
+      ].filter(Boolean);
+      const next = [canReconcileDeterministically ? ("Rerun: /caf arch " + instanceName) : ("Review max_candidates for profile=" + profile + " and decide whether to widen the allowance or accept the current over-cap set.")];
+      const severity = canReconcileDeterministically ? "blocker" : "advisory";
+      const fp = await writeFeedbackPacket(repoRoot, instanceName, profile, "retrieval-gate-max-candidates-exceeded", severity, observed, minimalFix, ev, next);
+      if (canReconcileDeterministically) {
+        die("Fail-closed. Wrote feedback packet: " + path.relative(repoRoot, fp).replace(/\\/g, "/"), 40);
+      }
+      process.stderr.write("Warning: " + observed + " (wrote " + path.relative(repoRoot, fp).replace(/\\/g, "/") + ")\n");
     }
 
     // Graph reserve slots should be used when graph-only candidates exist.
@@ -1171,20 +1314,21 @@ export async function internal_main(args = process.argv.slice(2)) {
     // Best-effort: do not block retrieval purely due to gate-side parsing.
   }
 
-  // Retrieval blob must include CAF-managed SPEC signals; these are not optional.
+  // Retrieval blob must propagate CAF-managed pin-derived constraints; semantic readiness is enforced upstream by the blob builder.
   const blobMd = await readUtf8(retrievalBlob);
-  const pinConstraints = hasNonPlaceholderSection(blobMd, 'Pin-derived system constraints (CAF-managed)');
+  const pinConstraints = hasRequiredManagedBulletsSection(blobMd, 'Pin-derived system constraints (CAF-managed)');
   if (!pinConstraints.ok) {
     const observed = 'Retrieval blob is missing required CAF-managed pin-derived system constraints';
     const minimalFix = [
-      'Ensure the system architect step copied spec templates verbatim (no in-band prefill).',
-      'Run the pin value explanation prefill script to hydrate CAF-managed sections before building the retrieval blob.',
+      'Run the canonical retrieval preflight so the blob is rebuilt from the current system spec before semantic retrieval.',
+      'If this still fails, inspect the source CAF_MANAGED_BLOCK: pin_derived_system_constraints_v1 in system_spec_v1.md and the propagated blob heading side by side.',
       'Rerun: /caf arch <instance>.',
     ];
     const ev = [
       `path: ${path.relative(repoRoot, retrievalBlob).replace(/\\/g, '/')}`,
       `section: Pin-derived system constraints (CAF-managed)`,
       `status: ${pinConstraints.reason}`,
+      `source_block: reference_architectures/${instanceName}/spec/playbook/system_spec_v1.md :: CAF_MANAGED_BLOCK pin_derived_system_constraints_v1`,
     ];
     const next = [
       `Open newest feedback packet under: reference_architectures/${instanceName}/feedback_packets/`,

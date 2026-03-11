@@ -17,6 +17,11 @@ profiles:
       max_per_plane: 20
       max_per_family: 5
     fill_to_max_candidates: true
+    # Active-retrieval exclusions for new-work profiles.
+    # These ids remain in the canonical library for legacy traceability, but MUST NOT
+    # be surfaced as first-class retrieval candidates for new instances.
+    exclude_candidate_ids:
+    - CAF-MODEL-01
     graph_expansion:
       enabled: true
       reserve_slots: 4
@@ -63,6 +68,8 @@ profiles:
         \ ensure caf_v1 patterns are present (\u22653) so CAF obligations and contracts are not starved."
       min_caf_v1: 2
     fill_to_max_candidates: true
+    exclude_candidate_ids:
+    - CAF-MODEL-01
     graph_expansion:
       enabled: true
       reserve_slots: 4

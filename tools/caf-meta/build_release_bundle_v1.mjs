@@ -68,8 +68,8 @@ const RELEASE_EXCLUDE_PREFIXES = [
 // Canonical public sample(s) allowed into the release bundle.
 // If you rename the sample, update these prefixes accordingly.
 const SAMPLE_INCLUDE_PREFIXES = [
-  'reference_architectures/cdx-saas/',
-  'companion_repositories/cdx-saas/',
+  'reference_architectures/codex-saas/',
+  'companion_repositories/codex-saas/',
 ];
 
 function isExcluded(relPath) {

@@ -2,7 +2,7 @@ schema_version: phase8_plane_binding_pattern_v1
 plane_id: CP
 layout:
   scaffold_directories:
-  - code/CP/
+    - code/CP/
   role_bindings:
     cp_plane_scaffold_readme:
       path_template: README.md
@@ -10,9 +10,36 @@ layout:
     cp_entrypoint_stub:
       path_template: control_plane.py
       artifact_class: code_runnable_candidate
+  abp_role_bindings:
+    ABP-CLEAN-01:
+      composition_root:
+        path_template: bootstrap/
+      inbound_adapters:
+        path_template: interfaces/inbound/
+      application_use_cases:
+        path_template: application/
+      domain_core:
+        path_template: domain/
+      outbound_ports:
+        path_template: application/ports/
+      outbound_adapters:
+        path_template: interfaces/outbound/
+    ABP-LAYERED-01:
+      composition_root:
+        path_template: bootstrap/
+      presentation_layer:
+        path_template: presentation/
+      application_services:
+        path_template: application/
+      domain_model:
+        path_template: domain/
+      data_access_layer:
+        path_template: data_access/
+      integration_adapters:
+        path_template: integrations/
 extensions:
   obligations:
-  - obligation_id: O-PBP-CP-01-minimum-entrypoint
-    title: CP plane must materialize at least one non-README file
-    required_capability: observability_and_config
-    role_binding_key: cp_entrypoint_stub
+    - obligation_id: O-PBP-CP-01-minimum-entrypoint
+      title: CP plane must materialize at least one non-README file
+      required_capability: observability_and_config
+      role_binding_key: cp_entrypoint_stub

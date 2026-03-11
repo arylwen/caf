@@ -10,7 +10,7 @@ Core subcommands:
 - `/caf saas <instance_name>`
 - `/caf arch <instance_name>`
 - `/caf plan <instance_name>`
-- `/caf next <instance_name> [apply=true|false]`
+- `/caf next <instance_name> [apply]`
 - `/caf build <instance_name>`
 - `/caf prd <instance_name> [promote=true|false]`
 

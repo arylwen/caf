@@ -120,7 +120,8 @@ function findLayer8Mentions(files) {
     'skills/',
     'skills_portable/',
     'tools/',
-    'technical_notes/',
+    'docs/maintainer/',
+    'docs/dev/maintainer/',
   ];
   for (const fp of files) {
     const r = rel(fp);

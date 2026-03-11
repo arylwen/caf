@@ -20,6 +20,9 @@ status: active
 
 Required (copied into companion repo by `caf-build-candidate` Step 0):
 - `caf/application_spec_v1.md`
+- `caf/application_domain_model_v1.yaml`
+- `caf/system_domain_model_v1.yaml`
+- `caf/abp_pbp_resolution_v1.yaml`
 - `caf/profile_parameters_resolved.yaml` (resolved persistence rails; if absent, read from reference_architectures/...)
 - `caf/tbp_resolution_v1.yaml` (resolved TBPs; if absent, read from reference_architectures/...)
 
@@ -31,21 +34,26 @@ It supports any Task Graph task where:
 - `required_capabilities` contains `persistence_implementation`, and
 
 - either:
-  - `task_id` matches: `TG-40-persistence-<resource_key>` (resource-scoped), or
+  - `task_id` matches: `TG-40-persistence-<resource_key>` (application resource-scoped), or
+  - `task_id` matches: `TG-40-persistence-cp-<aggregate_key>` (control-plane/system aggregate-scoped), or
   - `task_id` matches: `TG-10-OPTIONS-persistence_implementation` (cross-cutting option task)
 
-Deterministic resource extraction:
+Deterministic scope extraction:
 
-- If the task_id matches `TG-40-persistence-<resource_key>`, parse `<resource_key>`.
+- If the task_id matches `TG-40-persistence-<resource_key>`, treat it as an application-plane persistence task and parse `<resource_key>`.
+- If the task_id matches `TG-40-persistence-cp-<aggregate_key>`, treat it as a control-plane persistence task and parse `<aggregate_key>`.
 - If the task_id matches `TG-10-OPTIONS-persistence_implementation`, treat the task as cross-cutting and do not invent a resource key.
 - Otherwise → fail closed.
 
 Input discipline (required):
 - You MUST open and use the assigned task object (steps + DoD + semantic_review).
 - You MUST open and use the resolved rails (`profile_parameters_resolved.yaml`) and TBP resolution (`tbp_resolution_v1.yaml`) to avoid in-memory-only runtime persistence when a DB engine is resolved.
+- You MUST treat `caf/tbp_resolution_v1.yaml` as the resolved TBP id set only. Do NOT assume it inlines role-binding maps.
+- When you need a TBP-declared adapter surface, resolve it deterministically from the resolved TBP manifests via:
+  - `node tools/caf/resolve_tbp_role_binding_key_v1.mjs <instance_name> --role-binding-key <key>`
 
 Rails rule (non-negotiable):
-- If resolved rails require a database engine, you MUST NOT ship an in-memory-only implementation (except as an explicit fallback when permitted).
+- If resolved rails require a database engine, you MUST NOT ship an in-memory-only implementation.
 - If resolved rails disallow a backend, you MUST NOT generate or wire it.
 
 Backend posture selection rule (deterministic; minimize tech-specific DoD):
@@ -53,19 +61,30 @@ Backend posture selection rule (deterministic; minimize tech-specific DoD):
 - Normalize the engine to `engine_key` (lowercase, use `_` for separators). Examples: `postgres`, `mysql`, `sqlite`.
 - Derive the expected adapter surface role binding key: `${engine_key}_adapter_module`.
 - If a database engine is resolved (non-empty / not `none`):
-  - If `${engine_key}_adapter_module` is present in `caf/tbp_resolution_v1.yaml`, you MUST generate an engine-backed repository implementation for the resource by **adopting** that adapter surface (import + delegation), plus any permitted in-memory fallback.
-  - If `${engine_key}_adapter_module` is NOT present in `caf/tbp_resolution_v1.yaml`, fail closed (this indicates missing TBP resolution / wiring for the resolved engine).
+  - Run `node tools/caf/resolve_tbp_role_binding_key_v1.mjs <instance_name> --role-binding-key ${engine_key}_adapter_module`.
+  - If the helper returns exactly one match, you MUST generate an engine-backed repository implementation for the resource by **adopting** that adapter surface (import + delegation).
+  - If the helper returns zero matches, fail closed (this indicates missing TBP role binding coverage for the resolved engine in the resolved TBP set).
+  - If the helper returns more than one match, fail closed (ambiguous TBP role binding ownership).
 - Engine-backed repository naming convention:
-  - python: `code/ap/persistence/<engine_key>_<resource_key>_repository.py`
-  - typescript: `code/ap/persistence/<engine_key>_<resource_key>_repository.ts`
-- Repository factory ownership: the resource-scoped persistence task MUST own `code/ap/persistence/repository_factory.*` and MUST NOT defer that to any engine wiring worker.
-- Default behavior for local determinism:
-  - If `DATABASE_URL` is missing/empty, repository_factory returns the in-memory repository (when permitted by rails).
-  - If `DATABASE_URL` is present, repository_factory selects the engine-backed repository when the URL scheme matches the resolved engine (for postgres: `postgres://` or `postgresql://`), otherwise fall back (fail closed if rails require a DB).
+  - application-plane python: `code/ap/persistence/<engine_key>_<resource_key>_repository.py`
+  - control-plane python: `code/cp/persistence/<engine_key>_<aggregate_key>_repository.py`
+  - application-plane typescript: `code/ap/persistence/<engine_key>_<resource_key>_repository.ts`
+  - control-plane typescript: `code/cp/persistence/<engine_key>_<aggregate_key>_repository.ts`
+- Repository factory ownership:
+  - application-plane tasks own `code/ap/persistence/repository_factory.*`
+  - control-plane tasks own `code/cp/persistence/repository_factory.*`
+  - do not defer repository factory ownership to an engine wiring worker.
+- Default behavior for runtime selection when a DB engine is resolved:
+  - If `DATABASE_URL` is missing/empty, repository_factory MUST fail closed with a clear runtime error explaining that the resolved engine requires DB wiring.
+  - If `DATABASE_URL` is present, repository_factory selects the engine-backed repository only when the URL scheme matches the resolved engine (for postgres: `postgres://` or `postgresql://`).
+  - If the URL scheme does not match the resolved engine, repository_factory MUST fail closed.
+  - Do not silently return an in-memory/demo/default repository from production code paths.
 
+- Test doubles belong under `tests/**`, not under production runtime modules.
+- DO NOT materialize `InMemory*`, `Demo*`, `Fake*`, or similar fallback repositories under `code/ap/**` or `code/cp/**` when rails require a real database engine.
 - DO NOT instantiate an in-memory repository directly inside AP runtime routes/handlers.
 - Provide an injectable repository wiring surface (factory/provider) so runtime can select the appropriate backend based on resolved rails + environment.
-- If DB-specific adapter code is produced by a TBP task, your persistence work MUST still provide the integration seam (imports/injection points) required to adopt that adapter without rewrites.
+- If DB-specific adapter code is produced by a TBP task, your persistence work MUST still provide the integration interface and injection points required to adopt that adapter without rewrites.
 
 - You MUST open and use every `task.inputs[]` where `required: true`.
 - In your task report, include an **Inputs consumed** section listing each required input and what you derived from it.
@@ -74,7 +93,7 @@ Backend posture selection rule (deterministic; minimize tech-specific DoD):
 
 Write rails:
 - Only write within the companion repo Guardrails rails.
-- Place persistence modules under the Application Plane code root, using the repo’s established persistence layout (create minimal structure if absent).
+- Place persistence modules under the plane-local code root implied by the task id (`code/ap/...` for application-plane tasks, `code/cp/...` for control-plane tasks), using the repo’s established persistence layout (create minimal structure if absent).
 - Any file you create or substantially rewrite MUST include a `CAF_TRACE:` header block at the top (see CAF Operating Contract: "CAF trace headers").
 
 
@@ -144,3 +163,10 @@ Rules:
 - Evidence anchors MUST point to paths under `companion_repositories/<instance>/profile_v1/` and include line ranges.
 - Every claim MUST have at least one evidence anchor.
 - Do not include placeholders (TBD/TODO/etc.).
+
+
+## Interface binding contract handling (mandatory when present)
+
+- If `caf/interface_binding_contracts_v1.yaml` contains an entry whose `provider.task_id` matches the current task, satisfy that required interface explicitly.
+- Emit or preserve the concrete provider hook named by the interface binding contract (factory, adapter builder, registration hook, or equivalent).
+- Do not assume assembler work will infer the provider relationship unless the interface binding contract makes it explicit.

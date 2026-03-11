@@ -31,6 +31,7 @@ This worker is **not** responsible for production hardening.
 - `companion_repositories/<name>/**` (candidate repo)
 - The assigned Task Graph task (from `caf/task_graph_v1.yaml` or the reference_architectures copy)
 - `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` (pins + allowed write paths)
+- `caf/interface_binding_contracts_v1.yaml` when present
 
 ## TBP role-binding enforcement (mandatory)
 
@@ -74,8 +75,9 @@ When wiring compose:
 - Ensure AP and CP services are both present when required.
 - Ensure service dependencies are declared (e.g., AP depends_on CP when needed).
 - Ensure environment variables are consistent (ports, hostnames, DB connection strings) without inventing secrets.
-- Ensure the compose project name is stable and instance-scoped:
-  - Top-level `name:` MUST equal the CAF instance name (e.g., `name: cdx-saas`).
+- Ensure deployment/IaC identity is stable and Guardrails-owned:
+  - Read `deployment.stack_name` from `profile_parameters_resolved.yaml` and use that canonical value for any IaC surface you materialize.
+  - For compose packaging, top-level `name:` MUST equal `deployment.stack_name`.
 
 Compose ownership rule (tight leash):
 - `docker/compose.candidate.yaml` is owned by this capability (`runtime_wiring`).
@@ -108,7 +110,7 @@ YAML validity invariant:
 - Do not introduce placeholder keys like `ui: null` under `services:`. If a role-binding marker is desired, place it under a dedicated top-level extension key (e.g., `x-caf-role-bindings:`), not inside `services:`.
 
 Compose project naming invariant:
-- `docker/compose.candidate.yaml` MUST include a top-level `name:` field equal to the CAF instance name.
+- `docker/compose.candidate.yaml` MUST include a top-level `name:` field equal to `deployment.stack_name` from the resolved guardrails view.
 
 Compose-based packaging (docker_compose or podman_compose) standard outputs:
 
@@ -124,3 +126,18 @@ Compose-based packaging (docker_compose or podman_compose) standard outputs:
 
 - Any required input missing or outside rails → fail closed.
 - Ambiguous runtime shape not declared by planner → fail closed.
+
+
+## Interface binding evidence (mandatory when present)
+
+- If `caf/interface_binding_contracts_v1.yaml` contains an entry whose `assembler.task_id` matches the current task, you MUST close that interface binding explicitly in the runtime composition boundary.
+- Do not mark a binding closed if the consumer still keeps a silent production fallback to a local demo/in-memory/default provider.
+- For each closed interface binding, write `caf/binding_reports/<binding_id>.yaml` with:
+  - `schema_version: caf_interface_binding_report_v1`
+  - `binding_id`
+  - `status: closed`
+  - `closed_by.task_id`
+  - `evidence.consumer_artifact_paths[]`
+  - `evidence.provider_artifact_paths[]`
+  - `evidence.assembler_artifact_paths[]`
+- Wave order alone is not evidence of binding closure.

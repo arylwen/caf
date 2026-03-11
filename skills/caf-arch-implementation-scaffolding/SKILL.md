@@ -54,7 +54,7 @@ Specs are prerequisites for design/planning.
 - `spec/playbook/system_spec_v1.md`
 - `spec/playbook/application_spec_v1.md`
 
-### Step 2 - Domain model derivation (semantic intermediate; required before design-stage retrieval)
+### Step 2 - Plane-separated domain model derivation from architect-edit sources (semantic intermediate; required before design-stage retrieval)
 
 Invoke:
 
@@ -62,8 +62,16 @@ Invoke:
 
 Hard rules:
 
-- Overwrite `design/playbook/domain_model_v1.yaml` if present
-- Refuse on underspecified specs (worker writes its own feedback packet)
+- Require these architect-edit source docs to exist before invoking the worker:
+  - `spec/playbook/application_domain_model_v1.md`
+  - `spec/playbook/system_domain_model_v1.md`
+- The worker MUST treat those Markdown files as the authoritative human-edit sources for detailed domain modeling.
+- The worker MAY overwrite only the derived YAML views if present:
+  - `design/playbook/application_domain_model_v1.yaml`
+  - `design/playbook/system_domain_model_v1.yaml`
+- Do **not** emit or refresh the legacy combined file `design/playbook/domain_model_v1.yaml`.
+- Do **not** silently recreate or overwrite the Markdown source docs in this phase. If either source doc is missing, fail closed and instruct the user to rerun the architecture-scaffolding lane or restore the files.
+- Refuse on underspecified specs, missing source docs, or unresolved plane ownership (worker writes its own feedback packet).
 
 If a feedback packet was produced, STOP.
 
@@ -72,7 +80,7 @@ If a feedback packet was produced, STOP.
 Deterministic pre-retrieval helpers (MUST RUN; fail-closed):
 
 - Run: `node tools/caf/prefilter_semantic_candidates_v1.mjs <name> --profile=solution_architecture --limit=180`
-- Run: `node tools/caf/build_retrieval_context_blob_v1.mjs <name> --profile=solution_architecture`
+- Run: `node tools/caf/retrieval_preflight_v1.mjs <name> --profile=solution_architecture`
 
 Rules:
 - Do not print invocations.
@@ -246,7 +254,7 @@ Minimal Fix Proposal rules (avoid chicken/egg):
 - Always propose only allowed router commands:
   - `/caf arch <name>`
   - `/caf plan <name>`
-  - `/caf next <name> [apply=true]`
+  - `/caf next <name> [apply]`
 
 When sanity-check outputs are missing, the proposal MUST:
 

@@ -67,9 +67,10 @@ Write rails:
 
 1) **No new technology decisions**
 
-- UI framework preference must come from `ui_requirements_v1` (architect-edit).
-- If the requirements prefer `react`, generate React-compatible UI code.
-- If the requirements are missing or conflict with the task intent → fail closed.
+- UI framework choice must come from `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` → `ui.framework`.
+- Product-facing shell/page wording must come from `reference_architectures/<name>/spec/playbook/application_spec_v1.md` → `ARCHITECT_EDIT_BLOCK: ui_product_surface_v1` when that block is populated.
+- If the resolved pins prefer `react`, generate React-compatible UI code.
+- If the resolved UI pins are missing or conflict with the task intent → fail closed.
 
 2) **Build pipeline is TBP-driven**
 
@@ -138,7 +139,7 @@ The report MUST include:
 ## Fail-closed conditions
 
 - Missing required inputs.
-- `ui_requirements_v1` missing/invalid when the task depends on it.
+- `profile_parameters_resolved.yaml` missing/invalid UI rails when the task depends on them.
 - Intended writes outside the derived allowed write paths.
 - Any output artifact class outside derived allowed artifact classes.
 - Any ambiguity about tenant/principal context carriers when API calls are scaffolded.

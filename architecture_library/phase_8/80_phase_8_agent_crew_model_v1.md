@@ -1,6 +1,6 @@
 # Phase 8 Agent Crew Model (v1)
 
-Normative note (v1): Phase 8 is a deterministic, fail-closed build loop. Constraints come from **Task Graph + Layer 8 rails + platform pins (technology atoms) + TBPs**. Agents MUST NOT invent requirements, tasks, technologies, or architecture outside those constraints.
+Normative note (v1): Phase 8 is a deterministic, fail-closed build loop. Constraints come from **Task Graph + Layer 8 rails + resolved ABP/PBP style bindings + platform pins (technology atoms) + TBPs**. Agents MUST NOT invent requirements, tasks, technologies, or architecture outside those constraints.
 
 ## Purpose
 
@@ -85,7 +85,7 @@ Hard limits:
 - `reference_architectures/<name>/design/playbook/task_graph_v1.yaml` (canonical path; no version suffix)
 
 Responsibilities:
-- compile tasks from the **task archetype catalog** + TBP role bindings + explicit decision anchors
+- compile tasks from the **task archetype catalog** + resolved ABP/PBP style bindings + TBP role bindings + explicit decision anchors
 - attach anchors and acceptance checks to each task
 - fail closed if:
   - no archetype fits (emit a Make Tasks Request feedback packet)
@@ -161,14 +161,19 @@ The following artifacts define the v1 loop contracts:
 - `reference_architectures/<name>/spec/playbook/architecture_shape_parameters.yaml`
 - `reference_architectures/<name>/spec/guardrails/profile_parameters.yaml`
 - `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` (Layer 8 derived rails; generated)
+- `reference_architectures/<name>/spec/guardrails/abp_pbp_resolution_v1.yaml` (style→plane binding projection; generated)
 
 ### Specifications
 - `reference_architectures/<name>/spec/playbook/system_spec_v1.md` (pins → system constraints; merge-safe)
 - `reference_architectures/<name>/spec/playbook/application_spec_v1.md` (application-plane functional spec; merge-safe)
+- `reference_architectures/<name>/spec/playbook/application_domain_model_v1.md` (application-plane detailed domain source; architect-edit)
+- `reference_architectures/<name>/spec/playbook/system_domain_model_v1.md` (system/control-plane detailed domain source; architect-edit)
 
 ### Designs
 - `reference_architectures/<name>/design/playbook/control_plane_design_v1.md`
 - `reference_architectures/<name>/design/playbook/application_design_v1.md`
+- `reference_architectures/<name>/design/playbook/application_domain_model_v1.yaml` (derived)
+- `reference_architectures/<name>/design/playbook/system_domain_model_v1.yaml` (derived)
 
 ### Plan
 - `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
@@ -185,7 +190,8 @@ The following artifacts define the v1 loop contracts:
    - `lifecycle.generation_phase = architecture_scaffolding`
    - `platform pins (infra_target/packaging/runtime_language/database_engine)`
 
-2) `caf-arch` derives the Layer 8 resolved view (rails) and validates pins (fail-closed).
+2) `caf-arch` derives the Layer 8 resolved view (rails), projects the selected ABP across the PBP catalog, and validates pins (fail-closed).
+   Detailed plane domain models are not yet authoritative at this stage; `application_spec_v1.md` and `system_spec_v1.md` remain intentionally lean.
 
 3) `caf-system-architect` creates/updates (merge-safe):
    - `playbook/system_spec_v1.md`
@@ -205,6 +211,8 @@ The following artifacts define the v1 loop contracts:
    - writes/updates `contract_declarations_v1.yaml` (declares any material boundary contracts; form + justification)
    - writes/updates `control_plane_design_v1.md`
    - writes/updates `application_design_v1.md`
+   - scaffolds/updates `application_domain_model_v1.md` and `system_domain_model_v1.md` when detailed domain modeling is needed for planning
+   - derives `application_domain_model_v1.yaml` and `system_domain_model_v1.yaml` for planner consumption
    (including Decision Checklist blocks in both design docs)
    (CAF-managed blocks are rerun-safe; required ARCHITECT_EDIT_BLOCK sections preserve human accept/reject and open question answers.)
 
@@ -213,7 +221,7 @@ The following artifacts define the v1 loop contracts:
    - `application_design_v1.md` ARCHITECT_EDIT_BLOCK(s) (decisions + open questions)
    (Flip `status: adopt` in each option set; preserve everything else.)
 
-8) `caf-application-architect` compiles:
+8) `caf-application-architect` compiles using the resolved ABP/PBP style bindings, explicit plane/runtime/contract selections, derived active-plane evidence, plane-separated domain model views, and TBP role bindings:
    - `task_graph_v1.yaml`
    If compilation is impossible, emit a feedback packet (Make Tasks Request).
 

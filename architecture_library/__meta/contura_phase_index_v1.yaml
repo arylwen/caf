@@ -47,6 +47,8 @@ phases:
   - path: phase_8/84_phase_8_profile_parameters_template_v1.yaml
   - path: phase_8/85_phase_8_lifecycle_model_v1.md
   - path: phase_8/86_phase_8_approved_technology_atoms_schema_v1.yaml
+  - path: phase_8/87a_phase_8_plane_domain_models_and_persistence_compilation_contract_v1.md
+  - path: phase_8/87b_phase_8_plane_domain_model_schema_v1.yaml
   - path: phase_8/89_phase_8_instance_evolution_policy_v1.md
   - path: phase_8/90_phase_8_profile_derivation_policy_matrix_v1.yaml
   - path: phase_8/91_phase_8_candidate_code_enforcement_bar_v1.md

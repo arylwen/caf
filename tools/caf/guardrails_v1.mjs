@@ -196,6 +196,7 @@ function parsePinnedSpine(pinsObj) {
   return {
     evolution_stage: normalizeScalar(pinsObj?.lifecycle?.evolution_stage),
     generation_phase: normalizeScalar(pinsObj?.lifecycle?.generation_phase),
+    architecture_style: normalizeScalar(pinsObj?.architecture?.architecture_style),
     infra_target: normalizeScalar(pinsObj?.platform?.infra_target),
     packaging: normalizeScalar(pinsObj?.platform?.packaging),
     runtime_language: normalizeScalar(pinsObj?.platform?.runtime_language),
@@ -207,6 +208,12 @@ function parsePinnedSpine(pinsObj) {
     platform_auth_mode: normalizeScalar(pinsObj?.platform?.auth_mode),
     platform_eventing_backend: normalizeScalar(pinsObj?.platform?.eventing_backend),
     platform_schema_management_strategy: normalizeScalar(pinsObj?.platform?.schema_management_strategy),
+
+    // UI technology/runtime choices (pinned; architect UX is scalar values under ui.*)
+    ui_present: typeof pinsObj?.ui?.present === 'boolean' ? pinsObj.ui.present : null,
+    ui_kind: normalizeScalar(pinsObj?.ui?.kind),
+    ui_framework: normalizeScalar(pinsObj?.ui?.framework),
+    ui_deployment_preference: normalizeScalar(pinsObj?.ui?.deployment_preference),
   };
 }
 
@@ -228,6 +235,128 @@ function mapDatabaseEngineAtom(dbEnginePin) {
     none: 'none',
   };
   return m[v] ?? v;
+}
+
+
+async function buildAbpPbpResolutionObj(repoRoot, instanceName, resolvedPath, resolvedObj) {
+  const styleKey = normalizeScalar(resolvedObj?.architecture?.architecture_style);
+  if (!styleKey) {
+    const e = new Error('Missing architecture.architecture_style in resolved profile');
+    e.feedback = {
+      slug: 'guardrails-missing-architecture-style',
+      observedConstraint: 'ABP/PBP resolution failed: architecture.architecture_style is missing in profile_parameters_resolved.yaml',
+      minimalFixLines: ['Populate architecture.architecture_style in guardrails/profile_parameters.yaml and regenerate guardrails.'],
+      evidenceLines: [safeRel(repoRoot, resolvedPath)],
+      code: 27,
+    };
+    throw e;
+  }
+
+  const abpCatalogPath = path.join(repoRoot, 'architecture_library', 'phase_8', '98b_phase_8_architecture_binding_pattern_catalog_v1.yaml');
+  const pbpCatalogPath = path.join(repoRoot, 'architecture_library', 'phase_8', '81_phase_8_plane_binding_pattern_catalog_v1.yaml');
+  if (!fileExists(abpCatalogPath) || !fileExists(pbpCatalogPath)) {
+    const e = new Error('Missing ABP/PBP catalog');
+    e.feedback = {
+      slug: 'guardrails-missing-abp-pbp-catalog',
+      observedConstraint: 'ABP/PBP resolution failed: required catalog file is missing',
+      minimalFixLines: ['Restore the Phase 8 ABP/PBP catalogs, then rerun caf arch <name>.'],
+      evidenceLines: [safeRel(repoRoot, abpCatalogPath), safeRel(repoRoot, pbpCatalogPath)],
+      code: 28,
+    };
+    throw e;
+  }
+
+  const abpCatalogObj = parseYamlString(await readUtf8(abpCatalogPath), abpCatalogPath) || {};
+  const pbpCatalogObj = parseYamlString(await readUtf8(pbpCatalogPath), pbpCatalogPath) || {};
+  const styles = Array.isArray(abpCatalogObj?.styles) ? abpCatalogObj.styles : [];
+  const styleMatches = styles.filter((s) => normalizeScalar(s?.style_key) === styleKey && normalizeScalar(s?.status || 'active') === 'active');
+  if (styleMatches.length !== 1) {
+    const e = new Error('Unknown or ambiguous architecture style');
+    e.feedback = {
+      slug: 'guardrails-abp-style-resolution-failed',
+      observedConstraint: 'ABP/PBP resolution failed: architecture_style did not resolve to exactly one active ABP catalog entry',
+      minimalFixLines: ['Use a supported architecture.architecture_style value from the ABP catalog, then regenerate guardrails.'],
+      evidenceLines: [
+        `style_key=${styleKey}`,
+        safeRel(repoRoot, abpCatalogPath),
+        `matches=${styleMatches.length}`,
+      ],
+      code: 29,
+    };
+    throw e;
+  }
+
+  const styleEntry = styleMatches[0];
+  const abpManifestPath = path.join(repoRoot, normalizeScalar(styleEntry?.manifest_path));
+  if (!fileExists(abpManifestPath)) {
+    const e = new Error('Missing ABP manifest');
+    e.feedback = {
+      slug: 'guardrails-missing-abp-manifest',
+      observedConstraint: 'ABP/PBP resolution failed: selected ABP manifest is missing',
+      minimalFixLines: ['Restore the selected ABP manifest, then rerun caf arch <name>.'],
+      evidenceLines: [safeRel(repoRoot, abpManifestPath)],
+      code: 30,
+    };
+    throw e;
+  }
+  const abpManifestObj = parseYamlString(await readUtf8(abpManifestPath), abpManifestPath) || {};
+  const roleIds = (Array.isArray(abpManifestObj?.roles) ? abpManifestObj.roles : []).map((r) => normalizeScalar(r?.role_id)).filter(Boolean);
+
+  const planeEntries = [];
+  for (const p of Array.isArray(pbpCatalogObj?.planes) ? pbpCatalogObj.planes : []) {
+    const planeId = normalizeScalar(p?.plane_id);
+    const manifestRel = normalizeScalar(p?.manifest_path);
+    const manifestAbs = path.join(repoRoot, manifestRel);
+    if (!planeId || !manifestRel || !fileExists(manifestAbs)) {
+      const e = new Error('Missing PBP manifest');
+      e.feedback = {
+        slug: 'guardrails-missing-pbp-manifest',
+        observedConstraint: 'ABP/PBP resolution failed: a PBP manifest referenced by the catalog is missing',
+        minimalFixLines: ['Restore the missing PBP manifest or fix the plane catalog entry, then rerun caf arch <name>.'],
+        evidenceLines: [manifestRel || `(missing manifest for plane ${planeId || '(unknown)'})`, safeRel(repoRoot, pbpCatalogPath)],
+        code: 31,
+      };
+      throw e;
+    }
+    const pbpManifestObj = parseYamlString(await readUtf8(manifestAbs), manifestAbs) || {};
+    const roleBindings = pbpManifestObj?.layout?.role_bindings || {};
+    const abpRoleBindings = pbpManifestObj?.layout?.abp_role_bindings || {};
+    const selectedBindings = abpRoleBindings?.[normalizeScalar(styleEntry?.abp_id)] || null;
+    planeEntries.push({
+      plane_id: planeId,
+      pbp_manifest_path: manifestRel,
+      scaffold_directories: Array.isArray(pbpManifestObj?.layout?.scaffold_directories) ? pbpManifestObj.layout.scaffold_directories : [],
+      static_role_binding_keys: Object.keys(roleBindings || {}),
+      selected_abp_role_bindings: selectedBindings && typeof selectedBindings === 'object'
+        ? {
+            status: 'present',
+            role_paths: Object.entries(selectedBindings).map(([roleId, rec]) => ({
+              role_id: normalizeScalar(roleId),
+              path_template: normalizeScalar(rec?.path_template),
+            })).filter((x) => x.role_id && x.path_template),
+          }
+        : { status: 'absent', role_paths: [] },
+    });
+  }
+
+  return {
+    schema_version: 'phase8_abp_pbp_resolution_v1',
+    instance_name: instanceName,
+    derived_at: nowIso(),
+    generated_from: {
+      profile_parameters_resolved: safeRel(repoRoot, resolvedPath),
+      abp_catalog: safeRel(repoRoot, abpCatalogPath),
+      pbp_catalog: safeRel(repoRoot, pbpCatalogPath),
+    },
+    selected_architecture_style: {
+      style_key: styleKey,
+      abp_id: normalizeScalar(styleEntry?.abp_id),
+      manifest_path: safeRel(repoRoot, abpManifestPath),
+      role_ids: roleIds,
+    },
+    planes: planeEntries,
+    notes: 'Derived mechanically from architecture.architecture_style and the Phase 8 ABP/PBP catalogs. Does not activate planes.',
+  };
 }
 
 function policyRowMatches(rowMatch, pins) {
@@ -417,23 +546,8 @@ function extractYamlFence(text) {
   return m[1];
 }
 
-function extractUiAtomsFromApplicationSpec(appSpecText) {
-  const blk = extractBlock(
-    appSpecText,
-    '<!-- ARCHITECT_EDIT_BLOCK: ui_requirements_v1 START -->',
-    '<!-- ARCHITECT_EDIT_BLOCK: ui_requirements_v1 END -->'
-  );
-  if (!blk) return { atoms: {}, ui: null };
-  const y = extractYamlFence(blk);
-  if (!y) return { atoms: {}, ui: null };
-  let parsed;
-  try {
-    parsed = parseYamlString(y, '(guardrails_v1:ui_requirements_v1)');
-  } catch {
-    // UI signal is optional for guardrails; invalid YAML is handled elsewhere during planning.
-    return { atoms: {}, ui: null };
-  }
-  const ui = parsed?.ui;
+function extractUiAtomsFromPins(pinsObj) {
+  const ui = pinsObj?.ui;
   if (!ui || typeof ui !== 'object') return { atoms: {}, ui: null };
 
   const out = {};
@@ -443,7 +557,7 @@ function extractUiAtomsFromApplicationSpec(appSpecText) {
     if (s) out[k] = s;
   };
   add('ui.kind', ui.kind);
-  add('ui.framework', ui.framework_preference);
+  add('ui.framework', ui.framework);
   add('ui.deployment_preference', ui.deployment_preference);
   return { atoms: out, ui };
 }
@@ -749,20 +863,12 @@ if (invalidPlaneShapePins.length > 0) {
     'plane.runtime_shape': planeShapes.plane,
   };
 
-  // Optional UI atoms (from application_spec_v1.md ui_requirements_v1 block).
+  // Optional UI atoms (from profile_parameters.yaml ui.* pins).
   // These are treated as optional bind targets for TBPs; they do not participate in pinned spine completeness.
-  let uiSignal = null;
   const appSpecPath = path.join(playbookDir, 'application_spec_v1.md');
-  if (fileExists(appSpecPath)) {
-    try {
-      const appSpecText = await readUtf8(appSpecPath);
-      const res = extractUiAtomsFromApplicationSpec(appSpecText);
-      uiSignal = res?.ui ?? null;
-      for (const [k, v] of Object.entries(res?.atoms ?? {})) atoms[k] = v;
-    } catch {
-      // Ignore UI signal read failures here; planning will handle invalid/missing UI blocks.
-    }
-  }
+  const uiRes = extractUiAtomsFromPins(pinsObj);
+  const uiSignal = uiRes?.ui ?? null;
+  for (const [k, v] of Object.entries(uiRes?.atoms ?? {})) atoms[k] = v;
 
   // Optional derived atom: local AWS emulator target
   // - When infra_target == awslocal, treat the deployment target as localstack.
@@ -958,6 +1064,9 @@ if (invalidPlaneShapePins.length > 0) {
       allowed_write_paths: allowedWritePaths,
       forbidden_actions: rails?.forbidden_actions ?? [],
     },
+    architecture: {
+      architecture_style: pins.architecture_style,
+    },
     platform: {
       infra_target: pins.infra_target,
       packaging: pins.packaging,
@@ -981,12 +1090,13 @@ if (invalidPlaneShapePins.length > 0) {
       ui: {
         ...(typeof uiSignal?.present === 'boolean' ? { present: uiSignal.present } : {}),
         ...(normalizeScalar(uiSignal?.kind) ? { kind: normalizeScalar(uiSignal.kind) } : {}),
-        ...(normalizeScalar(uiSignal?.framework_preference) ? { framework_preference: normalizeScalar(uiSignal.framework_preference) } : {}),
+        ...(normalizeScalar(uiSignal?.framework) ? { framework: normalizeScalar(uiSignal.framework) } : {}),
         ...(normalizeScalar(uiSignal?.deployment_preference) ? { deployment_preference: normalizeScalar(uiSignal.deployment_preference) } : {}),
       },
     } : {}),
     deployment: {
       mode: atoms['deployment.mode'],
+      stack_name: instanceName,
       ...(atoms['deployment.target'] ? { target: atoms['deployment.target'] } : {}),
     },
     planes: {
@@ -1004,11 +1114,16 @@ if (invalidPlaneShapePins.length > 0) {
       derived_from_pins: {
         evolution_stage: pins.evolution_stage,
         generation_phase: pins.generation_phase,
+        ...(normalizeScalar(pins.architecture_style) ? { architecture_style: normalizeScalar(pins.architecture_style) } : {}),
         infra_target: pins.infra_target,
         packaging: pins.packaging,
         runtime_language: pins.runtime_language,
         database_engine: pins.database_engine,
         ...(normalizeScalar(pins.platform_schema_management_strategy) ? { schema_management_strategy: normalizeScalar(pins.platform_schema_management_strategy) } : {}),
+        ...(typeof pins.ui_present === 'boolean' ? { ui_present: pins.ui_present } : {}),
+        ...(normalizeScalar(pins.ui_kind) ? { ui_kind: normalizeScalar(pins.ui_kind) } : {}),
+        ...(normalizeScalar(pins.ui_framework) ? { ui_framework: normalizeScalar(pins.ui_framework) } : {}),
+        ...(normalizeScalar(pins.ui_deployment_preference) ? { ui_deployment_preference: normalizeScalar(pins.ui_deployment_preference) } : {}),
       },
       derived_plane_runtime_shapes: {
         source: planeShapes.source,
@@ -1031,6 +1146,26 @@ if (invalidPlaneShapePins.length > 0) {
 
   await ensureDir(guardrailsDir);
   await writeUtf8(resolvedPath, `${yamlStringify(resolvedObj)}\n`);
+
+  try {
+    const abpPbpResolutionObj = await buildAbpPbpResolutionObj(repoRoot, instanceName, resolvedPath, resolvedObj);
+    const abpPbpPath = path.join(guardrailsDir, 'abp_pbp_resolution_v1.yaml');
+    await writeUtf8(abpPbpPath, `${yamlStringify(abpPbpResolutionObj)}\n`);
+  } catch (err) {
+    if (err?.feedback) {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        err.feedback.slug,
+        err.feedback.observedConstraint,
+        err.feedback.minimalFixLines,
+        err.feedback.evidenceLines,
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, err.feedback.code || 27);
+    }
+    throw err;
+  }
+
 
   // Technology choice validation (validator-facing; does not affect downstream resolved UX)
   const techValidationPath = path.join(guardrailsDir, 'technology_choice_validation_v1.yaml');
@@ -1112,7 +1247,7 @@ if (invalidPlaneShapePins.length > 0) {
     ...(resolvedObj?.ui ? {
       'ui.present': (typeof resolvedObj?.ui?.present === 'boolean') ? (resolvedObj.ui.present ? 'true' : 'false') : undefined,
       'ui.kind': normalizeScalar(resolvedObj?.ui?.kind),
-      'ui.framework': normalizeScalar(resolvedObj?.ui?.framework_preference),
+      'ui.framework': normalizeScalar(resolvedObj?.ui?.framework),
       'ui.deployment_preference': normalizeScalar(resolvedObj?.ui?.deployment_preference),
     } : {}),
   };
@@ -1194,7 +1329,7 @@ if (invalidPlaneShapePins.length > 0) {
     seed_tbps: res.seed,
     resolved_tbps: res.resolved,
     conflicts_checked: true,
-        notes: 'Resolved deterministically from Guardrails atoms; runtime.framework sourced from pinned profile parameters (platform.framework) when applicable.',
+        notes: 'Resolved deterministically from Guardrails atoms; runtime/framework and UI pins are sourced from pinned profile parameters when applicable.',
   };
 
   const tbpPath = path.join(guardrailsDir, 'tbp_resolution_v1.yaml');
@@ -1244,8 +1379,8 @@ if (invalidPlaneShapePins.length > 0) {
   const tbpDebugPath = path.join(guardrailsDir, 'tbp_resolution_debug_v1.md');
   await writeUtf8(tbpDebugPath, `${lines.join('\n')}\n`);
 
-  // Success: be quiet; caller prints.
-  process.exit(0);
+  // Success: in library mode return normally; CLI exits in cli().
+  return 0;
 }
 
 

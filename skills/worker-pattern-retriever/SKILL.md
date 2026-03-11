@@ -173,7 +173,7 @@ No retrieval debug report is required (LLM-authored or otherwise).
 
 NOTE (ship blocker): the retrieval context blob is **script-owned**.
 - Always invoke:
-  - `node tools/caf/build_retrieval_context_blob_v1.mjs <instance_name> --profile=<profile>`
+  - `node tools/caf/retrieval_preflight_v1.mjs <instance_name> --profile=<profile>`
 - Never hand-assemble the blob in-band.
 - If the helper cannot be invoked, FAIL-CLOSED with a feedback packet and STOP.
 
@@ -262,6 +262,7 @@ Profile-controlled behavior (read from `retrieval_view_profiles_v1.yaml`):
 
 - Do not restate or re-implement the selection algorithm in this skill.
 - Follow the active profile in `architecture_library/patterns/retrieval_surface_v1/retrieval_view_profiles_v1.yaml` for: `max_candidates`, `open_definitions_top_k`, `diversity_constraints`, namespace coverage, and graph expansion limits.
+- Honor `exclude_candidate_ids` from the active retrieval profile. Excluded ids remain in the canonical library for legacy traceability, but MUST NOT be emitted as first-class candidates for new-work retrieval runs.
 - If graph expansion is enabled, it MUST run; if it cannot run (e.g., no eligible HIGH/MED grounded seeds), FAIL-CLOSED.
 
 ## Grounding procedure (HS-0)

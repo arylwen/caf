@@ -214,7 +214,7 @@ For each role binding:
 
 On refusal, write:
 
-* `technical_notes/feedback_packets/BP-YYYYMMDD-caf-extend-tbp-<slug>.md`
+* `feedback_packets/caf/BP-YYYYMMDD-caf-extend-tbp-<slug>.md`
 
 Include:
 

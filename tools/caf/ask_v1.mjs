@@ -119,7 +119,7 @@ function detectInstance(question, repoRoot) {
   // Backticks are optional; if present, treat them as strong hints.
   for (const t of extractBacktickTokens(question)) candidates.push(t);
 
-  // Word-like tokens (cdx-saas, hello-saas, etc.)
+  // Word-like tokens (codex-saas, hello-saas, etc.)
   const tokens = [];
   const wordRe = /\b([a-zA-Z0-9][a-zA-Z0-9_-]{1,80})\b/g;
   let wm;
@@ -129,7 +129,7 @@ function detectInstance(question, repoRoot) {
   }
   candidates.push(...tokens);
 
-  // Add simple bigram/trigram joins so “cdx saas” can map to “cdx-saas”.
+  // Add simple bigram/trigram joins so “codex saas” can map to “codex-saas”.
   for (let i = 0; i < tokens.length; i++) {
     const a = tokens[i];
     const b = tokens[i + 1];
@@ -149,8 +149,7 @@ function detectInstance(question, repoRoot) {
     if (resolved) return resolved;
   }
 
-  // Default preference order: cdx-saas, codex-saas, first instance on disk.
-  if (exists(path.join(raRoot, 'cdx-saas'))) return 'cdx-saas';
+  // Default preference order: codex-saas, then first instance on disk.
   if (exists(path.join(raRoot, 'codex-saas'))) return 'codex-saas';
 
   const dirs = listDirs(raRoot);

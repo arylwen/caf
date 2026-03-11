@@ -301,7 +301,7 @@ Write the blob in this exact order (Markdown headings exactly as shown):
 6) `## ARCHITECT_DECISIONS` (from `system_spec_v1.md` → `decision_resolutions_v1`)
 7) `## SPEC_SIGNAL` (from CAF-managed spec blocks + architect-edit requirement blocks)
 8) `## DOMAIN_RESOURCES` (only for `solution_architecture`; from `application_spec_v1.md`)
-9) `## UI_SIGNAL` (if `application_spec_v1.md` contains `ARCHITECT_EDIT_BLOCK: ui_requirements_v1`; include even when defaults)
+9) `## UI_SIGNAL` (from `profile_parameters_resolved.yaml` when a resolved `ui` object is present; include even when defaults)
 10) `### BRIDGE_ECHO (canonical phrases)`
 
 ### Content rules (stable; concise)

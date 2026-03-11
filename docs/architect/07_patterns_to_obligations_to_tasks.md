@@ -2,6 +2,10 @@
 
 This doc explains the “middle” of CAF: how decisions become work.
 
+![CAF traceability chain](../images/caf_traceability_chain.svg)
+
+*CAF keeps a visible chain from intent to patterns to obligations to tasks, so planning stays anchored to decisions rather than drifting into freeform backlog creation.*
+
 ## Promotion (patterns → obligations)
 
 - Adopted patterns imply **obligations**.
@@ -17,7 +21,7 @@ Derived index:
 
 See also:
 
-- `technical_notes/TN-012_promotions_and_obligations_v1.md`
+- `architecture_library/patterns/caf_meta_v1/caf_promotions_and_obligations_meta_patterns_v1.md`
 
 ## Planning (obligations → tasks)
 

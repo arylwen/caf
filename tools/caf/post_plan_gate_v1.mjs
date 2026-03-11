@@ -43,6 +43,9 @@ const taskIdContractGate = path.join(cafToolsDir, "task_id_contract_gate_v1.mjs"
 
 const taskGraphShapeGate = path.join(cafToolsDir, "task_graph_shape_gate_v1.mjs");
 
+const genInterfaceBindingContracts = path.join(cafToolsDir, "gen_interface_binding_contracts_v1.mjs");
+const interfaceBindingContractGate = path.join(cafToolsDir, "interface_binding_contract_gate_v1.mjs");
+
 const genTaskPlan = path.join(cafToolsDir, "gen_task_plan_v1.mjs");
 
 if (!fs.existsSync(playbookGate)) die("Missing helper: tools/caf/playbook_gate_v1.mjs");
@@ -51,6 +54,8 @@ if (!fs.existsSync(tbpObligationGate)) die("Missing helper: tools/caf/tbp_obliga
 if (!fs.existsSync(tbpGateAttachmentOptionsGate)) die("Missing helper: tools/caf/tbp_gate_attachment_options_task_gate_v1.mjs");
 if (!fs.existsSync(taskIdContractGate)) die("Missing helper: tools/caf/task_id_contract_gate_v1.mjs");
 if (!fs.existsSync(taskGraphShapeGate)) die("Missing helper: tools/caf/task_graph_shape_gate_v1.mjs");
+if (!fs.existsSync(genInterfaceBindingContracts)) die("Missing helper: tools/caf/gen_interface_binding_contracts_v1.mjs");
+if (!fs.existsSync(interfaceBindingContractGate)) die("Missing helper: tools/caf/interface_binding_contract_gate_v1.mjs");
 if (!fs.existsSync(genTaskPlan)) die("Missing helper: tools/caf/gen_task_plan_v1.mjs");
 
 function runGate(scriptPath) {
@@ -88,6 +93,14 @@ if (code !== 0) process.exit(code);
 code = runGate(taskGraphShapeGate);
 if (code !== 0) process.exit(code);
 
-// Step 5j (Derived task plan view)
+// Step 5j (Mechanical interface binding contract emission)
+code = runGate(genInterfaceBindingContracts);
+if (code !== 0) process.exit(code);
+
+// Step 5k (Interface binding closure sequencing)
+code = runGate(interfaceBindingContractGate);
+if (code !== 0) process.exit(code);
+
+// Step 5l (Derived task plan view)
 code = runGate(genTaskPlan);
 process.exit(code);

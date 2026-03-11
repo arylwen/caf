@@ -21,6 +21,8 @@ CAF is also meant to help you answer:
 
 See: [Answering questions with CAF](14_answering_questions_with_caf.md)
 
+For the default delivery sequence from PRD to code, see: [PRD-first lifecycle](15_prd_first_lifecycle.md)
+
 ## Why this matters (the “so what”)
 
 CAF improves delivery predictability by making architecture intent:

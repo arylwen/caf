@@ -260,6 +260,33 @@ export function markPendingFeedbackPacketsStaleSync(packetsDirAbs) {
   }
 }
 
+export function setFeedbackPacketStatusSync(packetFileAbs, newStatus) {
+  try {
+    const txt = fs.readFileSync(packetFileAbs, { encoding: 'utf8' });
+    const norm = ensureFeedbackPacketHeaderV1(txt);
+    const next = setFeedbackPacketStatusInText(norm, newStatus);
+    if (next !== txt) fs.writeFileSync(packetFileAbs, next, 'utf8');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function resolveFeedbackPacketsBySlugSync(packetsDirAbs, slugFragment) {
+  const frag = normalize(String(slugFragment ?? ''));
+  if (!frag) return [];
+  const changed = [];
+  const files = listFeedbackPacketFilesSync(packetsDirAbs).filter((f) => f.toLowerCase().endsWith('.md'));
+  for (const f of files) {
+    if (!f.includes(frag)) continue;
+    const abs = path.join(packetsDirAbs, f);
+    const before = readFeedbackPacketStatusSync(abs);
+    if (before && String(before).toLowerCase().includes('resolved')) continue;
+    if (setFeedbackPacketStatusSync(abs, 'resolved')) changed.push(abs);
+  }
+  return changed;
+}
+
 export function renderFeedbackPacketV1(params = {}) {
   const title = normalize(params.title) || 'CAF feedback packet';
   const instanceName = normalize(params.instanceName);
@@ -270,6 +297,8 @@ export function renderFeedbackPacketV1(params = {}) {
   const gapType = normalize(params.gapType);
   const minimalFixLines = Array.isArray(params.minimalFixLines) ? params.minimalFixLines.map(normalize).filter(Boolean) : [];
   const evidenceLines = Array.isArray(params.evidenceLines) ? params.evidenceLines.map(normalize).filter(Boolean) : [];
+  const agentGuidanceLines = Array.isArray(params.agentGuidanceLines) ? params.agentGuidanceLines.map(normalize).filter(Boolean) : [];
+  const humanGuidanceLines = Array.isArray(params.humanGuidanceLines) ? params.humanGuidanceLines.map(normalize).filter(Boolean) : [];
 
   const headerDate = normalize(params.dateYYYYMMDD) || nowDateYYYYMMDD();
 
@@ -298,11 +327,23 @@ export function renderFeedbackPacketV1(params = {}) {
     lines.push('');
   }
 
-  // Stable, short guidance block.
+  // Stable, short guidance blocks.
   lines.push('## Autonomous agent guidance');
-  lines.push('- Apply the Minimal Fix Proposal (do not invent alternatives).');
-  lines.push('- Mark this packet as resolved by changing `- Status: ...` to `- Status: resolved`.');
-  lines.push('- Then rerun the CAF command that produced this packet.');
+  if (agentGuidanceLines.length > 0) {
+    for (const l of agentGuidanceLines) lines.push(`- ${l}`);
+  } else {
+    lines.push('- Apply the Minimal Fix Proposal (do not invent alternatives).');
+    lines.push('- Continue with the next workflow step named by this packet; rerun the CAF command only if the packet explicitly requires it.');
+  }
+  lines.push('');
+
+  lines.push('## Human operator guidance');
+  if (humanGuidanceLines.length > 0) {
+    for (const l of humanGuidanceLines) lines.push(`- ${l}`);
+  } else {
+    lines.push('- Human operators should not treat manual packet status edits as the normal recovery path.');
+    lines.push('- Reset to the most recent safe checkpoint with the exact reset helper named by the packet, then rerun the exact CAF command.');
+  }
   lines.push('');
 
   return lines.join('\n');

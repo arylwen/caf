@@ -38,7 +38,18 @@ Authoritative pinned inputs:
 Optional derived views (generated, read-only):
 - `reference_architectures/<name>/layer_7/` (derived bundle; used by documentation and audit workflows)
 - `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml`
+- `reference_architectures/<name>/spec/guardrails/abp_pbp_resolution_v1.yaml`
 - `reference_architectures/<name>/spec/guardrails/syntactic_checks.md` (optional)
+
+
+Detailed plane-domain authoring inputs (implementation scaffolding onward):
+- `reference_architectures/<name>/spec/playbook/application_domain_model_v1.md`
+- `reference_architectures/<name>/spec/playbook/system_domain_model_v1.md`
+
+Optional derived domain views (generated, read-only):
+- `reference_architectures/<name>/design/playbook/application_domain_model_v1.yaml`
+- `reference_architectures/<name>/design/playbook/system_domain_model_v1.yaml`
+- `reference_architectures/<name>/design/playbook/domain_model_v1.yaml` (legacy compatibility view only)
 
 Invariant:
 - Instance pinned inputs are **architect-authored**.
@@ -121,6 +132,8 @@ Within CAF-managed sandbox instances, the companion repository target is treated
 
 - Global Phase 8 rules and catalogs live in: `architecture_library/phase_8/`
 - Architect-pinned instance inputs live in: `reference_architectures/<name>/spec/playbook/` and `reference_architectures/<name>/spec/guardrails/`
+- Detailed plane-domain source artifacts live in: `reference_architectures/<name>/spec/playbook/`
+- Derived plane-domain YAML views live in: `reference_architectures/<name>/design/playbook/`
 - Generated build outputs live in: `companion_repositories/<name>/<profile_version>/`
 
 ---

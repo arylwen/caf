@@ -197,6 +197,7 @@ function summarizeResolvedAtoms(resolvedYaml) {
     ['runtime.framework', resolvedYaml?.runtime?.framework],
     ['database.engine', resolvedYaml?.database?.engine],
     ['deployment.mode', resolvedYaml?.deployment?.mode],
+    ['deployment.stack_name', resolvedYaml?.deployment?.stack_name],
     ['tenancy.mode', resolvedYaml?.tenancy?.mode],
     ['plane.runtime_shape', resolvedYaml?.plane?.runtime_shape],
     ['refusal_posture', resolvedYaml?.refusal_posture],

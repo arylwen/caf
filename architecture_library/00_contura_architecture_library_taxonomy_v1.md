@@ -199,7 +199,13 @@ Lower-numbered documents take precedence unless explicitly stated otherwise.
 ## Phase 8 — Implementation Profiles & Companion Artifacts — Construction (Constrained)
 
 Within Phase 8, `profile_parameters.yaml` is the **single canonical architect-authored instance input**.
-All other Phase 8 instance inputs are either assistant-derived views or deprecated legacy formats.
+All other Phase 8 instance inputs are either assistant-derived views or deprecated older formats.
+
+Phase 8 binding families are cleanly separated:
+
+- **ABP** — architecture style / implementation shape (plane-neutral)
+- **PBP** — plane mapping of ABP roles
+- **TBP** — technology realization of already-resolved style + plane choices
 
 
 | File Name | Title | Type | Description |

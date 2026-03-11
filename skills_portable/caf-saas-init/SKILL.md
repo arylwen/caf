@@ -78,7 +78,7 @@ Allowed substitutions are strict, literal string replacements:
 ### Playbook file substitutions
 - Replace `{{instance_name}}` with `<instance_name>` if present.
 - Replace `"intentionally_boring_saas"` with `<instance_name>` if present.
-  (This is a compatibility shim for legacy templates that accidentally hard-code the example name.)
+  (This is a compatibility shim for older templates that accidentally hard-code the example name.)
 
 Do NOT insert or synthesize timestamps.
 

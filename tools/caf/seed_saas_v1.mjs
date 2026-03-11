@@ -19,6 +19,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
+import { parseYamlString } from './lib_yaml_v2.mjs';
+import { annotateSeededTemplateDefault, dumpYamlStable } from './lib_shape_lifecycle_v1.mjs';
 import { markPendingFeedbackPacketsStaleSync, renderFeedbackPacketV1, nowStampYYYYMMDD } from './lib_feedback_packets_v1.mjs';
 import { readCafVersionSync } from './lib_caf_version_v1.mjs';
 
@@ -248,6 +250,12 @@ export async function internal_main(argv = process.argv.slice(2)) {
   guardrailsContent = guardrailsContent.split("change_reason: ''").join("change_reason: 'initial_instance_creation'");
   guardrailsContent = guardrailsContent.split('notes: ""').join('notes: "Initialized by caf-saas-init."');
   guardrailsContent = guardrailsContent.split("notes: ''").join("notes: 'Initialized by caf-saas-init.'");
+
+  // Backfill lifecycle provenance for legacy templates that do not carry it yet.
+  if (!playbookContent.includes('lifecycle_shape_status:')) {
+    const seededObj = annotateSeededTemplateDefault(parseYamlString(playbookContent));
+    playbookContent = dumpYamlStable(seededObj);
+  }
 
   // Placeholder scan (fail-closed).
   const remaining = [

@@ -19,7 +19,7 @@ Use only these commands (do not invent new ones):
 - `caf help`
 - `caf saas <name>`
 - `caf arch <name>`
-- `caf next <name> [apply=true]`
+- `caf next <name> [apply]`
 - `caf build <name>`
 
 Tooling note:

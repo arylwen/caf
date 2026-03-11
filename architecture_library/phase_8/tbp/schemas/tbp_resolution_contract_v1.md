@@ -10,6 +10,7 @@ This contract defines how CAF resolves technology atoms into Technology Binding 
 ## Output
 
 - A deterministic ordered list of TBP IDs to apply for the current architecture instance.
+- `tbp_resolution_v1.yaml` is an ID-resolution artifact only; it does **not** inline `layout.role_bindings`. Downstream workers must resolve role-binding paths from the resolved TBP manifests (for example via `tools/caf/resolve_tbp_role_binding_key_v1.mjs` or `tools/caf/resolve_tbp_role_bindings_v1.mjs`).
 
 ## Algorithm (normative)
 

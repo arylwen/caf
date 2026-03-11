@@ -1,112 +1,112 @@
 ---
 name: worker-domain-modeler
 description: >
-  Derive a structured, DDD-oriented domain model from product-level specification text.
+  Derive plane-separated planner-facing YAML views from the architect-edit application/system domain model source docs.
   Instruction-only: no scripts. Fail-closed on ambiguity or missing required inputs.
 ---
 
 > **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
 > If this SKILL conflicts with the contract, the contract wins.
 
-
 # worker-domain-modeler
 
 ## Purpose
 
-Produce `playbook/domain_model_v1.yaml` as a **semantic intermediate** used by Playbook planning.
-This step makes planning less bespoke by avoiding direct "CRUD resources" hardcoding in the planner.
+Produce the plane-separated planner-facing YAML bundle required by planning from the architect-edit source docs:
 
-This worker does **not** select technologies or frameworks.
+Architect-edit source artifacts (authoritative inputs; do not overwrite in this phase):
+- `reference_architectures/<name>/spec/playbook/application_domain_model_v1.md`
+- `reference_architectures/<name>/spec/playbook/system_domain_model_v1.md`
+
+Planner-facing derived YAML artifacts:
+- `reference_architectures/<name>/design/playbook/application_domain_model_v1.yaml`
+- `reference_architectures/<name>/design/playbook/system_domain_model_v1.yaml`
+
+Do **not** emit the legacy combined file `design/playbook/domain_model_v1.yaml`.
 
 ## Inputs (read-only)
 
 Required:
 - `reference_architectures/<name>/spec/playbook/application_spec_v1.md`
-
-Optional (if present, use as constraints/anchors):
 - `reference_architectures/<name>/spec/playbook/system_spec_v1.md`
-- `reference_architectures/<name>/design/playbook/application_design_v1.md`
-- `reference_architectures/<name>/design/playbook/control_plane_design_v1.md`
+- `reference_architectures/<name>/spec/playbook/application_domain_model_v1.md`
+- `reference_architectures/<name>/spec/playbook/system_domain_model_v1.md`
 
-## Output
+Optional grounding inputs (use when present):
+- `reference_architectures/<name>/product/PRD.resolved.md`
+- `reference_architectures/<name>/product/PLATFORM_PRD.resolved.md`
+- `reference_architectures/<name>/product/PRD.md`
+- `reference_architectures/<name>/product/PLATFORM_PRD.md`
+- `reference_architectures/<name>/spec/playbook/prd_resolved_extract_v1.json`
+- `reference_architectures/<name>/spec/playbook/platform_prd_resolved_extract_v1.json`
+- product/PRD extracts or resolved text that help validate or enrich the architect-authored Markdown without replacing it
 
-- `reference_architectures/<name>/design/playbook/domain_model_v1.yaml`
-
-Must validate against:
-- `architecture_library/phase_8/87_phase_8_domain_model_schema_v1.yaml`
+Normative contracts / templates:
+- `architecture_library/phase_8/87a_phase_8_plane_domain_models_and_persistence_compilation_contract_v1.md`
+- `architecture_library/phase_8/87b_phase_8_plane_domain_model_schema_v1.yaml`
+- `architecture_library/phase_8/87c_phase_8_canonical_domain_normalization_vocabulary_v1.yaml`
+- `architecture_library/phase_8/templates/application_domain_model_v1.template.md`
+- `architecture_library/phase_8/templates/system_domain_model_v1.template.md`
 
 ## Hard rules (fail-closed)
 
-1) Grounded only: do not invent product features not supported by the spec.
-2) Deterministic: given the same spec text, produce stable ids (`context_id`, `use_case_id`).
-3) Minimum viable structure:
-   - At least 1 bounded context
-   - At least 1 use case
-4) If the spec is too underspecified to confidently name a domain summary + at least one use case, refuse and write a feedback packet.
+1) Grounded only: do not invent capabilities/entities not supported by PRD/spec/system inputs.
+2) Plane separation is mandatory:
+   - application/business-facing aggregates/entities go to `application_domain_model_v1.*`
+   - control-plane/platform-owned aggregates/entities go to `system_domain_model_v1.*`
+3) Source names are authoritative. Canonical normalization is optional metadata only.
+4) Do not replace a source entity name with a canonical vocabulary term.
+5) Deterministic canonical normalization policy:
+   - auto-annotate only for exact/alias-grade matches from `87c_phase_8_canonical_domain_normalization_vocabulary_v1.yaml`
+   - semantic matches may be marked as `status: suggested`
+   - if ambiguous, leave canonical metadata empty / `none`
+6) Derived YAML must validate against `87b_phase_8_plane_domain_model_schema_v1.yaml`.
+7) Each derived YAML must contain at least one bounded context and one use case.
+8) If the inputs are too underspecified to separate application vs system ownership, refuse and write a feedback packet.
 
 ## Procedure
 
-1) Read `application_spec_v1.md`.
+1) Read the product/system inputs.
+   - Use `application_spec_v1.md` for product-facing domain/resources.
+   - Use `system_spec_v1.md` plus `PLATFORM_PRD*.md` / extracts for control-plane/platform entities.
 
-2) Extract product-level intent:
+2) Read the two architect-edit source docs as authoritative human input.
+   - `application_domain_model_v1.md`
+   - `system_domain_model_v1.md`
+   - Use the PRD/spec/system inputs only to validate, clarify, and ground derivation of the YAML views.
+   - Do not silently rewrite, reseed, or replace the Markdown source docs in this phase.
 
-   - `domain.summary`: 1–3 sentences describing what the product manages/does.
-   - Identify user-facing behaviors as candidate **use cases**.
+3) Normalize into the two YAML views.
+   - `schema_version: phase8_plane_domain_model_v1`
+   - `plane_scope: application | system`
+   - include `generated_from.inputs`
+   - include `domain.summary`, `bounded_contexts`, `use_cases`
+   - include `api_candidates.resources[]` only when the plane genuinely exposes API-surface candidates
 
-   Preferred sources (use the first that exists):
-   - If spec has a `## Use cases` / `## User stories` / `## Functional requirements` section, use it.
-   - Else, use the spec's `Domain` and `Resources` descriptions.
+4) Canonical normalization metadata (optional; additive only)
+   - For aggregates/entities, you MAY add:
+     - `canonical.term_id`
+     - `canonical.status: exact | alias | suggested | none`
+     - `canonical.matched_by: alias_table | semantic_suggestion | architect_selected | none`
+     - `canonical.confidence` when suggested
+     - `canonical.aliases[]`
+     - `canonical.note`
+   - Preserve the source `name` regardless of normalization status.
 
-3) Derive bounded contexts (DDD-oriented, but minimal):
+5) System/control-plane derivation guidance
+   - Prefer platform-owned records visible in `PLATFORM_PRD*.md` / extracts, for example policy/admin/evidence/execution/tenant lifecycle records.
+   - If the platform inputs list entities such as `Policy Version`, `Approval Decision`, `Execution Record`, `Evidence Record`, `Retention Rule`, or `Deletion Request`, carry them into `system_domain_model_v1.*` rather than collapsing them back into narrative prose.
 
-   - If the spec only describes a single cohesive product area, produce a single context:
-     - `context_id: CORE`
-     - `name: Core`
-   - If the spec clearly describes distinct subdomains (e.g., billing, identity, content), split into 2–4 contexts.
+6) Application-plane derivation guidance
+   - Keep `application_spec_v1.md` lean/product-facing.
+   - If explicit `## Resources` exist, mirror them into `application_domain_model_v1.yaml:api_candidates.resources[]`.
+   - Otherwise derive application resources from clearly grounded entities only.
 
-   Deterministic `context_id` rule:
-   - Uppercase snake case of the context name, with non-alphanumerics removed.
-   - Example: "User Identity" -> `USER_IDENTITY`
+7) Write outputs:
+   - `design/playbook/application_domain_model_v1.yaml`
+   - `design/playbook/system_domain_model_v1.yaml`
 
-4) Derive entities (tactical DDD-lite, non-bespoke):
-
-   - Prefer using explicit `Resources` listed in the spec as entity candidates.
-   - If no resources are explicitly listed, derive 1–3 entity candidates only when the spec names a noun that is clearly the primary managed record (e.g., "widget").
-   - Fields:
-     - Use only fields explicitly present in the spec.
-     - If a field type is not explicit, use a conservative placeholder type like `text` (this is a domain type label, not a programming type).
-
-5) Derive use cases:
-
-   - Minimum: produce `UC-01` representing the primary interaction (e.g., "Manage Widgets").
-   - If resources exist, include standard use cases corresponding to operations only if the spec implies they exist.
-
-   Deterministic `use_case_id` rule:
-   - `UC-` + two-digit index in order of appearance in the spec.
-   - Example: `UC-01`, `UC-02`, ...
-
-6) Derive API candidates (optional, planning hint only):
-
-   - If the spec includes a `## Resources` section listing resource names and operations, mirror it under:
-     - `api_candidates.resources[]`
-   - If resources are not explicitly listed, but entities were derived in step 4, you MAY list them as `api_candidates.resources` with no operations (or with inferred operations only if the spec strongly implies CRUD).
-
-   Note: `api_candidates` does not decide REST vs GraphQL. It is only a list of potential externally-exposed interaction surfaces.
-
-7) Write `reference_architectures/<name>/design/playbook/domain_model_v1.yaml`.
-
-   Required content:
-   - `schema_version: domain_model_v1`
-   - `generated_from.inputs`: include the exact input file paths used.
-   - `domain.summary`
-   - `domain.bounded_contexts[]` (≥1)
-   - `domain.use_cases[]` (≥1)
-
-8) If refusal is required:
-
-   - Write a feedback packet under:
-     - `reference_architectures/<name>/feedback_packets/BP-YYYYMMDD-domain-model-incomplete.md`
-   - Include:
-     - Stuck At: domain model derivation
-     - Missing/ambiguous source sections in `reference_architectures/<name>/spec/playbook/application_spec_v1.md`
-     - Minimal fix proposal: which headings/content to add (e.g., add `## Use cases` with 1–3 bullets)
+8) Refusal path
+   - Write a feedback packet under `reference_architectures/<name>/feedback_packets/`
+   - Explain which missing/ambiguous sections prevented plane-separated derivation.
+   - Missing source docs are a refusal condition in this phase.

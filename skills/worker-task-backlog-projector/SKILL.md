@@ -42,6 +42,10 @@ This worker MUST NOT:
 
 For each task in `task_graph_v1.yaml` (in the order listed):
 
+- Start the file with:
+  - `# Task Backlog (v1)`
+  - `Derived from \`reference_architectures/<name>/design/playbook/task_graph_v1.yaml\`.`
+- Never reuse the task-plan heading, task-plan mermaid graph, or task-plan wave list in the backlog file.
 - Emit a section:
   - `## <task_id>: <title>`
   - `Capability: <required_capabilities[0]>`
@@ -65,9 +69,11 @@ Constraints:
 - Keep it concise: target 10–25 lines per task.
 - Do not add new paths.
 - If a field is missing, render `MISSING` and do not guess.
+- If an older or wrong `task_backlog_v1.md` already exists, overwrite it completely with the fresh projection.
 
 Non-negotiable:
 - Always emit `Definition of Done:` bullets. This section is required and must not be omitted.
+- The backlog file MUST remain distinct from `task_plan_v1.md`; do not emit mermaid graphs, edge lists, or wave plans into the backlog path.
 
 ## Fail-closed conditions
 

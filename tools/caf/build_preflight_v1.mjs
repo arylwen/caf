@@ -11,6 +11,8 @@
  *  2) companion_init_v1.mjs (materializes companion + caf/ planning inputs)
  *  3) build_gate_v1.mjs
  *  4) playbook_gate_v1.mjs
+ *  5) gen_interface_binding_contracts_v1.mjs
+ *  6) interface_binding_contract_gate_v1.mjs
  *
  * Constraints:
  * - No architecture decisions.
@@ -27,6 +29,8 @@ import { runValidateInstance } from './validate_instance_v1.mjs';
 import { internal_main as companionInit } from './companion_init_v1.mjs';
 import { internal_main as buildGate } from './build_gate_v1.mjs';
 import { internal_main as playbookGate } from './playbook_gate_v1.mjs';
+import { internal_main as genInterfaceBindingContracts } from './gen_interface_binding_contracts_v1.mjs';
+import { internal_main as interfaceBindingContractGate } from './interface_binding_contract_gate_v1.mjs';
 
 class CafExit extends Error {
   constructor(code, msg) {
@@ -96,6 +100,28 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
   // Step 4: playbook gate (fail-closed).
   try {
     const code = await playbookGate([instanceName]);
+    if (typeof code === 'number' && code !== 0) return code;
+  } catch (e) {
+    const code = typeof e?.code === 'number' ? e.code : 99;
+    const msg = String(e?.message || e?.stack || e);
+    if (msg) process.stderr.write(msg + '\n');
+    return code;
+  }
+
+  // Step 5: interface binding contract generation (mechanical).
+  try {
+    const code = await genInterfaceBindingContracts([instanceName]);
+    if (typeof code === 'number' && code !== 0) return code;
+  } catch (e) {
+    const code = typeof e?.code === 'number' ? e.code : 99;
+    const msg = String(e?.message || e?.stack || e);
+    if (msg) process.stderr.write(msg + '\n');
+    return code;
+  }
+
+  // Step 6: interface binding contract gate (fail-closed).
+  try {
+    const code = await interfaceBindingContractGate([instanceName]);
     if (typeof code === 'number' && code !== 0) return code;
   } catch (e) {
     const code = typeof e?.code === 'number' ? e.code : 99;

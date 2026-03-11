@@ -216,7 +216,7 @@ Minimal Fix Proposal rules (avoid chicken/egg):
 - Do NOT instruct the user to run internal sub-skills.
 - Always propose only allowed router commands:
   - `/caf arch <name>`
-  - `/caf next <name> [apply=true]`
+  - `/caf next <name> [apply]`
 
 When sanity-check outputs are missing, the proposal MUST:
 

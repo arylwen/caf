@@ -43,6 +43,9 @@ Deterministic resource extraction:
 Input discipline (required):
 - You MUST open and use the assigned task object (steps + DoD + semantic_review).
 - You MUST open and use the resolved rails (`profile_parameters_resolved.yaml`) and TBP resolution (`tbp_resolution_v1.yaml`) to avoid in-memory-only runtime persistence when a DB engine is resolved.
+- You MUST treat `caf/tbp_resolution_v1.yaml` as the resolved TBP id set only. Do NOT assume it inlines role-binding maps.
+- When you need a TBP-declared adapter surface, resolve it deterministically from the resolved TBP manifests via:
+  - `node tools/caf/resolve_tbp_role_binding_key_v1.mjs <instance_name> --role-binding-key <key>`
 
 Rails rule (non-negotiable):
 
@@ -56,7 +59,7 @@ Backend selection rule (deterministic):
 
 - DO NOT instantiate an in-memory repository directly inside AP runtime routes/handlers.
 - Provide an injectable repository wiring surface (factory/provider) so runtime can select the appropriate backend based on resolved rails + environment.
-- If DB-specific adapter code is produced by a TBP task, your persistence work MUST still provide the integration seam (imports/injection points) required to adopt that adapter without rewrites.
+- If DB-specific adapter code is produced by a TBP task, your persistence work MUST still provide the integration interface and injection points required to adopt that adapter without rewrites.
 
 - You MUST open and use every `task.inputs[]` where `required: true`.
 - In your task report, include an **Inputs consumed** section listing each required input and what you derived from it.
@@ -107,3 +110,10 @@ Rules:
 - Evidence anchors MUST point to paths under `companion_repositories/<instance>/profile_v1/` and include line ranges.
 - Every claim MUST have at least one evidence anchor.
 - Do not include placeholders (TBD/TODO/etc.).
+
+
+## Interface binding contract handling (mandatory when present)
+
+- If `caf/interface_binding_contracts_v1.yaml` contains an entry whose `provider.task_id` matches the current task, satisfy that required interface explicitly.
+- Emit or preserve the concrete provider hook named by the interface binding contract (factory, adapter builder, registration hook, or equivalent).
+- Do not assume assembler work will infer the provider relationship unless the interface binding contract makes it explicit.

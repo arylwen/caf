@@ -78,7 +78,7 @@ Allowed substitutions are strict, literal string replacements:
 ### Playbook file substitutions
 - Replace `{{instance_name}}` with `<instance_name>` if present.
 - Replace `"intentionally_boring_saas"` with `<instance_name>` if present.
-  (This is a compatibility shim for legacy templates that accidentally hard-code the example name.)
+  (This is a compatibility shim for older templates that accidentally hard-code the example name.)
 
 Do NOT insert or synthesize timestamps.
 
@@ -152,6 +152,7 @@ Never echo template contents.
 
 ## Next steps (required)
 After initialization, include a short 'Next steps' section that:
-- tells the user to run /caf-arch <instance_name>
-- reminds them that defaults were preselected for first-run and to review the seeded playbook YAMLs
-Do NOT include concrete command examples; the workflow will render them.
+- tells the user the seeded shape is only the bootstrap default, not the final lifecycle-ready shape
+- tells the user to run `/caf prd <instance_name>` before the first `/caf arch <instance_name>` in the default workflow
+- keeps the normal user guidance command-only: `/caf prd <instance_name>` before the first `/caf arch <instance_name>`
+Do NOT include concrete command examples beyond the exact `/caf ...` router surface.

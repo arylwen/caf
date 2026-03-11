@@ -1,12 +1,15 @@
 schema_version: phase8_ui_task_seeds_v1
 
 # UI task seeds are *authoritative* defaults that the Application Architect may add to the Task Graph
-# when the instance declares UI requirements. This file is intentionally small and stable.
+# when the instance declares UI pins in profile_parameters_resolved.yaml. This file is intentionally small and stable.
 #
 # Rules:
 # - Seeds are additive: they do not replace AP/CP tasks.
 # - Seeds must be satisfiable without introducing new tech/vendor decisions.
 # - Workers may implement these tasks as minimal scaffolds suitable for iteration.
+# - Technology/runtime choices come only from profile_parameters_resolved.yaml -> ui.*
+# - Product-facing shell/page wording comes from application_spec_v1.md -> ARCHITECT_EDIT_BLOCK: ui_product_surface_v1
+# - When a UI task depends on architecture semantics beyond ui.present, prefer adopted-pattern conditions over pin-specific branching.
 
 seeds:
   - seed_id: UI-01-shell
@@ -18,6 +21,8 @@ seeds:
       required_capabilities: [ui_frontend_scaffolding]
       depends_on: [TG-00-AP-runtime-scaffold]
       inputs:
+        - path: "reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml"
+          required: true
         - path: "reference_architectures/<instance>/spec/playbook/application_spec_v1.md"
           required: true
         - path: "reference_architectures/<instance>/design/playbook/application_design_v1.md"
@@ -27,41 +32,45 @@ seeds:
       definition_of_done:
         - "A minimal SPA UI skeleton exists under the companion repo and can be served as static assets."
         - "The UI contains a navigation shell and at least one page wired into the shell."
-        - "UI code avoids hard-coded vendor/runtime decisions beyond what the UI requirements declare."
+        - "UI code avoids hard-coded vendor/runtime decisions beyond what the resolved UI pins declare."
       semantic_review:
         severity_threshold: blocker
         focus_areas: [correctness, architecture_alignment]
         review_questions:
-          - "Does the UI scaffold match the UI requirements (kind/deployment intent) and avoid new technology choices?"
+          - "Does the UI scaffold match the resolved UI pins (kind/deployment intent) and avoid new technology choices?"
           - "Is the UI structure coherent (entrypoint, shell, page routing) without broken imports or missing files?"
           - "Are there any placeholder tokens (TBD/TODO/UNKNOWN/{{ }}) introduced in UI artifacts?"
         constraints_notes: |
-          Story: Provide a minimal UI shell for demo/admin flows grounded in the architect-declared UI requirements.
+          Story: Provide a minimal UI shell for demo/admin flows grounded in the architect-declared UI pins and product surface.
           Steps:
-            1) Read ui_requirements_v1 and confirm UI kind + deployment intent.
-            2) Create a minimal SPA folder under the companion repo.
-            3) Implement a navigation shell and a starter page.
-            4) Add a thin API client helper that assumes same-origin by default.
-            5) Document how to extend pages and hook calls to AP endpoints.
+            1) Read profile_parameters_resolved.yaml and confirm ui.kind + ui.framework + ui.deployment_preference.
+            2) Read the application-spec UI product surface for product-facing navigation/page intent.
+            3) Create a minimal SPA folder under the companion repo.
+            4) Implement a navigation shell and a starter page.
+            5) Add a thin API client helper that assumes same-origin by default.
+            6) Document how to extend pages and hook calls to AP endpoints.
           References:
+            - reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml
             - reference_architectures/<instance>/spec/playbook/application_spec_v1.md
             - reference_architectures/<instance>/design/playbook/application_design_v1.md
             - reference_architectures/<instance>/spec/playbook/system_spec_v1.md
       trace_anchors:
-        - pattern_id: "architect_edit:ui_requirements_v1"
+        - pattern_id: "pinned_input:ui.present"
           anchor_kind: plan_step_archetype
-          anchor_ref: "UI requirements"
+          anchor_ref: "Resolved UI pins"
 
   - seed_id: UI-02-policy-admin
     when:
       ui_present: true
-      required_pins_all: [CP-4]
+      required_adopted_patterns_any: [CAF-POL-01, POL-01, CAF-POL-02]
     task:
       task_id: TG-18-ui-policy-admin
       title: "Implement UI page for policy authoring"
       required_capabilities: [ui_frontend_scaffolding]
       depends_on: [TG-15-ui-shell]
       inputs:
+        - path: "reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml"
+          required: true
         - path: "reference_architectures/<instance>/spec/playbook/application_spec_v1.md"
           required: true
         - path: "reference_architectures/<instance>/design/playbook/control_plane_design_v1.md"
@@ -80,20 +89,21 @@ seeds:
           - "Does the UI avoid inventing policy fields or flows not grounded in design/contracts?"
           - "Are tenant/principal context requirements respected in the UI scaffolding (no cross-tenant leakage assumptions)?"
         constraints_notes: |
-          Story: Provide a UI surface for policy authoring (CP-4) that will call into the CP↔AP contract surface.
+          Story: Provide a UI surface for policy authoring when adopted policy patterns make policy administration a first-class product concern.
           Steps:
-            1) Read CP design + contract declarations to identify the declared policy authoring surface.
+            1) Read resolved UI pins, CP design, and contract declarations to identify the declared policy authoring surface.
             2) Add a Policy Admin page and wire it into the UI navigation.
             3) Scaffold list/create/edit interactions with placeholder-free stubs.
             4) Ensure tenant/principal identifiers are carried per the design's chosen context carrier.
             5) Document how the page should call the AP/CP endpoints/events once implemented.
           References:
+            - reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml
             - reference_architectures/<instance>/design/playbook/control_plane_design_v1.md
             - reference_architectures/<instance>/design/playbook/contract_declarations_v1.yaml
       trace_anchors:
-        - pattern_id: "pinned_input:CP-4"
+        - pattern_id: "selected_pattern:CAF-POL-01"
           anchor_kind: plan_step_archetype
-          anchor_ref: "Centralized Policy Authoring"
+          anchor_ref: "Policy authoring patterns adopted"
 
   - seed_id: UI-03-resource-pages
     when:
@@ -101,10 +111,12 @@ seeds:
     per_resource: true
     task_template:
       task_id: "TG-25-ui-page-{{resource_key}}"
-      title: "Implement UI page for resource: {{resource_name}}"
+      title: "Implement UI page for {{resource_name}} resource"
       required_capabilities: [ui_frontend_scaffolding]
       depends_on: [TG-15-ui-shell]
       inputs:
+        - path: "reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml"
+          required: true
         - path: "reference_architectures/<instance>/spec/playbook/application_spec_v1.md"
           required: true
       definition_of_done:
@@ -121,14 +133,15 @@ seeds:
         constraints_notes: |
           Story: Provide a simple UI page for a resource to support demo/admin flows.
           Steps:
-            1) Read the resource operations in application_spec_v1.
+            1) Read the resolved UI pins and resource operations in application_spec_v1.
             2) Add a page component and wire it into navigation.
             3) Scaffold forms and list rendering with safe defaults.
             4) Route calls through a single API helper (same-origin by default).
             5) Document how this page maps to AP endpoints once the API boundary is implemented.
           References:
+            - reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml
             - reference_architectures/<instance>/spec/playbook/application_spec_v1.md
       trace_anchors:
-        - pattern_id: "architect_edit:ui_requirements_v1"
+        - pattern_id: "pinned_input:ui.present"
           anchor_kind: plan_step_archetype
-          anchor_ref: "UI requirements"
+          anchor_ref: "Resolved UI pins"

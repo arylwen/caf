@@ -2,6 +2,10 @@
 
 CAF gates are the main correctness and drift-resistance mechanism.
 
+![CAF gates and fail-closed enforcement](../images/caf_gates_and_fail_closed.svg)
+
+*CAF gates enforce architecture obligations and block drift through fail-closed checks.*
+
 ## Gate semantics (conceptual)
 
 - A gate **blocks** progression when a required input/contract is missing.

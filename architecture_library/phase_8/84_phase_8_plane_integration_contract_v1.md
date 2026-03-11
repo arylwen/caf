@@ -13,6 +13,22 @@ This guidance focuses on:
 - invariants and acceptance checks (idempotency expectations, replay safety, failure semantics)
 - how to record open questions (fail-closed)
 
+## Separation of concerns (normative)
+
+The plane integration contract owns **cross-plane interaction semantics**.
+This includes:
+
+- sync vs async vs mixed CP↔AP interaction posture,
+- required context propagation semantics,
+- context-carrier choices (for example headers, JWT claims, message envelope fields),
+- delivery semantics and replay/idempotency expectations.
+
+These concerns MUST NOT be pushed into:
+
+- ABPs (architecture style only),
+- PBPs (plane mapping only), or
+- TBPs (technology realization only).
+
 ## Contract-first requirement (normative)
 
 If the control-plane ↔ application-plane boundary is **material** (correctness, safety, governance, lifecycle),

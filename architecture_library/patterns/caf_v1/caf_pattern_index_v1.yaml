@@ -19,7 +19,7 @@ patterns:
   source_paths: []
 
 - pattern_id: CAF-MODEL-01
-  name: Domain Modeling Framework Selection (DDD + Clean Architecture Default)
+  name: Deprecated bridge — Architecture Style Selection (superseded by ABP family)
   layer: caf
   verifiability: plan_ready
   plane: both

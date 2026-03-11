@@ -54,6 +54,7 @@ Turn a PRD into an **architecture shape** for the instance:
 
 - Authoritative (deterministic, on pass when promote=true):
   - `reference_architectures/<instance>/spec/playbook/architecture_shape_parameters.yaml`
+    - promotion stamps lifecycle provenance under `meta.lifecycle_shape_status: "prd_promoted"`
 
 ## Workflow (MUST follow ordering)
 

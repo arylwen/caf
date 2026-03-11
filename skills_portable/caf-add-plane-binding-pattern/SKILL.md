@@ -148,7 +148,7 @@ If the chosen source does not yield a parsable YAML mapping: refuse.
 ## Refusal / feedback packet
 
 On refusal, write:
-- `technical_notes/feedback_packets/BP-YYYYMMDD-caf-add-plane-binding-pattern-<slug>.md`
+- `feedback_packets/caf/BP-YYYYMMDD-caf-add-plane-binding-pattern-<slug>.md`
 
 When refusing due to patch source ambiguity, the Minimal Fix Proposal MUST include a **copy/paste-ready** snippet
 using the `INLINE_YAML` form (command line + YAML block in the same message).

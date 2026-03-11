@@ -71,3 +71,18 @@ export function collectRoleBindingExpectationsForCapability(tbpId, tbpManifest, 
 
   return expectations;
 }
+
+export function collectRoleBindingMatchesForKey(tbpId, tbpManifest, roleBindingKey) {
+  const key = String(roleBindingKey || '').trim();
+  if (!key) return [];
+  const roleBindings = tbpManifest?.layout?.role_bindings || {};
+  const rb = roleBindings?.[key] || null;
+  if (!rb || typeof rb !== 'object') return [];
+  return [{
+    tbp_id: tbpId,
+    role_binding_key: key,
+    path_template: rb?.path_template || null,
+    artifact_class: rb?.artifact_class || null,
+    evidence_contains: rb?.evidence_contains || [],
+  }];
+}

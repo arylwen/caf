@@ -22,6 +22,16 @@ entries:
   worker_id: worker-plane-runtime
   role_kind: worker
   status: active
+- capability_id: runtime_scaffolding_cp
+  worker_id: worker-plane-runtime
+  role_kind: worker
+  status: active
+  notes: Legacy compatibility alias for control-plane runtime scaffolding. Prefer plane_runtime_scaffolding in new planning output.
+- capability_id: runtime_scaffolding_ap
+  worker_id: worker-plane-runtime
+  role_kind: worker
+  status: active
+  notes: Legacy compatibility alias for application-plane runtime scaffolding. Prefer plane_runtime_scaffolding in new planning output.
 - capability_id: service_facade_implementation
   worker_id: worker-service-facade
   role_kind: worker
@@ -39,7 +49,7 @@ entries:
   worker_id: worker-ui-frontend
   role_kind: worker
   status: active
-  notes: Scaffold and extend a minimal UI (web SPA) in the companion repo, grounded in ui_requirements_v1 and pins.
+  notes: Scaffold and extend a minimal UI (web SPA) in the companion repo, grounded in profile_parameters_resolved.yaml ui.* pins and the application-spec UI product surface.
 
 - capability_id: runtime_wiring
   worker_id: worker-runtime-wiring

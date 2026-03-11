@@ -2151,8 +2151,8 @@
       "family_raw": "MODEL",
       "subfamily": null,
       "plane": "both",
-      "name": "Domain Modeling Framework Selection (DDD + Clean Architecture Default)",
-      "summary": "Select a modeling framework that yields plane-aware boundaries, invariants, and test seams without prescribing domain-specific nouns.",
+      "name": "Deprecated bridge — Architecture Style Selection (superseded by ABP family)",
+      "summary": "Legacy compatibility bridge retained for older traces. New derivations should use architecture.architecture_style and the ABP family.",
       "relations": [
         [
           "complements",

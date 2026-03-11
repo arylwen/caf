@@ -51,7 +51,7 @@ Execution discipline (ship blocker):
   - The required action is to run the producer (instruction-owned or invocation) that regenerates the bundle, then validate.
 - **Do not treat "I checked and outputs are missing" as having "invoked" a producer.**
   - "Invoked" means you executed the producer instructions/skill, not that you inspected the filesystem.
-- **Do not substitute cross-instance templates** (e.g., copying from `cdx-saas`) to satisfy postconditions.
+- **Do not substitute cross-instance templates** (e.g., copying from another instance) to satisfy postconditions.
   - If a producer cannot generate the required outputs for the current instance, fail-closed with a packet that attributes the gap to the producer and proposes a producer-side fix.
 
 Interactive checkpoints (allowed; preferred over silent shortcuts):
@@ -67,7 +67,7 @@ Interactive checkpoints (allowed; preferred over silent shortcuts):
 ### 3.2 Where to write packets
 
 - **Instance-scoped:** `reference_architectures/<name>/feedback_packets/BP-YYYYMMDD-<slug>.md`
-- **CAF/library-scoped:** `technical_notes/feedback_packets/BP-YYYYMMDD-<slug>.md`
+- **CAF/library-scoped:** `feedback_packets/caf/BP-YYYYMMDD-<slug>.md`
 
 ### 3.3 Packet structure (required)
 
@@ -106,11 +106,13 @@ Some packets are emitted for visibility but are NOT intended to be "fixed" by an
 
 2. **No new user-facing commands:** CAF’s router command surface is fixed to:
    - `caf help`
+   - `caf ask <question...>`
    - `caf saas <name>`
+   - `caf prd <name>`
    - `caf arch <name>`
-   - `caf next <name> [apply=true]`
+   - `caf next <name> [apply]`
+   - `caf plan <name>`
    - `caf build <name>`
-   - `caf demo <name>`
 
    Internals may be refactored, but MUST NOT add new user-facing entrypoints.
 
@@ -176,9 +178,11 @@ CAF-produced code and config MUST be traceable back to the Task Graph.
 ### 5.3 Task report minimum structure (mandatory)
 
 For every dispatched Task Graph task, the producer worker MUST write a task report to:
+
 - `caf/task_reports/<task_id>.md`
 
 The task report MUST include the following sections (in this order):
+
 1) `## Task Spec Digest`
    - task_id + title
    - primary capability

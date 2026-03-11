@@ -33,5 +33,6 @@ If `/caf ask` can’t build a context pack, it will tell you what phase artifact
 
 Typical fix:
 
-- run `/caf arch <instance>` (for decision artifacts)
-- run `/caf plan <instance>` (for work/impact artifacts)
+- for a fresh instance, run `/caf prd <instance>` and then `/caf arch <instance>` to create the lifecycle-ready shape and decision artifacts
+- if decision artifacts are missing after the shape is ready, run `/caf arch <instance>`
+- if work or impact artifacts are missing, run `/caf plan <instance>`

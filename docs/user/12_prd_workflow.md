@@ -1,68 +1,99 @@
 # PRD → Architecture Shape
 
-Use `/caf prd` when you have a product PRD and you want CAF to infer a **proposed architecture shape** (and, by default, promote it if it passes deterministic validation).
+`/caf prd` is the default second step after `/caf saas`.
 
-## What you do
+Its job is to turn PM/architect-authored PRD source documents into a **lifecycle-ready architecture shape** that the first `/caf arch` run can safely consume.
 
-1) Put your Product PRD here (PM-owned):
-
-- `reference_architectures/<instance>/product/PRD.md`
-
-2) Put your Platform posture brief here (architect-owned; file name is stable):
-
-- `reference_architectures/<instance>/product/PLATFORM_PRD.md`
-
-3) Run:
+## Default lifecycle position
 
 ```text
+/caf saas <instance>
 /caf prd <instance>
+/caf arch <instance>
+/caf next <instance> apply
+/caf arch <instance>
+/caf plan <instance>
+/caf build <instance>
 ```
 
-That’s it.
+## What you edit
 
-## What CAF does (internally)
+Human-owned source inputs live under:
+
+- `reference_architectures/<instance>/product/PRD.md`
+- `reference_architectures/<instance>/product/PLATFORM_PRD.md`
+
+`/caf saas` seeds both files so the default story is:
+
+1. seed an instance
+2. refine the PRD / platform posture if needed
+3. run `/caf prd`
+4. run the first `/caf arch`
+
+## What `/caf prd` does
 
 `/caf prd` is a single workflow that runs these steps for you:
 
-1) **Validate + extract (deterministic, fail-closed)**
-   - CAF validates both documents against the PRD contract.
-   - CAF extracts structured JSON views under `spec/playbook/` (token saver).
+1. **Validate + extract (deterministic, fail-closed)**
+   - validates both PRD source docs against the PRD source contract
+   - writes structured extracts under `spec/playbook/` for token-efficient downstream use
 
-2) **Resolve (semantic, constrained)**
-   - CAF produces placeholder-free resolved docs:
+2. **Resolve (semantic, constrained)**
+   - writes placeholder-free resolved source views:
      - `product/PRD.resolved.md`
      - `product/PLATFORM_PRD.resolved.md`
 
-3) **Infer a proposed architecture shape (semantic)**
-   - CAF infers the proposed shape primarily from `PLATFORM_PRD.resolved.md`.
-   - The rationale sidecar points to evidence in the same PRD-like source.
+3. **Infer a proposed architecture shape (semantic)**
+   - writes:
+     - `spec/playbook/architecture_shape_parameters.proposed.yaml`
+     - `spec/playbook/architecture_shape_parameters.proposed.rationale.json`
 
-4) **Validate + promote (deterministic, fail-closed)**
-   - CAF validates the proposal against allowed values and completeness rules.
-   - If valid (and `promote=true`, the default), CAF promotes the proposed shape to the authoritative shape file.
+4. **Validate + promote (deterministic, fail-closed)**
+   - validates the proposal against the shape schema / allowed values
+   - when validation passes and `promote=true` (the default), promotes the proposal to:
+     - `spec/playbook/architecture_shape_parameters.yaml`
+   - stamps the authoritative file with:
+     - `meta.lifecycle_shape_status: "prd_promoted"`
 
-## Outputs
+## Bootstrap shape vs lifecycle-ready shape
 
-Proposed (semantic):
-- `reference_architectures/<instance>/spec/playbook/architecture_shape_parameters.proposed.yaml`
-- `reference_architectures/<instance>/spec/playbook/architecture_shape_parameters.proposed.rationale.json`
+`/caf saas` also seeds `spec/playbook/architecture_shape_parameters.yaml`, but that seeded file is only a **bootstrap default**.
 
-Authoritative (on pass when `promote=true`):
-- `reference_architectures/<instance>/spec/playbook/architecture_shape_parameters.yaml`
+It is marked with:
 
-## If it fails
+- `meta.lifecycle_shape_status: "seeded_template_default"`
 
-CAF is fail-closed. When `/caf prd` cannot proceed safely, it writes a feedback packet:
+That bootstrap file exists so the instance has a complete editable surface from day one, but it is still only a bootstrap default until `/caf prd` promotes a validated lifecycle-ready shape.
 
-- `reference_architectures/<instance>/feedback_packets/` (newest file)
+## What becomes canonical vs advisory
 
-The packet tells you:
-- what constraint was violated
-- the minimal edit needed to fix it
+Canonical source artifacts:
 
-## Maintainer note (optional)
+- `product/PRD.md`
+- `product/PLATFORM_PRD.md`
+- `spec/playbook/architecture_shape_parameters.yaml`
 
-You can run deterministic helpers directly for debugging, but normal users should not need to:
+Derived / advisory artifacts:
 
-- `node tools/caf/prd_extract_v1.mjs <instance> ...`
-- `node tools/caf/prd_shape_validate_and_promote_v1.mjs --instance <instance> ...`
+- `spec/playbook/prd_product_extract_v1.json`
+- `spec/playbook/prd_platform_extract_v1.json`
+- `product/PRD.resolved.md`
+- `product/PLATFORM_PRD.resolved.md`
+- `spec/playbook/architecture_shape_parameters.proposed.yaml`
+- `spec/playbook/architecture_shape_parameters.proposed.rationale.json`
+
+The authoritative shape file is canonical for downstream lifecycle consumption, but the rationale sidecar stays separate so CAF preserves **rationale vs binding**.
+
+## Failure mode
+
+If `/caf prd` cannot proceed safely, CAF writes a feedback packet under:
+
+- `reference_architectures/<instance>/feedback_packets/`
+
+If you skip `/caf prd` and run the first `/caf arch` on a bootstrap shape, CAF now writes an **advisory** feedback packet and continues. For the launch workflow, the intended fix is still command-only: review the PRD source docs if needed, run `/caf prd <instance>`, then rerun `/caf arch <instance>` if you want the scaffold refreshed from the promoted shape.
+
+## Related docs
+
+- [Quickstart](03_quickstart.md)
+- [PRD-first lifecycle](15_prd_first_lifecycle.md)
+- [Instances, phases, and state](05_instances_phases_and_state.md)

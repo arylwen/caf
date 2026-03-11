@@ -1,0 +1,12 @@
+catalog_version: 1
+styles:
+  - abp_id: ABP-CLEAN-01
+    style_key: clean_architecture
+    name: Clean Architecture
+    manifest_path: architecture_library/phase_8/abp/styles/ABP-CLEAN-01/abp_manifest_v1.yaml
+    status: active
+  - abp_id: ABP-LAYERED-01
+    style_key: layered_architecture
+    name: Layered Architecture
+    manifest_path: architecture_library/phase_8/abp/styles/ABP-LAYERED-01/abp_manifest_v1.yaml
+    status: active

@@ -8,31 +8,59 @@ Typical high-level layout:
 
 ```text
 reference_architectures/<instance>/
-  spec/                  # pinned inputs + decision surfaces
-  architecture/          # derived architecture scaffolding (phase-dependent)
-  design/                # derived design/planning artifacts (phase-dependent)
+  product/               # human-owned PRD source docs
+  spec/                  # pinned inputs + architecture playbooks
+  design/                # derived design/planning artifacts
   feedback_packets/      # fail-closed outputs (blockers/advisories)
-  guardrails/            # resolved guardrails / enforcement receipts
+  .caf-state/            # checkpoints / lifecycle receipts
 ```
 
-## Phases
+## Default lifecycle
 
-CAF progresses through phases (e.g., intent → architecture → design → build). Some steps require you to explicitly adopt decisions.
+CAF’s default lifecycle is now:
 
-Two common “phase boundaries” you’ll notice:
+```text
+/caf saas <instance>
+/caf prd <instance>
+/caf arch <instance>
+/caf next <instance> apply
+/caf arch <instance>
+/caf plan <instance>
+/caf build <instance>
+```
 
-- **Architecture scaffolding → design** (after you checkpoint adopted decisions)
-- **Design/planning → build** (after gates confirm required artifacts exist)
+The important transition is that `/caf prd` is the normal bridge between seeded PRD intent and the first architecture scaffold.
+
+## Shape state before the first scaffold
+
+`/caf saas` seeds:
+
+- `product/PRD.md`
+- `product/PLATFORM_PRD.md`
+- `spec/playbook/architecture_shape_parameters.yaml`
+
+The seeded shape file is a bootstrap editable surface, but it is marked:
+
+- `meta.lifecycle_shape_status: "seeded_template_default"`
+
+CAF now treats that state as **not ready** for the first `/caf arch`.
+
+The first architecture scaffold requires the authoritative shape file to be in one of these lifecycle-ready states:
+
+- `prd_promoted`
+- `architect_curated` (advanced architect override)
 
 ## Checkpointing / apply
 
-`/caf next <instance> apply=true` checkpoints the adopted decision set so downstream stages can build deterministically.
+`/caf next <instance> apply` checkpoints the adopted decision set so downstream stages can build deterministically.
 
 In the command surface this is usually invoked as:
 
 ```text
-/caf next <instance> apply=true
+/caf next <instance> apply
 ```
+
+This checkpoint happens **after** the first architecture scaffold and decision adoption. It does not replace the architect review step.
 
 ## Generated outputs
 

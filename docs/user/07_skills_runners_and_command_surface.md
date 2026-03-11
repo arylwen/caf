@@ -27,10 +27,12 @@ Use `/caf help` to discover commands.
 CAF intentionally exposes a small set of subcommands:
 
 - `/caf saas <instance>`
-- `/caf prd <instance>` (optional)
+- `/caf prd <instance>`
 - `/caf arch <instance>`
-- `/caf next <instance> [apply=true|false]`
+- `/caf next <instance> apply`
 - `/caf plan <instance>`
 - `/caf build <instance>`
 
 CAF is designed so missing/ambiguous inputs fail closed (via feedback packets) rather than inventing a path forward.
+
+`/caf prd` is part of the default lifecycle, not a side workflow: `/caf saas` seeds PRD source docs and a bootstrap shape, `/caf prd` promotes a lifecycle-ready shape, and the first `/caf arch` warns if you are still on the bootstrap default.

@@ -18,6 +18,11 @@ CAF supports Claude Code, Codex, and Antigravity coding agents and provides a si
 
 ## Traceability
 
+![CAF traceability chain](../images/caf_traceability_chain.svg)
+
+*CAF keeps a requirement-to-code traceability chain that supports rationale, sizing, and impact analysis.*
+
+
 CAF is designed so you can answer: **“Why is this code here?”** without guessing.
 
 ### End-to-end traceability path
@@ -27,7 +32,7 @@ CAF is designed so you can answer: **“Why is this code here?”** without gues
    - What: the human-declared constraints and priorities ("architectural intent").
 
 2. **Patterns (resolved architectural decisions)**
-   - Where: architecture retrieval + decision resolution blocks in the instance spec, then adopted via `caf next <instance> apply=true`.
+   - Where: architecture retrieval + decision resolution blocks in the instance spec, then adopted via `caf next <instance> apply`.
    - What: a curated set of architecture patterns selected *because* they match pins and rails.
    - Evidence hooks:
      - `pin_ref:` links patterns back to the specific pins that drove them.
@@ -55,7 +60,7 @@ CAF is designed so you can answer: **“Why is this code here?”** without gues
 flowchart TD
   P["Pins<br/>(architectural<br/>intent)"] -->|pin_ref<br/>evidence| R["Ranked <br/> Pattern Candidates<br/>(grounded pattern records)"]
   R --> D["Decision Resolutions<br/>(adopt/defer/reject)"]
-  D -->|caf next<br/>&lt;instance&gt; apply=true| A["Adopted Patterns"]
+  D -->|caf next<br/>&lt;instance&gt; apply| A["Adopted Patterns"]
   A --> O["Pattern<br/>Obligations"]
   A --> C["Capabilities"]
   O --> T["Task Graph"]
@@ -98,5 +103,5 @@ Model-owned (bounded):
 
 ## Docs
 
-- User docs (public): [`docs/user/README.md`](docs/user/README.md)
-- Pattern browsing: [`docs/patterns/README.md`](docs/patterns/README.md)
+- User docs (public): [`README.md`](README.md)
+- Pattern browsing: [`../patterns/README.md`](../patterns/README.md)

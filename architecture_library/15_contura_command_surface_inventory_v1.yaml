@@ -57,10 +57,13 @@ commands:
             kind: string
           - name: apply
             required: false
-            kind: boolean
+            kind: literal
+            accepted_values:
+              - apply
+            notes: Omit for dry-run preview; include `apply` to checkpoint and advance.
       - verb: prd
         skill: skills/caf-prd/SKILL.md
-        summary: PRD → Architecture Shape workflow (extract, infer, validate, promote).
+        summary: Default lifecycle step after /caf saas; resolves PRD input into a lifecycle-ready architecture shape.
         args:
           - name: instance_name
             required: true

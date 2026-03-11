@@ -21,6 +21,7 @@
  *   - caf/contract_declarations_v1.yaml
  *   - caf/tbp_resolution_v1.yaml
  *   - caf/task_reports/ (evidence)
+ *   - caf/binding_reports/ (evidence)
  *   - caf/reviews/ (evidence)
  *
  * Constraints:
@@ -334,6 +335,7 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
   const cafAbs = path.join(targetAbs, 'caf');
   await ensureDir(cafAbs);
   await ensureDir(path.join(cafAbs, 'task_reports'));
+  await ensureDir(path.join(cafAbs, 'binding_reports'));
   await ensureDir(path.join(cafAbs, 'reviews'));
 
   // Deterministically mirror CAF-managed planning inputs into the companion.
@@ -355,6 +357,11 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
       srcAbs: path.join(layout.designPlaybookDir, 'task_graph_v1.yaml'),
       dstRel: 'caf/task_graph_v1.yaml',
       required: true,
+    },
+    {
+      srcAbs: path.join(layout.designPlaybookDir, 'interface_binding_contracts_v1.yaml'),
+      dstRel: 'caf/interface_binding_contracts_v1.yaml',
+      required: existsSync(path.join(layout.designPlaybookDir, 'interface_binding_contracts_v1.yaml')),
     },
     // Core playbook docs used as worker inputs
     {
@@ -378,6 +385,21 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
       required: true,
     },
     {
+      srcAbs: path.join(layout.designPlaybookDir, 'application_domain_model_v1.yaml'),
+      dstRel: 'caf/application_domain_model_v1.yaml',
+      required: true,
+    },
+    {
+      srcAbs: path.join(layout.designPlaybookDir, 'system_domain_model_v1.yaml'),
+      dstRel: 'caf/system_domain_model_v1.yaml',
+      required: true,
+    },
+    {
+      srcAbs: path.join(layout.specGuardrailsDir, 'abp_pbp_resolution_v1.yaml'),
+      dstRel: 'caf/abp_pbp_resolution_v1.yaml',
+      required: true,
+    },
+    {
       srcAbs: path.join(layout.specGuardrailsDir, 'tbp_resolution_v1.yaml'),
       dstRel: 'caf/tbp_resolution_v1.yaml',
       required: true,
@@ -390,7 +412,7 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
       repoRoot,
       instanceNameArg,
       'Missing required CAF planning inputs to mirror into the companion repo',
-      `Run /caf arch ${instanceNameArg} (or /caf next ${instanceNameArg} apply=true) until these files exist, then rerun: node tools/caf/companion_init_v1.mjs ${instanceNameArg} --overwrite\n\nMissing sources:\n${missing
+      `Run /caf arch ${instanceNameArg} (or /caf next ${instanceNameArg} apply) until these files exist, then rerun: node tools/caf/companion_init_v1.mjs ${instanceNameArg} --overwrite\n\nMissing sources:\n${missing
         .map((m) => `- ${path.relative(repoRoot, m.srcAbs)}`)
         .join('\n')}`
     );

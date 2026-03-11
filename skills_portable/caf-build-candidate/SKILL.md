@@ -1,224 +1,165 @@
 ---
 name: caf-build-candidate
-description: >
-  Execute the Application Architect Task Graph by dispatching tasks to worker skills under Layer 8 rails.
-  Packet-driven and fail-closed: on any missing input, invalid schema, mapping gap, rails violation, worker failure,
-  or review failure, write a feedback packet and stop.
-status: active
+description: "Execute the Application Architect Task Graph by dispatching tasks to worker skills under Guardrails. Runs deterministic gates (mechanical validators), then performs packet-driven worker dispatch (producer steps). Fail-closed: on any gate/worker/review failure, write a feedback packet and stop."
 ---
 
 > **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
 > If this SKILL conflicts with the contract, the contract wins.
 
-> **Tools guardrail:** During routed workflows, treat `tools/**` as read-only. Do NOT modify scripts or other producer surfaces (`skills/**`, `architecture_library/**`) while executing this command. If a change seems required, fail-closed with a feedback packet describing the needed producer-side fix.
-
+> **Tools guardrail:** During routed workflows, treat `tools/**` as read-only.
 
 
 # caf-build-candidate
 
-## Purpose
-
-Dispatch the **Task Graph v1** (produced during implementation scaffolding) to worker skills, under the derived Layer 8 rails.
-
-This skill is intentionally **packet-driven** (token-saving):
-
-- Avoid long precondition/postcondition checklists.
-- Prefer: run the producing step → stop if a feedback packet is produced.
-
 ## Inputs
 
 - instance_name (required)
+- wave_index (optional positional selector; REQUIRED when total task count is greater than 10)
 
-## Authoritative inputs (fail-closed)
+## Required scripted gates (fail-closed; token-saver)
 
-Instance artifacts:
+Run the single deterministic preflight helper:
 
-- `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml`
-- `reference_architectures/<name>/spec/guardrails/tbp_resolution_v1.yaml`
-- `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
+1) `node tools/caf/build_preflight_v1.mjs <instance_name>`
 
-Catalogs / schemas:
-
-- `architecture_library/phase_8/80_phase_8_task_graph_schema_v1.yaml`
-- `architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml`
-- `architecture_library/phase_8/80_phase_8_make_skill_feedback_packet_block_v1.md`
-- `architecture_library/phase_8/80_phase_8_make_skill_request_schema_v1.yaml`
-- `architecture_library/phase_8/90_phase_8_profile_derivation_policy_matrix_v1.yaml`
-- `architecture_library/phase_8/100_phase_8_technology_binding_patterns_standard_v1.md`
-- `architecture_library/phase_8/tbp/catalogs/tbp_catalog_v1.md`
-
-## Hard rules (non-negotiable)
-
-1) **Fail-closed always**
-- On any missing input, invalid schema, mapping gap, rails violation, worker failure, or review failure: write a feedback packet and STOP.
-
-2) **Task Graph is the source of truth**
-- Do not invent/merge tasks.
-- Do not change task inputs, DoD, review questions, or trace anchors.
-
-3) **No new architecture/vendor decisions**
-- Only implement what is implied by the pinned tech profile + Layer 8 rails + Task Graph.
-
-4) **Write boundary and artifact class enforcement**
-- No writes outside `lifecycle.allowed_write_paths`.
-- No outputs with artifact_class outside `lifecycle.allowed_artifact_classes`.
-
-## Procedure (deterministic, packet-driven)
-
-### Step 0 — Run deterministic build preflight (scripted)
-
-Run:
-
-- `node tools/caf/build_preflight_v1.mjs <instance_name>`
+This preflight runs (in order):
+- validate_instance_v1.mjs --mode=build
+- companion_init_v1.mjs (materializes companion + caf/ planning inputs + evidence roots)
+- build_gate_v1.mjs
+- playbook_gate_v1.mjs
 
 Rules:
 - Do **not** print command invocations.
-- If the helper exits non-zero and wrote a feedback packet under the instance, STOP and print only the feedback packet path.
+- If any helper exits non-zero and wrote a feedback packet under the instance, STOP and print only the feedback packet path.
+- If any helper is missing/unavailable: FAIL-CLOSED with a feedback packet requesting restoration of the helper.
 
-This preflight materializes the worker-visible companion scaffold:
-- ensures `companion_repo_target/` exists
-- stages CAF planning inputs under `<companion_repo_target>/caf/`
-- ensures evidence roots exist: `caf/task_reports/` and `caf/reviews/`
+## Dispatch (packet-driven)
 
-### Step 3 — Load + validate Task Graph (minimal)
+## Deterministic dispatch procedure (fail-closed)
 
-1) Load `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`.
+After gates succeed, you MUST execute the Task Graph deterministically (do not invent alternate orchestration and do not stop merely because there is no scripted dispatcher helper).
 
-2) Validate using `architecture_library/phase_8/80_phase_8_task_graph_schema_v1.yaml` as the checklist.
+### Step 1 — Ensure a derived task plan exists (mechanical)
 
-Refuse if:
-- `tasks` is empty
-- any task has empty `required_capabilities`
-- any task has empty `definition_of_done`
+Run:
 
-- For each task, include a `steps:` ordered list of concise implementation steps (human-readable). Do not add new file paths.
-- any task has empty `semantic_review.review_questions`
+- `node tools/caf/gen_task_plan_v1.mjs <instance_name>`
 
-### Step 4 — Resolve capability coverage and dispatch mapping
+This produces:
 
-1) Load `architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml`.
+- `reference_architectures/<name>/design/playbook/task_plan_v1.md`
 
-2) For each task, map all `required_capabilities` to a `worker_id`.
+If the helper exits non-zero (or a feedback packet was written), STOP and print only the newest feedback packet path.
 
-Dispatch rule (v1):
-- A task may list multiple capabilities only if they all map to the same `worker_id`.
-- If a task maps to more than one distinct `worker_id`, fail closed (planner must split the task).
+### Step 2 — Compute execution order (authoritative algorithm)
 
-3) Verify each resolved `worker_id` exists at `skills/<worker_id>/SKILL.md`.
+Source of truth for dependencies is still:
 
-If any capability is unmapped OR any worker skill is missing:
-- emit a **Make Skill Request** feedback packet (Step 4.1) and STOP.
+- `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
 
-#### Step 4.1 — Missing capability coverage: emit feedback packet + Make Skill Request block
+Execution order MUST be a topological traversal over `depends_on`:
 
-Write a feedback packet to:
-- `reference_architectures/<name>/feedback_packets/BP-YYYYMMDD-build-candidate-missing-capabilities.md`
+- Define **Wave 0** as all tasks with no `depends_on`.
+- Define **Wave N+1** as all remaining tasks whose `depends_on` are all completed.
+- Within each wave, sort by lexicographic `task_id` (stable tie-break).
+- Fail-closed if:
+  - any task depends_on a missing task_id, or
+  - there is a dependency cycle (no tasks are ready).
 
-The packet MUST include:
+You may use the wave list in `task_plan_v1.md` as a convenience, but the algorithm above is the contract.
 
-A) Failure summary:
-- Stuck At: capability_coverage
-- Observed Constraint: missing capabilities + impacted task_ids
-- Gap Type: Missing mapping | Missing worker skill
+### Step 2b — Generate a deterministic dispatch manifest (mechanical; recommended)
 
-B) Minimal fix proposal (producer-side):
-- Add a worker skill implementing the missing capabilities OR update deterministic mappings in the capability catalog.
+Run:
 
-C) The required machine-consumable block:
-- Include the “Proposed Make Skill Request (YAML)” block exactly as specified by:
-  - `architecture_library/phase_8/80_phase_8_make_skill_feedback_packet_block_v1.md`
-  - Schema: `architecture_library/phase_8/80_phase_8_make_skill_request_schema_v1.yaml`
+- `node tools/caf/gen_build_dispatch_manifest_v1.mjs <instance_name>`
 
-Populate the Make Skill Request with:
-- required_capabilities = missing capabilities
-- requested_workers = deterministic grouping is allowed
-- task_signatures = only impacted tasks (task_id + title + required_capabilities + inputs + DoD + semantic_review + trace_anchors)
+This produces:
 
-Chat output MUST print ONLY:
-- the feedback packet path (one line)
+- `reference_architectures/<name>/design/playbook/build_dispatch_manifest_v1.md`
 
-### Step 5 — Compute execution order
+This manifest is a derived view (like `task_plan_v1.md`) that:
+- resolves each task's `required_capabilities` to a canonical `worker_id` using `architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml`
+- lists tasks wave-by-wave with compact per-task dispatch packets
 
-1) Build a dependency graph from `depends_on`.
+If the helper exits non-zero and wrote a feedback packet under the instance, STOP and print only the feedback packet path.
 
-2) Refuse if:
-- dependency references an unknown task_id
-- a cycle exists
+### Step 2c — Operator-managed wave policy (instructional; cross-runner)
 
-3) Compute a stable execution order:
-- Lexicographic tie-break among ready tasks (task_id ascending).
+This policy is semantic and MUST be followed across Codex, Claude, and Antigravity. Do not require a dedicated helper script.
 
-Optional (mechanical aid):
+Determine the total task count from `task_graph_v1.yaml` and the valid wave list from Step 2.
 
-- You MAY generate a derived dispatch view via:
-  - `node tools/caf/gen_build_dispatch_manifest_v1.mjs <instance_name>`
+Policy:
+- If total task count is **10 or fewer**:
+  - `wave_index` is optional.
+  - If omitted, you MAY execute the full graph in wave order.
+  - If provided, execute ONLY that wave.
+- If total task count is **greater than 10**:
+  - `wave_index` is REQUIRED.
+  - If `wave_index` is missing, FAIL-CLOSED with a blocker feedback packet that:
+    - states unrestricted multi-wave build is not allowed for graphs larger than 10 tasks,
+    - lists the total wave count,
+    - lists the exact valid rerun commands `/caf build <instance_name> 0`, `/caf build <instance_name> 1`, ... `/caf build <instance_name> <last_wave>`.
+  - If `wave_index` is not a non-negative integer, FAIL-CLOSED with a blocker feedback packet.
+  - If `wave_index` is outside the valid wave range, FAIL-CLOSED with a blocker feedback packet that lists the valid range.
 
-This produces `design/playbook/build_dispatch_manifest_v1.md` (wave order + resolved worker IDs). It is a convenience only; source of truth remains `task_graph_v1.yaml` + capability catalog.
+Prior-wave completion rule:
+- If `wave_index > 0`, verify that every task in all prior waves already has BOTH artifacts under the COMPANION REPO evidence root:
+  - `companion_repositories/<instance_name>/profile_v1/caf/task_reports/<task_id>.md`
+  - `companion_repositories/<instance_name>/profile_v1/caf/reviews/<task_id>.md`
+- Do NOT look for prior-wave evidence under `reference_architectures/<instance_name>/...`; build execution evidence lives under the companion repo only.
+- If any are missing, FAIL-CLOSED with a blocker feedback packet that:
+  - identifies the earliest incomplete prior wave,
+  - lists the missing evidence paths using the full `companion_repositories/<instance_name>/profile_v1/...` paths,
+  - instructs the operator to run `/caf build <instance_name> <earliest_incomplete_wave>` first.
+- If the companion evidence exists, do NOT emit a blocker packet merely because a similarly named path is absent under `reference_architectures/`.
 
-### Step 6 — Dispatch tasks to workers + review
+Selection rule:
+- In wave-only mode, dispatch ONLY the tasks in the selected wave.
+- In full-run mode, dispatch all tasks in wave order.
 
-For each task in execution order:
+Packet quality rule:
+- Do NOT emit a vague blocker such as “manual orchestration required” or “no canonical scripted dispatcher.”
+- Any packet emitted under this step MUST explain exactly which wave selection is required and the exact rerun command(s).
 
-1) Construct a Task Assignment Contract (in-memory payload):
-- instance_name
-- companion_repo_target
-- lifecycle rails (allowed_write_paths, allowed_artifact_classes, forbidden_actions)
-- platform spine pins
-- full task object (inputs, DoD, semantic_review, trace_anchors)
+### Step 3 — Dispatch wave-by-wave (context-minimizing)
 
-2) Invoke the worker:
-- `skills/<worker_id>/SKILL.md`
+For each task in the selected execution set:
 
-Workers MUST write a task report to:
-- `<companion_repo_target>/caf/task_reports/<task_id>.md`
+- full-run mode: all tasks in wave order
+- wave-only mode: only the tasks in the selected wave, still in lexicographic task_id order
 
-3) Immediately invoke semantic review:
-- `skills/worker-code-reviewer/SKILL.md`
+1) Dispatch the task to the worker skill implied by its `required_capabilities`.
+2) Immediately run `worker-code-reviewer` for that task’s artifacts (fail-closed).
+3) Mark the task completed only if both worker + review succeed.
 
-Reviewer MUST:
-- write `<companion_repo_target>/caf/reviews/<task_id>.md` on pass
-- or write a feedback packet (and STOP the build) if severity threshold is met
+**Context rule:** do NOT paste the entire task graph into a worker prompt. Provide only:
+- the selected task object (task_id/title/steps/DoD/inputs/trace_anchors), and
+- the list of its `depends_on` task_ids (so the worker knows upstream context), and
+- any referenced input file paths.
 
-This skill does not perform deterministic filesystem checks between worker and reviewer.
-The only gates are: rails enforcement, schema validity, and semantic review threshold.
+**Determinism rule (capability → worker):** do NOT invent worker selection.
+- Resolve via `architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml`.
+- The `build_dispatch_manifest_v1.md` file (Step 2b) is a precomputed view of this mapping.
 
-## Build post-gate (mechanical; fail-closed)
+On any worker/review failure: write a feedback packet and STOP.
 
-After ALL tasks have completed successfully, run:
+### Step 4 — Build post-gate: runnable candidate integrity (mechanical; fail-closed)
+
+After ALL tasks in the selected execution set have completed successfully, run:
 
 - `node tools/caf/build_postgate_companion_runnable_v1.mjs <instance_name>`
 
-This post-gate is mechanical only. It MUST fail-closed if the companion repo is not minimally runnable (common issues: invalid compose service nodes like `ui: null`, stray root entrypoints like `profile_v1/main.py`).
+Run this post-gate:
+- after the full graph in full-run mode, or
+- in wave-only mode only after runtime wiring has completed (either in the selected wave or a prior completed wave)
+
+Wave-mode defer rule:
+- If runtime wiring has not completed yet, missing companion runnable surfaces (for example `docker/compose.candidate.yaml`) are expected.
+- In that case, the scripted helper may return success with a defer/skip message instead of blocking.
+- Do NOT write a feedback packet merely because runnable surfaces are absent before runtime wiring.
+
+This post-gate is mechanical only. Once runtime wiring has completed, it MUST fail-closed if the companion repo is not minimally runnable (common issues: invalid compose service nodes like `ui: null`, stray root entrypoints like `profile_v1/main.py`, or compose `name:` not matching `deployment.stack_name` from the resolved guardrails view).
 
 If the helper exits non-zero and wrote a feedback packet, STOP and print only the newest feedback packet path.
-
-## Feedback packets (general)
-
-Write feedback packets to:
-- `reference_architectures/<name>/feedback_packets/BP-YYYYMMDD-build-candidate-<slug>.md`
-
-Minimum fields:
-- Stuck At
-- Observed Constraint
-- Gap Type (Missing input | Schema violation | Missing mapping | Task failure | Review failure)
-- Minimal Fix Proposal
-- Evidence
-
-Do not print feedback packet contents in chat.
-
-## Success output constraints
-
-On success, print (in order):
-
-- `Dispatched Task Graph v1 and passed semantic review for reference_architectures/<name>.`
-
-Never echo file contents.
-
-## Next steps (required)
-
-After success, include a short “Next steps” section that:
-
-- points to `<companion_repo_target>/caf/reviews/`
-- reminds that output is CANDIDATE only
-
-Do NOT include concrete command examples; the workflow will render them.

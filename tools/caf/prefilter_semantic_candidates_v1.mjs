@@ -177,6 +177,27 @@ function stableSortCandidates(arr) {
   });
 }
 
+
+function readExcludedCandidateIdsForProfile(repoRoot, profile) {
+  const vpPath = path.join(
+    repoRoot,
+    'architecture_library',
+    'patterns',
+    'retrieval_surface_v1',
+    'retrieval_view_profiles_v1.yaml'
+  );
+  if (!existsSync(vpPath)) return new Set();
+  try {
+    const obj = parseYamlString(readFileSync(vpPath, 'utf8'), vpPath);
+    const arr = Array.isArray(obj?.profiles?.[profile]?.exclude_candidate_ids)
+      ? obj.profiles[profile].exclude_candidate_ids
+      : [];
+    return new Set(arr.map((v) => normalize(v)).filter(Boolean));
+  } catch {
+    return new Set();
+  }
+}
+
 function parseArgs(argv) {
   const out = { limit: 180 };
   for (const a of argv) {
@@ -268,6 +289,7 @@ async function main() {
 
   const signalTokens = buildSignalTokens(pinsObj, railsObj);
   const tokenSet = new Set(signalTokens);
+  const excludedCandidateIds = readExcludedCandidateIdsForProfile(repoRoot, profile);
 
   const recs = readJsonlSync(semSurface);
   const scored = [];
@@ -276,6 +298,7 @@ async function main() {
     const id = normalize(r.id);
     const ns = normalize(r.namespace);
     if (!id || !ns) continue;
+    if (excludedCandidateIds.has(id)) continue;
     const { score, hits } = scoreRecord(r, tokenSet);
     if (score <= 0) continue;
     scored.push({ ...r, score, hits });

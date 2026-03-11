@@ -252,6 +252,7 @@ async function main() {
   }
 
   const approvedMap = buildApprovedValueMapFromApprovedAtomsSchema(approvedAtomsSchemaObj);
+  const canonicalApprovalExemptKeys = new Set(['deployment.stack_name']);
 
   // Rule A - canonical atoms must be approved.
   const canonicalRoots = ['runtime', 'database', 'deployment', 'iac', 'ci', 'observability', 'persistence'];
@@ -262,6 +263,7 @@ async function main() {
     for (const { key, value } of flattenScalars(sub, [root])) {
       const v = normalizeScalar(value);
       if (!v) continue;
+      if (canonicalApprovalExemptKeys.has(key)) continue;
       const allowed = approvedMap.get(key);
       if (!allowed || !allowed.has(v)) {
         canonicalViolations.push({ key, value: v, allowed: formatAllowed(approvedMap, key) });

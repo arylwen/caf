@@ -4,14 +4,14 @@ title: CAF Phase 8 Profile Parameters (Architect UX Inputs) (v1)
 type: object
 additionalProperties: false
 description: >
-  Architect-authored Phase 8 inputs (UX). This file is intentionally minimal: it pins only the Phase 8
-  lifecycle knobs (evolution_stage, generation_phase) and the platform spine (infra_target, packaging,
-  runtime_language, database_engine) plus optional metadata. All other execution details are derived
-  into profile_parameters_resolved.yaml.
+  Architect-authored Phase 8 inputs (UX). This file is intentionally minimal: it pins lifecycle knobs,
+  architecture style, the platform spine (infra_target, packaging, runtime_language, database_engine),
+  and optional machine-consumed UI pins. Product-facing narrative belongs in specs/design, not in machine pins.
 required:
   - schema_version
   - instance_name
   - lifecycle
+  - architecture
   - platform
 properties:
   schema_version:
@@ -51,6 +51,18 @@ properties:
           - implementation_scaffolding
           - pre_production
           - production_hardening
+  architecture:
+    type: object
+    additionalProperties: false
+    required:
+      - architecture_style
+    properties:
+      architecture_style:
+        type: string
+        enum: [clean_architecture, layered_architecture, custom]
+        description: >
+          Architect-selected architecture style.
+          This resolves to an ABP catalog entry and is used as a machine-consumed implementation binding.
   platform:
     type: object
     additionalProperties: false
@@ -76,7 +88,6 @@ properties:
         type: string
         enum: [postgres, mysql, sqlserver, sqlite, none]
         description: Primary database engine. Select one.
-
       framework:
         type: string
         description: Optional runtime framework choice (validated deterministically by CAF guardrails).
@@ -96,7 +107,30 @@ properties:
           Optional schema management strategy.
           - code_bootstrap: repositories/app bootstrap tables (default)
           - alembic_migrations: generate migrations (requires ORM-backed persistence)
-
+  ui:
+    type: object
+    additionalProperties: false
+    description: >
+      Optional machine-consumed UI pins. These drive TBP resolution, retrieval/UI task seeding, and UI worker behavior.
+      Product-facing UI description belongs in application_spec_v1.md.
+    required:
+      - present
+    properties:
+      present:
+        type: boolean
+        description: Whether a browser UI is in scope for this instance.
+      kind:
+        type: string
+        enum: [web_spa]
+        description: UI runtime shape. Launch surface supports web_spa.
+      framework:
+        type: string
+        enum: [react]
+        description: UI framework choice. Launch surface supports react.
+      deployment_preference:
+        type: string
+        enum: [separate_ui_service, served_by_application_plane]
+        description: How the UI should be deployed for local candidate runs.
   planes:
     type: object
     additionalProperties: false

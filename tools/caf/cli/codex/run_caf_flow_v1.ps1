@@ -66,7 +66,7 @@ Check-Packets $packetsDir
 Run-Skill -RepoRoot $repo -SkillPath (Join-Path $repo "$skillsDir\caf-arch\SKILL.md") -InputHint ("instance_name={0}" -f $InstanceName)
 Check-Packets $packetsDir
 
-Run-Skill -RepoRoot $repo -SkillPath (Join-Path $repo "$skillsDir\caf-next\SKILL.md") -InputHint ("instance_name={0}`napply=true" -f $InstanceName)
+Run-Skill -RepoRoot $repo -SkillPath (Join-Path $repo "$skillsDir\caf-next\SKILL.md") -InputHint ("instance_name={0}`napply" -f $InstanceName)
 Check-Packets $packetsDir
 
 Run-Skill -RepoRoot $repo -SkillPath (Join-Path $repo "$skillsDir\caf-arch\SKILL.md") -InputHint ("instance_name={0}" -f $InstanceName)

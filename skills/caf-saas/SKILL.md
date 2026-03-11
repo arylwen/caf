@@ -92,7 +92,7 @@ After parsing, validate both fields with the regex rules above.
 
 ## Next steps (required)
 After initialization, include a short "Next steps" section that:
-- tell the user to review defaults in the configuration files and change architectural intent as needed
-- tell the user to run `/caf arch <name>`
-- include the exact example using the created instance name (e.g., `/caf arch hello-saas`)
+- tell the user to review the seeded PRD and platform brief plus the seeded bootstrap shape
+- tell the user that the default lifecycle is `/caf prd <name>` then `/caf arch <name>`
+- include the exact examples using the created instance name (e.g., `/caf prd hello-saas` then `/caf arch hello-saas`)
 

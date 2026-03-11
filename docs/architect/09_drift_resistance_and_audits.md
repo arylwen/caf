@@ -2,6 +2,10 @@
 
 CAF’s core design premise: **semantic steps drift; deterministic gates must not.**
 
+![CAF gates and fail-closed enforcement](../images/caf_gates_and_fail_closed.svg)
+
+*CAF prevents architectural drift by evaluating proposed changes against architecture obligations and blocking non-compliant changes until they are corrected or the architecture is explicitly updated.*
+
 ## Drift resistance mechanisms
 
 - Split: semantic ranking vs deterministic validation
@@ -34,4 +38,4 @@ And prefer to exclude:
 See also:
 
 - `tools/caf-meta/prepare_public_launch_v1.mjs`
-- `technical_notes/TN-011_caf_build_meta_rules_v1.md`
+- `docs/maintainer/02_canonical_sources_and_boundaries.md`

@@ -22,6 +22,7 @@ import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlString } from './lib_yaml_v2.mjs';
+import { annotatePrdPromoted, dumpYamlStable } from './lib_shape_lifecycle_v1.mjs';
 import { parsePrdMarkdownV1 } from './lib_prd_parse_v1.mjs';
 import { extractAllowedValuesFromParameterizedTemplatesMd } from './lib_param_allowed_values_from_md_v1.mjs';
 
@@ -46,6 +47,10 @@ function nowStampYYYYMMDD() {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`;
+}
+
+function nowIsoTimestamp() {
+  return new Date().toISOString();
 }
 
 function normalizeScalar(v) {
@@ -562,9 +567,10 @@ export async function internal_main(argv) {
   }
 
   if (args.promote) {
-    // Auto-promote: copy proposed YAML to authoritative YAML.
+    // Auto-promote: write authoritative YAML with lifecycle provenance stamped for downstream gates/audits.
+    const promotedObj = annotatePrdPromoted(proposedObj, rationaleObj?.source_prd_path || prdSourceRel, nowIsoTimestamp());
     await ensureDir(repoRootAbs, instanceRootAbs, path.dirname(authoritativeAbs));
-    await writeUtf8(repoRootAbs, instanceRootAbs, authoritativeAbs, proposedYamlText);
+    await writeUtf8(repoRootAbs, instanceRootAbs, authoritativeAbs, dumpYamlStable(promotedObj));
   }
 
   console.log(`OK: PRD shape proposal validated${args.promote ? ' and promoted' : ''} for instance '${instanceName}'.`);

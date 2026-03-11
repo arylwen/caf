@@ -106,7 +106,7 @@ Evidence items are referenced by ID:
 Each evidence item MUST include:
 
 - `evidence_id`: `E-001`
-- `type`: one of `pinned_input | derived_view | spec_text | design_text | task_graph | tbp | pbp | enforcement_bar | filesystem_check`
+- `type`: one of `pinned_input | derived_view | abp_pbp_resolution | spec_text | design_text | task_graph | tbp | pbp | enforcement_bar | filesystem_check`
 - `claim`: short paraphrase of what the evidence supports
 - `cite`: `path#anchor` (preferred) OR `path:<section heading>`
 - `excerpt`: a short excerpt (≤ 25 words) OR a concise YAML key path (e.g., `lifecycle.generation_phase`)
@@ -120,6 +120,7 @@ Diagnostics must be grounded in what exists. Minimum sources by generation phase
   - `playbook/architecture_shape_parameters.yaml`
   - `guardrails/profile_parameters.yaml`
   - `guardrails/profile_parameters_resolved.yaml`
+  - `guardrails/abp_pbp_resolution_v1.yaml` when present
   - Any generated specs if present
 
 Note: Diagnostics generation MUST NOT fail solely because `guardrails/derivation_cascade_contract_v1.md` is initially missing. `caf arch` is responsible for materializing it in-run (see `skills/caf-arch/SKILL.md`).
@@ -130,7 +131,8 @@ Note: Diagnostics generation MUST NOT fail solely because `guardrails/derivation
   - `spec/playbook/application_spec_v1.md` (if present)
   - `design/playbook/application_design_v1.md` and `playbook/control_plane_design_v1.md` (if present)
   - `playbook/task_graph_v1.yaml` (required for build phases)
-  - Referenced TBP/PBP manifests (as indicated by guardrails resolved view)
+  - `guardrails/abp_pbp_resolution_v1.yaml`
+  - Referenced ABP/PBP/TBP manifests (as indicated by the resolved style/binding views)
   - Candidate enforcement bar (library)
 
 If a source is required for the current phase but missing, CAF MUST fail-closed.

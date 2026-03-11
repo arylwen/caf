@@ -91,3 +91,12 @@ Rules:
 - Evidence anchors MUST point to paths under `companion_repositories/<instance>/profile_v1/` and include line ranges.
 - Every claim MUST have at least one evidence anchor.
 - Do not include placeholders (TBD/TODO/etc.).
+
+
+## Interface binding contract handling (mandatory when present)
+
+- If `caf/interface_binding_contracts_v1.yaml` contains an entry whose `required_interface.consumer.task_id` matches the current task, treat it as required-interface implementation input.
+- Declare the required interface explicitly in the service output (constructor parameter, port interface, or equivalent injectable boundary).
+- Do not leave stub/demo return paths in place when the interface binding contract says the service must be satisfied later by a provider and assembler task.
+- Do not silently instantiate local in-memory/demo/default providers once that contract applies.
+- If temporary test-only scaffolding is unavoidable, mark it explicitly with `CAF_TEST_ONLY`.

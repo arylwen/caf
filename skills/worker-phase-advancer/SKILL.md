@@ -3,7 +3,7 @@ name: worker-phase-advancer
 description: >
   Internal phase advancement worker for CAF.
   Determines the next sensible `lifecycle.generation_phase` from the current phase
-  using minimal observable prerequisites and, if apply=true, updates only
+  using minimal observable prerequisites and, when apply is requested, updates only
   `reference_architectures/<name>/spec/guardrails/profile_parameters.yaml`.
   No new user-facing commands.
 ---
@@ -25,7 +25,7 @@ Fail-closed is mandatory: if prerequisites are missing or ambiguous, write a fee
 ## Inputs
 
 - `instance_name` (required)
-- `apply=true|false` (optional; default: true)
+- `apply` (optional literal token; default behavior is to apply when invoked directly)
 
 ## Reads (authoritative)
 
@@ -41,7 +41,7 @@ Prerequisite probes (existence only; no deep parsing):
 
 ## Writes
 
-- If `apply=true`: update **only** `guardrails/profile_parameters.yaml` by changing `lifecycle.generation_phase`.
+- If `apply` is present: update **only** `guardrails/profile_parameters.yaml` by changing `lifecycle.generation_phase`.
 - On failure: write a feedback packet:
   - `reference_architectures/<name>/feedback_packets/BP-YYYYMMDD-phase-advance.md`
 
@@ -85,7 +85,7 @@ Do **not** attempt to validate every intermediate artifact. Only validate the *p
 5) If `apply=false`:
    - print the current phase and the recommended next phase; do not edit any files; stop.
 
-6) If `apply=true`:
+6) If `apply` is present:
    - update `profile_parameters.yaml` by changing **only** `lifecycle.generation_phase`.
    - print old → new.
 

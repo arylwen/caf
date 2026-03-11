@@ -2,8 +2,35 @@ schema_version: phase8_plane_binding_pattern_v1
 plane_id: AP
 layout:
   scaffold_directories:
-  - code/AP/
+    - code/AP/
   role_bindings:
     ap_plane_scaffold_readme:
       path_template: README.md
       artifact_class: markdown_docs
+  abp_role_bindings:
+    ABP-CLEAN-01:
+      composition_root:
+        path_template: bootstrap/
+      inbound_adapters:
+        path_template: interfaces/inbound/
+      application_use_cases:
+        path_template: application/
+      domain_core:
+        path_template: domain/
+      outbound_ports:
+        path_template: application/ports/
+      outbound_adapters:
+        path_template: interfaces/outbound/
+    ABP-LAYERED-01:
+      composition_root:
+        path_template: bootstrap/
+      presentation_layer:
+        path_template: presentation/
+      application_services:
+        path_template: application/
+      domain_model:
+        path_template: domain/
+      data_access_layer:
+        path_template: data_access/
+      integration_adapters:
+        path_template: integrations/

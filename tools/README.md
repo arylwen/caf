@@ -1,4 +1,4 @@
-# Tools (optional; not used by marketing flows)
+# Tools (optional; not used by the default command flow)
 
 This folder is reserved for **optional, producer-side helper scripts** that can perform **mechanical extraction / lint / formatting** tasks.
 

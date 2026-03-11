@@ -2,7 +2,8 @@
 name: caf-arch-architecture-scaffolding
 description: >
   Internal sub-skill for caf-arch. Produces/refreshes pinned Layer-8 derived view
-  and scaffolds the system/application specifications (architecture_scaffolding phase).
+  and scaffolds the architect-edit system/application specs + plane domain model sources
+  (architecture_scaffolding phase).
   No new user-facing commands.
 ---
 
@@ -41,7 +42,7 @@ Steps:
 
 1) Deterministic playbook spec seeding (token-saver; mandatory; fail-closed):
 
-   Rationale: `build_pin_value_explanations_v1.mjs` writes into `spec/playbook/system_spec_v1.md`, so the playbook specs must exist before pin enrichment runs.
+   Rationale: `build_pin_value_explanations_v1.mjs` writes into `spec/playbook/system_spec_v1.md`, and the architect should also receive the two plane domain-model source docs during architecture scaffolding. Seed all four human-edit playbook documents before pin enrichment runs.
 
    - Run: `node tools/caf/seed_playbook_specs_v1.mjs <name>`
 
@@ -90,7 +91,7 @@ Steps:
 
 6) Retrieval context blob (mandatory; fail-closed):
 
-   - Run: `node tools/caf/build_retrieval_context_blob_v1.mjs <name> --profile=arch_scaffolding`
+   - Run: `node tools/caf/retrieval_preflight_v1.mjs <name> --profile=arch_scaffolding`
 
    Rules:
    - Do **not** print the invocation.

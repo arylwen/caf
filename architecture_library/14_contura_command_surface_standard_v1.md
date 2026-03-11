@@ -43,9 +43,10 @@ These files map each `command_id` to a runnable command string, but **do not def
    - `/caf prd <name> [promote=true|false]`
    - `/caf arch <name>`
    - `/caf plan <name>`
-   - `/caf next <name> [apply=true|false]`
+   - `/caf next <name> [apply]`  *(omit `apply` for dry-run preview; include `apply` to checkpoint and advance)*
    - `/caf build <name>`
-3. Do not advertise any additional commands.
+3. Present `/caf prd` as the normal lifecycle step between `/caf saas` and the first `/caf arch`, not as an optional side workflow.
+4. Do not advertise any additional commands.
 
 ## Drift rules
 

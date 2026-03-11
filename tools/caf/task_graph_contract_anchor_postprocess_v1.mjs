@@ -3,10 +3,9 @@
  * CAF scripted helper (mechanical only)
  *
  * Purpose:
- * - Repair/normalize required contract trace anchors inside the planning task graph.
- * - Agents sometimes emit contract scaffolding tasks without the required
- *   contract_ref_path / contract_ref_section anchors, even though they are
- *   deterministically derivable from contract_declarations_v1.yaml.
+ * - Explicit maintainer/operator repair tool for required contract trace anchors inside the planning task graph.
+ * - This script is NOT part of the normal `/caf plan` workflow. The default posture is to fail closed on missing anchors during `/caf plan`, not to hide the producer defect.
+ * - When a human intentionally invokes this maintenance command, it may fill deterministically derivable anchors from the canonical design inputs.
  *
  * Behavior:
  * - Idempotent: running multiple times yields the same output.
@@ -57,6 +56,68 @@ function normalizeScalar(v) {
   return s.trim();
 }
 
+function extractBlock(text, startMarker, endMarker) {
+  const s = String(text ?? '').indexOf(startMarker);
+  if (s < 0) return null;
+  const e = String(text ?? '').indexOf(endMarker, s);
+  if (e < 0) return null;
+  return String(text ?? '').slice(s, e + endMarker.length);
+}
+
+function extractYamlFence(blockText) {
+  const lines = String(blockText ?? '').split(/\r?\n/);
+  let startLine = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (t === '```yaml' || t.startsWith('```yaml ')) {
+      startLine = i + 1;
+      break;
+    }
+  }
+  if (startLine < 0) return null;
+  let endLine = -1;
+  for (let i = startLine; i < lines.length; i++) {
+    if (lines[i].trim() === '```') {
+      endLine = i;
+      break;
+    }
+  }
+  if (endLine < 0) return null;
+  return lines.slice(startLine, endLine).join('\n');
+}
+
+function extractArchitectEditYaml(mdText, blockId) {
+  const block = extractBlock(
+    mdText,
+    `<!-- ARCHITECT_EDIT_BLOCK: ${blockId} START -->`,
+    `<!-- ARCHITECT_EDIT_BLOCK: ${blockId} END -->`
+  );
+  if (!block) return null;
+  return extractYamlFence(block);
+}
+
+function deriveContractSurfaceFromRefDoc(mdText) {
+  const planeChoicesYaml = extractArchitectEditYaml(mdText, 'plane_integration_contract_choices_v1');
+  if (!planeChoicesYaml) return 'custom';
+  let obj;
+  try {
+    obj = parseYamlString(planeChoicesYaml, 'plane_integration_contract_choices_v1') || {};
+  } catch {
+    return 'custom';
+  }
+  const choices = obj?.choices && typeof obj.choices === 'object' ? obj.choices : {};
+  const block = choices?.cp_ap_contract_surface && typeof choices.cp_ap_contract_surface === 'object'
+    ? choices.cp_ap_contract_surface
+    : null;
+  const options = Array.isArray(block?.options) ? block.options : [];
+  const adopted = options.find((o) => normalizeScalar(o?.status) === 'adopt');
+  const optionId = normalizeScalar(adopted?.option_id);
+  if (optionId === 'mixed') return 'mixed';
+  if (optionId === 'async_events') return 'async_events';
+  if (optionId === 'synchronous_api' || optionId === 'synchronous_http') return 'synchronous_http';
+  return 'custom';
+}
+
 function nowDateYYYYMMDD() {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, '0');
@@ -92,7 +153,8 @@ async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstra
     '',
     '## Autonomous agent guidance',
     '- Autonomous agents MUST apply the edits described in this packet before continuing.',
-    '- After applying the fix, rerun /caf plan <name> and then /caf build <name>.',
+    '- This tool is maintenance-only; do not wire it in as a hidden `/caf plan` postprocess.',
+    '- After applying the fix, rerun /caf build <name> (or rerun /caf plan <name> if you are regenerating planning outputs).',
     '',
   ].join('\n');
 
@@ -122,6 +184,33 @@ function ensureAnchor(traceAnchors, patternId, anchorKind = 'structural_validati
   if (exists) return false;
   traceAnchors.push({ pattern_id: pid, anchor_kind: anchorKind });
   return true;
+}
+
+function ensurePrefixedAnchor(traceAnchors, prefix, patternId, anchorKind = 'structural_validation') {
+  const pid = String(patternId);
+  let changed = false;
+  const kept = [];
+  let exactExists = false;
+  for (const a of traceAnchors) {
+    const current = normalizeScalar(a?.pattern_id);
+    if (current === pid) {
+      exactExists = true;
+      kept.push(a);
+      continue;
+    }
+    if (current.startsWith(prefix)) {
+      changed = true;
+      continue;
+    }
+    kept.push(a);
+  }
+  if (!exactExists) {
+    kept.push({ pattern_id: pid, anchor_kind: anchorKind });
+    changed = true;
+  }
+  traceAnchors.length = 0;
+  traceAnchors.push(...kept);
+  return changed;
 }
 
 export async function internal_main(argv = process.argv.slice(2)) {
@@ -174,8 +263,18 @@ export async function internal_main(argv = process.argv.slice(2)) {
     const bid = normalizeScalar(c?.boundary_id);
     const refPath = normalizeScalar(c?.contract_ref?.path);
     const refSection = normalizeScalar(c?.contract_ref?.section_heading);
+    let contractSurface = 'custom';
     if (bid && refPath && refSection) {
-      byBoundary.set(bid, { refPath, refSection });
+      const refAbsPath = path.isAbsolute(refPath) ? refPath : path.join(repoRoot, refPath);
+      if (existsSync(refAbsPath)) {
+        try {
+          const mdText = await fs.readFile(refAbsPath, { encoding: 'utf8' });
+          contractSurface = deriveContractSurfaceFromRefDoc(mdText);
+        } catch {
+          contractSurface = 'custom';
+        }
+      }
+      byBoundary.set(bid, { refPath, refSection, contractSurface });
     }
   }
 
@@ -197,13 +296,15 @@ export async function internal_main(argv = process.argv.slice(2)) {
       continue;
     }
 
-    const { refPath, refSection } = byBoundary.get(boundaryId);
+    const { refPath, refSection, contractSurface } = byBoundary.get(boundaryId);
 
     const ta = Array.isArray(t?.trace_anchors) ? t.trace_anchors : [];
     if (!Array.isArray(t.trace_anchors)) t.trace_anchors = ta;
 
-    changed = ensureAnchor(ta, `contract_ref_path:${refPath}`) || changed;
-    changed = ensureAnchor(ta, `contract_ref_section:${refSection}`) || changed;
+    changed = ensurePrefixedAnchor(ta, 'contract_boundary_id:', `contract_boundary_id:${boundaryId}`) || changed;
+    changed = ensurePrefixedAnchor(ta, 'contract_ref_path:', `contract_ref_path:${refPath}`) || changed;
+    changed = ensurePrefixedAnchor(ta, 'contract_ref_section:', `contract_ref_section:${refSection}`) || changed;
+    changed = ensurePrefixedAnchor(ta, 'contract_surface:', `contract_surface:${contractSurface}`) || changed;
   }
 
   if (unresolved.length > 0) {

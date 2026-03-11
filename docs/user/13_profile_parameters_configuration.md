@@ -2,7 +2,7 @@
 
 CAF instances have a **pinned configuration** file called `profile_parameters.yaml`.
 
-You usually edit it when you want to change **technology choices** (language, framework, database, packaging, auth mode, etc.) or **deployment posture** (local vs cloud targets).
+You usually edit it when you want to change **architecture and implementation bindings** (architecture style, language, framework, database, packaging, auth mode, UI runtime choices, etc.) or **deployment posture** (local vs cloud targets).
 
 ## Where it lives
 
@@ -12,8 +12,56 @@ For an instance named `<instance>`:
   - `reference_architectures/<instance>/spec/guardrails/profile_parameters.yaml`
 - Derived, guardrails-resolved config (CAF-managed):
   - `reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml`
+- Derived ABP/PBP style-to-plane projection (CAF-managed):
+  - `reference_architectures/<instance>/spec/guardrails/abp_pbp_resolution_v1.yaml`
 
-The resolved file is the one **workers should treat as authoritative**.
+The resolved files are the ones deterministic consumers should treat as authoritative for rails and style-to-plane binding.
+
+## Canonical source of supported pinned values
+
+The launch-time source of truth for the supported pinned values documented on this page is:
+
+- `architecture_library/phase_8/84_phase_8_profile_parameters_template_v1.yaml`
+
+The starter templates under `architecture_library/phase_8/profile_templates/*/profile_parameters_template_v1.yaml` are convenience presets. They should point back to the canonical Phase 8 template instead of redefining the value catalog independently.
+
+## Architecture / rationale split
+
+- `profile_parameters.yaml` owns **machine-consumed bindings** such as:
+  - `architecture.architecture_style`
+  - `platform.*`
+  - `ui.*`
+- specs/design/decisions own the **rationale**:
+  - why a style was chosen
+  - why a topology or contract posture exists
+  - business and solution rationale
+
+That split keeps technical bindings explicit without burying architectural reasoning inside config.
+
+## UI split: what goes where
+
+- `profile_parameters.yaml` owns **machine-consumed UI pins**:
+  - `ui.present`
+  - `ui.kind`
+  - `ui.framework`
+  - `ui.deployment_preference`
+- `application_spec_v1.md` owns the **product-facing UI description**:
+  - who the UI is for
+  - key pages/journeys
+  - navigation/shell expectations
+  - UX constraints that matter architecturally
+
+That split gives TBP resolution, planning, retrieval, and UI workers **one place to read UI technology/runtime choices**.
+
+## Architecture style resolution
+
+`architecture.architecture_style` is the architect-facing machine pin.
+CAF resolves it into:
+
+- a selected ABP (architecture style artifact), and
+- a derived ABP/PBP projection in `abp_pbp_resolution_v1.yaml`
+
+That derived view is what `/caf plan` should use for style-to-plane role mapping rather than reinterpreting architecture style from prose.
 
 ## How to apply changes
 
@@ -26,7 +74,14 @@ The resolved file is the one **workers should treat as authoritative**.
 
 ```yaml
 schema_version: phase8_profile_parameters_v1
-instance_name: hello-saas
+instance_name: codex-saas
+
+lifecycle:
+  evolution_stage: stage_0_local_prototype
+  generation_phase: architecture_scaffolding
+
+architecture:
+  architecture_style: clean_architecture
 
 platform:
   infra_target: local
@@ -41,6 +96,12 @@ platform:
   # Schema strategy (default for launch):
   schema_management_strategy: code_bootstrap
 
+ui:
+  present: true
+  kind: web_spa
+  framework: react
+  deployment_preference: separate_ui_service
+
 planes:
   cp:
     runtime_shape: api_service_http
@@ -48,29 +109,31 @@ planes:
     runtime_shape: api_service_http
 ```
 
-## Configuration table (stub)
+## Supported values (derived quick reference)
 
-This table is intentionally **minimal** for launch. It documents the most common keys and shows the kinds of TBPs/atoms that are typically implied.
+This table is a **docs/user convenience view** derived from the canonical Phase 8 profile-parameters template. It is intentionally simple: it lists the supported pinned values without trying to encode every cross-constraint between styles, languages, frameworks, or TBPs.
 
-> Note: TBP/atom IDs are part of the architecture library and may evolve. Treat the “Typical atoms” column as explanatory, not normative.
+| Key | Supported values in the canonical template | Default in canonical template |
+|---|---|---|
+| `lifecycle.evolution_stage` | `stage_0_local_prototype`, `stage_1_free_tier`, `stage_2_early_adopters`, `stage_3_growth`, `stage_4_scale_up`, `stage_5_enterprise` | `stage_0_local_prototype` |
+| `lifecycle.generation_phase` | `architecture_scaffolding`, `implementation_scaffolding`, `pre_production`, `production_hardening` | `architecture_scaffolding` |
+| `architecture.architecture_style` | `clean_architecture`, `layered_architecture`, `custom` | `clean_architecture` |
+| `platform.infra_target` | `local`, `aws`, `awslocal`, `azure`, `gcp`, `heroku` | `local` |
+| `platform.packaging` | `podman_compose`, `docker_compose`, `kubernetes`, `serverless` | `docker_compose` |
+| `platform.runtime_language` | `python`, `typescript`, `csharp`, `node`, `go`, `java` | `python` |
+| `platform.database_engine` | `postgres`, `mysql`, `sqlserver`, `sqlite`, `none` | `postgres` |
+| `ui.present` | `true`, `false` | `true` |
+| `ui.kind` | `web_spa` | `web_spa` |
+| `ui.framework` | `react` | `react` |
+| `ui.deployment_preference` | `separate_ui_service`, `served_by_application_plane` | `separate_ui_service` |
 
-| Key | What it controls | Common values | Default | Typical atoms implied (examples) | Notes |
-|---|---|---|---|---|---|
-| `platform.infra_target` | target environment posture | `local`, `aws`, `azure` | `local` | — | affects packaging + runtime wiring assumptions |
-| `platform.packaging` | how the stack is started locally | `podman_compose`, `docker_compose` | `podman_compose` | compose/podman wiring TBP | compose file name should match instance |
-| `platform.runtime_language` | primary app language | `python`, `typescript` | `python` | language atom TBP | drives framework options |
-| `platform.framework` | web framework | `fastapi` | (depends) | FastAPI TBP | may constrain project layout |
-| `platform.database_engine` | DB engine | `postgres` | (depends) | Postgres TBP | used by persistence + runtime wiring |
-| `platform.persistence_orm` | persistence model | `raw_sql`, `sqlalchemy_orm`, `sqlalchemy_core` | (depends) | ORM adapter TBP(s) | used to decide repo scaffolds |
-| `platform.schema_management_strategy` | how DB schema is created/evolved | `code_bootstrap`, `alembic_migrations` | `code_bootstrap` | schema bootstrap / migration atom(s) | only meaningful when a DB engine is resolved |
-| `platform.auth_mode` | auth posture | `mock`, `jwt`, … | `mock` | auth TBP(s) | impacts CP/AP routing + middleware |
-| `platform.eventing_backend` | async/eventing backend | `mock_in_memory`, … | `mock_in_memory` | eventing TBP(s) | used when event-driven patterns adopted |
-| `planes.cp.runtime_shape` | CP runtime shape | `api_service_http` | `api_service_http` | plane runtime TBP(s) | planning expects this to be adopted |
-| `planes.ap.runtime_shape` | AP runtime shape | `api_service_http` | `api_service_http` | plane runtime TBP(s) | planning expects this to be adopted |
+### Recommendation for docs/user
+
+- Keep the **canonical source-of-truth statement** on this page (`13_profile_parameters_configuration.md`).
+- Keep the **derived quick-reference table** on this same page so users do not have to open architecture-library files for common lookups.
+- Avoid copying the value catalog into multiple user pages; add links here instead of cloning the table elsewhere.
 
 ### Planned (post-launch)
 
-- Generate this table from:
-  - `tools/caf/config/technology_choice_rules_v1.yaml` (allowed values + defaults)
-  - TBP manifests (capability bindings / role binding keys)
-- Add a “Python choices” and “TypeScript choices” page with worked examples.
+- Generate this quick-reference table deterministically from `architecture_library/phase_8/84_phase_8_profile_parameters_template_v1.yaml`.
+- Optionally add a separate, generated reference page only if this table grows too large for the main configuration guide.
