@@ -142,6 +142,10 @@ Ship blockers (tight leash; required for `/caf plan`):
   - contract surface: `synchronous_http | async_events | mixed | custom`
     - Older-instance allowance: `synchronous_api` MAY appear in older instances; prefer `synchronous_http` going forward.
 
+- YAML scalar safety (ship blocker):
+  - In architect-edit YAML blocks, any scalar containing `: ` MUST be quoted or rephrased so the block remains parseable.
+  - This applies especially to `summary`, `question`, `notes[]`, and other human-readable scalar text.
+
 Template guidance (preferred):
 - Start from `architecture_library/phase_8/templates/plane_integration_contract_v1.template.md` and paste the choices/open-questions blocks into the CP design doc.
 - Do NOT emit the reduced/older non-canonical shape (`version: 1` + `choices.contract_surface` only). That shape is not plan-readable.

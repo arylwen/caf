@@ -15,6 +15,8 @@ Use this surface when you need to answer questions like:
 - **Add or adjust a skill safely** — Follow [Skill authoring](03_skill_authoring.md), [Command surfaces and routing](05_command_surfaces_and_routing.md), and [Feedback packets and fail-closed](07_feedback_packets_and_fail_closed.md) to extend CAF without creating drift.
 - **Debug generated outputs and packets** — Start with [Debugging generated outputs](06_debugging_generated_outputs.md), then use [Feedback packets and fail-closed](07_feedback_packets_and_fail_closed.md) and [Architect gates + fail-closed behavior](../architect/08_gates_and_fail_closed.md) when a framework seam needs investigation.
 - **Prepare a release or public bundle** — Use [Canonical sources and boundaries](02_canonical_sources_and_boundaries.md), [Release and public bundle hygiene](08_release_and_public_bundle_hygiene.md), and [`tools/caf-meta/README.md`](../../tools/caf-meta/README.md) when you need the maintainer view of release-oriented repo hygiene.
+- **Understand planning ownership, post-chain flow, and taxonomy terms** — Read [Planning workflows and post-chain](09_planning_workflows_and_post_chain.md) and [Taxonomies and ID namespaces](10_taxonomies_and_id_namespaces.md) when you need the maintainer view of how `/caf plan` turns design inputs into compiler-owned obligations, planner-owned tasks, and routed worker outputs.
+- **Review workflow diagrams directly** — Use [Maintainer workflow diagrams](diagrams/README.md) when you want the canonical Mermaid-backed lifecycle and post-chain views without narrative duplication.
 
 ## Reading order
 
@@ -26,6 +28,8 @@ Use this surface when you need to answer questions like:
 6. [Debugging generated outputs](06_debugging_generated_outputs.md)
 7. [Feedback packets and fail-closed](07_feedback_packets_and_fail_closed.md)
 8. [Release and public bundle hygiene](08_release_and_public_bundle_hygiene.md)
+9. [Planning workflows and post-chain](09_planning_workflows_and_post_chain.md)
+10. [Taxonomies and ID namespaces](10_taxonomies_and_id_namespaces.md)
 
 ## Canonical rule
 
@@ -36,6 +40,3 @@ Normative CAF framework doctrine remains in:
 - `architecture_library/patterns/caf_meta_v1/`
 - `architecture_library/__meta/caf_operating_contract_v1.md`
 - `tools/caf/contracts/**`
-
-Working maintainer notes that are not public guidance live under `docs/dev/maintainer/`.
-Historical and retired material lives under `docs/dev/history/`.

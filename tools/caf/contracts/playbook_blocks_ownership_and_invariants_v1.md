@@ -36,6 +36,7 @@ Scope: Phase 8 playbook specs under `reference_architectures/<instance>/spec/pla
     - guardrails posture (`spec/guardrails/profile_parameters_resolved.yaml`)
   - Invariants:
     - MUST be derived from pinned intent + rails; avoid inventing constraints not implied by pins/rails.
+    - During `architecture_scaffolding`, retrieval preflight MUST fail closed if this block is missing or empty.
 
 - `CAF_MANAGED_BLOCK: tech_profile_explanations_v1`
   - Owner: **caf-system-architect**
@@ -43,6 +44,7 @@ Scope: Phase 8 playbook specs under `reference_architectures/<instance>/spec/pla
     - guardrails outputs (TBP resolution + validated technology pins)
   - Invariants:
     - MUST explain the chosen technology posture without redefining pins (pins are already authoritative).
+    - During `architecture_scaffolding`, retrieval preflight MUST fail closed if this block is missing or empty.
 
 - `CAF_MANAGED_BLOCK: caf_decision_pattern_candidates_v1`
   - Owner: **worker-pattern-retriever-arch-scaffolding** (LLM-owned grounding)

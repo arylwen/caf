@@ -78,6 +78,21 @@ caf:
     - Use when you need an explicit ingress boundary and want to clarify edge vs API gateway vs service responsibilities.
     anchors:
     - caf_pattern: EXT-EDGE_GATEWAY
+    semantic_acceptance:
+      attachments:
+      - attachment_id: edge_gateway_topology_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - runtime_wiring
+        criteria:
+        - Runtime wiring realizes the adopted edge-boundary topology and keeps ingress responsibilities explicit.
+        - Edge and downstream boundary assumptions remain coherent with the adopted topology across the candidate runtime.
+        review_questions:
+        - Does runtime wiring realize the adopted edge topology coherently at ingress?
+        - Are edge and downstream boundary assumptions consistent with the adopted edge topology?
+        focus_areas:
+        - security
+        - architecture_alignment
 promotions:
   semantic_inputs:
   - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-edge_gateway.yaml

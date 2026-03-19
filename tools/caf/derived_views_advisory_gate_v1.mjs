@@ -154,6 +154,42 @@ async function writePacket(repoRoot, layout, instanceName, details, missingAbs) 
   return fp;
 }
 
+async function writeInternalErrorPacket(repoRoot, layout, instanceName, err) {
+  await fs.mkdir(layout.feedbackPacketsDir, { recursive: true });
+  const fp = path.join(layout.feedbackPacketsDir, `BP-${nowStampYYYYMMDD()}-derived-views-advisory-gate-internal-error.md`);
+  const message = String(err?.stack || err?.message || err || 'Unknown error');
+  const body = [
+    '# Feedback Packet - caf derived views advisory gate',
+    '',
+    `- Date: ${nowDateYYYYMMDD()}`,
+    cafBulletStampLine(),
+    `- Instance: ${instanceName}`,
+    '- Stuck At: tools/caf/derived_views_advisory_gate_v1.mjs',
+    '- Severity: advisory',
+    '- Observed Constraint: The derived-views advisory gate crashed before it could classify missing diagnostic views.',
+    '- Gap Type: Tool defect | Advisory gate runtime failure',
+    '',
+    '## Minimal Fix Proposal',
+    '- Fix the gate/tool defect instead of patching instance artifacts blindly.',
+    '- After the tool is fixed, rerun the exact gate or rerun the owning CAF command.',
+    '',
+    '## Evidence',
+    `- tool_error: ${message.split(/\r?\n/, 1)[0]}`,
+    '',
+    '## Autonomous agent guidance',
+    '- Treat this as a framework/tooling defect, not as an instance artifact defect.',
+    '- Prefer a small framework patch to the failing gate/helper or shared layout contract.',
+    `- After the tool fix, rerun: node tools/caf/derived_views_advisory_gate_v1.mjs ${instanceName}`,
+    '',
+    '## Human operator guidance',
+    '- Human operators: do not hand-edit derived views to compensate for a gate/tool crash.',
+    `- After the tool fix, rerun: node tools/caf/derived_views_advisory_gate_v1.mjs ${instanceName}`,
+    '',
+  ].join('\n');
+  await fs.writeFile(fp, ensureFeedbackPacketHeaderV1(body, { severity: 'advisory' }), 'utf8');
+  return fp;
+}
+
 async function main() {
   const instanceName = norm(process.argv[2]);
   if (!instanceName) die('Usage: node tools/caf/derived_views_advisory_gate_v1.mjs <instance_name>', 2);
@@ -171,4 +207,16 @@ async function main() {
   process.exit(0);
 }
 
-void main();
+void main().catch(async (err) => {
+  const instanceName = norm(process.argv[2]);
+  try {
+    if (instanceName && NAME_RE.test(instanceName)) {
+      const repoRoot = resolveRepoRoot();
+      const layout = getInstanceLayout(repoRoot, instanceName);
+      const fp = await writeInternalErrorPacket(repoRoot, layout, instanceName, err);
+      process.stderr.write(`Warning: Wrote advisory feedback packet: ${fp}\n`);
+    }
+  } catch {}
+  process.stderr.write(String(err?.stack || err?.message || err) + '\n');
+  process.exit(1);
+});

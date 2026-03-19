@@ -1,0 +1,110 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-AUTH-MOCK-01
+binds_to:
+  - atom_path: auth.mode
+    atom_value: mock
+  - atom_path: runtime.language
+    atom_value: python
+  - atom_path: plane.runtime_shape
+    atom_value: api_service_http
+requires_tbps:
+  - TBP-PY-01
+conflicts_with_tbps: []
+layout:
+  scaffold_directories:
+    - code/common/auth/
+    - code/ap/api/
+  role_bindings:
+    mock_auth_claims_module:
+      path_template: code/common/auth/mock_claims.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - Authorization
+        - Bearer
+        - tenant_id
+        - principal_id
+        - policy_version
+    mock_auth_ap_boundary_adapter:
+      path_template: code/ap/api/auth_context.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - resolve_auth_context
+        - HTTPException
+        - request.headers
+    mock_auth_ui_claim_builder:
+      path_template: code/ui/src/auth/mockAuth.js
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - Bearer
+        - tenant_id
+        - principal_id
+        - policy_version
+    mock_auth_ui_api_helper:
+      path_template: code/ui/src/api.js
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - Authorization
+        - X-Tenant-Id
+        - tenant context conflict
+extensions:
+  obligations:
+    - obligation_id: O-TBP-AUTH-MOCK-01-claim-contract
+      title: Materialize the mock auth claim-bearing contract helper used by policy and boundary surfaces.
+      required_capability: policy_enforcement
+      role_binding_key: mock_auth_claims_module
+    - obligation_id: O-TBP-AUTH-MOCK-01-boundary-adapter
+      title: Materialize the AP auth-context adapter that resolves the mock Authorization/Bearer contract for HTTP boundaries.
+      required_capability: api_boundary_implementation
+      role_binding_key: mock_auth_ap_boundary_adapter
+    - obligation_id: O-TBP-AUTH-MOCK-01-ui-claim-builder
+      title: Materialize the UI claim-builder that encodes the selected mock Authorization/Bearer payload and any explicit demo persona presets required by the declared UI flows.
+      required_capability: ui_frontend_scaffolding
+      role_binding_key: mock_auth_ui_claim_builder
+    - obligation_id: O-TBP-AUTH-MOCK-01-ui-api-helper
+      title: Materialize the UI API helper that emits the selected mock Authorization/Bearer contract, preserves claim-over-header conflict behavior, and keeps any demo persona posture explicit.
+      required_capability: ui_frontend_scaffolding
+      role_binding_key: mock_auth_ui_api_helper
+  gates:
+    - gate_id: G-AUTH-MOCK-CONTRACT-REALIZATION
+      title: Preserve the selected mock auth runtime contract across AP, policy, and UI surfaces
+      gate_kind: definition_of_done
+      attachment_scope: all_matching_tasks
+      required_capabilities:
+        - api_boundary_implementation
+        - policy_enforcement
+        - ui_frontend_scaffolding
+      criteria:
+        - The selected auth mode `mock` is realized through an explicit request-auth contract rather than disappearing behind generic policy or header-only prose.
+        - When tenant context adopts `auth_claim`, the canonical mock contract is an Authorization/Bearer claim surface; alternate tenant/principal headers are only inspected to reject conflicting carriers, not emitted as the primary happy-path contract.
+        - Mock auth helpers keep claim parsing and precedence behavior inside the stack-owned auth helper, AP boundary adapter, and UI API helper surfaces rather than scattering ad hoc token parsing across unrelated modules.
+        - The canonical mock Authorization/Bearer payload uses `tenant_id`, `principal_id`, and `policy_version`; unrelated request metadata stays outside the auth claim payload.
+        - UI claim construction and UI API header emission live in their actual owning surfaces rather than relying on a single proxy file to carry all evidence.
+        - When scaffolded UI flows include create/admin paths, the mock auth helper surfaces keep demo persona posture explicit (for example via named presets or clearly selected identities) rather than silently hardcoding a non-elevated principal that blocks the declared happy path.
+        - Runtime boundary handling preserves case-insensitive HTTP header access for Authorization/Bearer and alternate conflict-detection headers.
+      review_questions:
+        - Do AP/runtime entrypoints and policy seams name the selected mock auth contract explicitly rather than relying only on generic tenant headers?
+        - If `auth_claim` is adopted, do the UI claim-builder and UI API helper surfaces jointly issue the same explicit Bearer claim payload (`tenant_id`, `principal_id`, `policy_version`) that policy or boundary code resolves, without falling back to tenant/principal happy-path headers?
+        - If scaffolded UI flows include create/admin operations, is the chosen demo persona posture explicit in the UI auth helper surfaces rather than hidden behind a single hard-coded low-privilege identity?
+        - Do boundary/helper implementations preserve HTTP header case-insensitivity when resolving Authorization/Bearer inputs and alternate conflict-detection headers?
+      focus_areas:
+        - correctness
+        - architecture_alignment
+        - security
+      severity_threshold_override: high
+    - gate_id: G-AUTH-MOCK-HEADER-PRECEDENCE-COHERENCE
+      title: Keep mock auth realization coherent with tenant-context carrier precedence
+      gate_kind: coding_standard
+      attachment_scope: all_matching_tasks
+      required_capabilities:
+        - api_boundary_implementation
+        - policy_enforcement
+        - ui_frontend_scaffolding
+      criteria:
+        - Mock auth realization honors the adopted tenant-context carrier and conflict rule semantics instead of silently reverting to gateway-header precedence.
+        - Boundary, policy, and UI API helper surfaces fail explicitly when required tenant/principal identity cannot be derived from the selected mock contract.
+      review_questions:
+        - If claim-over-header is adopted, do auth, policy, and UI API helper surfaces preserve that precedence consistently?
+        - Are missing or malformed mock auth inputs handled explicitly rather than silently defaulting to an unsafe identity?
+      focus_areas:
+        - correctness
+        - security

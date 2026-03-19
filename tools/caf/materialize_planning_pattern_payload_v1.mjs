@@ -18,7 +18,8 @@
  * Constraints:
  * - No semantic inference.
  * - No auto-adoption of new patterns.
- * - Preserve existing promotions block content when present (this tool only guarantees selected_patterns correctness).
+ * - Preserve existing promotions block content when present.
+ * - Materialize adopted option choices mechanically from system_spec decision_resolutions_v1 so planning can fail-closed on option drift.
  *
  * Usage:
  *   node tools/caf/materialize_planning_pattern_payload_v1.mjs <instance_name>
@@ -35,6 +36,7 @@ import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlString } from './lib_yaml_v2.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { ensureFeedbackPacketHeaderV1, nowDateYYYYMMDD, nowStampYYYYMMDD } from './lib_feedback_packets_v1.mjs';
+import { collectAdoptedOptionSelections } from './extract_adopted_decision_options_v1.mjs';
 
 const require = createRequire(import.meta.url);
 // eslint-disable-next-line import/no-commonjs
@@ -226,9 +228,90 @@ function ensurePromotionsShape(existingPromotions) {
   return out;
 }
 
+function adoptedOptionChoiceKey(choice) {
+  return [
+    normalize(choice?.source),
+    normalize(choice?.evidence_hook_id),
+    normalize(choice?.pattern_id),
+    normalize(choice?.question_id),
+    normalize(choice?.option_set_id),
+    normalize(choice?.option_id),
+  ].join('|');
+}
+
+function filterAdoptedOptionChoicesForPlane(adoptedOptions, targetPlane, surfaceById) {
+  const out = [];
+  const seen = new Set();
+  for (const choice of Array.isArray(adoptedOptions) ? adoptedOptions : []) {
+    if (!choice || typeof choice !== 'object') continue;
+    const rec = surfaceById.get(normalize(choice.pattern_id));
+    if (!includeInPlane(rec?.plane, targetPlane)) continue;
+    const key = adoptedOptionChoiceKey(choice);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      source: normalize(choice.source),
+      evidence_hook_id: normalize(choice.evidence_hook_id),
+      pattern_id: normalize(choice.pattern_id),
+      question_id: normalize(choice.question_id),
+      option_set_id: normalize(choice.option_set_id),
+      option_id: normalize(choice.option_id),
+      summary: normalize(choice.summary),
+      payload: choice.payload && typeof choice.payload === 'object' ? choice.payload : {},
+    });
+  }
+  return out;
+}
+
 function dumpYaml(obj) {
-  // Keep output readable and stable.
-  return yaml.dump(obj, { noRefs: true, lineWidth: 120 });
+  // Keep output stable and force quoting for machine-managed scalar values so
+  // generated source-location strings like `foo.md:bar (status: adopt)` remain valid YAML.
+  return yaml.dump(obj, {
+    noRefs: true,
+    lineWidth: 120,
+    forceQuotes: true,
+    quotingType: "'",
+  });
+}
+
+function stableCanonicalize(value) {
+  if (Array.isArray(value)) return value.map((item) => stableCanonicalize(item));
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const key of Object.keys(value).sort()) {
+      out[key] = stableCanonicalize(value[key]);
+    }
+    return out;
+  }
+  return value;
+}
+
+function roundTripCheckPlanningPayloadYaml(yamlText, expectedObj, contextLabel) {
+  const parsed = parseYamlString(yamlText, contextLabel) || {};
+  const expectedCanon = stableCanonicalize(expectedObj);
+  const parsedCanon = stableCanonicalize(parsed);
+  const expectedJson = JSON.stringify(expectedCanon);
+  const parsedJson = JSON.stringify(parsedCanon);
+  if (expectedJson !== parsedJson) {
+    throw new Error(
+      `Round-trip mismatch for ${contextLabel}: emitted YAML reparsed to a different object shape.`
+    );
+  }
+  return parsed;
+}
+
+
+function salvagePromotionsFromUnreadablePayload(existingYaml, contextLabel) {
+  const lines = String(existingYaml ?? '').split(/\r?\n/);
+  const start = lines.findIndex((line) => line.trim() === 'promotions:');
+  if (start < 0) return ensurePromotionsShape(null);
+  const fragment = lines.slice(start).join('\n');
+  try {
+    const parsed = parseYamlString(fragment, `${contextLabel}:promotions_fragment`) || {};
+    return ensurePromotionsShape(parsed.promotions);
+  } catch {
+    return ensurePromotionsShape(null);
+  }
 }
 
 async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines) {
@@ -275,7 +358,7 @@ function inferDesignRetrievalProfile(layout) {
   return 'solution_architecture';
 }
 
-async function materializeOne(repoRoot, instanceName, layout, docPath, targetPlane, adoptedIds, surfacePath, surfaceById) {
+async function materializeOne(repoRoot, instanceName, layout, docPath, targetPlane, adoptedIds, adoptedOptionChoices, surfacePath, surfaceById) {
   const md = await fs.readFile(docPath, { encoding: 'utf8' });
   const block = extractCafManagedBlock(md, 'planning_pattern_payload_v1');
   if (!block) {
@@ -300,22 +383,16 @@ async function materializeOne(repoRoot, instanceName, layout, docPath, targetPla
   if (existingYaml) {
     try {
       existingObj = parseYamlString(existingYaml, `${docPath}:planning_pattern_payload_v1`) || null;
-    } catch (e) {
-      const pkt = await writeFeedbackPacket(
-        repoRoot,
-        instanceName,
-        'design-planning-payload-unreadable',
-        'Could not parse YAML inside CAF_MANAGED_BLOCK: planning_pattern_payload_v1',
-        [
-          `Fix YAML syntax in ${safeRel(repoRoot, docPath)} planning_pattern_payload_v1 block, then rerun /caf arch ${instanceName}.`,
-          `Preferred: rerun /caf arch ${instanceName} to regenerate design docs (do not patch ad-hoc).`,
-        ],
-        [
-          `file: ${safeRel(repoRoot, docPath)}`,
-          `error: ${String(e?.message ?? e)}`,
-        ]
-      );
-      return { ok: false, packet: pkt };
+    } catch {
+      // The block is CAF-managed/mechanical. If an earlier run emitted unreadable YAML,
+      // recover by rebuilding from authoritative sources and salvaging promotions when possible.
+      existingObj = {
+        generated_from: null,
+        promotions: salvagePromotionsFromUnreadablePayload(
+          existingYaml,
+          `${docPath}:planning_pattern_payload_v1`
+        ),
+      };
     }
   }
 
@@ -354,6 +431,7 @@ async function materializeOne(repoRoot, instanceName, layout, docPath, targetPla
 
   const existingGf = existingObj && typeof existingObj === 'object' ? existingObj.generated_from : null;
   const inferredProfile = inferDesignRetrievalProfile(layout);
+  const filteredAdoptedOptionChoices = filterAdoptedOptionChoicesForPlane(adoptedOptionChoices, targetPlane, surfaceById);
 
   const outObj = {};
   outObj.schema_version = 'planning_pattern_payload_v1';
@@ -361,10 +439,11 @@ async function materializeOne(repoRoot, instanceName, layout, docPath, targetPla
     retrieval_surface_path: safeRel(repoRoot, surfacePath),
     retrieval_profile: normalize(existingGf?.retrieval_profile) || inferredProfile,
     selected_patterns_source: 'system_spec_v1.md:decision_resolutions_v1 (status: adopt)',
+    adopted_option_choices_source: 'system_spec_v1.md:decision_resolutions_v1 (questions.options status: adopt)',
     materialized_by: 'tools/caf/materialize_planning_pattern_payload_v1.mjs',
   };
   outObj.notes = [
-    'Enrichment/promotions are deferred to planning (/caf plan). Reference:',
+    'Selected patterns and adopted option choices are materialized here as the design -> planning handoff. Planning still compiles obligations/tasks during /caf plan. Reference:',
     `reference_architectures/${instanceName}/design/playbook/design_summary_v1.md`,
     `reference_architectures/${instanceName}/design/playbook/pattern_obligations_v1.yaml`,
     `reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`,
@@ -374,13 +453,39 @@ async function materializeOne(repoRoot, instanceName, layout, docPath, targetPla
     core: selected.core,
     external: selected.external,
   };
+  outObj.adopted_option_choices = filteredAdoptedOptionChoices;
   outObj.promotions = ensurePromotionsShape(existingObj && typeof existingObj === 'object' ? existingObj.promotions : null);
+
+  const dumpedYaml = dumpYaml(outObj).trimEnd();
+  try {
+    roundTripCheckPlanningPayloadYaml(
+      dumpedYaml,
+      outObj,
+      `${docPath}:planning_pattern_payload_v1:generated`
+    );
+  } catch (e) {
+    const pkt = await writeFeedbackPacket(
+      repoRoot,
+      instanceName,
+      'design-planning-payload-roundtrip-failed',
+      'CAF-managed planning_pattern_payload_v1 did not round-trip parse after generation',
+      [
+        'Maintainer: fix tools/caf/materialize_planning_pattern_payload_v1.mjs so emitted YAML round-trips cleanly, then rerun /caf arch.',
+        `Do not hand-edit ${safeRel(repoRoot, docPath)}; the payload block is framework-owned and must be rewritten by the producer.`,
+      ],
+      [
+        `file: ${safeRel(repoRoot, docPath)}`,
+        `error: ${String(e?.message ?? e)}`,
+      ]
+    );
+    return { ok: false, packet: pkt };
+  }
 
   const newInner = [
     '## Planning pattern payload (CAF-managed)',
     '',
     '```yaml',
-    dumpYaml(outObj).trimEnd(),
+    dumpedYaml,
     '```',
   ].join('\n');
 
@@ -482,16 +587,17 @@ export async function internal_main(argv = process.argv.slice(2)) {
   }
 
   const adoptedIds = collectAdoptedPatternIds(decObj);
+  const adoptedOptionChoices = collectAdoptedOptionSelections(decObj, 'system');
 
   const { surfacePath, byId } = await loadRetrievalSurfaceIndex(repoRoot);
 
   // Materialize both docs.
-  const res1 = await materializeOne(repoRoot, instanceName, layout, appDesignPath, 'application', adoptedIds, surfacePath, byId);
+  const res1 = await materializeOne(repoRoot, instanceName, layout, appDesignPath, 'application', adoptedIds, adoptedOptionChoices, surfacePath, byId);
   if (!res1.ok) {
     process.stdout.write(res1.packet + '\n');
     return 3;
   }
-  const res2 = await materializeOne(repoRoot, instanceName, layout, cpDesignPath, 'control', adoptedIds, surfacePath, byId);
+  const res2 = await materializeOne(repoRoot, instanceName, layout, cpDesignPath, 'control', adoptedIds, adoptedOptionChoices, surfacePath, byId);
   if (!res2.ok) {
     process.stdout.write(res2.packet + '\n');
     return 3;

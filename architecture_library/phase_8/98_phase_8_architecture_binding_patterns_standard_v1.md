@@ -8,9 +8,9 @@ smearing that choice across CAF decision patterns, plane bindings, or technology
 
 An ABP is:
 
-- **Style-only**: it defines structural roles, dependency direction, and style invariants.
+- **Style-only**: it defines structural roles, dependency direction, logical inversion/composition shape, and style invariants.
 - **Plane-neutral**: it MUST NOT decide whether a role lives in CP, AP, DP, AI, or ST.
-- **Technology-neutral**: it MUST NOT bind frameworks, ORMs, runtimes, vendors, or packaging.
+- **Technology-neutral**: it MUST NOT bind frameworks, ORMs, runtimes, vendors, packaging, or DI-container/tooling choices.
 - **Fail-closed**: unknown style keys, missing manifests, or missing required PBP role mappings are errors.
 
 ## Separation of concerns (normative)
@@ -28,7 +28,8 @@ ABPs MUST NOT:
 - define CP↔AP contract surface choices (sync vs async, mixed, etc.);
 - define context-carrier semantics (headers, JWT, message envelope, etc.);
 - define file paths directly;
-- define framework-specific or ORM-specific implementation details.
+- define framework-specific or ORM-specific implementation details;
+- choose a DI container, registration API, lifetime model, or other IoC-framework/tooling detail.
 
 Those concerns belong to:
 
@@ -100,6 +101,8 @@ ABPs MAY define their own role vocabularies, but role names SHOULD stay close to
 
 For example, a Clean Architecture ABP might define roles such as:
 
+ABP may also require that composition happens at a `composition_root`-like role and that inner roles depend on abstractions rather than concrete outer implementations. Those are architecture-style constraints, not container/tooling choices.
+
 - `composition_root`
 - `inbound_adapters`
 - `application_use_cases`
@@ -130,6 +133,22 @@ Planners MUST NOT use ABPs to:
 - infer deployment topology,
 - infer CP UI deployment posture,
 - hardcode framework or ORM choices.
+
+## Optional semantic acceptance attachment surface (v1)
+
+If an ABP manifest needs to contribute style-owned semantic acceptance pressure, it SHOULD do so via a shared semantic-acceptance attachment shape that the framework-owned post-plan compiler can apply generically, rather than planner-specific prose rules.
+
+Recommended fields:
+
+- `attachment_id`
+- `attachment_scope` (`single_execution_anchor` or `all_matching_tasks`)
+- `required_capabilities[]`
+- `criteria[]`
+- `review_questions[]`
+- `focus_areas[]`
+- `severity_threshold_override`
+
+These attachments express architecture-style acceptance in task DoD / review questions. They do not encode framework, ORM, or file-path facts.
 
 ## Initial catalog expectation (v1)
 

@@ -13,8 +13,9 @@ ROLE_BINDINGS:
 - integration_adapters: Local integration adapters are represented as compose services for dependencies (e.g., `postgres`).
 
 Best-practice (normative for this TBP):
-- CP/AP services MUST use `build:` with `docker/Dockerfile.cp` and `docker/Dockerfile.ap` so developers do not need local Python tooling.
+- CP/AP services MUST use `build:` with `docker/Dockerfile.cp` and `docker/Dockerfile.ap` so developers do not need host-local language/runtime tooling for the selected stack.
 - `.env` MUST be a real file with non-secret local defaults (no placeholders), and `.gitignore` MUST ignore `.env` and `*.local`.
+- When an adopted database engine/runtime contract requires a canonical connection URL shape (for example PostgreSQL + SQLAlchemy), `.env` should carry that same canonical URL form rather than a drifting alternate example.
 
 ADDS_EVIDENCE_HOOKS:
 - E-TBP-COMPOSE-01-01: `docker/compose.candidate.yaml` exists.

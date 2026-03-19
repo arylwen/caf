@@ -12,6 +12,7 @@ These are **not** domain architecture patterns (those live under `architecture_l
 - **Meta-pattern highlight:** architectural tasks are parameterized by rails/TBPs (avoid “if postgres then …” branching; see MP-18).
 - **Anti-pattern highlight:** combinatorial sprawl (technology/language special-casing across workers/gates) is prohibited; see the new meta-pattern docs.
 - **Meta-pattern highlight:** deterministic scripts are composable (CLI + importable `internal_main` with no execution on import; bundle adjacent deterministic stages into a single postprocess tool; see MP-19).
+- **Meta-pattern highlight:** planner-owned skeletons may be followed by framework-owned deterministic enrichment; every new library terminal must have an explicit ownership path (see `caf_deterministic_enrichment_ownership_meta_pattern_v1.md`).
 - **Roadmap:** a staggered plan to extend library-owned option sets across CAF domain patterns.
 - **Meta-pattern highlight:** worker skills must not hardcode TBP IDs; bind via capability + role bindings (see `caf_no_tbp_id_leakage_in_worker_skills_meta_pattern_v1.md`).
 
@@ -35,6 +36,7 @@ This folder is primarily **maintainer-facing**. If you are using CAF to generate
 ## Key docs
 
 - `caf_meta_patterns_playbook_v1.md`
+- `caf_deterministic_enrichment_ownership_meta_pattern_v1.md`
 - `caf_meta_patterns_checklist_v1.md`
 - `meta_vs_domain_classification_rule_v1.md`
 - `caf_feedback_packet_protocol_meta_pattern_v1.md`

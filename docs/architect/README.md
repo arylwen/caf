@@ -6,9 +6,9 @@ This folder is for **software architects, solution architects, and platform engi
 
 It goes deeper than `docs/user/` and focuses on how CAF helps teams answer three durable questions:
 
-![CAF operating loop](../images/caf_operating_loop.svg)
+![CAF staged decision making](../images/caf_staged_decision_making.svg)
 
-*CAF is a continuous architecture-guided operating loop with retrieval, gates, and queryable state.*
+*CAF stages architectural decision-making: architecture direction first, implementation architecture second, then planning and candidate code.*
 
 1) **What architecture decisions did we make, and why?**
 2) **For this product or architecture intent, how big is the work?**
@@ -65,3 +65,14 @@ For deeper mechanics, start with:
 - `architecture_library/patterns/caf_meta_v1/caf_promotions_and_obligations_meta_patterns_v1.md`
 - `architecture_library/patterns/caf_meta_v1/caf_directory_and_enforcement_meta_patterns_v1.md`
 - `docs/maintainer/README.md`
+
+
+## Next best link
+
+[Mental model](01_mental_model.md) — Start with the traceability model behind the three architect questions CAF is designed to answer.
+
+## Top 3 related links
+
+- [Architect workflows](10_architect_workflows.md) — See how the PRD-first launch path fits into day-to-day architect use.
+- [CAF ask internals](06_caf_ask_internals.md) — Understand how architect questions map to durable ask context packs.
+- [PRD-first lifecycle](../user/15_prd_first_lifecycle.md) — Cross-check the public lifecycle framing against the architect view.

@@ -93,6 +93,13 @@ Immediately after the title, include these lines **in this exact order**:
 
 Additional `- Key: Value` lines MAY appear, but MUST come **after** the required four lines.
 
+Preferred optional fields when applicable:
+
+- `- Instance: <name>`
+- `- Stuck At: <tool_or_skill_path>`
+- `- Gap Type: <short classification>`
+- `- Issue Tracker: <url>` — use when the packet explicitly recommends strengthening a reusable framework/provider/gate seam so operators know where to file or update the follow-up.
+
 ---
 
 ## 4) Canonical body sections (normative)

@@ -1,0 +1,60 @@
+# reference_architectures/{{instance_name}}/spec/playbook/architecture_shape_parameters.yaml
+schema_version: "architecture_shape_parameters_v1"
+instance_name: "{{instance_name}}"
+created_at: "2026-01-14T00:00:00Z"  # update as needed
+
+template_instances:
+  - template_id: "CP"
+    template_version: "v1"
+    pins:
+      CP-1: "Declarative + Evaluative"
+      CP-2: "Authoritative Lifecycle Owner"
+      CP-3: "Human, Service, and Agent Identity Governance"
+      CP-4: "Centralized Policy Authoring"
+      CP-5: "Centralized Safety Gate Orchestration"
+      CP-6: "Unified Governance Integration"
+
+  - template_id: "AP"
+    template_version: "v1"
+    pins:
+      AP-1: "Ingress + Explicit Delegation"
+      AP-2: "Inline + Step-Level Enforcement"
+      AP-3: "Pre- and Mid-Execution Evaluation"
+      AP-4: "Pre- and Mid-Invocation Safety Gates"
+      AP-5: "Agent Orchestration Execution"
+      AP-6: "Synchronous + Deferred Aggregation"
+
+  - template_id: "DP"
+    template_version: "v1"
+    pins:
+      DP-1: "Logical Isolation (Enforced)"
+      DP-2: "Query/Computation Enforcement"
+      DP-3: "Access + Retention + Lineage Enforcement"
+      DP-4: "Data Plane Executes Inference"
+      DP-5: "Inline + Deferred Aggregation"
+
+  - template_id: "AI"
+    template_version: "v1"
+    pins:
+      AI-1: "Delegated Agent Identity"
+      AI-2: "Policy + Explicit Approval Authority"
+      AI-3: "Pre-Invocation + Step Boundary Evaluation"
+      AI-4: "Session + Tenant-Scoped Memory"
+      AI-5: "Pre-Action + Continuous Safety Gates"
+      AI-6: "Synchronous + Deferred Aggregation"
+
+  - template_id: "ST"
+    template_version: "v1"
+    pins:
+      ST-1: "Shared Storage with Logical Isolation"
+      ST-2: "Tenant-Keyed Primary Addressing"
+      ST-3: "Tenant-Partitioned Placement"
+      ST-4: "Retention + Hard Deletion"
+      ST-5: "Tenant-Scoped Backup and Restore"
+      ST-6: "Inline Evidence Emission"
+
+meta:
+  lifecycle_shape_status: "seeded_template_default"
+  lifecycle_shape_source: "caf-saas-init"
+  lifecycle_shape_contract: "phase_8_prd_lifecycle_integration_v1"
+  notes: "Pinned values define the governed_agentic_review starter for a boring SaaS review workflow with bounded agent orchestration."

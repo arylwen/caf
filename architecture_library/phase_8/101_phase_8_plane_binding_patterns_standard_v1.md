@@ -68,7 +68,7 @@ Rules:
 PBP manifests MAY include an `extensions` block that declaratively expresses:
 
 - **Obligations**: required plane artifact outputs that the planner must compile into Task Graph tasks.
-- **Gates**: *semantic* acceptance criteria (Definition of Done / coding standards / guardrails) that the planner compiles into Task Graph:
+- **Gates**: *semantic* acceptance criteria (Definition of Done / coding standards / guardrails) that the framework-owned post-plan compiler compiles into the final Task Graph after the planner emits the structural task graph:
   - `definition_of_done[]`
   - `semantic_review.review_questions[]` (when provided)
 
@@ -77,3 +77,17 @@ Rules (v1):
 - Declarations MUST reference intent via `role_binding_key` and/or `required_capability`.
 - Gates MUST NOT be compiled into deterministic filesystem checks.
 - If a gate cannot be deterministically attached to exactly one planner-emitted task, planning must fail closed.
+
+### Shared semantic acceptance attachment shape (v1 optional)
+
+When a PBP manifest needs to contribute semantic acceptance pressure, it SHOULD use the same conceptual fields as TBP gates / pattern attachments:
+
+- `attachment_id`
+- `attachment_scope` (`single_execution_anchor` or `all_matching_tasks`)
+- `required_capabilities[]` (or a plane-local role-binding mapping that resolves to them)
+- `criteria[]`
+- `review_questions[]`
+- `focus_areas[]`
+- `severity_threshold_override`
+
+These attachments are framework-collected semantic requirements for post-plan enrichment, not deterministic path checks.

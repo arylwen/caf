@@ -247,9 +247,10 @@ E) TBP resolution (fail-closed)
 - Do NOT infer TBPs from patterns here; only use the deterministic resolution output.
 
 F) Adopted decision options (fail-closed)
-- From `reference_architectures/<name>/spec/playbook/system_spec_v1.md` → `decision_resolutions_v1`:
-  - Collect `adopted_option_choices` as tuples:
-    - `(pattern_id, evidence_hook_id, question_id, option_set_id, option_id)`
+- Use the union of `planning_pattern_payload_v1.adopted_option_choices` from BOTH design payload blocks as the primary planner-visible adopted option source.
+- Cross-check that source against `reference_architectures/<name>/spec/playbook/system_spec_v1.md` → `decision_resolutions_v1`.
+- Collect `adopted_option_choices` as tuples:
+  - `(pattern_id, evidence_hook_id, question_id, option_set_id, option_id)`
   - Include only decisions where:
     - `status: adopt`, and
     - `resolved_values.questions` exists (non-empty), and
@@ -263,6 +264,7 @@ F) Adopted decision options (fail-closed)
 	      1) Preferred: rerun `/caf arch <name>` (design) so the CAF-managed planning payloads include all adopted decisions.
 	      2) If a pattern should not drive planning/code yet: change its `status` in `system_spec_v1.md` → `decision_resolutions_v1` from `adopt` to `defer`, then rerun `/caf arch <name>`.
 	      3) If you must hotfix: manually edit the CAF-managed `planning_pattern_payload_v1.selected_patterns` blocks to add the missing IDs (keep YAML valid), then rerun `/caf arch <name>`.
+- If the payload union and the spec-derived tuples disagree, FAIL-CLOSED with a feedback packet. The design post-gate should have caught this earlier; do not continue planning on drift.
 - Record the adopted option’s `summary` and `payload` (verbatim) for grounding; do not reinterpret.
 
 G) Resolved UI pins (optional; fail-closed when required but invalid)
@@ -277,228 +279,39 @@ G) Resolved UI pins (optional; fail-closed when required but invalid)
 - Treat `ui_product_surface_v1` as product-surface intent only; it MUST NOT override or duplicate technology pins.
 - If the resolved file is missing or the `ui` object cannot be read when required, FAIL-CLOSED.
 
-### Step 2 — Emit `pattern_obligations_v1.yaml`
+### Step 2 — Consume compiler-owned `pattern_obligations_v1.yaml`
 
-Write a schema-valid `pattern_obligations_v1.yaml` that enumerates obligations required to make a “boring SaaS” demo viable.
+Read the canonical compiler-owned obligations registry from:
 
-Hard rules:
-- Task IDs are NOT arbitrary. Every emitted task_id MUST match one of the canonical templates below (TG-00-*, TG-20-*, TG-30-*, TG-40-*, TG-90-*, TG-10-OPTIONS-*, TG-TBP-*).
-- The planner MUST NOT emit sequential TG-01/TG-02/TG-03 style ids for worker-dispatched capabilities.
-- If an obligation cannot be mapped to a canonical task id template, FAIL-CLOSED and write a feedback packet.
+- `reference_architectures/<name>/design/playbook/pattern_obligations_v1.yaml`
 
-- No framework assumptions.
-- `generated_from.inputs` MUST include all instance inputs used to compile obligations, plus:
-  - `reference_architectures/<name>/spec/guardrails/tbp_resolution_v1.yaml`
-  - `architecture_library/phase_8/tbp/atoms/<TBP_ID>/tbp_manifest_v1.yaml` for every TBP that contributes any obligation via `extensions.obligations`.
-  - `architecture_library/patterns/external_v1/definitions_v1/<PATTERN>.yaml` for every adopted option obligation emitted in section (9) (unique list).
-- Obligation ids are stable and deterministic.
-- Obligations MUST cite their sources (pattern ids, runtime shapes, boundary ids, resource names).
-Additional grounding rules (selected_pattern_ids):
+Ownership rules:
+- The planner MUST NOT hand-author, overwrite, or "repair" the full obligations artifact.
+- The planner consumes the compiled obligations registry and emits `task_graph_v1.yaml` that covers it.
+- If the compiled obligation registry is missing, invalid, or materially inconsistent with the task-graph problem the planner is asked to solve, FAIL-CLOSED and surface the CAF-owned packet path from the deterministic compiler / invariant gates.
 
-- `selected_pattern_ids` for each obligation MUST be a subset of the **canonical adopted decision pattern set** (from `system_spec_v1.md:decision_resolutions_v1 (status: adopt)`), not merely the design payload.
-  - It MUST NOT include pattern ids that were not adopted in `system_spec_v1.md`.
-  - If an obligation is not driven by any adopted pattern, set `selected_pattern_ids: []` (empty list is allowed by schema).
-- If you cite a pattern definition file under `sources` (e.g., `architecture_library/patterns/.../definitions_v1/<PATTERN>.yaml`), that `<PATTERN>` MUST be present in the adopted `selected_patterns` union. Otherwise FAIL-CLOSED (do not cite non-adopted patterns).
+What remains planner-owned:
+- task existence
+- dependencies
+- required capability routing
+- canonical task ids
+- baseline task contract
+- semantic / decision anchors needed for downstream deterministic enrichment
 
-Pattern-driven structural validation obligations (required)
+What is no longer planner-owned:
+- enumerating the full `pattern_obligations_v1.yaml` list
+- restating TBP extension obligations inline
+- serializing the obligations registry in chat or one-shot shell blobs
 
-Goal: make non-optionized (and optionized) adopted patterns first-class drivers of obligations and tasks, without bespoke if/then mapping.
-
-Rules (deterministic; no guessing):
-
-- Let `adopted_pattern_ids` be all `decision_resolutions_v1.decisions[*].pattern_id` where `status: adopt`.
-- For each `pattern_id` in `adopted_pattern_ids`:
-  - Resolve the pattern via the canonical retrieval surface JSONL to obtain:
-    - `definition_path`
-    - `plane`
-  - Emit exactly one obligation:
-
-    - obligation_id: `OBL-PAT-<pattern_id>`
-    - obligation_kind: `other`
-    - capability_id: `structural_validation`
-    - plane_scope (derived from `plane`):
-      - `control` → `CP`
-      - `application` → `AP`
-      - `data` → `DP`
-      - `both` (or unknown) → `cross_plane`
-    - description (single sentence):
-      - `"Adopted pattern <pattern_id>: validate structural alignment with the pattern definition of done."`
-    - selected_pattern_ids: `["<pattern_id>"]`
-    - sources (minimum):
-      1) `reference_architectures/<name>/spec/playbook/system_spec_v1.md`
-         - anchor: `decision_resolutions_v1 pattern_id=<pattern_id> status=adopt`
-      2) `<definition_path>`
-         - anchor: `definition_of_done + promotions (when present)`
-
-- Add every referenced `<definition_path>` to `generated_from.inputs` (unique list).
-
-Fail-closed:
-
-- If any adopted `pattern_id` cannot be resolved to a `definition_path` via the retrieval surface, STOP with a feedback packet (do not guess).
-
-
-
-
-Minimum obligation set to emit (if applicable):
-
-0) Pattern structural validation obligations (always when any patterns are adopted)
-- For each adopted pattern_id: `OBL-PAT-<pattern_id>`
-
-
-1) Runtime scaffold obligations (always)
-- `OBL-PLANE-CP-RUNTIME-SCAFFOLD`
-- `OBL-PLANE-AP-RUNTIME-SCAFFOLD`
-
-2) Per material contract (for each `boundary_id`)
-- `OBL-CONTRACT-<boundary_id>-AP`
-- `OBL-CONTRACT-<boundary_id>-CP`
-
-3) CP/AP policy surface (required when any material AP↔CP contract exists)
-- `OBL-CP-POLICY-SURFACE`
-- `OBL-AP-POLICY-ENFORCEMENT`
-
-4) Tenant context propagation (required when tenancy pattern(s) are selected OR a tenant carrier is explicitly adopted in the contract section)
-- `OBL-TENANT-CONTEXT-PROPAGATION`
-
-5) Auth mode (required when `ap_runtime_shape` implies an external API boundary; mock is acceptable)
-- `OBL-AP-AUTH-MODE`
-
-6) Per API surface candidate (only when `ap_runtime_shape` implies an external HTTP API)
-
-For each `R` in `resource_names` (as derived from `application_domain_model_v1.yaml`, with spec fallback only when the application domain model is incomplete):
-- `OBL-AP-RESOURCE-<R>-API`
-- `OBL-AP-RESOURCE-<R>-SERVICE`
-- `OBL-AP-RESOURCE-<R>-PERSISTENCE`
-
-6b) Per persisted system/control-plane aggregate (only when CP is active)
-
-For each `S` in `system_persisted_aggregate_names`:
-- `OBL-CP-ENTITY-<S>-PERSISTENCE`
-
-7) Enforcement-bar-required obligations (when required)
-
-Read these flags from:
-- `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml`
-
-If `candidate_enforcement_bar.runnable_policy.require_runtime_wiring == true`, emit:
-- `OBL-RUNTIME-WIRING`
-
-If `candidate_enforcement_bar.test_policy.require_unit == true`, emit:
-- `OBL-UNIT-TESTS`
-
-
-7b) Repo operator documentation obligation (always in implementation_scaffolding)
-
-If `lifecycle.generation_phase == implementation_scaffolding`, emit:
-- `OBL-REPO-README`
-  - capability_id: `repo_documentation`
-  - plane_scope: `cross_plane`
-  - description: `Produce a practical operator README for the companion repo (start/run/test/env) grounded in pins + TBPs.`
-
-This obligation is mandatory in `implementation_scaffolding`.
-Do **not** treat it as optional, advisory, or postprocess-repairable.
-If omitted, planning output is incomplete and should be rejected by gates rather than repaired by helper scripts.
-
-
-8) TBP extension obligations (when present)
-
-If any resolved TBP declares `extensions.obligations`, union those obligations into the compiled obligations list.
-
-Deterministic compilation rules:
-- For each `tbp_id` in `tbp_resolution_v1.yaml:resolved_tbps` (in listed order):
-  - Open `architecture_library/phase_8/tbp/atoms/<tbp_id>/tbp_manifest_v1.yaml` and parse as YAML.
-  - If `extensions.obligations` is missing or empty: continue.
-  - For each entry `o` in `extensions.obligations`:
-    - Require `o.obligation_id`, `o.title`, `o.required_capability`, `o.role_binding_key`.
-    - Require `o.required_capability` exists as a `capability_id` in `architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml`.
-    - Require `layout.role_bindings` contains key `o.role_binding_key`.
-    - Fail-closed if `o.obligation_id` collides with any already-emitted obligation_id (pattern-derived or earlier TBP-derived).
-    - Emit an obligation entry:
-      - obligation_id: `o.obligation_id`
-      - obligation_kind: `other`
-      - plane_scope (deterministic):
-        - If `o.required_capability` in {api_boundary_implementation, service_facade_implementation}: `AP`
-        - Else if `o.required_capability` == `persistence_implementation`: derive `AP` or `CP` from the emitting plane/domain input; if not derivable, use `cross_plane` and fail closed rather than guessing.
-        - Else if `o.required_capability` in {contract_scaffolding, runtime_wiring}: `cross_plane`
-        - Else: `cross_plane`
-      - capability_id: `o.required_capability`
-      - description: `o.title` (optionally append ` (TBP: <tbp_id>)` for clarity)
-      - sources (minimum 2):
-        - path: `reference_architectures/<name>/spec/guardrails/tbp_resolution_v1.yaml`
-          anchor: `resolved_tbps includes <tbp_id>`
-        - path: `architecture_library/phase_8/tbp/atoms/<tbp_id>/tbp_manifest_v1.yaml`
-          anchor: `extensions.obligations[obligation_id=<o.obligation_id>], role_binding_key=<o.role_binding_key>`
-      - selected_pattern_ids: []
-
-9) Adopted decision option obligations (when present)
-
-If `adopted_option_choices` is non-empty, emit one additional obligation per adopted option.
-
-Deterministic obligation id:
-- `OBL-OPT-<pattern_id>-<question_id>-<option_id>`
-- Normalize tokens deterministically:
-  - Uppercase all letters.
-  - Replace any character not in `[A-Z0-9]` with `-`.
-  - Collapse repeated `-` to a single `-`.
-  - Trim leading/trailing `-`.
-
-Deterministic obligation classification (no new decisions):
-	- Determine a category key:
-  - If `option_set_id` begins with:
-    - `ingress.` or `ui.` or `api.` or `resilience.` → category `api_edge`
-    - `security.` → category `security_policy`
-    - `tenant_context.` or `tenancy.` or `iam.` or `zero_trust.` or `policy.` or `policy_gating.` or `ai_safety.` or `agent.` or `channel.` → category `security_policy`
-    - `obs.` or `ops.` → category `ops_observability`
-    - `ai_observability.` or `agent_observability.` or `compliance.` or `compliance_evidence.` → category `ops_observability`
-    - `async.` or `data.` → category `data_async`
-    - `network.` → category `network_wiring`
-    - `cross_plane.` or `cp_ap.` or `edge.` → category `network_wiring`
-    - `service.` → category `service_runtime`
-    - `plane.` or `modeling.` → category `service_runtime`
-- otherwise → FAIL-CLOSED (unknown option_set_id namespace).
-  - Immediate mitigation to proceed (conflict-safe):
-    - In BOTH:
-      - `reference_architectures/<name>/spec/playbook/system_spec_v1.md`
-      - `reference_architectures/<name>/spec/playbook/application_spec_v1.md`
-    - Locate the matching decision entry under `ARCHITECT_EDIT_BLOCK: decision_resolutions_v1` (pattern_id/question_id).
-    - Ensure the decision does not contain any nested adopted options:
-      - If the decision `status` is `defer` or `reject`, set any nested option `status: adopt` to `status: defer`.
-      - If the decision `status` is `adopt`, and you cannot support this namespace yet, flip the decision `status` to `defer`.
-    - Then rerun: `/caf plan <name>` (no need to rerun `/caf arch` for this immediate unblock unless other blockers require it).
-  - Maintainer action:
-    - Open an issue at `[url]` and paste the full text of the newest `BP-*-planning-unknown-option-namespace` feedback packet.
-    - Request a deterministic mapping for this namespace (or add pattern-level promotions/obligation extensions so it contributes without bespoke mapping).
-- Map category → (obligation_kind, plane_scope, capability_id):
-  - `api_edge` → (`api_boundary`, `AP`, `api_boundary_implementation`)
-  - `security_policy` → (`auth`, `cross_plane`, `policy_enforcement`)
-  - `ops_observability` → (`other`, `cross_plane`, `observability_and_config`)
-  - `data_async` → (`persistence_boundary`, `cross_plane`, `persistence_implementation`)
-  - `network_wiring` → (`other`, `cross_plane`, `runtime_wiring`)
-  - `service_runtime` → (`other`, `AP`, `plane_runtime_scaffolding`)
-
-Obligation fields (deterministic):
-- `description` MUST be a single sentence:
-  - `"Adopted decision option <pattern_id>/<question_id>=<option_id>: <option_summary>"`
-- `selected_pattern_ids: ["<pattern_id>"]`
-- `sources` MUST include at minimum:
-  1) `reference_architectures/<name>/spec/playbook/system_spec_v1.md`
-     - anchor: `decision_resolutions_v1 decision pattern_id=<pattern_id>, question_id=<question_id>, adopted option_id=<option_id>`
-  2) `architecture_library/patterns/external_v1/definitions_v1/<pattern_file>.yaml`
-     - anchor: `caf.option_sets[option_set_id=<option_set_id>].options[option_id=<option_id>]`
-- If the option has a non-empty `payload`, append to the system_spec source anchor (briefly; no verbose dumps), e.g. `payload keys: [k1, k2]`.
-
-Fail-closed safety:
-- If any adopted option maps to a `capability_id` not present in `architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml`, FAIL-CLOSED.
-
-Obligation ordering:
-- Sort by `obligation_id`.
-
-Also write a TSV mirror `pattern_obligations_index_v1.tsv` to `reference_architectures/<name>/design/playbook/` with columns:
-- obligation_id	plane_scope	kind	primary_source
 
 ### Step 3 — Emit `task_graph_v1.yaml` covering all obligations
 
 Write a schema-valid `task_graph_v1.yaml` with tasks that cover every emitted obligation.
+
+Ownership note:
+- The planner remains responsible for task structure, baseline task contract, and semantic/decision anchors.
+- The planner MUST NOT spend tokens re-emitting library-owned semantic acceptance prose from adopted patterns/options/TBPs/PBPs/ABPs.
+- Those library-owned attachments are enriched mechanically during the scripted post-plan phase.
 
 Hard rules:
 - Every obligation MUST be covered by ≥1 task via a trace anchor token:
@@ -508,11 +321,22 @@ Output serialization safety (critical; prevents LLM output-token exhaustion):
 - The planner MUST write `task_graph_v1.yaml` as a file under the repo path.
 - Avoid single-command file writes containing large YAML (common 8–16k command-length limits). Prefer multiple small file edits/patches.
 - The planner MUST NOT print the full YAML (or large YAML fragments) in chat output.
-- If the task graph contains more than 10 tasks OR any single task is large, the planner MUST serialize in batches of **≤3 tasks per write**:
+- The planner MUST serialize `task_graph_v1.yaml` **one task per write** for all models and all task counts:
   - create/overwrite the file with header + `tasks:` first
-  - append tasks 1–3, then 4–6, etc., ensuring the file remains valid YAML after each batch
-  - after each batch, output only a short progress line (e.g., `wrote tasks 1–3/25`)
+  - append exactly one task at a time, ensuring the file remains valid YAML after each write
+  - after each write, output only a short progress line (e.g., `wrote task 1/25`)
 - After writing the file, output only a short summary (counts + file paths).
+
+Named CAF deliverables that MUST NOT be written as one whole-shell blob regardless of OS/shell:
+- `reference_architectures/<name>/design/playbook/pattern_obligations_v1.yaml`
+- `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
+- `reference_architectures/<name>/design/playbook/task_backlog_v1.md`
+- `reference_architectures/<name>/design/playbook/interface_binding_contracts_v1.yaml`
+
+Troubleshooting rule (non-negotiable):
+- If the runner hits command-length / output-length / buffer limits while writing a named deliverable, do **not** switch to printing the artifact in chat and do **not** fall back to a single huge shell write.
+- Continue using the artifact's prescribed write discipline (for `task_graph_v1.yaml`: one task per write).
+- If the runner still fails after following the prescribed write discipline, stop and surface a feedback packet that tells the human to retry `/caf plan <instance_name>` rather than inventing an alternate emission mode.
 
   - `pattern_obligation_id:<obligation_id>`
 - Every task MUST have exactly one `required_capabilities` entry.
@@ -593,6 +417,9 @@ Planner rule (canonical; deterministic):
   - tenant-context propagation / conflict handling
 - The combined task MUST cover those obligations in one task rather than splitting them into separate CP/AP/auth tasks.
 - Legacy split policy task ids (`TG-00-CP-policy-surface`, `TG-00-AP-policy-enforcement`, `TG-00-AP-auth-mode`) are compatibility-only and MUST NOT appear in new planning output.
+- The policy task MUST consume `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` as a required input so the selected `platform.auth_mode` is explicit in planning.
+- Baseline task wording MUST explicitly name the selected `platform.auth_mode` value in the task story (steps, DoD, or semantic_review.constraints_notes); do not let auth mode disappear behind generic policy prose.
+- If `platform.auth_mode == mock` and the adopted tenant-context carrier is `auth_claim`, the baseline task wording MUST make the mock claim-bearing contract explicit (for example a mock JWT or equivalent test token carrying `tenant_id`, `principal_id`, and `policy_version`). Do not silently drift to header-style semantics or describe generic tenant headers as the happy-path carrier.
 
 Dependency rule (deterministic):
 - `TG-35-policy-enforcement-core` depends on every emitted contract scaffolding task.
@@ -634,15 +461,18 @@ Required task steps (minimum):
 - Define a persistence boundary interface for the aggregate/resource aligned to the relevant plane domain model.
 - Implement repository selection via an injectable factory/wiring surface; DO NOT instantiate an in-memory repository directly inside runtime entry surfaces.
 - Align assumptions to resolved rails (database.engine + persistence.orm). If a DB engine is resolved, ensure the design is DB-ready (adapter/wiring points), even if DB-specific code is delivered by a TBP-derived task.
+- Explicitly name the selected `persistence.orm` and `schema_management_strategy` in the task story so downstream workers cannot collapse ORM-backed rails into a raw-SQL-only assumption.
 - When the task targets `TG-40-persistence-cp-*`, emit the persistence work into the control-plane code surface rather than the application-plane code surface.
 
 Required DoD bullets (minimum):
 - "Repository wiring is injectable and does not hard-wire an in-memory implementation for runtime."
 - "Persistence assumptions are aligned to resolved rails (database.engine + persistence.orm) and do not contradict resolved TBPs."
+- "The selected persistence.orm and schema_management_strategy are named explicitly and do not silently collapse to a raw-SQL-only posture when ORM-backed rails are selected."
 - "The persistence boundary is emitted into the plane-local path implied by ABP/PBP resolution for the active plane."
 
 Required semantic review question (minimum):
 - "Are persistence assumptions aligned to the resolved persistence rails and any TBP-derived DB obligations (no in-memory-only runtime)?"
+- "Does the task explicitly preserve the selected persistence.orm rather than silently degrading to a driver/raw-SQL-only assumption?"
 
 E2) UI tasks (generic, data-driven; when applicable)
 
@@ -716,6 +546,29 @@ Definition of Done (semantic; deterministic; minimum 3 lines):
 Semantic review:
 - severity_threshold: `blocker`
 - 3–7 review_questions that ask whether the implementation aligns with the adopted options and does not introduce new architecture decisions.
+
+F2) Library-owned semantic acceptance attachments (required; post-plan compiled)
+
+Do not hardcode technology facts or option-specific DoD / review language in planner conditionals.
+The planner must keep the semantic pressure visible by emitting the correct task structure (`required_capabilities`, dependencies, steps, and adopted-decision/obligation anchors), but the planner MUST NOT expand library-owned semantic acceptance prose into task-local `definition_of_done[]` / `semantic_review.review_questions[]`.
+
+Framework-owned post-plan compiler:
+- `tools/caf/task_graph_semantic_acceptance_enrichment_v1.mjs` collects active semantic acceptance from library-owned elements and enriches the planner-emitted `task_graph_v1.yaml` deterministically.
+- Active attachment sources remain:
+  - adopted pattern definitions: `caf.semantic_acceptance.attachments[]`
+  - adopted human questions / option sets / adopted options: `semantic_acceptance.attachments[]`
+  - resolved TBPs: `tbp_manifest_v1.yaml:extensions.gates[]`
+  - selected ABP / PBP manifests: optional shared semantic-acceptance attachment extensions when present
+
+Planner responsibilities (required):
+- Emit the concrete non-OPTIONS tasks whose `required_capabilities[]` make those attachments targetable.
+- Preserve adopted-option structural pressure via obligations and TG-10-OPTIONS-* tasks; do not collapse those obligations away just because the attachment prose is now script-owned.
+- Keep task `steps`, baseline `definition_of_done`, and baseline `semantic_review.review_questions` focused on the task's own implementation story; do not restate library-owned attachment prose there.
+- If planner output omits the concrete consumer task for an active attachment capability, the post-plan compiler will fail closed.
+
+Semantic wording rules:
+- Library-owned attachments must state what must be true, not file-path checks and not negative anti-checklists.
+- If any attachment criteria encode file paths or script-like checks, FAIL-CLOSED and request a library rewrite.
 
 G) Enforcement-bar-required wiring/tests (when required)
 
@@ -833,61 +686,17 @@ Semantic requirements:
 - In `semantic_review.constraints_notes`, explicitly list the covered TBP obligation_ids and the TBP role_binding_keys (names only) so workers can implement without guessing.
 
 
-I) TBP extension gates (when present)
+I) TBP extension gates (when present; post-plan compiled)
 
-If any resolved TBP declares `extensions.gates`, compile them into **semantic acceptance signals**.
+Treat `extensions.gates[]` as the TBP-owned form of the shared semantic-acceptance attachment contract.
 
-Hard rules (normative):
-- Gates are **not** deterministic checks. They are **Definition of Done / coding standards / guardrails**.
-- Do NOT compile gates into `path exists`, `file contains`, or any other script-like validation.
-- Gate criteria MUST remain semantic and must not embed concrete file paths.
-
-Deterministic compilation rules:
-
-1) For each `tbp_id` in `tbp_resolution_v1.yaml:resolved_tbps` (in listed order):
-   - Open `architecture_library/phase_8/tbp/atoms/<tbp_id>/tbp_manifest_v1.yaml`.
-   - If `extensions.gates` is missing or empty: continue.
-
-2) For each gate `g` in `extensions.gates`:
-   - Require `g.gate_id`, `g.gate_kind`, and `g.criteria[]` (non-empty).
-   - Phase applicability:
-     - If `g.phase_applicability` is present, apply the gate only when the current `lifecycle.generation_phase` is included.
-     - Otherwise apply in all supported planning phases.
-
-3) Resolve the target capability deterministically:
-   - If `g.required_capability` is present: use it.
-   - Else if `g.role_binding_key` is present:
-     - Find TBP obligations in `extensions.obligations` with the same `role_binding_key`.
-     - If none exist → FAIL-CLOSED (gate cannot attach).
-     - If the obligations map to more than one distinct `required_capability` → FAIL-CLOSED (ambiguous).
-     - Otherwise use that single `required_capability`.
-
-4) Attach the gate to exactly one task (deterministic):
-   - If a task `TG-TBP-<tbp_id>-<capability_id>` exists, attach the gate there.
-   - Else compute the same execution-anchor attachment target used in (H):
-     - choose a **non-TBP, non-OPTIONS** task requiring `capability_id`.
-   - If no valid execution-anchor exists (only selector tasks or none), emit a minimal `TG-TBP-<tbp_id>-<capability_id>` task (even if there were no TBP obligations for that capability) and attach the gate to it.
-   - Never attach TBP gates to selector/OPTIONS tasks.
-
-5) Compile gate content into the target task:
-   - For each string `c` in `g.criteria[]`:
-     - Append a line to `task.steps[]` (preferred):
-       - `TBP Gate (<tbp_id>/<g.gate_id>) [<g.gate_kind>]: <c>`
-     - If the task uses `definition_of_done[]`, also append the same line there.
-   - For each string `q` in `g.review_questions[]` (if present):
-     - Append a semantic review question to `task.semantic_review.review_questions[]`:
-       - `TBP Gate (<tbp_id>/<g.gate_id>): <q>`
-   - If `g.focus_areas[]` is present:
-     - Union into `task.semantic_review.focus_areas[]` (dedupe + stable sort).
-   - If `g.severity_threshold_override` is present:
-     - Raise the task's `semantic_review.severity_threshold` to the **most severe** of:
-       - current threshold
-       - override
-     - Severity order (most severe → least): `blocker` > `high` > `medium` > `low`.
-
-6) If any gate criteria appears to encode a file path or a script-like check, FAIL-CLOSED and request the TBP author to rewrite it as semantic acceptance criteria.
-
-
+Rules:
+- Do not attach TBP gates to selector/OPTIONS tasks.
+- Normalize `required_capability` / `required_capabilities[]` + `attachment_scope` using the F2 rules above.
+- The scripted post-plan compiler, not the planner, compiles TBP gate criteria into `definition_of_done[]` and TBP gate review questions into `semantic_review.review_questions[]`.
+- Preserve TBP provenance in the emitted line prefix:
+  - `TBP Gate (<tbp_id>/<gate_id>): <text>`
+- If a TBP gate cannot be attached deterministically under the shared attachment rules, FAIL-CLOSED.
 
 Definition of Done + Semantic Review (required):
 - Each task MUST include a backlog-style `definition_of_done` list (semantic criteria only; no file path assertions).

@@ -112,6 +112,22 @@ caf:
     - If an existing Plane Integration Contract section already pins modes, keep this consistent.
     anchors:
     - caf_pattern: CAF-XPLANE-01
+    semantic_acceptance:
+      attachments:
+      - attachment_id: cross_plane_mode_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - contract_scaffolding
+        - runtime_wiring
+        criteria:
+        - Cross-plane contracts and runtime wiring realize the adopted interaction mode explicitly at the boundary.
+        - Cross-plane interaction handling stays consistent with the adopted mode across contract and runtime assumptions.
+        review_questions:
+        - Do contract and runtime tasks realize the adopted cross-plane interaction mode explicitly and coherently?
+        - Is the adopted cross-plane mode preserved without introducing a second implicit interaction shape?
+        focus_areas:
+        - architecture_alignment
+        - maintainability
 promotions:
   semantic_inputs:
   - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-XPLANE-01.yaml

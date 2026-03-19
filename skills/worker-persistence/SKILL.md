@@ -58,6 +58,7 @@ Rails rule (non-negotiable):
 
 Backend posture selection rule (deterministic; minimize tech-specific DoD):
 - Read `caf/profile_parameters_resolved.yaml` and determine the resolved `database.engine` / `platform.database_engine`.
+- Read `persistence.orm` / `platform.persistence_orm` from `caf/profile_parameters_resolved.yaml` and preserve that realization choice explicitly in production persistence code.
 - Normalize the engine to `engine_key` (lowercase, use `_` for separators). Examples: `postgres`, `mysql`, `sqlite`.
 - Derive the expected adapter surface role binding key: `${engine_key}_adapter_module`.
 - If a database engine is resolved (non-empty / not `none`):
@@ -76,7 +77,7 @@ Backend posture selection rule (deterministic; minimize tech-specific DoD):
   - do not defer repository factory ownership to an engine wiring worker.
 - Default behavior for runtime selection when a DB engine is resolved:
   - If `DATABASE_URL` is missing/empty, repository_factory MUST fail closed with a clear runtime error explaining that the resolved engine requires DB wiring.
-  - If `DATABASE_URL` is present, repository_factory selects the engine-backed repository only when the URL scheme matches the resolved engine (for postgres: `postgres://` or `postgresql://`).
+  - If `DATABASE_URL` is present, repository_factory selects the engine-backed repository only when the shared runtime helper accepts it for the resolved engine (for postgres: canonical SQLAlchemy PostgreSQL URLs such as `postgresql+psycopg://...`, while legacy compatibility forms like `postgresql://...` or `postgres://...` may be normalized by the shared helper).
   - If the URL scheme does not match the resolved engine, repository_factory MUST fail closed.
   - Do not silently return an in-memory/demo/default repository from production code paths.
 
@@ -85,6 +86,14 @@ Backend posture selection rule (deterministic; minimize tech-specific DoD):
 - DO NOT instantiate an in-memory repository directly inside AP runtime routes/handlers.
 - Provide an injectable repository wiring surface (factory/provider) so runtime can select the appropriate backend based on resolved rails + environment.
 - If DB-specific adapter code is produced by a TBP task, your persistence work MUST still provide the integration interface and injection points required to adopt that adapter without rewrites.
+
+Persistence ORM realization rule (non-negotiable):
+- If `persistence.orm == sqlalchemy_orm`, production persistence code MUST realize ORM-backed surfaces explicitly.
+  - Acceptable signals include SQLAlchemy engine/session/model/bootstrap surfaces (for example `create_engine`, `Session`/`sessionmaker`, mapped models, or metadata bootstrap hooks).
+  - Do NOT satisfy ORM-backed rails with raw `psycopg`/cursor-only repository logic in production modules.
+  - If `schema_management_strategy == code_bootstrap`, the ORM-backed persistence boundary MUST expose and invoke a deterministic bootstrap hook (for example metadata create-all) without leaking transport concerns.
+- If `persistence.orm == raw_sql`, direct driver/cursor delegation may be used, but the repository boundary and fail-closed runtime selection rules above still apply.
+- If the selected ORM cannot be realized from the available TBP/adapter surfaces, FAIL-CLOSED instead of silently degrading to a different persistence posture.
 
 - You MUST open and use every `task.inputs[]` where `required: true`.
 - In your task report, include an **Inputs consumed** section listing each required input and what you derived from it.
@@ -113,6 +122,7 @@ Schema management strategy alignment (generic):
 - Read `schema_management_strategy` from `caf/profile_parameters_resolved.yaml`.
 - If `schema_management_strategy: code_bootstrap`:
   - Ensure there is a deterministic schema initialization hook within the persistence boundary (either provided by the adapter surface or implemented in persistence code) that is invoked at startup or on first use, without leaking transport concerns into persistence.
+  - When `persistence.orm` is ORM-backed, the bootstrap hook MUST remain ORM-owned (for example metadata/bootstrap surfaces), not a raw driver-only cursor bootstrap.
 - If `schema_management_strategy` indicates migrations (e.g., `alembic_migrations`):
   - Do not silently bootstrap schema at runtime.
   - Ensure the persistence boundary is compatible with migrations posture (the schema init hook must be absent or a no-op, and the companion repo includes clear entrypoints/docs for applying migrations per the TBP).
@@ -136,6 +146,7 @@ Multi-writer prevention (generic):
 - Refuse if any intended write is outside the derived allowed write paths for the instance.
 - Refuse if any output artifact class is not in the derived allowed artifact classes.
 - Refuse if forbidden actions would be violated (for example generating production code).
+- Refuse if selected ORM/auth realization choices in `caf/profile_parameters_resolved.yaml` would be silently degraded in production code (for example `sqlalchemy_orm` emitted as raw cursor-only repositories).
 
 
 

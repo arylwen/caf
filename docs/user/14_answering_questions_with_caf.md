@@ -86,3 +86,14 @@ That supports three core question families:
 Notes:
 - File → feature impact becomes much stronger after `/caf build`, when the companion workspace exists.
 - CAF remains fail closed: ambiguity should produce a feedback packet rather than speculation.
+
+
+## Next best link
+
+[PRD-first lifecycle](15_prd_first_lifecycle.md) — Make sure the right lifecycle artifacts exist before you lean on `/caf ask`.
+
+## Top 3 related links
+
+- [Quickstart](03_quickstart.md) — Build the minimal artifact path for a new instance.
+- [Feedback packets and debugging](08_feedback_packets_and_debugging.md) — Recover cleanly when the ask surface fails closed.
+- [Decision visibility](../architect/02_decision_visibility.md) — Go deeper on one of the three architect question families.

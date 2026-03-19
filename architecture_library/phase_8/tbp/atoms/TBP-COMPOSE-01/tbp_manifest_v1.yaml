@@ -85,6 +85,7 @@ extensions:
         - Service-to-service endpoints are expressed via internal DNS/service names and ports; avoid hardcoding host-specific addresses.
       review_questions:
         - Are any credentials embedded directly in runtime wiring configuration?
+        - Do cross-service URLs inside compose-backed local runs use service DNS names rather than localhost?
       focus_areas: [security, portability]
       severity_threshold_override: high
 
@@ -94,7 +95,7 @@ extensions:
       required_capability: runtime_wiring
       criteria:
         - Runtime wiring includes explicit services for CP and AP (and DB/event runtime when adopted), with clear role names matching the plane contract.
-        - CP/AP services use compose builds (Dockerfile-based) so developers do not need local Python tooling.
+        - CP/AP services use compose builds (Dockerfile-based) so developers do not need host-local language/runtime tooling for the selected stack.
         - Port exposure and volumes are minimal and documented; local dev conveniences are isolated and optional.
       review_questions:
         - Do service names and roles align with the CP/AP plane boundary and the adopted integration contract?

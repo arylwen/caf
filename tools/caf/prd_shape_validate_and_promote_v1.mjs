@@ -23,6 +23,8 @@ import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlString } from './lib_yaml_v2.mjs';
 import { annotatePrdPromoted, dumpYamlStable } from './lib_shape_lifecycle_v1.mjs';
+import { createScopedCheckpoint } from './lib_checkpoint_v1.mjs';
+import { renderFeedbackPacketV1 } from './lib_feedback_packets_v1.mjs';
 import { parsePrdMarkdownV1 } from './lib_prd_parse_v1.mjs';
 import { extractAllowedValuesFromParameterizedTemplatesMd } from './lib_param_allowed_values_from_md_v1.mjs';
 
@@ -112,6 +114,22 @@ function parseArgs(argv) {
   }
   return out;
 }
+
+
+const PRD_CHECKPOINT_LABEL = 'prd_promoted';
+const PRD_CHECKPOINT_ENTRIES = [
+  'product/PRD.md',
+  'product/PLATFORM_PRD.md',
+  'product/PRD.resolved.md',
+  'product/PLATFORM_PRD.resolved.md',
+  'spec/playbook/prd_extract_v1.json',
+  'spec/playbook/platform_prd_extract_v1.json',
+  'spec/playbook/prd_resolved_extract_v1.json',
+  'spec/playbook/platform_prd_resolved_extract_v1.json',
+  'spec/playbook/architecture_shape_parameters.proposed.yaml',
+  'spec/playbook/architecture_shape_parameters.proposed.rationale.json',
+  'spec/playbook/architecture_shape_parameters.yaml',
+];
 
 function buildEvidenceIndexFromPrd(prdObj) {
   const capsById = new Map();
@@ -368,29 +386,19 @@ function normalizeInferredPins(rationaleObj) {
   return Object.keys(out).length ? out : null;
 }
 
-function formatFeedbackPacket({ instanceName, observedConstraint, minimalFixLines, evidenceLines }) {
-  return [
-    '# Feedback Packet - caf prd shape validate + promote',
-    '',
-    `- Date: ${nowDateYYYYMMDD()}`,
-    cafBulletStampLine(),
-    `- Instance: ${instanceName}`,
-    `- Stuck At: tools/caf/prd_shape_validate_and_promote_v1.mjs`,
-    `- Severity: blocker`,
-    `- Observed Constraint: ${observedConstraint}`,
-    `- Gap Type: Schema violation`,
-    '',
-    '## Minimal Fix Proposal',
-    ...minimalFixLines.map((l) => `- ${l}`),
-    '',
-    '## Evidence',
-    ...(evidenceLines.length ? evidenceLines.map((e) => `- ${e}`) : ['- (none)']),
-    '',
-    '## Autonomous agent guidance',
-    '- Autonomous agents with reasoning capabilities MUST apply the edits described in this packet before continuing.',
-    '- After applying the fix, resume the current CAF workflow step; rerun the relevant command (/caf arch, /caf plan, or /caf build) only if required by your runner.',
-    '',
-  ].join('\n');
+function formatFeedbackPacket({ instanceName, observedConstraint, minimalFixLines, evidenceLines, humanGuidanceLines = [] }) {
+  return renderFeedbackPacketV1({
+    title: 'caf prd shape validate + promote',
+    instanceName,
+    stuckAt: 'tools/caf/prd_shape_validate_and_promote_v1.mjs',
+    severity: 'blocker',
+    status: 'pending',
+    observedConstraint,
+    gapType: 'Schema violation | PRD promotion',
+    minimalFixLines,
+    evidenceLines: evidenceLines.length ? evidenceLines : ['(none)'],
+    humanGuidanceLines,
+  });
 }
 
 export async function internal_main(argv) {
@@ -440,6 +448,10 @@ export async function internal_main(argv) {
       observedConstraint: errors.join(' | '),
       minimalFixLines: fixes,
       evidenceLines: evidence,
+      humanGuidanceLines: [
+        'Correct the missing PRD promotion inputs, then rerun /caf prd <name>.',
+        'Do not bypass the validator by copying stale proposed files into authoritative surfaces.',
+      ],
     });
     const pktAbs = path.join(feedbackDirAbs, `BP-${nowStampYYYYMMDD()}-prd-shape-validate-missing-input.md`);
     await writeUtf8(repoRootAbs, instanceRootAbs, pktAbs, pkt);
@@ -560,6 +572,10 @@ export async function internal_main(argv) {
         prdSourceRel,
         ...errors.slice(0, 30).map((e) => `error: ${e}`),
       ],
+      humanGuidanceLines: [
+        'Fix the PRD-derived proposal and rationale, then rerun /caf prd <name>.',
+        'If the PRD source changed materially, rerun the full /caf prd workflow rather than hand-editing authoritative shape files.',
+      ],
     });
     const pktAbs = path.join(feedbackDirAbs, `BP-${nowStampYYYYMMDD()}-prd-shape-validate-failed.md`);
     await writeUtf8(repoRootAbs, instanceRootAbs, pktAbs, pkt);
@@ -571,6 +587,36 @@ export async function internal_main(argv) {
     const promotedObj = annotatePrdPromoted(proposedObj, rationaleObj?.source_prd_path || prdSourceRel, nowIsoTimestamp());
     await ensureDir(repoRootAbs, instanceRootAbs, path.dirname(authoritativeAbs));
     await writeUtf8(repoRootAbs, instanceRootAbs, authoritativeAbs, dumpYamlStable(promotedObj));
+    try {
+      await createScopedCheckpoint(instanceRootAbs, PRD_CHECKPOINT_LABEL, PRD_CHECKPOINT_ENTRIES, {
+        instance: instanceName,
+        source: 'caf-prd',
+        lifecycle_shape_status: 'prd_promoted',
+        source_prd_path: rationaleObj?.source_prd_path || prdSourceRel,
+      });
+    } catch (e) {
+      await ensureDir(repoRootAbs, instanceRootAbs, feedbackDirAbs);
+      const pkt = formatFeedbackPacket({
+        instanceName,
+        observedConstraint: 'PRD promotion succeeded but PRD checkpoint creation failed',
+        minimalFixLines: [
+          'Inspect filesystem permissions under the instance root.',
+          'Rerun /caf prd <name> so CAF can recreate the PRD checkpoint after promotion.',
+        ],
+        evidenceLines: [
+          `instance_root=${path.relative(repoRootAbs, instanceRootAbs).replace(/\\/g, '/')}`,
+          `checkpoint_label=${PRD_CHECKPOINT_LABEL}`,
+          `checkpoint_error=${String(e?.message ?? e)}`,
+        ],
+        humanGuidanceLines: [
+          'Promotion already updated the authoritative shape; do not hand-edit packet status to bypass the missing checkpoint.',
+          'Fix the checkpoint write failure, rerun /caf prd <name>, then continue with /caf arch <name>.',
+        ],
+      });
+      const pktAbs = path.join(feedbackDirAbs, `BP-${nowStampYYYYMMDD()}-prd-checkpoint-create-failed.md`);
+      await writeUtf8(repoRootAbs, instanceRootAbs, pktAbs, pkt);
+      die('PRD checkpoint creation failed after promotion.', 5);
+    }
   }
 
   console.log(`OK: PRD shape proposal validated${args.promote ? ' and promoted' : ''} for instance '${instanceName}'.`);

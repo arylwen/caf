@@ -2,7 +2,7 @@
 name: worker-python-packaging
 description: >
   Deterministically materialize Python package marker files (__init__.py) required
-  for importable candidate code packages per TBP-PY-01.
+  for importable candidate code packages.
 status: active
 ---
 
@@ -19,7 +19,7 @@ status: active
 ## Purpose
 
 Ensure candidate Python code packages are importable by materializing missing
-`__init__.py` marker files under the TBP-declared Python code root (default: `code/`).
+`__init__.py` marker files under the resolved Python code root returned by role-binding expectations.
 
 This worker is **mechanical**:
 - no architecture decisions
@@ -31,18 +31,18 @@ This worker is **mechanical**:
 - `companion_repositories/<name>/**` (candidate repo)
 - The assigned Task Graph task (from `caf/task_graph_v1.yaml` or the reference_architectures copy)
 - `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` (write rails)
-- `architecture_library/phase_8/tbp/atoms/TBP-PY-01/tbp_manifest_v1.yaml` (code root + obligation role bindings)
+- `reference_architectures/<name>/spec/guardrails/tbp_resolution_v1.yaml` (resolved TBP set used by the role-binding resolver)
 
-## TBP role-binding enforcement (mandatory)
+## Role-binding enforcement (mandatory)
 
-Before writing any markers, resolve TBP role bindings and obey the manifest-declared paths.
+Before writing any markers, resolve role-binding expectations for this capability and obey the returned paths.
 
 Run (from repo root):
 - `node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance_name> --capability python_package_markers_materialization`
 
 Then:
-- Ensure the role binding path(s) exist (at minimum: `code/__init__.py`).
-- Do NOT invent alternate layouts (e.g., `src/`) unless the TBP manifest declares them.
+- Ensure every returned role-binding path for this capability exists.
+- Do NOT invent alternate layouts (e.g., `src/`) unless the resolved role-binding expectations declare them.
 
 ## Execution
 

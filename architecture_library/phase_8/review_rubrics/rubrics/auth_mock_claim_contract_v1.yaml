@@ -1,0 +1,34 @@
+schema_version: v1
+kind: review_rubric
+rubric_id: RR-AUTH-MOCK-CLAIM-CONTRACT-01
+title: Mock auth claim-contract coherence (v1)
+applies_when:
+  - condition: "task.semantic_review mentions G-AUTH-MOCK-CONTRACT-REALIZATION OR G-AUTH-MOCK-HEADER-PRECEDENCE-COHERENCE"
+checks:
+  - check_id: RR-AUTH-MOCK-01
+    severity: high
+    category: correctness
+    rule: >
+      The shared auth helper, AP boundary adapter, UI claim-builder, and UI API helper surfaces
+      realize one coherent mock Authorization/Bearer claim contract when the task-managed auth
+      contract requires it; the contract must not disappear into generic tenant/principal
+      header-only behavior, the canonical Bearer payload must carry `tenant_id`, `principal_id`,
+      and `policy_version`, and HTTP header access must remain case-insensitive at the runtime
+      boundary.
+    evidence_hints:
+      - "inspect the task-touched shared auth helper, AP boundary, UI claim-builder, and UI API helper files"
+      - "run node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance> --capability policy_enforcement|api_boundary_implementation|ui_frontend_scaffolding as needed"
+      - "look for one coherent Bearer/Authorization contract rather than per-file ad hoc token parsing"
+      - "fail if the UI claim payload omits `policy_version` or packs unrelated request metadata into the canonical auth claim"
+      - "fail if the TBP points at a proxy UI file while the real contract is split across separate claim-builder and API helper surfaces"
+      - "prefer validator-backed authenticated AP runtime proof on the TBP role binding rather than a bespoke post-build branch"
+  - check_id: RR-AUTH-MOCK-02
+    severity: high
+    category: security
+    rule: >
+      When the task-managed tenant-context contract adopts claim-over-header semantics, alternate
+      tenant/principal headers may be inspected only for conflict rejection and must not become the
+      primary happy-path carrier across the AP boundary, shared auth helper, or UI API helper.
+    evidence_hints:
+      - "inspect auth context / policy helper code and UI API helper code for explicit conflict rejection behavior and case-insensitive header resolution"
+      - "fail if X-Tenant-Id or X-Principal-Id becomes the primary required carrier while Authorization/Bearer is optional or absent"

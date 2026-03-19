@@ -296,6 +296,36 @@ Some models (or constrained environments) time out or degrade when asked to upda
 
 ---
 
+### MP-23: Deterministic enrichment ownership must be explicit
+
+CAF may use deterministic post-plan or post-build enrichment when the content being attached is already framework-owned and repetitive.
+
+#### Rules
+
+- Keep the planner focused on the minimal structural skeleton:
+  - task ids
+  - dependencies
+  - capability routing
+  - baseline task contract
+  - semantic/trace anchors
+  - task-local hints required for deterministic targeting
+- Use deterministic enrichers only for framework-owned or library-authored repetitive pressure such as:
+  - semantic acceptance attachments
+  - required inputs implied by resolved rails
+  - derived binding-contract artifacts
+- Do not use enrichers to compensate for missing planner-owned semantic artifacts. If the planner omitted a semantic artifact, strengthen instructions and fail closed.
+- Every new library terminal or realization option must have an explicit ownership path:
+  - planner-owned carrier
+  - deterministic enricher/deriver (if any)
+  - verifying gate
+- Prefer declarative matcher kinds and artifact classes over hardcoded TBP- or technology-specific conditionals in generic gates.
+
+#### Why this matters
+
+- Keeps planner prompts smaller and more stable.
+- Prevents worker-local lore from becoming the only place where framework rules live.
+- Makes template-default decisions safer: a terminal should not become the default until its ownership path is first-class.
+
 ## 6. Avoid duplication: a single home for a choice
 
 ### MP-12: If a dedicated contract section exists, do not duplicate decisions elsewhere

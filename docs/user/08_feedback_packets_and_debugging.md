@@ -25,6 +25,7 @@ Tips:
 - Prefer fixing the *root contract* over patching downstream artifacts.
 - Treat advisory packets as signals, but keep fail-closed behavior for correctness.
 - When a packet names an exact `node tools/caf/...` command, copy that command verbatim. Do not guess helper names and do not drop required flags such as `--profile=...`.
+- When a packet recommends strengthening a reusable framework/provider seam, prefer filing or updating the linked issue instead of keeping the fix as local operator lore.
 - `/caf arch` and `/caf plan` are not general-purpose overwrite commands. If a packet tells you to reset first, run the exact reset helper before rerunning the CAF command:
   - architecture scaffolding reset: `node tools/caf/architecture_scaffolding_reset_v1.mjs <instance> overwrite`
   - implementation/design reset: `node tools/caf/implementation_reset_v1.mjs <instance> overwrite`

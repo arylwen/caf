@@ -9,13 +9,13 @@ This directory defines a parallel, *optional* track where maintainers may run sm
 Maintainer/audit scripts that operate on the *library itself* live under `tools/caf-meta/`.
 This folder is intentionally separate from `tools/caf/` (which contains instance/runtime helpers).
 
-
 ## Contracts (keep scripts + skills aligned)
 
 - `tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md`
 - `tools/caf/contracts/decision_candidates_block_parsing_contract_v1.md`
 - `tools/caf/contracts/retrieval_context_blob_contract_v1.md`
 - `tools/caf/contracts/deployment_identity_contract_v1.md`
+- `tools/caf/contracts/enrichment_ownership_map_v1.md`
 
 ## What scripts MAY do (mechanical only)
 
@@ -56,10 +56,12 @@ the file system work to reduce token cost.
 
 - `playbook_gate_v1.mjs`: deterministic caf-arch Step 5e coverage gate (Guardrails enforcement bar → Task Graph capabilities).
   - Usage: `node tools/caf/playbook_gate_v1.mjs <instance_name>`
+- `compile_pattern_obligations_v1.mjs`: deterministic compiler for `design/playbook/pattern_obligations_v1.yaml` from resolved rails, planning payloads, domain models, contract declarations, and TBP manifests.
 - `pattern_obligation_gate_v1.mjs`: deterministic caf-arch Step 5f coverage gate (pattern obligations → Task Graph trace anchors).
-- `post_plan_gate_v1.mjs`: thin wrapper that runs `playbook_gate_v1.mjs` then `pattern_obligation_gate_v1.mjs` (caf-arch Step 5e+5f consolidation).
-  - Usage: `node tools/caf/pattern_obligation_gate_v1.mjs <instance_name>`
-  - Intended to be invoked by `skills/caf-arch` when available.
+- `task_graph_obligation_trace_enrichment_v1.mjs`: deterministic task-graph trace attachment for compiler-owned obligation families using canonical task ids / option anchors / TBP capability routing.
+- `post_plan_gate_v1.mjs`: thin wrapper that runs the deterministic post-plan chain (obligation compilation, semantic acceptance enrichment, required-input enrichment, UI-seed semantic enrichment, obligation-trace enrichment, playbook/obligation/task-graph gates, interface-binding derivation/gate, task-plan generation).
+  - Usage: `node tools/caf/post_plan_gate_v1.mjs <instance_name>`
+  - Intended to be invoked by `skills/caf-arch` when available. Ownership guidance for what belongs in this chain lives in `tools/caf/contracts/enrichment_ownership_map_v1.md`.
 
 - `planning_invariant_gate_v1.mjs`: producer-side planning invariant check (planning outputs exist + contract/task trace anchors + enforcement-bar capability coverage).
   - Usage: `node tools/caf/planning_invariant_gate_v1.mjs <instance_name>`
@@ -89,6 +91,9 @@ the file system work to reduce token cost.
 - `build_gate_v1.mjs`: deterministic caf-build-candidate gate (required artifacts + rail sanity).
   - Usage: `node tools/caf/build_gate_v1.mjs <instance_name>`
 
+- `build_technology_choice_realization_gate_v1.mjs`: contract-owned technology realization gate for emitted companions (role-binding expectations + validator-backed runtime smoke (for example import/authenticated boundary smoke where declared by TBP manifests)).
+  - Usage: `node tools/caf/build_technology_choice_realization_gate_v1.mjs <instance_name>`
+
 - `build_postgate_companion_runnable_v1.mjs`: deterministic post-gate for runnable candidate integrity (compose sanity + common stray entrypoints). Compose naming is validated against `deployment.stack_name` from the resolved guardrails view.
   - Usage: `node tools/caf/build_postgate_companion_runnable_v1.mjs <instance_name>`
   - Intended to run after all build tasks complete; writes a feedback packet and fails closed on common non-runnable outputs.
@@ -96,6 +101,7 @@ the file system work to reduce token cost.
 - `gen_build_dispatch_manifest_v1.mjs`: deterministic derived view for build dispatch (wave order + capability→worker mapping).
   - Usage: `node tools/caf/gen_build_dispatch_manifest_v1.mjs <instance_name>`
   - Produces: `reference_architectures/<instance>/design/playbook/build_dispatch_manifest_v1.md`
+  - Dispatch packets preserve the selected task object fields required by the build contract (`task_id`, `title`, `depends_on`, `inputs`, `steps`, `definition_of_done`, `semantic_review`, and `trace_anchors`).
   - Intended to reduce build-step ambiguity and prevent agent thrash; does **not** execute workers.
 
 - `atom_normalization_validator_v1.mjs`: validate canonical atoms are approved and legacy spine pins do not conflict.
@@ -193,6 +199,14 @@ Build evidence is written under:
 - `companion_repositories/<name>/profile_v1/caf/binding_reports/<binding_id>.yaml`
 
 The planner/build gates fail closed when a declared interface binding does not line up with the task graph, or when assembler work completes without explicit binding evidence.
+
+Conceptual split:
+
+- ABP owns the logical inversion/composition shape.
+- The interface binding contract owns the concrete binding obligations for this instance.
+- TBP/runtime wiring owns the framework-specific realization mechanism (container registration, bootstrap/module wiring, or explicit manual composition-root code).
+
+This keeps CAF from turning `interface_binding_contracts_v1.yaml` into a second general-purpose IoC configuration surface.
 
 Planner emission is mechanical: the planner should emit per-task `interface_binding_hints[]` in `task_graph_v1.yaml`, and `tools/caf/gen_interface_binding_contracts_v1.mjs` derives `interface_binding_contracts_v1.yaml` from those hints plus `abp_pbp_resolution_v1.yaml`. Legacy AP task-id fallback remains only as a temporary compatibility path while older instances are still being regenerated.
 

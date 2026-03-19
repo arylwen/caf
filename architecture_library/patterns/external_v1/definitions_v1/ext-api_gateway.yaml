@@ -73,6 +73,21 @@ caf:
     - "Warranted when the system exposes APIs to external or partner clients and requires consistent ingress policy enforcement."
     anchors:
     - caf_pattern: EXT-API_GATEWAY
+    semantic_acceptance:
+      attachments:
+      - attachment_id: api_gateway_boundary_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - runtime_wiring
+        criteria:
+        - Runtime wiring reflects the adopted API-gateway responsibility split at the ingress boundary.
+        - Ingress composition preserves a coherent separation between gateway-owned policy handling and service-owned behavior.
+        review_questions:
+        - Does runtime wiring reflect the adopted API-gateway responsibility split coherently at ingress?
+        - Is ingress composition consistent with the adopted gateway-versus-service boundary?
+        focus_areas:
+        - security
+        - architecture_alignment
 promotions:
   semantic_inputs:
     - source_path: "architecture_library/patterns/external_v1/definitions_v1/ext-api_gateway.yaml"

@@ -103,7 +103,7 @@ caf:
     description: How tenant context is carried at ingress and validated.
     options:
     - option_id: auth_claim
-      summary: Tenant context from verified auth claims (e.g., JWT claim).
+      summary: Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.
       carrier_kind: verified_claim
       carrier_name: tenant_id
       value_type: uuid
@@ -170,7 +170,7 @@ caf:
   - question_key: tenant_context_carrier
     question_id: Q-AP-TENANT-CARRIER-01
     question: What is the tenant context carrier at the AP ingress boundary (kind/name/type) and what are the rejection conditions?
-    description: Select how tenant context is carried and validated at the application ingress boundary.
+    description: Select how tenant context is carried and validated at the application ingress boundary. For `auth_claim`, the carrier lives inside verified auth material (for example Authorization/Bearer claims), not as a generic tenant header.
     option_set_id: tenant_context.ingress_carrier
     specialization_notes:
     - This question is warranted when multi-tenancy is in scope (tenant isolation) or tenant context propagation is required.
@@ -179,6 +179,22 @@ caf:
     anchors:
     - caf_pattern: CAF-TCTX-01
     - caf_pattern: CAF-AID-01
+    semantic_acceptance:
+      attachments:
+      - attachment_id: ap_tenant_context_carrier_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - api_boundary_implementation
+        - runtime_wiring
+        criteria:
+        - Application ingress handling derives tenant context from the adopted carrier and validates it at the declared boundary.
+        - Runtime wiring preserves the adopted tenant-context carrier coherently from ingress into downstream execution.
+        review_questions:
+        - Does the application boundary derive tenant context from the adopted carrier and preserve it into downstream execution?
+        - Is the adopted tenant-context carrier reflected consistently between boundary handling and runtime wiring?
+        focus_areas:
+        - correctness
+        - security
   - question_key: cp_ap_tenant_context_carrier
     question_id: Q-CPAP-TENANT-CARRIER-01
     question: "What tenant context carrier is used on CP\u2194AP interactions (kind/name/type) and what are the rejection\
@@ -192,6 +208,23 @@ caf:
     anchors:
     - caf_pattern: CAF-TCTX-01
     - caf_pattern: CAF-PLANE-01
+    semantic_acceptance:
+      attachments:
+      - attachment_id: cp_ap_tenant_context_carrier_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - contract_scaffolding
+        - api_boundary_implementation
+        - runtime_wiring
+        criteria:
+        - CP↔AP contract handling and runtime wiring preserve the adopted tenant-context carrier explicitly across the boundary.
+        - Boundary assumptions, contract language, and runtime composition remain coherent with the adopted tenant-context carrier.
+        review_questions:
+        - Do CP↔AP contract, boundary, and runtime tasks preserve the adopted tenant-context carrier coherently?
+        - Is the adopted tenant carrier reflected consistently across contract language, boundary handling, and runtime wiring?
+        focus_areas:
+        - security
+        - architecture_alignment
   - question_key: tenant_context_conflict_precedence
     question_id: Q-CPAP-TCTX-CONFLICT-01
     question: If multiple potential tenant carriers are present (e.g., claim + header), which is authoritative and what is
@@ -204,6 +237,23 @@ caf:
     anchors:
     - caf_pattern: CAF-TCTX-01
     - caf_pattern: CAF-PLANE-01
+    semantic_acceptance:
+      attachments:
+      - attachment_id: tenant_context_conflict_precedence_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - contract_scaffolding
+        - api_boundary_implementation
+        - runtime_wiring
+        criteria:
+        - Boundary and runtime handling apply the adopted tenant-context precedence rule consistently when more than one carrier is present.
+        - Conflict handling remains explicit and coherent across CP↔AP contracts, boundary logic, and runtime composition.
+        review_questions:
+        - Do contract, boundary, and runtime tasks realize one coherent tenant-context precedence rule for conflicting carriers?
+        - Is conflict handling explicit and consistent with the adopted precedence decision across the affected surfaces?
+        focus_areas:
+        - security
+        - correctness
 promotions:
   semantic_inputs:
   - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-TCTX-01.yaml

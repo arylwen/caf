@@ -37,6 +37,9 @@ Use this checklist when changing skills, templates, validators, or adding patter
 - [ ] Architectural tasks consume rails/TBP inputs and avoid technology-hardcoded branching (technology specifics belong in TBP tasks + manifests).
 - [ ] Avoid combinatorial sprawl: workers/gates express invariants, not per-technology syntactic checks (technology specifics belong behind TBP-provided seams).
 - [ ] Worker skills do not hardcode TBP IDs; they bind via capability + `role_binding_key` using `resolve_tbp_role_bindings_v1` (see `caf_no_tbp_id_leakage_in_worker_skills_meta_pattern_v1.md`).
+- [ ] When a rule is library-authored and repetitive, decide whether it belongs in the planner output or in a deterministic enricher; do not leave the ownership implicit.
+- [ ] Every new library terminal or realization option maps to an existing enricher/gate, or introduces a new framework-owned one before becoming a default.
+- [ ] Generic gates prefer declared matcher kinds / artifact classes over hardcoded TBP- or technology-specific checks.
 
 ## E. Avoid duplication
 

@@ -49,10 +49,13 @@ Rubric library:
 
 Rubric selection:
 1) If the task's `semantic_review.rubric_ids` is non-empty: apply those rubrics (fail-closed if any ID cannot be resolved), PLUS the baseline rubrics `RR-TASK-REPORT-01` and `RR-TBP-ROLE-BINDINGS-01`.
-2) Otherwise, auto-select using pins/derived atoms:
+2) Otherwise, auto-select using pins/derived atoms and task-managed contract lines:
    - If `platform.runtime_language == python`: apply `RR-PY-GENERAL-01` and `RR-PY-TESTS-01`.
    - If `platform.packaging` is `docker_compose` or `podman_compose`: apply `RR-COMPOSE-01`.
    - If `profile_parameters_resolved.yaml` contains `runtime.framework: fastapi`: apply `RR-FASTAPI-SVC-01`.
+   - If the task's required capabilities include `ui_frontend_scaffolding`, or the resolved pins indicate `ui.kind: web_spa`, apply `RR-WEB-SPA-01`.
+   - If the task's managed DoD / review questions include `G-PY-PACKAGING-CANONICAL-MANIFEST`, apply `RR-PY-DEPENDENCY-MANIFEST-01`.
+   - If the task's managed DoD / review questions include `G-AUTH-MOCK-CONTRACT-REALIZATION` or `G-AUTH-MOCK-HEADER-PRECEDENCE-COHERENCE`, apply `RR-AUTH-MOCK-CLAIM-CONTRACT-01`.
    - Always apply `RR-TASK-REPORT-01` (task report structure + step evidence).
    - Always apply `RR-TBP-ROLE-BINDINGS-01` (manifest-driven TBP output placement).
 
@@ -62,6 +65,12 @@ Rubric evaluation:
 - For `RR-TBP-ROLE-BINDINGS-01`, you MUST run:
   - `node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance_name> --capability <task.required_capabilities[0]>`
   and verify each expected `path_template` exists under the companion repo and contains every `evidence_contains` string.
+
+- For `RR-PY-DEPENDENCY-MANIFEST-01`, inspect the canonical dependency manifest and the runtime-wiring/container build surfaces named by the task report or touched files. Verify the build installs from the canonical manifest selected by the task-managed packaging contract rather than duplicating inline package lists.
+
+- For `RR-AUTH-MOCK-CLAIM-CONTRACT-01`, inspect the policy, API-boundary, and UI helper surfaces touched by the task (plus any resolved auth role-binding paths) and verify they preserve one coherent mock Authorization/Bearer claim contract; alternate tenant/principal headers may appear only for conflict rejection when the task-managed contract says so.
+
+- For `RR-WEB-SPA-01`, you MUST inspect the rendered shell/page wiring evidence directly in the touched UI files (at minimum `code/ui/src/App.jsx`, `code/ui/src/api.js`, and any touched `code/ui/src/pages/*.jsx`). Treat descriptive/static pages presented as implemented functionality as a blocker.
 
 - For each rubric check, decide PASS or FAIL with brief evidence.
 - Any FAIL at or above the configured threshold MUST be emitted as a finding.

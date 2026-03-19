@@ -121,6 +121,22 @@ caf:
     - If a plane integration contract section is present, populate this question there rather than duplicating elsewhere.
     anchors:
     - caf_pattern: CAF-PLANE-01
+    semantic_acceptance:
+      attachments:
+      - attachment_id: cp_ap_contract_surface_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - contract_scaffolding
+        - runtime_wiring
+        criteria:
+        - Contract and runtime wiring surfaces realize the adopted CP↔AP contract surface consistently across the boundary.
+        - Control/Application interaction semantics remain explicit and coherent with the adopted boundary shape through runtime wiring.
+        review_questions:
+        - Do contract and runtime tasks realize one coherent CP↔AP surface aligned to the adopted decision?
+        - Is the adopted CP↔AP surface preserved consistently between boundary definition and runtime wiring?
+        focus_areas:
+        - architecture_alignment
+        - correctness
 
 promotions:
   semantic_inputs:

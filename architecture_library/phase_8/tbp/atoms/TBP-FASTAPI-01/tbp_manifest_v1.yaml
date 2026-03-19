@@ -25,15 +25,39 @@ layout:
       evidence_contains:
       - FastAPI
       - include_router
+    dependency_provider_boundary:
+      path_template: code/ap/api/dependencies.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - Depends
+      - get_
+    python_requirements_manifest:
+      path_template: requirements.txt
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+      - fastapi
+      validator_kind: python_requirements_manifest
+      validator_config:
+        package_names_all_of:
+        - fastapi
 extensions:
   obligations:
   - obligation_id: O-TBP-FASTAPI-01-composition-root
     title: Materialize FastAPI composition root
     required_capability: api_boundary_implementation
     role_binding_key: composition_root
+  - obligation_id: O-TBP-FASTAPI-01-dependency-provider-boundary
+    title: Materialize FastAPI dependency provider boundary
+    required_capability: api_boundary_implementation
+    role_binding_key: dependency_provider_boundary
+  - obligation_id: O-TBP-FASTAPI-01-framework-dependency
+    title: Materialize the FastAPI framework dependency in the canonical Python dependency manifest.
+    required_capability: observability_and_config
+    role_binding_key: python_requirements_manifest
 
   gates:
   - gate_id: G-FASTAPI-API-BOUNDARY-THIN
+    attachment_scope: all_matching_tasks
     title: Keep API boundary thin
     gate_kind: guardrail
     required_capability: api_boundary_implementation
@@ -48,12 +72,30 @@ extensions:
     severity_threshold_override: high
 
   - gate_id: G-FASTAPI-COMPOSITION-ROOT-WIRING
+    attachment_scope: all_matching_tasks
     title: Composition root wiring clarity
     gate_kind: definition_of_done
     required_capability: api_boundary_implementation
     criteria:
     - Composition root creates the FastAPI app and includes resource routers via explicit router registration.
     - Cross-cutting middleware (authn/authz, logging, request-id) is wired at the composition root (or a dedicated boundary wiring module) and documented.
+    - When the resolved schema strategy is code_bootstrap, the composition root invokes the shared schema bootstrap hook before serving traffic instead of leaving schema creation dormant.
+    - Fail-closed auth/policy exceptions are mapped to explicit HTTP responses at the composition root (or a dedicated boundary wiring module) rather than surfacing as raw framework 500s.
     review_questions:
     - Are routers registered explicitly and discoverably?
+    - When code_bootstrap is selected, does the composition root invoke the shared schema bootstrap hook before serving traffic?
+    - Are fail-closed auth/policy exceptions translated consistently at the boundary/composition root?
     focus_areas: [maintainability, observability]
+
+  - gate_id: G-FASTAPI-FRAMEWORK-MANAGED-DEPENDENCY-PROVIDERS
+    attachment_scope: all_matching_tasks
+    title: Framework-managed dependency provider boundary
+    gate_kind: definition_of_done
+    required_capability: api_boundary_implementation
+    criteria:
+    - When framework-managed dependency wiring is selected, route modules consume services/providers via a TBP-declared dependency provider boundary rather than constructing them inline.
+    - The dependency provider boundary stays within FastAPI-owned boundary code and does not introduce a second bespoke DI/container subsystem.
+    review_questions:
+    - Do route modules use Depends(...) against provider functions from the declared dependency provider boundary?
+    - Is provider construction centralized in the dependency provider boundary rather than duplicated across routers?
+    focus_areas: [maintainability, correctness]

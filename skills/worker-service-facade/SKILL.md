@@ -49,6 +49,12 @@ Write rails:
 - Place the service facade under the Application Plane code root, using the repo’s established layout for services (create minimal structure if absent).
 - Any file you create or substantially rewrite MUST include a `CAF_TRACE:` header block at the top (see CAF Operating Contract: "CAF trace headers").
 
+Resolved TBP module conventions (mandatory when present):
+- Before choosing Python import/module paths, read `tbp_conventions.module_conventions` from `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml`.
+- Treat `plane_module_roots.ap` / `plane_module_roots.cp` as the canonical absolute module roots for generated Python imports.
+- Prefer `intra_package_import_style=explicit_relative_preferred` for imports within the same package subtree.
+- Do NOT invent alternate bare roots like `ap...` when the resolved Application Plane root is `code.ap`.
+
 
 Service facade minimum invariants (generic; no tech stack assumptions):
 - Transport-free: do not import API boundary / transport adapter modules.
@@ -64,6 +70,7 @@ Service facade minimum invariants (generic; no tech stack assumptions):
 - Treat any TBP role-binding evidence hints (e.g., `evidence_contains`) as *implementation cues*, not as script-like checks.
 - Do not invent additional acceptance checks beyond the Task Graph.
 - Maintain transport-free service boundaries (no imports from API boundary modules).
+- Keep service imports coherent with the resolved module convention surface; same-package imports should prefer explicit relative form when `explicit_relative_preferred` is selected.
 - Ensure outputs contain no placeholder tokens (TBD/TODO/UNKNOWN/{{ }}).
 
 ## Fail-closed conditions

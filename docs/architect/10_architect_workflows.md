@@ -77,3 +77,14 @@ Use:
 - obligation/task TSV indexes
 
 To explain deltas without re-reading the whole playbook.
+
+
+## Next best link
+
+[PRD-first lifecycle](../user/15_prd_first_lifecycle.md) — Cross-check these workflows against the default public lifecycle language.
+
+## Top 3 related links
+
+- [Mental model](01_mental_model.md) — Re-anchor on the traceability model behind the workflows.
+- [PRD → Architecture Shape](../user/12_prd_workflow.md) — Review the promotion step that now drives the first architecture scaffold.
+- [Impact assessment](04_impact_assessment.md) — Use `/caf ask` to evaluate the blast radius after a workflow change.

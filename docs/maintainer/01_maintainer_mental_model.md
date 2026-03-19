@@ -49,4 +49,3 @@ Archive retired or superseded documents here when they still have historical val
 - [Skill authoring](03_skill_authoring.md) — Add or adjust a skill while preserving CAF ownership boundaries.
 - [Command surfaces and routing](05_command_surfaces_and_routing.md) — Understand where maintainer-facing commands are allowed to operate.
 - [Release and public bundle hygiene](08_release_and_public_bundle_hygiene.md) — Use the current public maintainer release checklist and bundle rules as a fast navigation index.
-

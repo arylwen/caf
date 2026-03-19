@@ -1,0 +1,26 @@
+schema_version: v1
+kind: review_rubric
+rubric_id: RR-PY-DEPENDENCY-MANIFEST-01
+title: Canonical Python dependency manifest contract (v1)
+applies_when:
+  - condition: "task.semantic_review mentions G-PY-PACKAGING-CANONICAL-MANIFEST"
+checks:
+  - check_id: RR-PY-DEP-01
+    severity: high
+    category: correctness
+    rule: >
+      When the task-managed packaging contract declares a canonical Python dependency manifest,
+      the companion repo exposes that manifest at the resolved path and it contains the required
+      dependency evidence markers contributed by the resolved role-binding expectations.
+    evidence_hints:
+      - "run node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance> --capability observability_and_config"
+      - "inspect the resolved manifest path (typically requirements.txt) and verify every evidence_contains marker appears"
+  - check_id: RR-PY-DEP-02
+    severity: high
+    category: maintainability
+    rule: >
+      Python container/runtime wiring installs dependencies from the canonical dependency manifest
+      rather than duplicating package names inline or drifting to a second worker-local manifest.
+    evidence_hints:
+      - "inspect docker/Dockerfile.ap, docker/Dockerfile.cp, Containerfile, or equivalent runtime-wiring files touched by the task"
+      - "look for pip install -r <canonical manifest> (or an equivalent manifest-driven install) and fail if package lists are duplicated inline"

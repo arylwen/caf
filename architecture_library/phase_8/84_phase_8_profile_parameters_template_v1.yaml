@@ -82,6 +82,11 @@ platform:
   # - none
   database_engine: "postgres"
 
+  # dependency_wiring_mode (allowed values):
+  # - framework_managed
+  # - manual_composition_root
+  dependency_wiring_mode: "manual_composition_root"
+
 ui:
   # UI pins are machine-consumed. Product-facing UI description belongs in application_spec_v1.md.
   present: true

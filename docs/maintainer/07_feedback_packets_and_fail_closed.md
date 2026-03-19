@@ -25,3 +25,4 @@ The binding rule lives in:
 - Distinguish blocker vs advisory intentionally.
 - Do not fail-closed on missing required outputs unless the responsible producer step actually ran.
 - For instruction-heavy semantic stages, a single permission checkpoint is allowed when warranted, but it must not be used to dodge execution by default.
+- Packets may also carry an `Issue Tracker` header when the recommended follow-up is framework-owned hardening rather than only local recovery. Use the shared issue URL when you want to direct maintainers or operators to a reusable follow-up seam.

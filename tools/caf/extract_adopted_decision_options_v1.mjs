@@ -21,11 +21,11 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parseYamlString } from './lib_yaml_v2.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 
-// Allow piping to head without crashing (EPIPE).
 process.stdout.on('error', (e) => {
   if (e && String(e.code) === 'EPIPE') process.exit(0);
 });
@@ -35,15 +35,15 @@ function die(msg, code = 1) {
   process.exit(code);
 }
 
-function normalize(x) {
+export function normalize(x) {
   return String(x ?? '').trim();
 }
 
-function readUtf8(p) {
+export function readUtf8(p) {
   return fs.readFileSync(p, 'utf8');
 }
 
-function exists(p) {
+export function exists(p) {
   try {
     fs.accessSync(p);
     return true;
@@ -52,7 +52,7 @@ function exists(p) {
   }
 }
 
-function extractBlock(text, startMarker, endMarker) {
+export function extractBlock(text, startMarker, endMarker) {
   const s = String(text ?? '').indexOf(startMarker);
   if (s < 0) return null;
   const e = String(text ?? '').indexOf(endMarker, s);
@@ -60,8 +60,7 @@ function extractBlock(text, startMarker, endMarker) {
   return String(text ?? '').slice(s, e + endMarker.length);
 }
 
-function extractYamlFence(blockText) {
-  // Deterministic fence scan (no regex-based extraction).
+export function extractYamlFence(blockText) {
   const lines = String(blockText ?? '').split(/\r?\n/);
   let startLine = -1;
   for (let i = 0; i < lines.length; i++) {
@@ -83,7 +82,7 @@ function extractYamlFence(blockText) {
   return lines.slice(startLine, endLine).join('\n');
 }
 
-function extractDecisionResolutionsObj(mdText, sourceLabel) {
+export function extractDecisionResolutionsObj(mdText, sourceLabel) {
   const block = extractBlock(
     mdText,
     '<!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 START -->',
@@ -96,12 +95,12 @@ function extractDecisionResolutionsObj(mdText, sourceLabel) {
   if (!parsed || typeof parsed !== 'object') return null;
   const schema = normalize(parsed.schema_version);
   if (schema && schema !== 'decision_resolutions_v1') {
-    // Still return; caller can decide what to do. We avoid enforcing here.
+    return parsed;
   }
   return parsed;
 }
 
-function collectAdoptedOptionSelections(decisionsObj, sourceKind) {
+export function collectAdoptedOptionSelections(decisionsObj, sourceKind) {
   const out = [];
   const decisions = Array.isArray(decisionsObj?.decisions) ? decisionsObj.decisions : [];
   for (const d of decisions) {
@@ -127,6 +126,7 @@ function collectAdoptedOptionSelections(decisionsObj, sourceKind) {
         const option_id = normalize(o.option_id);
         if (!option_id) continue;
         const summary = normalize(o.summary);
+        const payload = o.payload && typeof o.payload === 'object' ? o.payload : {};
         out.push({
           source: sourceKind,
           evidence_hook_id,
@@ -135,11 +135,56 @@ function collectAdoptedOptionSelections(decisionsObj, sourceKind) {
           option_set_id,
           option_id,
           summary,
+          payload,
         });
       }
     }
   }
   return out;
+}
+
+export function dedupeAdoptedOptionSelections(results) {
+  const seen = new Set();
+  const out = [];
+  for (const r of Array.isArray(results) ? results : []) {
+    if (!r || typeof r !== 'object') continue;
+    const key = [
+      normalize(r.source),
+      normalize(r.pattern_id),
+      normalize(r.question_id),
+      normalize(r.option_set_id),
+      normalize(r.option_id),
+      normalize(r.evidence_hook_id),
+    ].join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(r);
+  }
+  return out;
+}
+
+export function readAdoptedOptionSelectionsForInstance(repoRoot, instance, source = 'both') {
+  const src = normalize(source).toLowerCase();
+  if (!['system', 'application', 'both'].includes(src)) {
+    throw new Error(`Invalid source: ${source}`);
+  }
+  const layout = getInstanceLayout(repoRoot, instance);
+  const sysPath = path.join(layout.specPlaybookDir, 'system_spec_v1.md');
+  const appPath = path.join(layout.specPlaybookDir, 'application_spec_v1.md');
+  const results = [];
+  if (src === 'system' || src === 'both') {
+    if (!exists(sysPath)) throw new Error(`Missing: ${path.relative(repoRoot, sysPath)}`);
+    const md = readUtf8(sysPath);
+    const obj = extractDecisionResolutionsObj(md, 'system_spec decision_resolutions_v1');
+    if (obj) results.push(...collectAdoptedOptionSelections(obj, 'system'));
+  }
+  if (src === 'application' || src === 'both') {
+    if (!exists(appPath)) throw new Error(`Missing: ${path.relative(repoRoot, appPath)}`);
+    const md = readUtf8(appPath);
+    const obj = extractDecisionResolutionsObj(md, 'application_spec decision_resolutions_v1');
+    if (obj) results.push(...collectAdoptedOptionSelections(obj, 'application'));
+  }
+  return dedupeAdoptedOptionSelections(results);
 }
 
 function parseArgs(argv) {
@@ -180,12 +225,11 @@ function emit(results, format) {
     }
     return;
   }
-  // jsonl default
   for (const r of results) process.stdout.write(`${JSON.stringify(r)}\n`);
 }
 
-function main() {
-  const { instance, source, format } = parseArgs(process.argv.slice(2));
+export async function internal_main(argv = process.argv.slice(2)) {
+  const { instance, source, format } = parseArgs(argv);
   if (!instance) {
     die('usage: node tools/caf/extract_adopted_decision_options_v1.mjs <instance_name> [--source=system|application|both] [--format=jsonl|json|tsv]');
   }
@@ -193,27 +237,22 @@ function main() {
   if (!['system', 'application', 'both'].includes(src)) {
     die(`Invalid --source=${source} (expected system|application|both)`, 2);
   }
-
   const repoRoot = resolveRepoRoot();
-  const layout = getInstanceLayout(repoRoot, instance);
-  const sysPath = path.join(layout.specPlaybookDir, 'system_spec_v1.md');
-  const appPath = path.join(layout.specPlaybookDir, 'application_spec_v1.md');
-
-  const results = [];
-  if (src === 'system' || src === 'both') {
-    if (!exists(sysPath)) die(`Missing: ${path.relative(repoRoot, sysPath)}`, 2);
-    const md = readUtf8(sysPath);
-    const obj = extractDecisionResolutionsObj(md, 'system_spec decision_resolutions_v1');
-    if (obj) results.push(...collectAdoptedOptionSelections(obj, 'system'));
-  }
-  if (src === 'application' || src === 'both') {
-    if (!exists(appPath)) die(`Missing: ${path.relative(repoRoot, appPath)}`, 2);
-    const md = readUtf8(appPath);
-    const obj = extractDecisionResolutionsObj(md, 'application_spec decision_resolutions_v1');
-    if (obj) results.push(...collectAdoptedOptionSelections(obj, 'application'));
-  }
-
+  const results = readAdoptedOptionSelectionsForInstance(repoRoot, instance, src);
   emit(results, format);
+  return 0;
 }
 
-main();
+async function main() {
+  try {
+    const code = await internal_main(process.argv.slice(2));
+    process.exit(typeof code === 'number' ? code : 0);
+  } catch (e) {
+    process.stderr.write(`${String(e && e.message ? e.message : e)}\n`);
+    process.exit(1);
+  }
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  void main();
+}

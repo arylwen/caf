@@ -4,15 +4,14 @@ CAF turns PRDs into architecture, project plans, and candidate code through orch
 
 CAF is used via a single command surface (`/caf ...`) inside a supported agent runner. CAF supports Claude Code, Codex, and Antigravity coding agents.
 
-![CAF end-to-end pipeline](../images/caf_end_to_end_pipeline.svg)
+![CAF PRD-first journey](../images/caf_prd_first_journey.svg)
 
-*CAF turns PRD into code through architecture and planning, with persistent artifacts at every phase.*
+*CAF keeps product intent, architecture decisions, implementation architecture decisions, planning, and candidate code connected through explicit checkpoints.*
 
 ## Choose your path (by role)
 
 - Product managers: [Product manager view](11_product_manager_view.md)
 - Architects / software engineers: [Architect documentation](../architect/README.md)
-
 
 ## Quickstart - Ask CAF questions (assistant-friendly)
 
@@ -24,7 +23,7 @@ The canonical public sample instance is `codex-saas`.
 
 ## Quickstart - create your own CAF SaaS reference implementation
 
-Replace `<instance>` with your own instance name.
+Replace `<instance>` with your own instance name. `/caf saas` also accepts an optional second argument for a starter profile template id; the default remains the plain boring SaaS starter, and `governed_agentic_review_v1` is available when you want the governed agentic review demo path.
 
 ```text
 /caf saas <instance>
@@ -66,3 +65,14 @@ Replace `<instance>` with your own instance name.
 ## Pattern browser (direct links)
 
 - Taxonomy + graphs: [`docs/patterns/pattern_taxonomy_v1.md`](../patterns/pattern_taxonomy_v1.md)
+
+
+## Next best link
+
+[What is CAF?](01_what_is_caf.md) — Start with the shortest explanation of what CAF does before you choose a deeper path.
+
+## Top 3 related links
+
+- [Quickstart](03_quickstart.md) — Run the default command flow on your own instance.
+- [PRD-first lifecycle](15_prd_first_lifecycle.md) — See how CAF moves from product intent into architecture, planning, and build.
+- [Answering questions with CAF](14_answering_questions_with_caf.md) — Use `/caf ask` as the fastest proof path for the bundled sample.

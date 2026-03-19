@@ -62,6 +62,11 @@ Run (from repo root):
 Then:
 - Materialize the composition root at the returned `path_template` for the expectation whose `role_binding_key` is `composition_root`.
 - Also open the TBP manifest itself and obey its `layout.role_bindings` path_template for the API boundary module (e.g., `api_boundary.path_template`), substituting `{resource_snake}` from the task_id when resource-scoped.
+- If `platform.dependency_wiring_mode=framework_managed`, resolve `dependency_provider_boundary` with `node tools/caf/resolve_tbp_role_binding_key_v1.mjs <instance_name> --role-binding-key dependency_provider_boundary`. When the selected TBP exposes that role binding, materialize that TBP-declared file too and keep framework-managed dependency-provider functions there.
+- Before choosing Python import/module paths, read `tbp_conventions.module_conventions` from `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` when present.
+- Treat `plane_module_roots.ap` / `plane_module_roots.cp` as the canonical absolute module roots for API-boundary imports and dotted runtime references.
+- Prefer `intra_package_import_style=explicit_relative_preferred` for imports within the same package subtree.
+- Do NOT invent alternate bare roots like `ap...` when the resolved Application Plane root is `code.ap`.
 - Do not create alternate/duplicate composition roots (e.g., do not create both `main.py` at repo root and `code/ap/main.py`).
 - If an existing legacy composition root already exists at a different path, prefer the TBP path_template and avoid adding new duplicates. If reconciliation would require broad refactors, FAIL-CLOSED.
 
@@ -73,6 +78,8 @@ API boundary minimum invariants (generic; no tech stack assumptions):
   - Create endpoints MUST NOT require an id in the request body; generate the id server-side (typically in the service layer).
   - Update endpoints MUST take the id from the URL/path parameter and MUST ignore any id fields in the body.
 - Do not embed persistence logic in the boundary.
+- When `platform.dependency_wiring_mode=framework_managed` and the selected TBP exposes a `dependency_provider_boundary`, route modules must consume providers from that boundary instead of constructing services/repositories inline.
+- Keep router/provider imports consistent with the resolved module convention surface; a framework-managed `dependency_provider_boundary` must be imported using the same resolved root or the preferred same-package relative-import style.
 
 ## Definition of Done alignment (semantic)
 

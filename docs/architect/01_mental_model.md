@@ -57,11 +57,11 @@ Canonical instance layout:
 
 See: [`05_traceability_chain_and_data_model.md`](05_traceability_chain_and_data_model.md)
 
-## Next
+## Next best link
 
 [Traceability chain and data model](05_traceability_chain_and_data_model.md) — See the concrete artifact surfaces behind the mental model on this page.
 
-## Related
+## Top 3 related links
 
 - [Decision visibility](02_decision_visibility.md) — Learn how CAF shows what architectural decisions are currently in play.
 - [Work visibility and sizing](03_work_visibility_sizing.md) — See how obligations and tasks become visible execution work.

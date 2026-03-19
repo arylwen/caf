@@ -112,7 +112,7 @@ async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstra
     `- Instance: ${instanceName}`,
     `- Stuck At: tools/caf/tbp_obligation_gate_v1.mjs`,
     `- Observed Constraint: ${observedConstraint}`,
-    `- Gap Type: Missing obligation | TBP obligations ignored by planner`,
+    `- Gap Type: Missing obligation | TBP obligations ignored by deterministic compiler`,
     '',
     '## Minimal Fix Proposal',
     ...minimalFixLines.map((l) => `- ${l}`),
@@ -295,7 +295,7 @@ async function main() {
       'tbp-obligations-not-emitted',
       'One or more resolved TBP extension obligations were not emitted into pattern_obligations_v1.yaml.',
       [
-        'Update the planner (caf-application-architect) to compile TBP extensions.obligations into playbook/pattern_obligations_v1.yaml (Step 2.8).',
+        'Update the deterministic obligation compiler so resolved TBP extensions.obligations are compiled into playbook/pattern_obligations_v1.yaml.',
         'Rerun /caf arch <instance> to regenerate planning outputs.',
       ],
       [

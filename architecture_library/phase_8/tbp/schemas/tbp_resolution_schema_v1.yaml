@@ -10,6 +10,7 @@ required:
   - resolution_atoms
   - seed_tbps
   - resolved_tbps
+  - resolved_conventions
   - conflicts_checked
 properties:
   schema_version:
@@ -46,6 +47,30 @@ properties:
     items:
       type: string
       pattern: "^TBP-[A-Z0-9-]+$"
+  resolved_conventions:
+    type: object
+    additionalProperties: false
+    properties:
+      module_conventions:
+        type: object
+        additionalProperties: false
+        properties:
+          absolute_import_root:
+            type: string
+            minLength: 1
+          intra_package_import_style:
+            type: string
+            enum: [explicit_relative_preferred, absolute_from_root]
+          plane_module_roots:
+            type: object
+            additionalProperties: false
+            properties:
+              ap:
+                type: string
+                minLength: 1
+              cp:
+                type: string
+                minLength: 1
   conflicts_checked:
     type: boolean
   notes:

@@ -1,0 +1,68 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-RAW-SQL-01
+binds_to:
+  - atom_path: persistence.orm
+    atom_value: raw_sql
+  - atom_path: runtime.language
+    atom_value: python
+requires_tbps:
+  - TBP-PY-01
+conflicts_with_tbps:
+  - TBP-SQLALCHEMY-01
+layout:
+  scaffold_directories:
+    - code/common/persistence/
+  role_bindings:
+    raw_sql_runtime_module:
+      path_template: code/common/persistence/raw_sql_runtime.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - DATABASE_URL
+        - def get_connection
+        - def execute_sql
+        - def fetch_all
+    raw_sql_schema_bootstrap:
+      path_template: code/common/persistence/raw_sql_schema_bootstrap.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - def bootstrap_schema
+        - CREATE TABLE IF NOT EXISTS
+extensions:
+  obligations:
+    - obligation_id: O-TBP-RAW-SQL-01-runtime-module
+      title: Materialize the shared raw-SQL runtime module (connection and execution helpers) for explicit-SQL persistence.
+      required_capability: persistence_implementation
+      role_binding_key: raw_sql_runtime_module
+    - obligation_id: O-TBP-RAW-SQL-01-schema-bootstrap
+      title: Materialize the deterministic raw-SQL schema bootstrap hook aligned to the resolved schema strategy.
+      required_capability: persistence_implementation
+      role_binding_key: raw_sql_schema_bootstrap
+  gates:
+    - gate_id: G-RAW-SQL-PERSISTENCE-REALIZATION
+      title: Preserve explicit raw-SQL realization for raw_sql persistence rails
+      gate_kind: definition_of_done
+      attachment_scope: all_matching_tasks
+      required_capability: persistence_implementation
+      criteria:
+        - Raw-SQL-backed persistence realizes explicit SQL runtime surfaces through shared connection and execution helpers inside the persistence boundary.
+        - Repository logic does not silently degrade raw_sql rails into ORM-owned runtime/bootstrap helpers in production modules.
+      review_questions:
+        - Do persistence modules adopt the shared raw-SQL runtime seam rather than issuing ad hoc SQL from service or boundary layers?
+        - Is ORM-only runtime/bootstrap machinery absent from the selected raw_sql production persistence path?
+      focus_areas:
+        - correctness
+        - architecture_alignment
+      severity_threshold_override: high
+    - gate_id: G-RAW-SQL-SCHEMA-STRATEGY-ALIGNMENT
+      title: Align raw-SQL schema bootstrap behavior to the resolved schema strategy
+      gate_kind: coding_standard
+      attachment_scope: all_matching_tasks
+      required_capability: persistence_implementation
+      criteria:
+        - When schema management is code_bootstrap, schema DDL remains explicit and is exposed through a deterministic persistence hook.
+        - Runtime persistence code avoids scattering schema DDL or bootstrap side effects across unrelated modules.
+      review_questions:
+        - Does raw-SQL schema bootstrap remain deterministic and local to the persistence boundary for the selected strategy?
+      focus_areas:
+        - correctness
+        - maintainability

@@ -208,37 +208,76 @@ function normalizeScalar(v) {
   return s.trim();
 }
 
-function parsePinsFromYamlObj(pinsObj) {
-  return {
-    evolution_stage: normalizeScalar(pinsObj?.lifecycle?.evolution_stage),
-    generation_phase: normalizeScalar(pinsObj?.lifecycle?.generation_phase),
-    infra_target: normalizeScalar(pinsObj?.platform?.infra_target),
-    packaging: normalizeScalar(pinsObj?.platform?.packaging),
-    runtime_language: normalizeScalar(pinsObj?.platform?.runtime_language),
-    database_engine: normalizeScalar(pinsObj?.platform?.database_engine),
-  };
-}
-
-function parseResolvedFromYamlObj(obj) {
-  return {
-    evolution_stage: normalizeScalar(obj?.lifecycle?.evolution_stage),
-    generation_phase: normalizeScalar(obj?.lifecycle?.generation_phase),
-    infra_target: normalizeScalar(obj?.platform?.infra_target),
-    packaging: normalizeScalar(obj?.platform?.packaging),
-    runtime_language: normalizeScalar(obj?.platform?.runtime_language),
-    database_engine: normalizeScalar(obj?.platform?.database_engine),
-  };
-}
-
-function comparePinnedVsResolved(pins, resolved) {
-  const mismatches = [];
-  for (const k of Object.keys(pins)) {
-    const pv = normalizeScalar(pins[k]);
-    const rv = normalizeScalar(resolved[k]);
-    if (!pv || !rv) continue;
-    if (pv !== rv) mismatches.push(`${k}: pins='${pv}' resolved='${rv}'`);
+function getPath(obj, pathParts, defaultValue = '') {
+  let cur = obj;
+  for (const part of pathParts) {
+    if (cur && typeof cur === 'object' && part in cur) {
+      cur = cur[part];
+    } else {
+      return defaultValue;
+    }
   }
-  return mismatches;
+  return cur;
+}
+
+const PIN_TO_RESOLVED_PATHS = [
+  { label: 'lifecycle.evolution_stage', pinPath: ['lifecycle', 'evolution_stage'], resolvedPath: ['lifecycle', 'evolution_stage'] },
+  { label: 'lifecycle.generation_phase', pinPath: ['lifecycle', 'generation_phase'], resolvedPath: ['lifecycle', 'generation_phase'] },
+  { label: 'platform.infra_target', pinPath: ['platform', 'infra_target'], resolvedPath: ['platform', 'infra_target'] },
+  { label: 'platform.packaging', pinPath: ['platform', 'packaging'], resolvedPath: ['platform', 'packaging'] },
+  { label: 'platform.runtime_language', pinPath: ['platform', 'runtime_language'], resolvedPath: ['platform', 'runtime_language'] },
+  { label: 'platform.database_engine', pinPath: ['platform', 'database_engine'], resolvedPath: ['platform', 'database_engine'] },
+  { label: 'platform.framework', pinPath: ['platform', 'framework'], resolvedPath: ['platform', 'framework'] },
+  { label: 'platform.dependency_wiring_mode', pinPath: ['platform', 'dependency_wiring_mode'], resolvedPath: ['platform', 'dependency_wiring_mode'] },
+  { label: 'platform.persistence_orm', pinPath: ['platform', 'persistence_orm'], resolvedPath: ['platform', 'persistence_orm'] },
+  { label: 'platform.auth_mode', pinPath: ['platform', 'auth_mode'], resolvedPath: ['platform', 'auth_mode'] },
+  { label: 'platform.eventing_backend', pinPath: ['platform', 'eventing_backend'], resolvedPath: ['platform', 'eventing_backend'] },
+];
+
+const TECH_VALIDATION_MIRRORS = [
+  { techKey: 'platform.framework', resolvedTargets: [['platform', 'framework'], ['runtime', 'framework']] },
+  { techKey: 'platform.dependency_wiring_mode', resolvedTargets: [['platform', 'dependency_wiring_mode']] },
+  { techKey: 'platform.persistence_orm', resolvedTargets: [['platform', 'persistence_orm'], ['persistence', 'orm']] },
+  { techKey: 'platform.auth_mode', resolvedTargets: [['platform', 'auth_mode']] },
+  { techKey: 'platform.eventing_backend', resolvedTargets: [['platform', 'eventing_backend']] },
+  { techKey: 'platform.schema_management_strategy', resolvedTargets: [['database', 'schema_management_strategy']] },
+];
+
+function compareGuardrailsCoherence(pinsObj, resolvedObj, techValidationObj) {
+  const mismatches = [];
+
+  for (const pair of PIN_TO_RESOLVED_PATHS) {
+    const pinValue = normalizeScalar(getPath(pinsObj, pair.pinPath));
+    if (!pinValue) continue;
+    const resolvedValue = normalizeScalar(getPath(resolvedObj, pair.resolvedPath));
+    const resolvedKey = pair.resolvedPath.join('.');
+    if (!resolvedValue) {
+      mismatches.push(`${pair.label}: pins='${pinValue}' but resolved '${resolvedKey}' is missing`);
+      continue;
+    }
+    if (pinValue !== resolvedValue) {
+      mismatches.push(`${pair.label}: pins='${pinValue}' resolved='${resolvedValue}'`);
+    }
+  }
+
+  const techChoices = techValidationObj?.technology_choices_resolved ?? {};
+  for (const mirror of TECH_VALIDATION_MIRRORS) {
+    const effectiveValue = normalizeScalar(techChoices?.[mirror.techKey]?.effective);
+    if (!effectiveValue) continue;
+    for (const resolvedTarget of mirror.resolvedTargets) {
+      const resolvedKey = resolvedTarget.join('.');
+      const resolvedValue = normalizeScalar(getPath(resolvedObj, resolvedTarget));
+      if (!resolvedValue) {
+        mismatches.push(`${mirror.techKey}: effective='${effectiveValue}' but resolved '${resolvedKey}' is missing`);
+        continue;
+      }
+      if (effectiveValue !== resolvedValue) {
+        mismatches.push(`${mirror.techKey}: effective='${effectiveValue}' but resolved '${resolvedKey}'='${resolvedValue}'`);
+      }
+    }
+  }
+
+  return Array.from(new Set(mismatches));
 }
 
 function assertWriteAllowed(targetPath) {
@@ -359,13 +398,14 @@ async function failClosedFromHelper(repoRoot, instanceName, stageSlug, helperRel
   die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 40);
 }
 
-async function readPinsAndResolved(repoRoot, pinsPath, resolvedPath) {
+async function readGuardrailsViews(pinsPath, resolvedPath, techValidationPath) {
   const pinsObj = parseYamlString(await readUtf8(pinsPath), pinsPath);
   const resolvedObj = parseYamlString(await readUtf8(resolvedPath), resolvedPath);
+  const techValidationObj = parseYamlString(await readUtf8(techValidationPath), techValidationPath);
   return {
-    pins: parsePinsFromYamlObj(pinsObj),
-    resolved: parseResolvedFromYamlObj(resolvedObj),
+    pinsObj,
     resolvedObj,
+    techValidationObj,
   };
 }
 
@@ -392,6 +432,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
   const guardrailsDir = layout.specGuardrailsDir;
   const pinsPath = path.join(guardrailsDir, 'profile_parameters.yaml');
   const resolvedPath = path.join(guardrailsDir, 'profile_parameters_resolved.yaml');
+  const techValidationPath = path.join(guardrailsDir, 'technology_choice_validation_v1.yaml');
   const shapePath = path.join(layout.specPlaybookDir, 'architecture_shape_parameters.yaml');
   const productPrdPath = path.join(instRoot, 'product', 'PRD.md');
   const platformPrdPath = path.join(instRoot, 'product', 'PLATFORM_PRD.md');
@@ -436,25 +477,26 @@ const layout = getInstanceLayout(repoRoot, instanceName);
     }
   }
 
-  if (!fileExists(pinsPath) || !fileExists(resolvedPath)) {
+  if (!fileExists(pinsPath) || !fileExists(resolvedPath) || !fileExists(techValidationPath)) {
     const fp = await writeFeedbackPacket(
       repoRoot,
       instanceName,
-      'arch-gate-missing-pins-or-resolved',
-      'Expected pins and resolved files to exist after Guardrails derivation',
+      'arch-gate-missing-guardrails-derived-views',
+      'Expected guardrails derived views to exist after Guardrails derivation',
       ['Re-seed the instance (caf saas <name>) and rerun caf arch <name>.'],
       [
         `Missing? ${safeRel(repoRoot, pinsPath)} => ${fileExists(pinsPath) ? 'present' : 'missing'}`,
         `Missing? ${safeRel(repoRoot, resolvedPath)} => ${fileExists(resolvedPath) ? 'present' : 'missing'}`,
+        `Missing? ${safeRel(repoRoot, techValidationPath)} => ${fileExists(techValidationPath) ? 'present' : 'missing'}`,
       ]
     );
     die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 30);
   }
 
-  // Postcondition: pins ↔ resolved coherence with one deterministic retry.
+  // Postcondition: guardrails derived views must mirror pins and validated technology choices.
   {
-    const { pins, resolved, resolvedObj } = await readPinsAndResolved(repoRoot, pinsPath, resolvedPath);
-    let mismatches = comparePinnedVsResolved(pins, resolved);
+    let { pinsObj, resolvedObj, techValidationObj } = await readGuardrailsViews(pinsPath, resolvedPath, techValidationPath);
+    let mismatches = compareGuardrailsCoherence(pinsObj, resolvedObj, techValidationObj);
     if (mismatches.length > 0) {
       // Deterministic recovery: delete only the derived resolved view, rerun Guardrails once.
       await safeDeleteResolvedOnly(repoRoot, resolvedPath, path.resolve(instRoot));
@@ -472,25 +514,26 @@ const layout = getInstanceLayout(repoRoot, instanceName);
         );
       }
 
-      const reread = await readPinsAndResolved(repoRoot, pinsPath, resolvedPath);
-      mismatches = comparePinnedVsResolved(reread.pins, reread.resolved);
-      resolvedObj.deployment = reread.resolvedObj?.deployment || resolvedObj.deployment;
+      ({ pinsObj, resolvedObj, techValidationObj } = await readGuardrailsViews(pinsPath, resolvedPath, techValidationPath));
+      mismatches = compareGuardrailsCoherence(pinsObj, resolvedObj, techValidationObj);
     }
 
     if (mismatches.length > 0) {
       const fp = await writeFeedbackPacket(
         repoRoot,
         instanceName,
-        'arch-gate-stale-resolved-after-retry',
-        'Guardrails resolved view remains stale (pins != resolved) after deterministic retry',
+        'arch-gate-stale-resolved-tech-choice-propagation',
+        'Guardrails resolved view does not mirror pinned values and validated technology choices after deterministic retry',
         [
           'Inspect guardrails/profile_parameters.yaml for placeholders or unexpected keys/values.',
+          'Inspect guardrails/technology_choice_validation_v1.yaml and confirm effective values are mirrored into guardrails/profile_parameters_resolved.yaml.',
           'Generate the derivation contract (caf next <name>) and review the “Derived view status” section.',
-          'Rerun caf arch <name> after fixing pins.',
+          'Rerun caf arch <name> after fixing pins or the guardrails derivation logic.',
         ],
         [
           safeRel(repoRoot, pinsPath),
           safeRel(repoRoot, resolvedPath),
+          safeRel(repoRoot, techValidationPath),
           ...mismatches.slice(0, 20),
         ]
       );
@@ -498,6 +541,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
     }
 
     const deploymentStackName = normalizeScalar(resolvedObj?.deployment?.stack_name);
+    const generationPhase = normalizeScalar(resolvedObj?.lifecycle?.generation_phase);
     if (!deploymentStackName) {
       const fp = await writeFeedbackPacket(
         repoRoot,
@@ -516,7 +560,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
       die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 31);
     }
 
-    if (normalizeScalar(resolved.generation_phase) === 'architecture_scaffolding') {
+    if (generationPhase === 'architecture_scaffolding') {
       if (!fileExists(shapePath)) {
         const fp = await writeFeedbackPacket(
           repoRoot,
@@ -528,7 +572,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
             'Architect-edited alternative: create or restore spec/playbook/architecture_shape_parameters.yaml, then rerun /caf arch <name>.',
           ],
           [
-            `phase=${normalizeScalar(resolved.generation_phase)}`,
+            `phase=${generationPhase}`,
             `missing=${safeRel(repoRoot, shapePath)}`,
           ]
         );
@@ -569,7 +613,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
             'See docs/user/15_prd_first_lifecycle.md for the PRD-first lifecycle and operator guidance.',
           ],
           [
-            `phase=${normalizeScalar(resolved.generation_phase)}`,
+            `phase=${generationPhase}`,
             `shape_status=${shapeStatus}`,
             safeRel(repoRoot, shapePath),
             `product_prd=${fileExists(productPrdPath) ? 'present' : 'missing'}:${safeRel(repoRoot, productPrdPath)}`,
@@ -584,7 +628,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
     // Ship blocker: prevent accidental regeneration of architecture_scaffolding after deliverables already exist.
     // Rationale: rerunning scaffolding in-place has a high chance of mixing derived artifacts with stale deliverables.
     // Update flows are intentionally explicit (reset + rerun), not implicit.
-    if (normalizeScalar(resolved.generation_phase) === 'architecture_scaffolding') {
+    if (generationPhase === 'architecture_scaffolding') {
       const presentDeliverables = listPresentArchitectureScaffoldingDeliverables(repoRoot, layout);
       if (presentDeliverables.length > 0) {
         const fp = await writeFeedbackPacket(
@@ -602,7 +646,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
             '  - then rerun /caf arch <name>',
           ],
           [
-            `phase=${normalizeScalar(resolved.generation_phase)}`,
+            `phase=${generationPhase}`,
             ...presentDeliverables.slice(0, 20),
           ]
         );
@@ -637,7 +681,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
             '  - then rerun /caf arch <name>',
           ],
           [
-            `phase=${normalizeScalar(resolved.generation_phase)}`,
+            `phase=${generationPhase}`,
             `checkpoint_root=${safeRel(repoRoot, checkpointRoot)}`,
           ]
         );

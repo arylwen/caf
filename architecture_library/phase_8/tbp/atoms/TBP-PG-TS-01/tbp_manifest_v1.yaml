@@ -22,7 +22,6 @@ layout:
       artifact_class: config_stubs_non_executable
       evidence_contains:
         - postgres
-        - DATABASE_URL
     postgres_adapter_module:
       path_template: code/ap/persistence/postgres_adapter.ts
       artifact_class: code_placeholders_non_runnable
@@ -33,12 +32,12 @@ layout:
 extensions:
   obligations:
     - obligation_id: O-TBP-PG-TS-01-compose-postgres-service
-      title: Materialize PostgreSQL service in candidate compose wiring and expose DATABASE_URL
+      title: Materialize PostgreSQL service in candidate compose wiring without inlining runtime DATABASE_URL ownership
       required_capability: postgres_persistence_wiring
       role_binding_key: postgres_compose_candidate
 
     - obligation_id: O-TBP-PG-TS-01-env-contract
-      title: Materialize PostgreSQL environment contract examples (DATABASE_URL / POSTGRES_*)
+      title: Materialize PostgreSQL environment contract examples (POSTGRES_* and engine-owned references as applicable)
       required_capability: postgres_persistence_wiring
       role_binding_key: database_env_contract
 

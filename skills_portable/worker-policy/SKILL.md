@@ -68,6 +68,8 @@ Constraints:
 - Keep implementation minimal but coherent (no "README-only" completion).
 - Ensure any examples are realistic and do not contain placeholders (TBD/TODO/...).
 - When implementing the canonical combined task, do not split responsibility back into multiple pseudo-tasks; produce one coherent policy/auth/context slice and report it under the requested `task_id`.
+- Read `caf/profile_parameters_resolved.yaml` and the task's managed DoD / semantic-review lines; if they make the selected auth contract explicit, realize that contract verbatim rather than collapsing it into generic policy prose.
+- When the task carries a managed claim-bearing or carrier-precedence contract, keep that contract explicit across AP/CP policy seams and treat alternate carriers only according to the declared conflict rule.
 
 ## Task report (required)
 

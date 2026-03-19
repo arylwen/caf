@@ -10,7 +10,9 @@ This contract defines how CAF resolves technology atoms into Technology Binding 
 ## Output
 
 - A deterministic ordered list of TBP IDs to apply for the current architecture instance.
+- A deterministic merged `resolved_conventions` view for stack-owned worker conventions declared by resolved TBPs (for example language/module conventions).
 - `tbp_resolution_v1.yaml` is an ID-resolution artifact only; it does **not** inline `layout.role_bindings`. Downstream workers must resolve role-binding paths from the resolved TBP manifests (for example via `tools/caf/resolve_tbp_role_binding_key_v1.mjs` or `tools/caf/resolve_tbp_role_bindings_v1.mjs`).
+- Worker-facing deterministic conventions that are shared across capabilities SHOULD flow through normal TBP resolution and be mirrored into `profile_parameters_resolved.yaml` under `tbp_conventions`; do not add ad hoc one-off resolver scripts for conventions that can be expressed in this resolved view.
 
 ## Algorithm (normative)
 

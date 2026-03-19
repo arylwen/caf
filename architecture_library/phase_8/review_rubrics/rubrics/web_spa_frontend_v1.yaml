@@ -1,0 +1,69 @@
+schema_version: v1
+kind: review_rubric
+rubric_id: RR-WEB-SPA-01
+title: Web SPA frontend wiring and interaction completeness (v1)
+applies_when:
+  - condition: "task.required_capabilities contains ui_frontend_scaffolding"
+checks:
+  - check_id: RR-SPA-WIRE-01
+    severity: blocker
+    category: correctness
+    rule: "SPA shell/page tasks must materialize real UI wiring, not only descriptive or placeholder content presented as implemented functionality."
+    evidence_hints:
+      - "inspect code/ui/src/App.jsx, code/ui/src/api.js, and the task-touched page files"
+      - "look for event handlers, route/page selection wiring, useEffect/useMemo/useState backed data flow, or submit handlers that are actually used by rendered UI"
+      - "fail if task reports claim implementation but touched pages only render static explanatory prose/lists with no observable interaction path"
+  - check_id: RR-SPA-WIRE-02
+    severity: blocker
+    category: correctness
+    rule: "Resource/admin pages must be reachable from implemented SPA shell navigation or router flow, and the shell must expose the page path/control it claims to provide."
+    evidence_hints:
+      - "verify App.jsx or router registration imports and renders each task page"
+      - "verify the page is actually selectable/reachable from shell navigation or route table"
+  - check_id: RR-SPA-WIRE-03
+    severity: high
+    category: architecture
+    rule: "API-backed SPA interactions must use the shared UI API helper / declared contract surface rather than ad hoc raw fetch calls or disconnected mock data."
+    evidence_hints:
+      - "inspect code/ui/src/api.js and confirm task pages import or use the shared helper when API interaction is claimed"
+      - "prefer declared local contract paths such as /api/* and /cp/* over hard-coded localhost ports"
+      - "fail when same-origin proxy wiring is expected locally but the shared helper still targets direct localhost backend ports"
+  - check_id: RR-SPA-STATE-01
+    severity: high
+    category: correctness
+    rule: "API-backed SPA pages expose explicit loading, empty, success, and failure states; failures are surfaced fail-closed rather than silently ignored."
+    evidence_hints:
+      - "look for loading/error/empty branches in rendered output"
+      - "fail if the page claims data wiring but has no observable state handling"
+  - check_id: RR-SPA-ERR-DETAIL-01
+    severity: high
+    category: operability
+    rule: "The shared UI API helper must preserve backend error detail for non-2xx responses when available, so emitted SPA failures remain diagnosable instead of collapsing into status-code-only noise."
+    evidence_hints:
+      - "inspect code/ui/src/api.js for a shared non-2xx path that reads JSON detail and/or response text before throwing"
+      - "fail if the helper only throws messages like API request failed: 401 with no backend detail path"
+      - "prefer one shared helper behavior over per-page ad hoc parsing"
+  - check_id: RR-SPA-FORM-01
+    severity: high
+    category: correctness
+    rule: "Pages that claim create/update/admin actions bind visible form state to a real submit/preview action path; static forms/mockups are not acceptable completion."
+    evidence_hints:
+      - "inspect controlled inputs, submit handlers, and calls to the shared API helper"
+      - "verify every controlled input/setter pair is backed by declared component state (useState/useReducer or equivalent)"
+      - "fail if the page shows action language but has no real handler/action path"
+  - check_id: RR-SPA-CONTRACT-01
+    severity: blocker
+    category: architecture
+    rule: "Admin/evaluation pages must describe and scaffold only the backend contract surface that is actually declared; evaluation/admin probes must not be mislabeled as CRUD authoring, and CRUD claims require corresponding contract evidence."
+    evidence_hints:
+      - "inspect the task inputs/design/contracts for declared operations before accepting page copy such as author, create, edit, list, or publish"
+      - "fail if the UI page presents CRUD authoring semantics while the implemented API/helper usage only supports evaluation or probe-style calls"
+      - "prefer neutral administration/probe wording unless contract/design sources explicitly ground authoring flows"
+  - check_id: RR-SPA-HANDOFF-01
+    severity: high
+    category: correctness
+    rule: "Resource pages that unlock downstream flows must visibly expose required resource identifiers and provide a usable handoff into dependent forms instead of forcing hidden/manual lookup dead ends."
+    evidence_hints:
+      - "inspect list/detail rendering for identifiers such as workspace_id, submission_id, or similar keys when downstream forms require them"
+      - "prefer direct select/copy/prefill controls or clearly visible IDs over hidden state that users cannot act on"
+      - "fail if a downstream create/update form requires an upstream identifier that the page never exposes or hands off"

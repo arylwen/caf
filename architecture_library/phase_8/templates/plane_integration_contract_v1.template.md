@@ -8,7 +8,7 @@
 
 <!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_choices_v1 START -->
 ## Plane Integration Contract questions (architect-edit)
-(YAML. Low-friction: each question embeds its option list. Flip exactly one option to `status: adopt`. Options MUST be hydrated from CAF library patterns; do not hand-author option inventories here.)
+(YAML. Low-friction: each question embeds its option list. Flip exactly one option to `status: adopt`. Options MUST be hydrated from CAF library patterns; do not hand-author option inventories here. If any scalar value contains `: `, quote it or rephrase it.)
 
 ```yaml
 schema_version: plane_integration_contract_choices_v1

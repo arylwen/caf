@@ -22,6 +22,7 @@ platform:
   packaging: "podman_compose"
   runtime_language: "python"
   database_engine: "postgres"
+  dependency_wiring_mode: "manual_composition_root"
   framework: "fastapi"
   persistence_orm: "sqlalchemy_orm"
   schema_management_strategy: "code_bootstrap"
@@ -46,3 +47,4 @@ meta:
   requested_by: "caf-saas-init"
   change_reason: "initial_instance_creation"
   notes: "Initialized by caf-saas-init."
+  profile_template_id: "default-podman"

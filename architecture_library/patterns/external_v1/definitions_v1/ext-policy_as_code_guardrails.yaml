@@ -78,6 +78,21 @@ caf:
     - Warranted when governance and compliance rules must be enforced consistently and auditable across teams and environments.
     anchors:
     - caf_pattern: EXT-POLICY_AS_CODE_GUARDRAILS
+    semantic_acceptance:
+      attachments:
+      - attachment_id: policy_as_code_enforcement_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - runtime_wiring
+        criteria:
+        - Runtime wiring and operator-facing composition reflect the adopted primary policy-as-code enforcement point.
+        - Guardrail enforcement assumptions remain coherent with the adopted delivery/runtime enforcement posture.
+        review_questions:
+        - Does runtime wiring reflect the adopted primary policy-as-code enforcement point coherently?
+        - Are guardrail enforcement assumptions consistent with the adopted enforcement posture?
+        focus_areas:
+        - security
+        - governance
 promotions:
   semantic_inputs:
   - source_path: architecture_library/patterns/external_v1/definitions_v1/ext-policy_as_code_guardrails.yaml

@@ -9,6 +9,7 @@
  *     caf_meta/
  *   design/
  *     playbook/
+ *     caf_meta/
  *   feedback_packets/
  */
 
@@ -24,6 +25,7 @@ export function getInstanceLayout(repoRoot, instanceName) {
   const cafMetaDir = path.join(specDir, 'caf_meta');
 
   const designPlaybookDir = path.join(designDir, 'playbook');
+  const designMetaDir = path.join(designDir, 'caf_meta');
 
   const feedbackDir = path.join(instanceRoot, 'feedback_packets');
 
@@ -36,6 +38,7 @@ export function getInstanceLayout(repoRoot, instanceName) {
     specPlaybookDir,
     cafMetaDir,
     designPlaybookDir,
+    designMetaDir,
     feedbackDir,
 
     // Script-facing aliases (internal repo consistency; not a compatibility promise).

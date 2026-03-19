@@ -32,10 +32,10 @@ import fs from 'node:fs/promises';
 import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
-import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlFile } from './lib_yaml_v2.mjs';
-import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { latestCheckpointDir, restoreLatestScopedCheckpoint } from './lib_checkpoint_v1.mjs';
+import { renderFeedbackPacketV1, markPendingFeedbackPacketsStaleSync } from './lib_feedback_packets_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 
@@ -80,6 +80,22 @@ function dirHasAnyFiles(dir) {
     return false;
   }
 }
+
+
+const PRD_CHECKPOINT_LABEL = 'prd_promoted';
+const PRD_CHECKPOINT_ENTRIES = [
+  'product/PRD.md',
+  'product/PLATFORM_PRD.md',
+  'product/PRD.resolved.md',
+  'product/PLATFORM_PRD.resolved.md',
+  'spec/playbook/prd_extract_v1.json',
+  'spec/playbook/platform_prd_extract_v1.json',
+  'spec/playbook/prd_resolved_extract_v1.json',
+  'spec/playbook/platform_prd_resolved_extract_v1.json',
+  'spec/playbook/architecture_shape_parameters.proposed.yaml',
+  'spec/playbook/architecture_shape_parameters.proposed.rationale.json',
+  'spec/playbook/architecture_shape_parameters.yaml',
+];
 
 async function ensureDir(p) {
   await fs.mkdir(p, { recursive: true });
@@ -197,31 +213,23 @@ async function rmSpecDerivedStrict(specRootAbs, allowedAbsSet) {
 
 // NOTE: We intentionally do NOT re-run guardrails here.
 
-async function writeFeedbackPacket(layout, repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines) {
+async function writeFeedbackPacket(layout, repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines, humanGuidanceLines = []) {
   await ensureDir(layout.feedbackDir);
+  try { markPendingFeedbackPacketsStaleSync(layout.feedbackDir); } catch {}
   const fp = path.join(layout.feedbackDir, `BP-${nowStampYYYYMMDD()}-${slug}.md`);
-  const body = [
-    `# Feedback Packet - caf architecture scaffolding reset`,
-    '',
-    `- Date: ${nowDateYYYYMMDD()}`,
-    cafBulletStampLine(),
-    `- Instance: ${instanceName}`,
-    `- Stuck At: tools/caf/architecture_scaffolding_reset_v1.mjs`,
-    `- Observed Constraint: ${observedConstraint}`,
-    `- Gap Type: Stale derived artifacts | Deletion blocked`,
-    '',
-    '## Minimal Fix Proposal',
-    ...minimalFixLines.map((l) => `- ${l}`),
-    '',
-    '## Evidence',
-    ...evidenceLines.map((l) => `- ${l}`),
-    '',
-    '## Autonomous agent guidance',
-    '- Autonomous agents with reasoning capabilities MUST apply the edits described in this packet before continuing.',
-    '- After applying the fix, resume the current CAF workflow step; rerun the relevant command (/caf arch, /caf plan, or /caf build) only if required by your runner.',
-    '',
-  ].join('\n');
-  await fs.writeFile(fp, ensureFeedbackPacketHeaderV1(body), { encoding: 'utf8' });
+  const body = renderFeedbackPacketV1({
+    title: 'caf architecture scaffolding reset',
+    instanceName,
+    stuckAt: 'tools/caf/architecture_scaffolding_reset_v1.mjs',
+    severity: 'blocker',
+    status: 'pending',
+    observedConstraint,
+    gapType: 'Stale derived artifacts | Deletion blocked | PRD checkpoint restore',
+    minimalFixLines,
+    evidenceLines,
+    humanGuidanceLines,
+  });
+  await fs.writeFile(fp, body, { encoding: 'utf8' });
   return fp;
 }
 
@@ -255,6 +263,9 @@ async function main() {
   await ensureDir(layout.designDir);
   await ensureDir(layout.feedbackDir);
 
+
+  const prdCheckpointDir = latestCheckpointDir(layout.instanceRoot, PRD_CHECKPOINT_LABEL);
+
   // Phase safety: only allow wiping spec-derived artifacts in architecture_scaffolding.
   let phase = '(missing)';
   try {
@@ -282,6 +293,10 @@ async function main() {
       [
         `phase: ${phase}`,
         `pins: ${path.relative(repoRoot, path.join(layout.specGuardrailsDir, 'profile_parameters.yaml')).split('\\').join('/')}`,
+      ],
+      [
+        'This helper is intentionally limited to architecture_scaffolding.',
+        `Use the reset helper that matches phase='${phase}', then rerun the CAF command for that phase.`,
       ]
     );
     die(`Refused. See feedback packet: ${path.relative(repoRoot, pkt).split('\\').join('/')}`, 45);
@@ -303,7 +318,17 @@ async function main() {
   // Wipe spec-derived artifacts (preserve pinned inputs).
   const s = await rmSpecDerivedStrict(layout.specDir, allowed);
 
-  const hadErrors = (d.errors?.length ?? 0) > 0 || (f.errors?.length ?? 0) > 0 || (s.errors?.length ?? 0) > 0;
+  const prdRestore = { restored: false, checkpointDir: prdCheckpointDir ? path.relative(repoRoot, prdCheckpointDir).split('\\').join('/') : '(none)', error: '' };
+  if (prdCheckpointDir) {
+    try {
+      await restoreLatestScopedCheckpoint(layout.instanceRoot, PRD_CHECKPOINT_LABEL, { entries: PRD_CHECKPOINT_ENTRIES });
+      prdRestore.restored = true;
+    } catch (e) {
+      prdRestore.error = String(e?.message ?? e);
+    }
+  }
+
+  const hadErrors = (d.errors?.length ?? 0) > 0 || (f.errors?.length ?? 0) > 0 || (s.errors?.length ?? 0) > 0 || Boolean(prdRestore.error);
   const hasRemaining =
     (d.remaining?.length ?? 0) > 0 ||
     (f.remaining?.length ?? 0) > 0 ||
@@ -343,6 +368,11 @@ async function main() {
     die(`Reset failed. See feedback packet: ${path.relative(repoRoot, pkt).split('\\').join('/')}`, 55);
   }
 
+  console.log(`OK: reset architecture scaffolding artifacts for '${instanceName}'`);
+  console.log(`- design/: deleted ${d.deleted}/${d.attempted}`);
+  console.log(`- feedback_packets/: deleted ${f.deleted}/${f.attempted}`);
+  console.log(`- spec/ derived files: deleted ${s.deleted}/${s.attempted}`);
+  console.log(`- prd checkpoint: ${prdRestore.restored ? `restored from ${prdRestore.checkpointDir}` : (prdCheckpointDir ? `found but not restored (${prdRestore.error})` : 'not found')}`);
   // No further actions. Next step is to rerun /caf arch, which will re-derive guardrails.
 }
 

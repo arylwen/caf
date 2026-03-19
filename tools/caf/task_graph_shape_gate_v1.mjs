@@ -25,7 +25,7 @@ import { loadPlaneDomainModelViews, extractResourceKeysFromApplicationDomainMode
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
-import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 
@@ -337,6 +337,7 @@ async function main() {
     process.exit(20);
   }
 
+  resolveFeedbackPacketsBySlugSync(path.join(layout.instRoot, 'feedback_packets'), 'task-graph-shape-incomplete');
   process.exit(0);
 }
 

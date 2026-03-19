@@ -160,9 +160,12 @@ Operationally, CAF now treats `/caf prd` as **strongly expected by default**.
 
 For the launch workflow, the practical rule is simple: run `/caf prd` before you treat the first `/caf arch` scaffold as your stable baseline. If you skip it, CAF will surface an advisory packet so you can correct course without getting blocked.
 
-## Related docs
+## Next best link
 
-- [Quickstart](03_quickstart.md)
-- [PRD → Architecture Shape](12_prd_workflow.md)
-- [Instances, phases, and state](05_instances_phases_and_state.md)
-- [Architect workflows](../architect/10_architect_workflows.md)
+[Quickstart](03_quickstart.md) — Run the default sequence on a fresh instance after you understand the lifecycle model.
+
+## Top 3 related links
+
+- [PRD → Architecture Shape](12_prd_workflow.md) — Go deeper on the promotion step that makes the lifecycle safe.
+- [Answering questions with CAF](14_answering_questions_with_caf.md) — Use the ask surface to inspect the lifecycle state you just created.
+- [Architect workflows](../architect/10_architect_workflows.md) — Compare the launch-path lifecycle with architect-operated variations.

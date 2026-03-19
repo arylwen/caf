@@ -52,7 +52,9 @@ layout:
       evidence_contains:
         - proxy_pass
         - ap:8000
+        - cp:8001
         - /api
+        - /cp
     ui_compose_service:
       path_template: docker/compose.candidate.yaml
       artifact_class: config_stubs_non_executable
@@ -86,12 +88,12 @@ extensions:
       required_capability: ui_frontend_scaffolding
       criteria:
         - UI source uses JSX/React and is compiled into browser-runnable assets as part of the candidate run flow (no serving raw JSX directly to browsers).
-        - UI calls the Application Plane via a stable local contract surface (prefer same-origin via reverse proxy) without requiring ad-hoc CORS bypasses.
+        - UI calls CP/AP surfaces via stable local contract paths (prefer same-origin via reverse proxy) without requiring ad-hoc CORS bypasses.
       review_questions:
         - Does the UI run end-to-end via the compose stack without manual build steps on the host?
-        - Are API calls made via a stable contract surface (e.g., /api/*) rather than hard-coded localhost ports in UI code?
+        - Are UI backend calls made via stable local contract surfaces (for example /api/* and /cp/*) rather than hard-coded localhost ports in UI code?
       focus_areas: [portability, correctness]
       severity_threshold_override: high
       notes: |
         Implementation hint (non-normative): prefer a multi-stage Dockerfile that runs `npm ci` + `npm run build` in a Node image, then copies `dist/` into an nginx image.
-        For local same-origin behavior, configure nginx to serve the SPA and proxy `/api/*` to `http://ap:8000` (compose service DNS).
+        For local same-origin behavior, configure nginx to serve the SPA and proxy `/api/*` to `http://ap:8000` and `/cp/*` to `http://cp:8001` (compose service DNS).

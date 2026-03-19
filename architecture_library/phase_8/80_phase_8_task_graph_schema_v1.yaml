@@ -134,3 +134,57 @@ properties:
               anchor_ref:
                 type: string
                 description: "Optional label or reference within the pattern."
+        interface_binding_hints:
+          type: array
+          minItems: 0
+          description: >
+            Optional task-level binding declarations. These are the semantic source for instance-specific
+            required/provided interface closure intent when a consumer/provider/assembler loop must be preserved
+            across waves. CAF may derive interface_binding_contracts_v1.yaml from these hints mechanically.
+          items:
+            type: object
+            additionalProperties: false
+            required: [binding_key, participant, semantic_role]
+            properties:
+              binding_key:
+                type: string
+                minLength: 1
+                description: Stable group key linking the consumer, provider, and assembler task hints.
+              participant:
+                type: string
+                enum: [consumer, provider, assembler]
+              semantic_role:
+                type: string
+                enum: [application_consumer, persistence_provider, contract_consumer, contract_provider, assembler]
+              plane_scope:
+                type: string
+                minLength: 1
+                description: Optional plane scope label carried into the derived binding contract.
+              resource_key:
+                type: string
+                minLength: 1
+                description: Optional resource/aggregate key carried into the derived binding contract.
+              binding_id:
+                type: string
+                minLength: 1
+                description: Optional stable binding id override for the derived binding contract.
+              description:
+                type: string
+                minLength: 1
+                description: Optional human-readable binding description.
+              required_interface_name:
+                type: string
+                minLength: 1
+                description: Required on the consumer hint when an interface binding is declared.
+              required_interface_description:
+                type: string
+                minLength: 1
+                description: Optional description for the required interface on the consumer hint.
+              provider_binding_kind:
+                type: string
+                minLength: 1
+                description: Optional provider binding kind override (for provider hint or shared binding metadata).
+              assembler_binding_action:
+                type: string
+                minLength: 1
+                description: Optional assembler binding action override (for assembler hint or shared binding metadata).

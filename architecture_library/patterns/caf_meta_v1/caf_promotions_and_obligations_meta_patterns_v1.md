@@ -35,6 +35,28 @@ Promotions are used for:
 
 Promotions do not directly create obligations today; they constrain how tasks must be executed and reviewed.
 
+### Semantic acceptance attachment
+
+A **semantic acceptance attachment** is library-owned acceptance metadata that tells the planner what semantic pressure must be preserved structurally and what the framework-owned post-plan compiler must compile into Task Graph `definition_of_done[]` and `semantic_review.review_questions[]`.
+
+Semantic acceptance attachments exist so CAF does **not** hardcode technology facts or option-specific acceptance text inside planner conditionals.
+
+Rules:
+
+- The planner is a **structural carrier** of semantic pressure, not a technology-fact rule engine.
+- Runtime-significant acceptance should be declared on library-owned elements (patterns, adopted decision questions/options, TBPs, and when present ABP/PBP manifests).
+- Attachments must remain **semantic and positive**: they state what must be true, not file-path checks or negative anti-checklists.
+- New enforcement pressure lands in final `task_graph_v1.yaml` through the framework-owned post-plan semantic acceptance compiler, not via bespoke planner conditionals.
+- Deterministic gates, when needed, should verify that required semantic acceptance was compiled, not re-encode bespoke technology-specific scanners.
+
+Authoritative contract surfaces (v1):
+
+- CAF/external pattern definitions: `caf.semantic_acceptance.attachments[]`
+- CAF/external human questions: `caf.human_questions[].semantic_acceptance.attachments[]`
+- CAF/external options: `caf.option_sets[].options[].semantic_acceptance.attachments[]`
+- TBP manifests: `extensions.gates[]` (TBP-owned semantic acceptance surface)
+- ABP/PBP manifests: optional manifest extension surfaces when present
+
 Authoritative locations:
 
 - Pattern definitions: `architecture_library/patterns/**/definitions_v1/*.yaml`
@@ -44,20 +66,21 @@ Authoritative locations:
 
 ### Obligation
 
-An **obligation** is a planner-compiled requirement that the Task Graph must cover to produce a viable candidate outcome (e.g., runnable demo, enforcement bar).
+An **obligation** is a compiler-owned requirement that the Task Graph must cover to produce a viable candidate outcome (e.g., runnable demo, enforcement bar).
 
 Obligations are enumerated in `pattern_obligations_v1.yaml` and converted into Task Graph tasks with specific worker capabilities.
 
 Authoritative locations:
 
 - Schema: `architecture_library/phase_8/80_phase_8_pattern_obligations_schema_v1.yaml`
-- Planner procedure: `skills/caf-application-architect/SKILL.md` (Step 2 → obligations, Step 3 → Task Graph)
+- Compiler: `tools/caf/compile_pattern_obligations_v1.mjs`
+- Task coverage / attachment: `tools/caf/task_graph_obligation_trace_enrichment_v1.mjs` + `tools/caf/pattern_obligation_gate_v1.mjs`
 
 ## End-to-end flow
 
 The canonical flow (pins → spec → design → plan → build) is documented in `caf_derivation_cascade_meta_patterns_v1.md`.
 
-This note focuses on the promotions/obligations slice:
+This note focuses on the promotions/obligations slice and the adjacent semantic-acceptance slice:
 
 1) Pattern retrieval proposes candidate patterns (no decisions).
 
@@ -69,23 +92,45 @@ This note focuses on the promotions/obligations slice:
 
 - `reference_architectures/<name>/spec/playbook/system_spec_v1.md` → `ARCHITECT_EDIT_BLOCK: decision_resolutions_v1`
 
-3) Design stage materializes a planning payload that includes the selected patterns and the unioned promotions.
+3) Design stage materializes a planning payload that includes the selected patterns, adopted option choices, and the unioned promotions.
 
 - `reference_architectures/<name>/design/playbook/control_plane_design_v1.md` → `CAF_MANAGED_BLOCK: planning_pattern_payload_v1`
 - `reference_architectures/<name>/design/playbook/application_design_v1.md` → `CAF_MANAGED_BLOCK: planning_pattern_payload_v1`
 - Procedure + fail-closed validation: `tools/caf/materialize_planning_pattern_payload_v1.mjs` + `tools/caf/design_postgate_planning_coherence_v1.mjs` (wired by `skills/caf-arch-implementation-scaffolding/SKILL.md`)
 
-4) Planning stage compiles obligations, then compiles tasks that cover those obligations.
+4) The planning post-chain compiles obligations deterministically from structured inputs, then the planner emits tasks that cover those obligations.
+
+5) The planner emits the concrete consumer tasks and semantic anchors required for attachment targeting, and the framework-owned post-plan chain merges active semantic acceptance attachments plus compiler-owned obligation traces into those tasks deterministically.
+
+6) Build stage executes tasks via workers, producing code + reports.
 
 - Obligations: `reference_architectures/<name>/design/playbook/pattern_obligations_v1.yaml`
 - Task Graph: `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
 - Procedure: `skills/caf-application-architect/SKILL.md`
 
-5) Build stage executes tasks via workers, producing code + reports.
 
 - Orchestrator: `skills/caf-build-candidate/SKILL.md`
 - Worker contracts: `skills/worker-*/SKILL.md`
 - Worker outputs: `companion_repositories/<name>/caf/task_reports/*.md` (generated)
+
+## Deterministic enrichment ownership
+
+Promotions and obligations are not the only library-owned surfaces that influence the final Task Graph. CAF also uses deterministic post-plan enrichment for framework-owned, repetitive attachments such as semantic acceptance and required inputs.
+
+The ownership split is:
+
+- planner-owned: task existence, dependencies, capability routing, semantic anchors, and the baseline task contract
+- framework-owned deterministic enrichment: repetitive library-authored pressure that can be attached mechanically after planning
+- gates: verify that the enriched result exists and is coherent
+
+This keeps the planner as the structural carrier of semantic pressure without forcing it to restate every library-authored rule inline.
+
+When adding a new library terminal or task-seed family, maintainers must decide whether it is consumed directly by the planner or by a deterministic enricher. Do not leave the ownership implicit.
+
+See also:
+
+- `architecture_library/patterns/caf_meta_v1/caf_deterministic_enrichment_ownership_meta_pattern_v1.md`
+- `tools/caf/contracts/enrichment_ownership_map_v1.md`
 
 ## How promotions work
 
@@ -104,7 +149,7 @@ See:
 
 ### Union rule (design stage)
 
-In `planning_pattern_payload_v1`, promotions are unioned from each adopted pattern definition:
+In `planning_pattern_payload_v1`, adopted option choices are mechanically copied from `system_spec_v1.md:decision_resolutions_v1` and promotions are unioned from each adopted pattern definition:
 
 - Source of truth for adopted patterns: `system_spec_v1.md:decision_resolutions_v1 (status: adopt)`
 - Source of truth for definition file location: `pattern_retrieval_surface_v1.jsonl` → `definition_path`
@@ -113,14 +158,19 @@ Union procedure + validation is defined in:
 
 - `tools/caf/materialize_planning_pattern_payload_v1.mjs` + `tools/caf/design_postgate_planning_coherence_v1.mjs` (wired by `skills/caf-arch-implementation-scaffolding/SKILL.md`)
 
-Critical invariant:
+Critical invariants:
 
+- The emitted `adopted_option_choices` block must preserve the adopted option tuples from `decision_resolutions_v1` without semantic reinterpretation.
 - The emitted `promotions` block must preserve the expected shape and must not be `{}`.
   Emit explicit list keys even when empty.
 
 ### Consumption rule (planning stage)
 
-The planner (`caf-application-architect`) consumes promotions only to constrain tasks:
+The CAF planning command consumes `adopted_option_choices` and promotions in two different ownership lanes:
+
+- the deterministic obligation compiler emits `OBL-OPT-*` obligations into `pattern_obligations_v1.yaml`
+- the planner-owned semantic step emits `TG-10-OPTIONS-*` tasks and the structural anchors needed for later attachment
+- promotions still constrain the planner-owned task graph output:
 
 - For `semantic_inputs` entries:
   - `cross_cutting` inputs are added to every task `inputs[]`.
@@ -152,9 +202,9 @@ See:
 
 - `architecture_library/phase_8/80_phase_8_pattern_obligations_schema_v1.yaml`
 
-### Compilation rule (planning stage)
+### Compilation rule (deterministic compiler)
 
-The planner compiles a deterministic “minimum viable set” of obligations plus expansions based on:
+`tools/caf/compile_pattern_obligations_v1.mjs` compiles a deterministic “minimum viable set” of obligations plus expansions based on:
 
 - material contracts (`contract_declarations_v1.yaml`)
 - resources / API surface (domain model + spec fallback)
@@ -162,7 +212,7 @@ The planner compiles a deterministic “minimum viable set” of obligations plu
 
 This is specified in:
 
-- `skills/caf-application-architect/SKILL.md` → Step 2
+- `tools/caf/compile_pattern_obligations_v1.mjs`
 
 Critical invariants:
 
@@ -172,6 +222,8 @@ Critical invariants:
 ### From obligations to tasks
 
 Each obligation must be covered by one or more tasks in `task_graph_v1.yaml`.
+
+Coverage is proven by trace anchor tokens. The canonical path is: planner owns task structure and canonical task ids; `tools/caf/task_graph_obligation_trace_enrichment_v1.mjs` attaches compiler-owned obligation trace anchors deterministically where the target is mechanical; `tools/caf/pattern_obligation_gate_v1.mjs` verifies coverage.
 
 Coverage is proven by trace anchor tokens:
 

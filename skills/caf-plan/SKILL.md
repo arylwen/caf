@@ -1,7 +1,7 @@
 ---
 name: caf-plan
 description: >
-  CAF planning command. Produces planning artifacts (pattern obligations + task graph) after design outputs exist.
+  CAF planning command. Produces compiler-owned pattern obligations plus a planner-owned task graph after design outputs exist.
   Intended to be run after `/caf arch <instance>` has produced the design bundle.
 ---
 
@@ -83,7 +83,18 @@ Rules:
 - If it exits non-zero, it will print a CAF-owned feedback packet path. STOP and surface only that path.
 - This is the canonical proof that the script-owned `planning_pattern_payload_v1` handoff exists and has the required `promotions.*` list keys before the instruction-owned planner runs.
 
-4) Invoke the canonical planning producer (instruction-owned):
+4) Deterministic obligation compilation (fail-closed)
+
+Run:
+
+- `node tools/caf/compile_pattern_obligations_v1.mjs <name>`
+
+Rules:
+- Do **not** print the invocation.
+- `pattern_obligations_v1.yaml` is compiler-owned. Do not ask the planner to hand-author it.
+- If it exits non-zero, it will write or print a CAF-owned feedback packet path. STOP and surface only that path.
+
+5) Invoke the canonical planning producer (instruction-owned):
 
 - `skills/caf-application-architect/SKILL.md`
 
@@ -91,7 +102,7 @@ Packet handling:
 - If any new feedback packet has `Severity: blocker`, STOP and surface the newest blocker.
 - If ONLY advisory packets were produced, DO NOT STOP.
 
-5) Mechanical YAML scalar-safety postprocess (deterministic)
+6) Mechanical YAML scalar-safety postprocess (deterministic)
 
 Run:
 
@@ -102,7 +113,7 @@ Rules:
 - This helper is script-owned and mechanical only; it rewrites unsafe plain scalars containing `: ` in planning YAML so downstream parsers do not fail on valid planning content.
 - If it exits non-zero, it will write a feedback packet. STOP and surface only that packet path.
 
-6) Producer-side planning invariants (fail-closed; do not "auto-fix")
+7) Producer-side planning invariants (fail-closed; do not "auto-fix")
 
 Run:
 
@@ -115,11 +126,12 @@ Rules:
 
 Important:
 - `interface_binding_contracts_v1.yaml` is not a prerequisite for Step 4.
+- The scripted post-plan phase is allowed to enrich `task_graph_v1.yaml` mechanically only for framework-owned derivations (for example library-owned semantic acceptance attachment expansion and interface binding contract propagation).
 - It is generated mechanically during the post-plan invariant phase after the planner emits `task_graph_v1.yaml`.
 - The same scripted post-plan phase may update the task graph mechanically so bound consumer/provider/assembler tasks take `interface_binding_contracts_v1.yaml` as a required input.
 - If that file is missing after `/caf plan`, investigate the planner output and `tools/caf/post_plan_gate_v1.mjs`, not `/caf arch`.
 
-7) Deterministic planning validation (fail-closed; no hidden repair)
+8) Deterministic planning validation (fail-closed; no hidden repair)
 
 Run:
 
@@ -129,7 +141,7 @@ Rules:
 - Do **not** print the invocation.
 - If it exits non-zero, it will write a feedback packet. STOP and surface only that packet path.
 
-8) Finalize derived views:
+9) Finalize derived views:
 
 - Invoke: `skills/caf-arch-postprocess/SKILL.md`
 

@@ -1,38 +1,39 @@
 schema_version: phase8_tbp_manifest_v1
 tbp_id: TBP-PY-PACKAGING-01
-
 binds_to:
   - atom_path: runtime.language
     atom_value: python
-
 requires_tbps:
   - TBP-PY-01
 conflicts_with_tbps: []
-
 layout:
   scaffold_directories: []
-
   role_bindings:
-    python_project_manifest:
-      path_template: pyproject.toml
-      artifact_class: config_stubs_non_executable
-      evidence_contains:
-        - "[project]"
-
     python_requirements_manifest:
       path_template: requirements.txt
       artifact_class: config_stubs_non_executable
       evidence_contains:
-        - "fastapi"
-
+        - "# CAF_TRACE:"
 extensions:
   obligations:
-    - obligation_id: O-TBP-PY-PACKAGING-01-pyproject
-      title: Materialize Python project manifest
-      required_capability: observability_and_config
-      role_binding_key: python_project_manifest
-
     - obligation_id: O-TBP-PY-PACKAGING-01-requirements
-      title: Materialize Python requirements manifest
+      title: Materialize the canonical Python dependency manifest (`requirements.txt`) for runnable candidates.
       required_capability: observability_and_config
       role_binding_key: python_requirements_manifest
+  gates:
+    - gate_id: G-PY-PACKAGING-CANONICAL-MANIFEST
+      title: Preserve one canonical Python dependency manifest for runnable candidate wiring
+      gate_kind: definition_of_done
+      attachment_scope: all_matching_tasks
+      required_capabilities:
+        - observability_and_config
+        - runtime_wiring
+      criteria:
+        - Python runnable candidates publish one canonical dependency manifest at repo root (`requirements.txt`).
+        - Python container/runtime wiring installs dependencies from the canonical manifest rather than hard-coding an inline package list in Dockerfiles.
+      review_questions:
+        - Does the companion repo expose a repo-root `requirements.txt` as the canonical dependency manifest?
+        - Do Python Dockerfiles or container build surfaces install from `requirements.txt` rather than duplicating package names inline?
+      focus_areas:
+        - maintainability
+        - correctness

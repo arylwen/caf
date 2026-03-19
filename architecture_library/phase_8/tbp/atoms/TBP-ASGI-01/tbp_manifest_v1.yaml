@@ -15,3 +15,18 @@ layout:
       artifact_class: code_runnable_candidate
       evidence_contains:
       - "from .main import app"
+    python_requirements_manifest:
+      path_template: requirements.txt
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+      - uvicorn
+      validator_kind: python_requirements_manifest
+      validator_config:
+        package_names_all_of:
+        - uvicorn
+extensions:
+  obligations:
+  - obligation_id: O-TBP-ASGI-01-server-dependency
+    title: Materialize the ASGI server dependency in the canonical Python dependency manifest.
+    required_capability: observability_and_config
+    role_binding_key: python_requirements_manifest

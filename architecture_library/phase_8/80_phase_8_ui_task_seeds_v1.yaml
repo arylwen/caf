@@ -65,7 +65,7 @@ seeds:
       required_adopted_patterns_any: [CAF-POL-01, POL-01, CAF-POL-02]
     task:
       task_id: TG-18-ui-policy-admin
-      title: "Implement UI page for policy authoring"
+      title: "Implement UI page for policy administration"
       required_capabilities: [ui_frontend_scaffolding]
       depends_on: [TG-15-ui-shell]
       inputs:
@@ -79,21 +79,21 @@ seeds:
           required: true
       definition_of_done:
         - "A Policy Admin page exists and is reachable from the UI shell navigation."
-        - "The page includes a basic CRUD flow scaffold (list/create/edit) without inventing policy schema fields beyond contract/design sources."
+        - "The page scaffolds only the declared policy administration surface: evaluation/admin-probe flows by default, and list/create/edit authoring flows only when the contract/design explicitly declares them."
         - "UI stubs reflect tenant scoping and identity context requirements at the boundary (pass tenant_id/principal_id as required by the design)."
       semantic_review:
         severity_threshold: blocker
         focus_areas: [architecture_alignment, security]
         review_questions:
-          - "Does the UI page align with CP policy authoring intent and declared CP↔AP contract surface?"
+          - "Does the UI page align with the declared CP policy administration surface (evaluation/admin probe by default; authoring only when explicitly declared)?"
           - "Does the UI avoid inventing policy fields or flows not grounded in design/contracts?"
           - "Are tenant/principal context requirements respected in the UI scaffolding (no cross-tenant leakage assumptions)?"
         constraints_notes: |
-          Story: Provide a UI surface for policy authoring when adopted policy patterns make policy administration a first-class product concern.
+          Story: Provide a UI surface for policy administration when adopted policy patterns make policy visibility or evaluation a first-class product concern.
           Steps:
-            1) Read resolved UI pins, CP design, and contract declarations to identify the declared policy authoring surface.
+            1) Read resolved UI pins, CP design, and contract declarations to identify the declared policy administration surface.
             2) Add a Policy Admin page and wire it into the UI navigation.
-            3) Scaffold list/create/edit interactions with placeholder-free stubs.
+            3) Scaffold only the operations grounded in that surface; evaluation/admin-probe is the default and CRUD authoring is allowed only when the contract/design declares it.
             4) Ensure tenant/principal identifiers are carried per the design's chosen context carrier.
             5) Document how the page should call the AP/CP endpoints/events once implemented.
           References:
@@ -103,7 +103,7 @@ seeds:
       trace_anchors:
         - pattern_id: "selected_pattern:CAF-POL-01"
           anchor_kind: plan_step_archetype
-          anchor_ref: "Policy authoring patterns adopted"
+          anchor_ref: "Policy administration patterns adopted"
 
   - seed_id: UI-03-resource-pages
     when:
@@ -123,6 +123,7 @@ seeds:
         - "A resource page exists and is reachable from the UI shell navigation."
         - "The page scaffolds the resource operations declared in the spec (list/create/get/update/delete as applicable), without inventing extra endpoints."
         - "UI scaffolding preserves tenant scoping (tenant context is required and carried)."
+        - "When downstream flows require resource identifiers, the page visibly exposes those identifiers and provides a direct handoff into dependent forms instead of leaving dead-end create/update flows."
       semantic_review:
         severity_threshold: blocker
         focus_areas: [correctness, architecture_alignment]
@@ -130,14 +131,16 @@ seeds:
           - "Does the page match the resource operations declared in the spec (no missing/extra operations)?"
           - "Does the UI avoid inventing fields or domain rules not grounded in the spec/design?"
           - "Is tenant scoping treated as mandatory in UI calls (no unscoped calls)?"
+          - "When downstream flows depend on resource identifiers, does the page visibly expose those identifiers and provide a usable handoff into dependent forms?"
         constraints_notes: |
           Story: Provide a simple UI page for a resource to support demo/admin flows.
           Steps:
             1) Read the resolved UI pins and resource operations in application_spec_v1.
             2) Add a page component and wire it into navigation.
             3) Scaffold forms and list rendering with safe defaults.
-            4) Route calls through a single API helper (same-origin by default).
-            5) Document how this page maps to AP endpoints once the API boundary is implemented.
+            4) If downstream flows depend on resource identifiers, expose those identifiers in the page and prefill or hand off into the dependent form.
+            5) Route calls through a single API helper (same-origin by default).
+            6) Document how this page maps to AP endpoints once the API boundary is implemented.
           References:
             - reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml
             - reference_architectures/<instance>/spec/playbook/application_spec_v1.md

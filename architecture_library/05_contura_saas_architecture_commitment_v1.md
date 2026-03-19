@@ -134,7 +134,7 @@ Alternate architectural models (such as layered MVC, monolithic 3-tier structure
 
 ## Downstream Impact
 
-All documents within the Contura Architecture Library—including pattern guides (e.g., tri-plane patterns, multi-tenancy patterns, policy engine patterns), governance documents (AI Safety Gate, Observability), and domain frameworks (CSCP-AF, CSAP-AF, CDAF, CAI-AF)—must assume:
+All documents within the Contura Architecture Library—including pattern guides (e.g., tri-plane patterns, multi-tenancy patterns, policy engine patterns), governance documents (AI Safety Gate, Observability), rare domain constraints, extension packs, modernization playbooks, and system-specific specifications—must assume:
 
 - The AI-first, cloud-native, multi-tenant SaaS product model  
 - The Control/Application/Data Plane architecture approach  

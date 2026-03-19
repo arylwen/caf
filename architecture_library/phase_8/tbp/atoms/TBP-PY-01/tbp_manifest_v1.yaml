@@ -7,6 +7,12 @@ requires_tbps: []
 conflicts_with_tbps: []
 layout:
   code_root: code/
+  module_conventions:
+    absolute_import_root: code
+    intra_package_import_style: explicit_relative_preferred
+    plane_module_roots:
+      ap: code.ap
+      cp: code.cp
   scaffold_directories:
   - code/
   - tests/
@@ -51,3 +57,20 @@ extensions:
     title: Materialize Python package markers for candidate code packages
     required_capability: python_package_markers_materialization
     role_binding_key: python_package_marker_code_root
+  gates:
+  - gate_id: G-PY-MODULE-ROOT-COHERENCE
+    title: Preserve resolved Python module-root coherence
+    gate_kind: definition_of_done
+    attachment_scope: all_matching_tasks
+    required_capabilities:
+    - plane_runtime_scaffolding
+    - runtime_wiring
+    criteria:
+    - Runtime package structure, imports, and entrypoints align to the resolved Python module-root conventions across generated plane surfaces.
+    - Canonical plane module roots are realized consistently across runtime scaffolds, operator entrypoints, and tests.
+    review_questions:
+    - Do generated Python package roots, imports, and entrypoints all reflect the same resolved module-root conventions?
+    - Are plane package markers and import paths coherent across runtime surfaces?
+    focus_areas:
+    - maintainability
+    - correctness

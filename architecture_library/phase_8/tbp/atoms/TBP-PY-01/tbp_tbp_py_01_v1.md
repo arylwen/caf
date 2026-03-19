@@ -18,6 +18,7 @@ ROLE_BINDINGS:
 - config_registry: A repository-level dependency/config specification file (`pyproject.toml` or `requirements*.txt`) plus a config module/package (e.g., `code/ap/config/`).
 - config_model: A strongly-typed config object (commonly a Pydantic BaseSettings model) representing runtime settings loaded from env.
 - config_provider: A single place responsible for loading config from env/.env and making it available to composition root and adapters.
+- module_import_conventions: Absolute imports use the canonical `code` package root (for example `code.ap...` / `code.cp...`); when importing within the same package tree, explicit relative imports are preferred over inventing alternate roots such as bare `ap...`.
 
 ADDS_EVIDENCE_HOOKS:
 - E-TBP-PY-01-01: `pyproject.toml` OR `requirements.txt` exists at repo root.
@@ -29,6 +30,7 @@ ADDS_STRUCTURAL_VALIDATIONS:
 - V-TBP-PY-01-02: Python packages used for application code contain `__init__.py` (no implicit namespace packages for core service code in v1). In CAF layout, this includes `code/__init__.py` and any subpackages referenced by entrypoints (e.g., `code/ap/__init__.py` for `code.ap.*`).
 - V-TBP-PY-01-03: `domain_core` contains no imports from the chosen web framework TBP (e.g., no `fastapi`, `django`).
 - V-TBP-PY-01-04: Config is read via a config_provider (env-backed) rather than hard-coded literals for runtime endpoints/credentials.
+- V-TBP-PY-01-05: Runtime entrypoints, absolute imports, and package markers must agree on the canonical Python import root; do not mix `code.ap...` runtime entrypoints with bare `ap...` imports in the same package tree.
 
 EXTENSION_OBLIGATIONS (script-owned):
 - O-TBP-PY-01-python-package-markers: Ensure Python package marker files exist for candidate code packages so module imports resolve deterministically.

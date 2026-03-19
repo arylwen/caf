@@ -10,6 +10,19 @@ CAF uses one canonical public sample name across the public docs, demos, and ask
 
 Use that name consistently in release-facing guidance. Do not mix it with older sample names on the same public surface.
 
+## Starter template options
+
+CAF keeps the default simple SaaS starter and now also ships an explicit governed agentic review starter.
+
+- `intentionally_boring_saas_v1`
+  - default for `/caf saas <instance>`
+  - simple boring SaaS path with no agentic-first sample framing
+- `governed_agentic_review_v1`
+  - opt in with `/caf saas <instance> governed_agentic_review_v1`
+  - keeps the same boring review workspace domain but seeds a governed agentic review modernization story with human approval checkpoints
+
+This split is intentional: CAF should still be able to seed a plain SaaS surface from a template, while also offering a marketing and exploration path for SaaS to SaaS-plus-AI modernization.
+
 ## Packaging posture
 
 Generated instance folders under `reference_architectures/` and `companion_repositories/` are usually runtime artifacts, not source.

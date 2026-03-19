@@ -26,9 +26,9 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseYamlString } from './lib_yaml_v2.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
-import { cafBulletStampLine, cafMarkdownStampLine } from './lib_caf_version_v1.mjs';
+import { cafMarkdownStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
-import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { renderFeedbackPacketV1, nowStampYYYYMMDD, markPendingFeedbackPacketsStaleSync } from './lib_feedback_packets_v1.mjs';
 
 class CafFailClosed extends Error {
   constructor(message, exitCode = 1) {
@@ -42,17 +42,6 @@ function die(msg, code = 1) {
 }
 
 
-function nowDateYYYYMMDD() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-}
-
-function nowStampYYYYMMDD() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`;
-}
 
 async function readUtf8(p) {
   return await fs.readFile(p, { encoding: 'utf8' });
@@ -141,6 +130,28 @@ function extractTechPostureBullets(systemSpecText, profile) {
   return bullets;
 }
 
+
+function requiredSemanticBlockFailures(systemSpecText) {
+  const failures = [];
+  const pinConstraints = extractPinDerivedConstraintsSection(systemSpecText, 'arch_scaffolding');
+  if (!pinConstraints || pinConstraints.length === 0) {
+    failures.push({
+      slug: 'pattern-retrieval-pin_constraints_missing',
+      observed: 'pin_derived_system_constraints_v1 is missing/empty; retrieval blob would omit critical semantic constraints',
+      evidence: ['spec/playbook/system_spec_v1.md :: CAF_MANAGED_BLOCK pin_derived_system_constraints_v1'],
+    });
+  }
+  const techBullets = extractTechPostureBullets(systemSpecText, 'arch_scaffolding');
+  if (!techBullets || techBullets.length === 0) {
+    failures.push({
+      slug: 'pattern-retrieval-tech_posture_missing',
+      observed: 'tech_profile_explanations_v1 is missing/empty; retrieval blob would omit the resolved posture summary',
+      evidence: ['spec/playbook/system_spec_v1.md :: CAF_MANAGED_BLOCK tech_profile_explanations_v1'],
+    });
+  }
+  return failures;
+}
+
 function trimToBullets(lines, maxBullets) {
   // Count markdown bullets ("- ") only; preserve non-bullets that are short headers.
   const out = [];
@@ -196,32 +207,24 @@ function parseArgs(argv) {
   return args;
 }
 
-async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines) {
+async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines, humanGuidanceLines = []) {
   const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
   await fs.mkdir(packetsDir, { recursive: true });
+  try { markPendingFeedbackPacketsStaleSync(packetsDir); } catch {}
   const fp = path.join(packetsDir, `BP-${nowStampYYYYMMDD()}-${slug}.md`);
-  const body = [
-    `# Feedback Packet - build_retrieval_context_blob_v1`,
-    '',
-    `- Date: ${nowDateYYYYMMDD()}`,
-    cafBulletStampLine(),
-    `- Instance: ${instanceName}`,
-    `- Stuck At: tools/caf/build_retrieval_context_blob_v1.mjs`,
-    `- Observed Constraint: ${observedConstraint}`,
-    `- Gap Type: Retrieval context blob build`,
-    '',
-    `## Minimal Fix Proposal`,
-    ...minimalFixLines.map((l) => `- ${l}`),
-    '',
-    `## Evidence`,
-    ...evidenceLines.map((l) => `- ${l}`),
-    '',
-    `## Autonomous agent guidance`,
-    `- Autonomous agents with reasoning capabilities MUST apply the edits described in this packet before continuing.`,
-    `- After applying the fix, resume the current CAF workflow step; rerun the relevant command (/caf arch, /caf plan, or /caf build) only if required by your runner.`,
-    '',
-  ].join('\n');
-  await writeUtf8(fp, ensureFeedbackPacketHeaderV1(body));
+  const body = renderFeedbackPacketV1({
+    title: 'build_retrieval_context_blob_v1',
+    instanceName,
+    stuckAt: 'tools/caf/build_retrieval_context_blob_v1.mjs',
+    severity: 'blocker',
+    status: 'pending',
+    observedConstraint,
+    gapType: 'Retrieval context blob build',
+    minimalFixLines,
+    evidenceLines,
+    humanGuidanceLines,
+  });
+  await writeUtf8(fp, body);
   return fp;
 }
 
@@ -703,39 +706,33 @@ export async function internal_main(argv = process.argv.slice(2)) {
   }
 
   // Semantic readiness guard:
-  // Agents often run blob build before the semantic “summaries” are written into system_spec_v1.md.
-  // Fail-closed if those CAF-managed summaries are missing/placeholder so retrieval cannot proceed ungrounded.
-  const pinConstraints = extractPinDerivedConstraintsSection(sysText, profile);
-  if (!pinConstraints || pinConstraints.length === 0) {
+  // Missing system-spec semantic blocks are an architecture-scaffolding miss, not a retrieval-only defect.
+  const semanticBlockFailures = requiredSemanticBlockFailures(sysText);
+  if (semanticBlockFailures.length > 0) {
+    const failure = semanticBlockFailures[0];
     const fp = await writeFeedbackPacket(
       repoRoot,
       instanceName,
-      'pattern-retrieval-pin_constraints_missing',
-      'pin_derived_system_constraints_v1 is missing/empty; retrieval blob would omit critical semantic constraints',
+      failure.slug,
+      failure.observed,
       [
-        'Run the semantic system-architect step that populates CAF_MANAGED_BLOCK: pin_derived_system_constraints_v1.',
-        'Then rerun build_retrieval_context_blob_v1.mjs and resume retrieval.',
+        'Reset the architecture-scaffolding outputs if they are drifted or partially written.',
+        `Reset: node tools/caf/architecture_scaffolding_reset_v1.mjs ${instanceName} overwrite`,
+        `Then rerun: /caf arch ${instanceName}`,
       ],
-      [safeRel(repoRoot, systemSpecPath)]
+      [safeRel(repoRoot, systemSpecPath), ...failure.evidence],
+      [
+        'This is an architecture-semantic hydration miss, not a retrieval-only issue.',
+        `Reset: node tools/caf/architecture_scaffolding_reset_v1.mjs ${instanceName} overwrite`,
+        `Then rerun: /caf arch ${instanceName}`,
+        'If deletes or writes were blocked, rerun locally or rerun the agent with full filesystem permissions.',
+      ]
     );
     die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 16);
   }
 
+  const pinConstraints = extractPinDerivedConstraintsSection(sysText, profile);
   const techPostureBullets = extractTechPostureBullets(sysText, profile);
-  if (!techPostureBullets || techPostureBullets.length === 0) {
-    const fp = await writeFeedbackPacket(
-      repoRoot,
-      instanceName,
-      'pattern-retrieval-tech_posture_missing',
-      'tech_profile_explanations_v1 is missing/empty; retrieval blob would omit the resolved posture summary',
-      [
-        'Run the semantic system-architect step that populates CAF_MANAGED_BLOCK: tech_profile_explanations_v1.',
-        'Then rerun build_retrieval_context_blob_v1.mjs and resume retrieval.',
-      ],
-      [safeRel(repoRoot, systemSpecPath)]
-    );
-    die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 16);
-  }
 
   const decisionsObj = extractDecisionResolutions(sysText) ?? { schema_version: 'decision_resolutions_v1', decisions: [] };
   const architectDecisionLines = renderArchitectDecisions(decisionsObj, profile);

@@ -3,9 +3,21 @@
   Contura Architecture Framework (CAF)
 </h1>
 
+<p align="center">
+  <strong>Follow CAF on:</strong>
+  <a href="https://medium.com/contura-architecture-framework/most-ai-coding-flows-jump-from-prompt-to-code-caf-keeps-architecture-in-the-loop-8af17300501a">Medium</a> ·
+  <a href="https://x.com/conturacaf">X</a>
+</p>
+
 Most AI coding flows jump from prompt to code. CAF keeps architecture in the loop.
 
 CAF turns PRDs into architecture, project plans, and candidate code through orchestrated, governed AI generation.
+
+CAF keeps product intent, architecture decisions, implementation architecture decisions, planning, and candidate code connected through human decision gates.
+
+<p align="center">
+  <img src="docs/images/caf_prd_first_journey.svg" alt="CAF PRD-first journey from seeded instance through PRDs, architecture, planning, and candidate code." width="100%" />
+</p>
 
 CAF gives teams three durable answers:
 
@@ -17,8 +29,9 @@ CAF supports Claude Code, Codex, and Antigravity coding agents and provides a si
 
 ## Quick start (ask-first)
 
-```text
-git clone github.com/arylwen/caf
+```bash
+git clone https://github.com/arylwen/caf.git
+cd caf
 /caf ask For codex-saas, what architecture decisions did we make, and why?
 ```
 
@@ -51,16 +64,21 @@ Replace `<instance>` with your own name.
 - CAF is **not** a “ship-to-prod” generator: outputs are **candidate-only** and require human review.
 - CAF is **fail-closed**: if inputs are missing or ambiguous, it emits a feedback packet instead of guessing.
 
-## Where to go next
+## Next best link
 
-- New to CAF: [`docs/user/01_what_is_caf.md`](docs/user/01_what_is_caf.md)
-- PRD-first lifecycle: [`docs/user/15_prd_first_lifecycle.md`](docs/user/15_prd_first_lifecycle.md)
+[What is CAF?](docs/user/01_what_is_caf.md) — Get the shortest public explanation of what CAF does and why it exists.
+
+## Top 3 related links
+
+- [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md) — Follow the default product-intent to architecture to plan to build path.
+- [Answering questions with CAF](docs/user/14_answering_questions_with_caf.md) — See how `/caf ask` turns CAF into a queryable delivery surface.
+- [Architect docs](docs/architect/README.md) — Go deeper on decisions, sizing, impact, and architect-operated workflows.
+
+## More docs
+
 - User docs: [`docs/user/README.md`](docs/user/README.md)
-- Architect docs: [`docs/architect/README.md`](docs/architect/README.md)
 - Maintainer docs: [`docs/maintainer/README.md`](docs/maintainer/README.md)
 - Pattern browsing: [`docs/patterns/README.md`](docs/patterns/README.md)
-
-For the visual mental models and deeper mechanics, start in `docs/user/`, `docs/architect/`, and `docs/maintainer/`.
 
 ## Repo landmarks
 
@@ -81,3 +99,8 @@ Generated at runtime (typically **gitignored**; may not exist until you run CAF)
 
 - **Review the agent permissions in `.vscode/settings.json` and `.claude/settings.local.json` and make sure they meet your security requirements before running the agent.**
 - **Safety rule (agents):** CAF workflows should **not** run any `git` commands (read or write). Treat the working tree as the source of truth.
+
+## Find CAF on
+
+- Medium: [Architecture Still Matters in the Age of Vibe Coding](https://medium.com/contura-architecture-framework/most-ai-coding-flows-jump-from-prompt-to-code-caf-keeps-architecture-in-the-loop-8af17300501a)
+- X: [CAF on X](https://x.com/conturacaf)

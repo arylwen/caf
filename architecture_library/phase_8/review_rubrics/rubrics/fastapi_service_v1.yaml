@@ -17,6 +17,20 @@ checks:
     rule: "Request validation is enforced via Pydantic models (or equivalent), not ad-hoc dict parsing in route handlers."
     evidence_hints:
       - "route signatures should use typed models"
+  - check_id: RR-FA-BOUNDARY-ERR-01
+    severity: high
+    category: correctness
+    rule: "Fail-closed auth/policy exceptions are translated at the boundary/composition root into explicit HTTP responses instead of leaking as raw 500 errors."
+    evidence_hints:
+      - "inspect the FastAPI composition root and boundary wiring for exception handlers or equivalent fail-closed mapping"
+      - "fail if PermissionError/authorization failure paths can bubble through API routes as uncaught framework 500s"
+  - check_id: RR-FA-SCHEMA-BOOTSTRAP-01
+    severity: high
+    category: correctness
+    rule: "When resolved schema_management_strategy is code_bootstrap, the FastAPI composition root invokes the shared schema bootstrap hook before serving traffic."
+    evidence_hints:
+      - "inspect main/app factory surfaces for lifespan or startup wiring that calls the shared bootstrap hook"
+      - "fail if code_bootstrap is selected but schema bootstrap remains a dormant helper that is never invoked at runtime"
   - check_id: RR-FA-ARCH-01
     severity: medium
     category: architecture

@@ -95,6 +95,112 @@ async function deleteTree(targetDir) {
   }
 }
 
+
+function toRelList(entries) {
+  return Array.from(new Set((Array.isArray(entries) ? entries : [])
+    .map((e) => String(e ?? '').trim().replace(/\\/g, '/').replace(/^\.\//, ''))
+    .filter(Boolean))).sort();
+}
+
+function safeJoinUnderInstance(instanceRootAbs, relPath) {
+  const rel = String(relPath ?? '').trim().replace(/\\/g, '/').replace(/^\.\//, '');
+  if (!rel) throw new Error('Checkpoint entry path must be non-empty');
+  const abs = path.resolve(instanceRootAbs, rel);
+  const relative = path.relative(instanceRootAbs, abs);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error(`Checkpoint entry escapes instance root: ${rel}`);
+  }
+  return { rel, abs };
+}
+
+async function copyEntry(instanceRootAbs, checkpointDirAbs, relPath) {
+  const { rel, abs } = safeJoinUnderInstance(instanceRootAbs, relPath);
+  if (!existsSync(abs)) return false;
+  const dst = path.join(checkpointDirAbs, rel);
+  if (isDir(abs)) {
+    await copyTree(abs, dst);
+  } else {
+    await ensureDir(path.dirname(dst));
+    const buf = await fs.readFile(abs);
+    await fs.writeFile(dst, buf);
+  }
+  return true;
+}
+
+async function deleteEntry(instanceRootAbs, relPath) {
+  const { abs } = safeJoinUnderInstance(instanceRootAbs, relPath);
+  if (!existsSync(abs)) return;
+  const st = statSync(abs);
+  if (st.isDirectory()) {
+    await deleteTree(abs);
+    await fs.rmdir(abs).catch(() => {});
+  } else {
+    await fs.unlink(abs).catch(() => {});
+  }
+}
+
+export async function createScopedCheckpoint(instanceRootAbs, label, entries, manifest) {
+  const relEntries = toRelList(entries);
+  if (relEntries.length === 0) throw new Error('Cannot checkpoint: entries list is empty');
+  const stamp = nowStampUTC_YYYYMMDD_HHMMSS();
+  const root = checkpointRoot(instanceRootAbs);
+  const ckDir = path.join(root, `${label}_${stamp}`);
+
+  await ensureDir(root);
+  await ensureDir(ckDir);
+
+  const captured = [];
+  for (const rel of relEntries) {
+    if (await copyEntry(instanceRootAbs, ckDir, rel)) captured.push(rel);
+  }
+
+  const mf = {
+    schema: 'caf_checkpoint_manifest_v1',
+    created_utc: new Date().toISOString(),
+    label,
+    scope: 'instance-paths',
+    entries: captured,
+    ...(manifest ?? {}),
+  };
+  await fs.writeFile(path.join(ckDir, 'checkpoint_manifest.json'), JSON.stringify(mf, null, 2) + '\n', { encoding: 'utf8' });
+  return ckDir;
+}
+
+export async function restoreLatestScopedCheckpoint(instanceRootAbs, label, opts = {}) {
+  const latestDir = latestCheckpointDir(instanceRootAbs, label);
+  if (!latestDir) throw new Error(`No checkpoints found for label: ${label}`);
+
+  let manifest = {};
+  const manifestPath = path.join(latestDir, 'checkpoint_manifest.json');
+  if (existsSync(manifestPath)) {
+    try {
+      manifest = JSON.parse(await fs.readFile(manifestPath, { encoding: 'utf8' }));
+    } catch {
+      manifest = {};
+    }
+  }
+
+  const relEntries = toRelList(Array.isArray(opts.entries) && opts.entries.length ? opts.entries : manifest.entries);
+  if (relEntries.length === 0) throw new Error(`Checkpoint has no restorable entries: ${latestDir}`);
+
+  for (const rel of relEntries) {
+    await deleteEntry(instanceRootAbs, rel);
+  }
+  for (const rel of relEntries) {
+    const src = path.join(latestDir, rel);
+    if (!existsSync(src)) continue;
+    const dst = path.join(instanceRootAbs, rel);
+    if (isDir(src)) {
+      await copyTree(src, dst);
+    } else {
+      await ensureDir(path.dirname(dst));
+      const buf = await fs.readFile(src);
+      await fs.writeFile(dst, buf);
+    }
+  }
+  return latestDir;
+}
+
 export async function createSpecCheckpoint(instanceRootAbs, label, manifest) {
   const stamp = nowStampUTC_YYYYMMDD_HHMMSS();
   const root = checkpointRoot(instanceRootAbs);

@@ -77,6 +77,11 @@ Preferred posture:
 
 When emitting or editing CAF artifacts that contain large lists (e.g., pattern candidates, task lists, obligations, decisions):
 
+Never dump the deliverables below as one whole blob:
+
+- `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
+- `reference_architectures/<name>/design/playbook/task_backlog_v1.md`
+
 - Do **not** attempt a single-shot write that embeds the entire YAML payload.
 - Prefer **multiple small edits/patches**, keeping the file valid YAML after **every** batch.
 - Batch list emissions in groups of **at most 3 elements per edit** (rule of thumb: ≤3 items per patch).

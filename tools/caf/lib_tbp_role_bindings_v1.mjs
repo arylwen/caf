@@ -66,6 +66,8 @@ export function collectRoleBindingExpectationsForCapability(tbpId, tbpManifest, 
       path_template: rb?.path_template || null,
       artifact_class: rb?.artifact_class || null,
       evidence_contains: rb?.evidence_contains || [],
+      validator_kind: rb?.validator_kind || null,
+      validator_config: rb?.validator_config || null,
     });
   }
 
@@ -84,5 +86,47 @@ export function collectRoleBindingMatchesForKey(tbpId, tbpManifest, roleBindingK
     path_template: rb?.path_template || null,
     artifact_class: rb?.artifact_class || null,
     evidence_contains: rb?.evidence_contains || [],
+    validator_kind: rb?.validator_kind || null,
+    validator_config: rb?.validator_config || null,
   }];
+}
+
+
+function normalizeScalar(v) {
+  return String(v ?? '').trim();
+}
+
+function normalizeLower(v) {
+  return normalizeScalar(v).toLowerCase();
+}
+
+function ensureArray(v) {
+  return Array.isArray(v) ? v : [];
+}
+
+export function manifestBindsAtom(tbpManifest, atomPath, atomValue) {
+  const wantPath = normalizeLower(atomPath);
+  const wantValue = normalizeLower(atomValue);
+  return ensureArray(tbpManifest?.binds_to).some((binding) => {
+    return normalizeLower(binding?.atom_path) === wantPath && normalizeLower(binding?.atom_value) === wantValue;
+  });
+}
+
+export function collectGateRefsForCapability(tbpId, tbpManifest, capabilityId) {
+  const want = normalizeLower(capabilityId);
+  const gates = ensureArray(tbpManifest?.extensions?.gates);
+  const refs = [];
+  for (const gate of gates) {
+    const caps = [
+      normalizeLower(gate?.required_capability),
+      ...ensureArray(gate?.required_capabilities).map(normalizeLower),
+    ].filter(Boolean);
+    if (!caps.includes(want)) continue;
+    refs.push({
+      tbp_id: tbpId,
+      gate_id: normalizeScalar(gate?.gate_id) || null,
+      title: normalizeScalar(gate?.title) || null,
+    });
+  }
+  return refs;
 }

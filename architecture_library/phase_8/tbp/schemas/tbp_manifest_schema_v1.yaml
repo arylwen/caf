@@ -11,6 +11,80 @@ required:
   - requires_tbps
   - conflicts_with_tbps
 
+$defs:
+  semantic_acceptance_gate:
+    type: object
+    additionalProperties: false
+    required: [gate_id, gate_kind, criteria]
+    anyOf:
+      - required: [required_capability]
+      - required: [required_capabilities]
+      - required: [role_binding_key]
+    properties:
+      gate_id:
+        type: string
+        minLength: 3
+      title:
+        type: string
+        minLength: 1
+      gate_kind:
+        type: string
+        enum: [definition_of_done, coding_standard, guardrail]
+        description: 'How this gate should be compiled into planning artifacts (semantic only).'
+      attachment_scope:
+        type: string
+        enum: [single_execution_anchor, all_matching_tasks]
+        description: 'How planners should attach this semantic acceptance to tasks. Defaults to single_execution_anchor when omitted.'
+      phase_applicability:
+        type: array
+        description: 'Optional list of lifecycle.generation_phase values where this gate applies. If omitted, it applies to all phases that run the planner.'
+        items:
+          type: string
+          enum: [implementation_scaffolding, pre_production, production_hardening]
+      required_capability:
+        type: string
+        minLength: 3
+        description: 'Capability whose tasks should receive this gate (typically the capability used by a TBP obligation group).'
+      required_capabilities:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          minLength: 3
+        description: 'Optional multi-capability attachment surface for the same semantic acceptance rule.'
+      role_binding_key:
+        type: string
+        minLength: 1
+        description: 'Optional role binding key used to deterministically attach the gate to TBP obligations/tasks. If used, the planner must resolve it via extensions.obligations.'
+      criteria:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+        description: "Semantic acceptance criteria (Definition of Done / coding standards / guardrails). MUST NOT encode file-path or 'path exists' assertions."
+      review_questions:
+        type: array
+        default: []
+        items:
+          type: string
+          minLength: 1
+        description: 'Optional semantic review questions to be merged into Task Graph semantic_review.review_questions.'
+      focus_areas:
+        type: array
+        default: []
+        items:
+          type: string
+          minLength: 1
+        description: 'Optional semantic review focus area tags (e.g., security, correctness, observability).'
+      severity_threshold_override:
+        type: string
+        enum: [blocker, high, medium, low]
+        description: 'Optional override: planner may raise the task semantic_review.severity_threshold to at least this value.'
+      notes:
+        type: string
+        description: 'Optional additional guidance (semantic only).'
 properties:
   schema_version:
     type: string
@@ -60,6 +134,33 @@ properties:
         minLength: 1
         description: "Root path for candidate source code in the companion repo (e.g., 'code/')."
 
+      module_conventions:
+        type: object
+        additionalProperties: false
+        description: >
+          Optional deterministic language/runtime module conventions that workers should consume
+          via normal TBP resolution rather than re-deriving ad hoc.
+        properties:
+          absolute_import_root:
+            type: string
+            minLength: 1
+            description: "Canonical absolute import root for stack-owned code packages (for example 'code')."
+          intra_package_import_style:
+            type: string
+            enum: [explicit_relative_preferred, absolute_from_root]
+            description: "Preferred import style for imports within the same package tree."
+          plane_module_roots:
+            type: object
+            additionalProperties: false
+            description: "Canonical module roots for CAF planes when absolute imports are needed."
+            properties:
+              ap:
+                type: string
+                minLength: 1
+              cp:
+                type: string
+                minLength: 1
+
       scaffold_directories:
         type: array
         items:
@@ -91,6 +192,14 @@ properties:
               items:
                 type: string
               description: "Optional implementation hints (not deterministic checks). Workers may use these as cues when realizing the role."
+            validator_kind:
+              type: string
+              minLength: 1
+              description: "Optional library-owned validator kind consumed by tools/caf generic gates when deterministic realization verification is required for this role binding."
+            validator_config:
+              type: object
+              additionalProperties: true
+              description: "Optional validator-specific configuration. Shape is defined by the validator kind, not by the generic TBP manifest schema."
 
   extensions:
     description: >
@@ -128,62 +237,4 @@ properties:
         type: array
         default: []
         items:
-          type: object
-          additionalProperties: false
-          required: [gate_id, gate_kind, criteria]
-          anyOf:
-            - required: [required_capability]
-            - required: [role_binding_key]
-          properties:
-            gate_id:
-              type: string
-              minLength: 3
-            title:
-              type: string
-              minLength: 1
-            gate_kind:
-              type: string
-              enum: [definition_of_done, coding_standard, guardrail]
-              description: 'How this gate should be compiled into planning artifacts (semantic only).'
-            phase_applicability:
-              type: array
-              description: 'Optional list of lifecycle.generation_phase values where this gate applies. If omitted, it applies to all phases that run the planner.'
-              items:
-                type: string
-                enum: [implementation_scaffolding, pre_production, production_hardening]
-            required_capability:
-              type: string
-              minLength: 3
-              description: 'Capability whose tasks should receive this gate (typically the capability used by a TBP obligation group).'
-            role_binding_key:
-              type: string
-              minLength: 1
-              description: 'Optional role binding key used to deterministically attach the gate to TBP obligations/tasks. If used, the planner must resolve it via extensions.obligations.'
-            criteria:
-              type: array
-              minItems: 1
-              items:
-                type: string
-                minLength: 1
-              description: "Semantic acceptance criteria (Definition of Done / coding standards / guardrails). MUST NOT encode file-path or 'path exists' assertions."
-            review_questions:
-              type: array
-              default: []
-              items:
-                type: string
-                minLength: 1
-              description: 'Optional semantic review questions to be merged into Task Graph semantic_review.review_questions.'
-            focus_areas:
-              type: array
-              default: []
-              items:
-                type: string
-                minLength: 1
-              description: 'Optional semantic review focus area tags (e.g., security, correctness, observability).'
-            severity_threshold_override:
-              type: string
-              enum: [blocker, high, medium, low]
-              description: 'Optional override: planner may raise the task semantic_review.severity_threshold to at least this value.'
-            notes:
-              type: string
-              description: 'Optional additional guidance (semantic only).'
+          $ref: '#/$defs/semantic_acceptance_gate'

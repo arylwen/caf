@@ -85,11 +85,13 @@ Compose ownership rule (tight leash):
 
 Support service wiring (instance-driven):
 - If the instance task graph contains a task requiring `postgres_persistence_wiring`, compose MUST include a `postgres` service and AP MUST be wired with `DATABASE_URL` (or equivalent) for in-network connectivity.
+- When PostgreSQL + SQLAlchemy rails are resolved, the emitted instance `.env` MUST satisfy the SQLAlchemy role-binding contract for accepted DATABASE_URL shapes; prefer the canonical form `postgresql+psycopg://...` and keep runtime wiring coherent with the shared persistence helper and env examples.
 - For local compose runs, the `postgres` service MUST expose the container port on the host for developer testing:
   - Add `ports: ["${POSTGRES_PORT:-5432}:5432"]` (or YAML list form) on the `postgres` service.
   - Use the instance `.env` `POSTGRES_PORT` default of 5432 when present.
   - Keep in-network AP connectivity via `POSTGRES_HOST=postgres` / `DATABASE_URL` unchanged.
 - If the instance task graph contains a task requiring `ui_frontend_scaffolding`, compose MUST include a `ui` service and keep the UI wiring consistent with the UI Dockerfile + nginx config declared by role bindings for the UI capability.
+- When the resolved UI TBP is `TBP-UI-REACT-VITE-01`, `docker/Dockerfile.ui` MUST realize an explicit Vite build path in the image build surface (for example `npm exec vite build` or equivalent) rather than relying on an opaque generic build step alone. The Dockerfile and task report MUST satisfy the resolved `ui_dockerfile` role binding evidence before claiming completion.
 
 UI config mount policy (portability + podman/docker parity):
 - Compose MUST NOT bind-mount `nginx.ui.conf` (or other UI server config) by default.
@@ -118,7 +120,7 @@ Compose-based packaging (docker_compose or podman_compose) standard outputs:
   - MUST use `build:` for CP/AP (Dockerfile-based builds; no local pip prerequisite)
   - MUST use `env_file: ../.env` (or `${VAR}` interpolation) for configuration externalization
 - `docker/Dockerfile.cp` and `docker/Dockerfile.ap`
-  - MUST install dependencies in-image (e.g., `pip install -r ...`) so runtime does not require local Python tooling
+  - MUST install dependencies in-image from the canonical dependency manifest when the task DoD / resolved role-binding expectations establish one, so runtime does not require local Python tooling
 - `.env` (real local defaults; no secrets)
 - `.gitignore` ignores `.env` and `*.local`
 

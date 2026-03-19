@@ -192,6 +192,50 @@ function applyTemplate(s, instanceName) {
   return String(s ?? '').replaceAll('{{instance_name}}', instanceName);
 }
 
+function isPlainObject(v) {
+  return !!v && typeof v === 'object' && !Array.isArray(v);
+}
+
+function cloneJson(v) {
+  return JSON.parse(JSON.stringify(v));
+}
+
+function mergeConventionMaps(target, incoming, trail = []) {
+  for (const [key, value] of Object.entries(incoming || {})) {
+    const nextTrail = [...trail, key];
+    const existing = target[key];
+    if (existing === undefined) {
+      target[key] = cloneJson(value);
+      continue;
+    }
+    if (isPlainObject(existing) && isPlainObject(value)) {
+      mergeConventionMaps(existing, value, nextTrail);
+      continue;
+    }
+    if (JSON.stringify(existing) !== JSON.stringify(value)) {
+      throw new Error(`conflict:${nextTrail.join('.')}:${JSON.stringify(existing)}!=${JSON.stringify(value)}`);
+    }
+  }
+  return target;
+}
+
+function collectResolvedConventions(resolvedTbpIds, catalogById) {
+  const out = {};
+  const evidence = [];
+  for (const tbpId of resolvedTbpIds) {
+    const manifest = catalogById.get(tbpId)?.obj;
+    const moduleConventions = manifest?.layout?.module_conventions;
+    if (!isPlainObject(moduleConventions) || Object.keys(moduleConventions).length === 0) continue;
+    try {
+      out.module_conventions = mergeConventionMaps(out.module_conventions || {}, moduleConventions, ['module_conventions']);
+      evidence.push(`${tbpId}: layout.module_conventions`);
+    } catch (err) {
+      throw new Error(`TBP convention conflict (${tbpId}): ${err.message}`);
+    }
+  }
+  return { conventions: out, evidence };
+}
+
 function parsePinnedSpine(pinsObj) {
   return {
     evolution_stage: normalizeScalar(pinsObj?.lifecycle?.evolution_stage),
@@ -204,6 +248,7 @@ function parsePinnedSpine(pinsObj) {
 
     // Technology choices (pinned; architect UX is scalar values under platform.*)
     platform_framework: normalizeScalar(pinsObj?.platform?.framework),
+    platform_dependency_wiring_mode: normalizeScalar(pinsObj?.platform?.dependency_wiring_mode),
     platform_persistence_orm: normalizeScalar(pinsObj?.platform?.persistence_orm),
     platform_auth_mode: normalizeScalar(pinsObj?.platform?.auth_mode),
     platform_eventing_backend: normalizeScalar(pinsObj?.platform?.eventing_backend),
@@ -772,8 +817,12 @@ if (invalidPlaneShapePins.length > 0) {
 }
 
 
+  const optionalPinnedKeys = new Set([
+    'platform_dependency_wiring_mode',
+  ]);
+
   const missingPins = Object.entries(pins)
-    .filter(([_, v]) => !normalizeScalar(v))
+    .filter(([k, v]) => !optionalPinnedKeys.has(k) && !normalizeScalar(v))
     .map(([k, _]) => k);
   if (missingPins.length > 0) {
     const fp = await writeFeedbackPacket(
@@ -917,6 +966,7 @@ if (invalidPlaneShapePins.length > 0) {
   const techChoicesResolved = {};
   const techChoicePins = [
     { key: 'platform.framework', pinValue: normalizeScalar(pins.platform_framework), requiredKey: 'platform.framework' },
+    { key: 'platform.dependency_wiring_mode', pinValue: normalizeScalar(pins.platform_dependency_wiring_mode), requiredKey: null },
     { key: 'platform.persistence_orm', pinValue: normalizeScalar(pins.platform_persistence_orm), requiredKey: null },
     { key: 'platform.auth_mode', pinValue: normalizeScalar(pins.platform_auth_mode), requiredKey: null },
     { key: 'platform.eventing_backend', pinValue: normalizeScalar(pins.platform_eventing_backend), requiredKey: null },
@@ -1072,6 +1122,19 @@ if (invalidPlaneShapePins.length > 0) {
       packaging: pins.packaging,
       runtime_language: pins.runtime_language,
       database_engine: pins.database_engine,
+      ...(normalizeScalar(techChoicesResolved['platform.framework']?.effective)
+        ? { framework: normalizeScalar(techChoicesResolved['platform.framework']?.effective) }
+        : {}),
+      dependency_wiring_mode: normalizeScalar(techChoicesResolved['platform.dependency_wiring_mode']?.effective) || 'manual_composition_root',
+      ...(normalizeScalar(techChoicesResolved['platform.persistence_orm']?.effective)
+        ? { persistence_orm: normalizeScalar(techChoicesResolved['platform.persistence_orm']?.effective) }
+        : {}),
+      ...(normalizeScalar(techChoicesResolved['platform.auth_mode']?.effective)
+        ? { auth_mode: normalizeScalar(techChoicesResolved['platform.auth_mode']?.effective) }
+        : {}),
+      ...(normalizeScalar(techChoicesResolved['platform.eventing_backend']?.effective)
+        ? { eventing_backend: normalizeScalar(techChoicesResolved['platform.eventing_backend']?.effective) }
+        : {}),
     },
     profile_version: profileVersion,
     companion_repo_target: companionTarget,
@@ -1082,10 +1145,18 @@ if (invalidPlaneShapePins.length > 0) {
       language: atoms['runtime.language'],
       ...(atoms['runtime.framework'] ? { framework: atoms['runtime.framework'] } : {}),
     },
+    tbp_conventions: {},
     database: {
       engine: atoms['database.engine'],
       schema_management_strategy: normalizeScalar(atoms['database.schema_management_strategy']) || 'code_bootstrap',
     },
+    ...(normalizeScalar(techChoicesResolved['platform.persistence_orm']?.effective)
+      ? {
+          persistence: {
+            orm: normalizeScalar(techChoicesResolved['platform.persistence_orm']?.effective),
+          },
+        }
+      : {}),
     ...(uiSignal ? {
       ui: {
         ...(typeof uiSignal?.present === 'boolean' ? { present: uiSignal.present } : {}),
@@ -1119,7 +1190,12 @@ if (invalidPlaneShapePins.length > 0) {
         packaging: pins.packaging,
         runtime_language: pins.runtime_language,
         database_engine: pins.database_engine,
+        ...(normalizeScalar(pins.platform_framework) ? { framework: normalizeScalar(pins.platform_framework) } : {}),
+        ...(normalizeScalar(pins.platform_dependency_wiring_mode) ? { dependency_wiring_mode: normalizeScalar(pins.platform_dependency_wiring_mode) } : {}),
+        ...(normalizeScalar(pins.platform_persistence_orm) ? { persistence_orm: normalizeScalar(pins.platform_persistence_orm) } : {}),
         ...(normalizeScalar(pins.platform_schema_management_strategy) ? { schema_management_strategy: normalizeScalar(pins.platform_schema_management_strategy) } : {}),
+        ...(normalizeScalar(pins.platform_auth_mode) ? { auth_mode: normalizeScalar(pins.platform_auth_mode) } : {}),
+        ...(normalizeScalar(pins.platform_eventing_backend) ? { eventing_backend: normalizeScalar(pins.platform_eventing_backend) } : {}),
         ...(typeof pins.ui_present === 'boolean' ? { ui_present: pins.ui_present } : {}),
         ...(normalizeScalar(pins.ui_kind) ? { ui_kind: normalizeScalar(pins.ui_kind) } : {}),
         ...(normalizeScalar(pins.ui_framework) ? { ui_framework: normalizeScalar(pins.ui_framework) } : {}),
@@ -1238,6 +1314,8 @@ if (invalidPlaneShapePins.length > 0) {
   const atomsForResolution = {
     'runtime.language': normalizeScalar(resolvedObj?.runtime?.language),
     'runtime.framework': normalizeScalar(resolvedObj?.runtime?.framework),
+    'persistence.orm': normalizeScalar(resolvedObj?.persistence?.orm),
+    'auth.mode': normalizeScalar(resolvedObj?.platform?.auth_mode),
     'database.engine': normalizeScalar(resolvedObj?.database?.engine),
     'deployment.mode': normalizeScalar(resolvedObj?.deployment?.mode),
     'deployment.target': normalizeScalar(resolvedObj?.deployment?.target),
@@ -1277,6 +1355,32 @@ if (invalidPlaneShapePins.length > 0) {
     );
     die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 25);
   }
+
+  let resolvedConventions = {};
+  let resolvedConventionEvidence = [];
+  try {
+    const conventionRes = collectResolvedConventions(res.resolved, res.catalogById);
+    resolvedConventions = conventionRes.conventions;
+    resolvedConventionEvidence = conventionRes.evidence;
+  } catch (err) {
+    const fp = await writeFeedbackPacket(
+      repoRoot,
+      instanceName,
+      'guardrails-tbp-convention-conflict',
+      'TBP resolution failed: conflicting deterministic TBP conventions',
+      [
+        'Align TBP layout.module_conventions so resolved TBPs do not declare conflicting values for the same convention key, then rerun caf arch <name>.',
+      ],
+      [String(err?.message || err)],
+    );
+    die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 28);
+  }
+  if (Object.keys(resolvedConventions).length > 0) {
+    resolvedObj.tbp_conventions = resolvedConventions;
+  } else {
+    delete resolvedObj.tbp_conventions;
+  }
+  await writeUtf8(resolvedPath, `${yamlStringify(resolvedObj)}\n`);
 
   // Phase-gated: require at least one framework TBP for python+HTTP in implementation_scaffolding.
   if (
@@ -1318,6 +1422,8 @@ if (invalidPlaneShapePins.length > 0) {
     resolution_atoms: {
       'runtime.language': atomsForResolution['runtime.language'],
       ...(atomsForResolution['runtime.framework'] ? { 'runtime.framework': atomsForResolution['runtime.framework'] } : {}),
+      ...(atomsForResolution['persistence.orm'] ? { 'persistence.orm': atomsForResolution['persistence.orm'] } : {}),
+      ...(atomsForResolution['auth.mode'] ? { 'auth.mode': atomsForResolution['auth.mode'] } : {}),
       'database.engine': atomsForResolution['database.engine'],
       'deployment.mode': atomsForResolution['deployment.mode'],
       'plane.runtime_shape': atomsForResolution['plane.runtime_shape'],
@@ -1328,8 +1434,9 @@ if (invalidPlaneShapePins.length > 0) {
     },
     seed_tbps: res.seed,
     resolved_tbps: res.resolved,
+    resolved_conventions: resolvedConventions,
     conflicts_checked: true,
-        notes: 'Resolved deterministically from Guardrails atoms; runtime/framework and UI pins are sourced from pinned profile parameters when applicable.',
+    notes: 'Resolved deterministically from Guardrails atoms; runtime/framework, persistence ORM, auth mode, and UI pins are sourced from pinned profile parameters when applicable.',
   };
 
   const tbpPath = path.join(guardrailsDir, 'tbp_resolution_v1.yaml');
@@ -1345,6 +1452,22 @@ if (invalidPlaneShapePins.length > 0) {
   lines.push('## Resolution atoms');
   for (const [k, v] of Object.entries(tbpResolutionObj.resolution_atoms)) {
     lines.push(`- ${k}: ${v}`);
+  }
+  lines.push('');
+  lines.push('## Resolved conventions');
+  if (Object.keys(tbpResolutionObj.resolved_conventions || {}).length === 0) {
+    lines.push('- none');
+  } else {
+    for (const marker of resolvedConventionEvidence) lines.push(`- source: ${marker}`);
+    const moduleConventions = tbpResolutionObj.resolved_conventions?.module_conventions || {};
+    for (const [k, v] of Object.entries(moduleConventions)) {
+      if (isPlainObject(v)) {
+        lines.push(`- module_conventions.${k}:`);
+        for (const [sk, sv] of Object.entries(v)) lines.push(`  - ${sk}: ${sv}`);
+      } else {
+        lines.push(`- module_conventions.${k}: ${v}`);
+      }
+    }
   }
   lines.push('');
   lines.push('## Seed TBPs (applicable by binds_to)');

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parseYamlString } from './lib_yaml_v2.mjs';
-import { extractResourceKeysFromApplicationDomainModel } from './lib_plane_domain_models_v1.mjs';
+import { extractResourceKeysFromApplicationDomainModel, normalizeKey as normalizeDomainKey } from './lib_plane_domain_models_v1.mjs';
 
 function normalizeScalar(v) {
   if (v === null || v === undefined) return '';
@@ -48,6 +48,37 @@ function extractYamlFence(blockText) {
   return lines.slice(startLine, endLine).join('\n');
 }
 
+function cloneJson(value) {
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
+function humanizeResourceKey(key) {
+  const t = normalizeScalar(key).replace(/[-_]+/g, ' ').trim();
+  if (!t) return '';
+  return t.replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function renderTemplateScalar(value, replacements) {
+  let out = String(value ?? '');
+  for (const [k, v] of Object.entries(replacements || {})) {
+    out = out.replaceAll(`{{${k}}}`, String(v ?? ''));
+  }
+  return out;
+}
+
+function renderTemplateValue(value, replacements) {
+  if (Array.isArray(value)) return value.map((item) => renderTemplateValue(item, replacements));
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[renderTemplateScalar(k, replacements)] = renderTemplateValue(v, replacements);
+    }
+    return out;
+  }
+  if (typeof value === 'string') return renderTemplateScalar(value, replacements);
+  return value;
+}
+
 export function extractAdoptedPatternIdsFromSystemSpec(systemSpecText) {
   const out = new Set();
   const block = extractBlock(
@@ -79,15 +110,24 @@ export function taskIdsFromTaskGraphObj(taskGraphObj) {
   );
 }
 
-export async function computeExpectedUiTaskIds({ repoRoot, resolvedObj, systemSpecText, applicationDomainModelObj, shapeObj = null }) {
+export async function loadUiSeedCatalog(repoRoot) {
+  const seedsPath = path.join(repoRoot, 'architecture_library', 'phase_8', '80_phase_8_ui_task_seeds_v1.yaml');
+  const seedsObj = parseYamlString(await fs.readFile(seedsPath, { encoding: 'utf8' }), seedsPath) || {};
+  return {
+    path: seedsPath,
+    obj: seedsObj,
+    seeds: ensureArray(seedsObj?.seeds),
+  };
+}
+
+export async function computeExpectedUiTaskMatches({ repoRoot, resolvedObj, systemSpecText, applicationDomainModelObj, shapeObj = null }) {
   const out = [];
   const ui = resolvedObj && typeof resolvedObj === 'object' ? resolvedObj.ui : null;
   if (!ui || ui.present !== true) {
-    return { uiPresent: false, expected: out, adoptedPatternIds: new Set(), resourceKeys: [] };
+    return { uiPresent: false, matches: out, adoptedPatternIds: new Set(), resourceKeys: [], seedCatalogPath: null };
   }
 
-  const seedsPath = path.join(repoRoot, 'architecture_library', 'phase_8', '80_phase_8_ui_task_seeds_v1.yaml');
-  const seedsObj = parseYamlString(await fs.readFile(seedsPath, { encoding: 'utf8' }), seedsPath) || {};
+  const { path: seedCatalogPath, seeds } = await loadUiSeedCatalog(repoRoot);
   const adoptedPatternIds = extractAdoptedPatternIdsFromSystemSpec(systemSpecText);
   const resourceKeys = extractResourceKeysFromApplicationDomainModel(applicationDomainModelObj || {});
 
@@ -107,7 +147,7 @@ export async function computeExpectedUiTaskIds({ repoRoot, resolvedObj, systemSp
     }
   }
 
-  for (const seed of ensureArray(seedsObj?.seeds)) {
+  for (const seed of seeds) {
     const when = seed?.when && typeof seed.when === 'object' ? seed.when : {};
     if (Object.prototype.hasOwnProperty.call(when, 'ui_present') && Boolean(when.ui_present) !== Boolean(ui.present === true)) continue;
 
@@ -124,19 +164,46 @@ export async function computeExpectedUiTaskIds({ repoRoot, resolvedObj, systemSp
       const templateId = normalizeScalar(seed?.task_template?.task_id);
       if (!templateId) continue;
       for (const key of resourceKeys) {
+        const normalizedResourceKey = normalizeDomainKey(key) || normalizeKey(key);
+        const replacements = {
+          resource_key: normalizedResourceKey,
+          resource_name: humanizeResourceKey(normalizedResourceKey),
+        };
+        const renderedTask = renderTemplateValue(cloneJson(seed?.task_template) || {}, replacements) || {};
         out.push({
-          taskId: templateId.replaceAll('{{resource_key}}', key),
+          taskId: normalizeScalar(renderedTask?.task_id),
           seedId: normalizeScalar(seed?.seed_id) || '(unknown)',
-          reason: `resource:${key}`,
+          reason: `resource:${normalizedResourceKey}`,
+          resourceKey: normalizedResourceKey,
+          sourcePath: seedCatalogPath,
+          taskDef: renderedTask,
         });
       }
       continue;
     }
 
-    const taskId = normalizeScalar(seed?.task?.task_id);
+    const taskDef = cloneJson(seed?.task) || {};
+    const taskId = normalizeScalar(taskDef?.task_id);
     if (!taskId) continue;
-    out.push({ taskId, seedId: normalizeScalar(seed?.seed_id) || '(unknown)', reason: 'seed-match' });
+    out.push({
+      taskId,
+      seedId: normalizeScalar(seed?.seed_id) || '(unknown)',
+      reason: 'seed-match',
+      resourceKey: '',
+      sourcePath: seedCatalogPath,
+      taskDef,
+    });
   }
 
-  return { uiPresent: true, expected: out, adoptedPatternIds, resourceKeys };
+  return { uiPresent: true, matches: out, adoptedPatternIds, resourceKeys, seedCatalogPath };
+}
+
+export async function computeExpectedUiTaskIds(args) {
+  const result = await computeExpectedUiTaskMatches(args);
+  return {
+    uiPresent: result.uiPresent,
+    expected: result.matches.map((m) => ({ taskId: m.taskId, seedId: m.seedId, reason: m.reason })),
+    adoptedPatternIds: result.adoptedPatternIds,
+    resourceKeys: result.resourceKeys,
+  };
 }

@@ -227,6 +227,10 @@ async function main() {
       const rw = resolvedWorker.get(tid);
       const deps = depsMap.get(tid) || [];
       const inputs = Array.isArray(t?.inputs) ? t.inputs : [];
+      const steps = Array.isArray(t?.steps) ? t.steps : [];
+      const definitionOfDone = Array.isArray(t?.definition_of_done) ? t.definition_of_done : [];
+      const semanticReview = t?.semantic_review && typeof t.semantic_review === 'object' ? t.semantic_review : {};
+      const reviewQuestions = Array.isArray(semanticReview?.review_questions) ? semanticReview.review_questions : [];
       const anchors = Array.isArray(t?.trace_anchors) ? t.trace_anchors : [];
 
       lines.push(`### ${sanitizeMd(tid)}${title ? ` — ${title}` : ''}`);
@@ -242,6 +246,33 @@ async function main() {
           const p = sanitizeMd(i?.path || '');
           const req = i?.required === false ? 'optional' : 'required';
           if (p) lines.push(`- (${req}) \`${p}\``);
+        }
+        lines.push('');
+      }
+
+      if (steps.length > 0) {
+        lines.push('**Steps:**');
+        for (const step of steps) {
+          const s = sanitizeMd(step);
+          if (s) lines.push(`- ${s}`);
+        }
+        lines.push('');
+      }
+
+      if (definitionOfDone.length > 0) {
+        lines.push('**Definition of Done:**');
+        for (const line of definitionOfDone) {
+          const s = sanitizeMd(line);
+          if (s) lines.push(`- ${s}`);
+        }
+        lines.push('');
+      }
+
+      if (reviewQuestions.length > 0) {
+        lines.push('**Semantic review questions:**');
+        for (const line of reviewQuestions) {
+          const s = sanitizeMd(line);
+          if (s) lines.push(`- ${s}`);
         }
         lines.push('');
       }
@@ -286,6 +317,44 @@ async function main() {
         const req = i?.required === false ? 'optional' : 'required';
         lines.push(`  - path: ${p}`);
         lines.push(`    required: ${req}`);
+      }
+      lines.push('steps:');
+      if (steps.length === 0) lines.push('  - (none)');
+      for (const step of steps) {
+        const s = sanitizeMd(step);
+        if (s) lines.push(`  - ${s}`);
+      }
+      lines.push('definition_of_done:');
+      if (definitionOfDone.length === 0) lines.push('  - (none)');
+      for (const line of definitionOfDone) {
+        const s = sanitizeMd(line);
+        if (s) lines.push(`  - ${s}`);
+      }
+      lines.push('semantic_review:');
+      const severityThreshold = sanitizeMd(semanticReview?.severity_threshold || '');
+      lines.push(`  severity_threshold: ${severityThreshold || '(none)'}`);
+      lines.push('  review_questions:');
+      if (reviewQuestions.length === 0) lines.push('    - (none)');
+      for (const line of reviewQuestions) {
+        const s = sanitizeMd(line);
+        if (s) lines.push(`    - ${s}`);
+      }
+      lines.push('trace_anchors:');
+      if (anchors.length === 0) lines.push('  - (none)');
+      for (const a of anchors) {
+        lines.push('  -');
+        const kind = sanitizeMd(a?.anchor_kind || '');
+        const pid = sanitizeMd(a?.pattern_id || '');
+        const pob = sanitizeMd(a?.pattern_obligation_id || '');
+        const pin = sanitizeMd(a?.pinned_input || '');
+        const ae = sanitizeMd(a?.architect_edit || '');
+        const tbp = sanitizeMd(a?.tbp_id || '');
+        if (kind) lines.push(`    anchor_kind: ${kind}`);
+        if (pid) lines.push(`    pattern_id: ${pid}`);
+        if (pob) lines.push(`    pattern_obligation_id: ${pob}`);
+        if (pin) lines.push(`    pinned_input: ${pin}`);
+        if (ae) lines.push(`    architect_edit: ${ae}`);
+        if (tbp) lines.push(`    tbp_id: ${tbp}`);
       }
       lines.push('```');
       lines.push('');

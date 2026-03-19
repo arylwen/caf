@@ -118,4 +118,8 @@ The blob MUST NOT:
 
 - `tools/caf/retrieval_preflight_v1.mjs` is the explicit retrieval **pre-gate**. It must rebuild the blob from the current spec/guardrails state before semantic retrieval.
 - `tools/caf/build_retrieval_context_blob_v1.mjs` is responsible for semantic-readiness fail-closed checks on upstream CAF-managed blocks.
+- For `architecture_scaffolding`, blob build MUST fail closed when either of these `system_spec_v1.md` blocks is missing or empty:
+  - `CAF_MANAGED_BLOCK: pin_derived_system_constraints_v1`
+  - `CAF_MANAGED_BLOCK: tech_profile_explanations_v1`
+- The recovery path for those misses is phase-aware: reset architecture scaffolding, rerun `/caf arch <instance>`, then retry retrieval.
 - `tools/caf/retrieval_gate_v1.mjs` is the retrieval **post-gate**. It validates that required retrieval outputs exist and that CAF-managed sections were propagated into the blob; it must not reinterpret benign phrases like `TODO comments` as placeholder evidence.

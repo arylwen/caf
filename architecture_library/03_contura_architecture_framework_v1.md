@@ -2,13 +2,13 @@
 
 Version: v1 (Draft)  
 Status: Under Review  
-Last Updated: 2025-12-12
+Last Updated: 2026-03-15
 
 ## 1. Introduction
 
 The **Contura Architecture Framework** (CAF) defines the universal architectural principles, pillars, views, lifecycle model, and decision processes governing all Contura systems. CAF v1 is an AI-first, identity-aware framework emphasizing automation, agentic workflows, safety, cost minimalism, evolvability, and a shared architectural language across Contura.
 
-CAF is the normative architectural document for Contura systems. It remains stable over time and across technologies, while detailed domain frameworks derive from CAF to provide system- or domain-specific implementation guidance.
+CAF is the normative architectural document for Contura systems. It remains stable over time and across technologies, while downstream branch-out artifacts derive from CAF to provide pattern-specific, modernization-specific, or system-specific guidance.
 
 ## 2. Scope and Boundary Rules
 
@@ -20,7 +20,7 @@ CAF contains only universal, system-agnostic architectural guidance. It defines:
 4. A canonical lifecycle model governing staged evolution.  
 5. Cross-system decision-making and evaluation frameworks.  
 6. Canonical architectural structures—such as control, application, and data planes—required to prevent fragmentation of system shape and governance semantics.
-7. Definitions of domains for future branch-out architecture frameworks.
+7. Definitions of branch-out artifact families used for future downstream architectural guidance.
 
 CAF intentionally excludes implementation details, cloud-specific guidance, and non-universal patterns. Such material belongs in branch-out documents that evolve more rapidly than CAF.
 
@@ -240,7 +240,7 @@ The following domains do **not** define independent architectural authority and 
 - Developer Platform / DevEx  
 - Observability & Telemetry  
 
-Constraints for these domains are expressed through templates, patterns, and governance documents.
+Constraints for these domains are expressed through templates, patterns, governance documents, extension packs, and modernization playbooks.
 
 ---
 
@@ -265,11 +265,30 @@ Patterns:
 - Observability & Telemetry Patterns Guide  
 - Data Governance & Data Quality Patterns Guide  
 - AI & Agentic Systems Patterns Guide  
+- Agentic Automation Extension Pack  
 - Branching, Versioning, and Promotion Architecture Guide  
 
 ---
 
-## 8.3 Governance & Enforcement Specifications
+## 8.3 Extension Packs & Modernization Playbooks
+
+Extension packs and modernization playbooks package **non-authoritative, cross-cutting architectural guidance** that is broader than a single pattern but does not justify independent architectural authority.
+
+These artifacts:
+
+- remain fully downstream of CAF and its governance documents
+- package related pattern families, workflow shapes, and control expectations
+- make modernization journeys explicit without redefining architectural intent
+- do not introduce new authority-bearing framework layers
+
+### Current / Planned
+
+- Agentic Automation Extension Pack  
+- SaaS-to-Agentic Modernization Playbook  
+
+---
+
+## 8.4 Governance & Enforcement Specifications
 
 Governance documents define **processes, controls, and validation mechanisms** that enforce or evaluate conformance to CAF-defined architectural intent.
 
@@ -289,7 +308,7 @@ These documents:
 
 ---
 
-## 8.4 Non-Authority Statement (Normative)
+## 8.5 Non-Authority Statement (Normative)
 
 The following planes and domains are explicitly **non-authoritative** within CAF:
 
@@ -298,8 +317,8 @@ The following planes and domains are explicitly **non-authoritative** within CAF
 - AI & Agentic Systems  
 - Platform, DevEx, and Observability concerns  
 
-Architectural intent for these areas is fully expressed through CAF invariants, templates, patterns, and governance mechanisms.  
-No standalone domain frameworks are defined or planned for these areas.
+Architectural intent for these areas is fully expressed through CAF invariants, templates, patterns, governance mechanisms, extension packs, and modernization playbooks.  
+No standalone authority-bearing domain frameworks are defined or planned for these areas.
 
 ## 9. Version History
 

@@ -344,6 +344,7 @@ export function renderFeedbackPacketV1(params = {}) {
     lines.push('- Human operators should not treat manual packet status edits as the normal recovery path.');
     lines.push('- Reset to the most recent safe checkpoint with the exact reset helper named by the packet, then rerun the exact CAF command.');
   }
+  lines.push('- If the packet is correct but CAF still cannot progress, file an issue at: https://github.com/arylwen/caf/issues');
   lines.push('');
 
   return lines.join('\n');

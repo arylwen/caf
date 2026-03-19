@@ -20,12 +20,22 @@ function trimBOM(s) {
   return s;
 }
 
+function normalizeStructuralLine(s) {
+  return String(s ?? '')
+    .replace(/^\ufeff/, '')
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '')
+    .replace(/\u00A0/g, ' ')
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, '-')
+    .replace(/[\u2018\u2019\u201B\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201F\u2033]/g, '"');
+}
+
 function splitLines(md) {
   return normalizeLine(trimBOM(md)).split('\n');
 }
 
 function isHeading(line) {
-  const m = /^(#{1,6})\s+(.*)$/.exec(line);
+  const m = /^(#{1,6})\s+(.*)$/.exec(normalizeStructuralLine(line));
   if (!m) return null;
   return { level: m[1].length, text: m[2].trim() };
 }
@@ -54,7 +64,7 @@ function parseSimpleTable(lines) {
   // |---|---|
   // | ..| ..|
   const rows = [];
-  const clean = (l) => l.trim();
+  const clean = (l) => normalizeStructuralLine(l).trim();
   const tableLines = lines.map(clean).filter((l) => l.startsWith('|') && l.endsWith('|'));
   if (tableLines.length < 2) return null;
 
@@ -153,7 +163,7 @@ function parseCapabilityBlocks(md) {
     const fallback = (label) => {
       const re = new RegExp(`\\*\\*${label}\\*\\*\\s*:\\s*(.+)$`, 'i');
       for (const ln of bodyLines) {
-        const mm = re.exec(ln.trim());
+        const mm = re.exec(normalizeStructuralLine(ln).trim());
         if (mm) return mm[1].trim();
       }
       return null;
@@ -203,7 +213,7 @@ function parsePosture(md) {
   // - PP-01: ... => Answer: ...
   const questions = [];
   for (const ln of lines) {
-    const m = /^[-*]\s*(PP-[0-9]{2,3})\s*(?:[:]|-+)\s*(.+)$/.exec(ln.trim());
+    const m = /^[-*]\s*(PP-[0-9]{2,3})\s*(?:[:]|-+)\s*(.+)$/.exec(normalizeStructuralLine(ln).trim());
     if (!m) continue;
     questions.push({ question_id: m[1], question: m[2], answer: '' });
   }

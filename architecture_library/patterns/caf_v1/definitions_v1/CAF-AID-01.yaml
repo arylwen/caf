@@ -126,6 +126,22 @@ caf:
     - If identity kind is fixed by an upstream IAM governance decision, record it here for consistency.
     anchors:
     - caf_pattern: CAF-AID-01
+    semantic_acceptance:
+      attachments:
+      - attachment_id: agent_identity_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - plane_runtime_scaffolding
+        - runtime_wiring
+        criteria:
+        - Runtime scaffolds and wiring surfaces realize the adopted agent identity kind as an explicit governed runtime assumption.
+        - Agent-related runtime composition preserves the adopted identity mode and attribution expectations across the candidate runtime.
+        review_questions:
+        - Do runtime scaffolds and wiring surfaces realize the adopted agent identity kind coherently?
+        - Is agent identity and attribution handling consistent with the adopted identity mode across runtime composition?
+        focus_areas:
+        - security
+        - auditability
 promotions:
   semantic_inputs:
   - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-AID-01.yaml

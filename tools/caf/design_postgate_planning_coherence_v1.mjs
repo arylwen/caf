@@ -3,9 +3,9 @@
  * CAF scripted helper (mechanical only)
  *
  * Purpose (MP-20 design post-gate):
- * - Fail early at the end of `/caf arch <instance>` (design phase) if the adopted patterns
- *   in `spec/playbook/system_spec_v1.md` are not fully surfaced into the design planning
- *   payload blocks:
+ * - Fail early at the end of `/caf arch <instance>` (design phase) if adopted patterns
+ *   and adopted option choices in `spec/playbook/system_spec_v1.md` are not fully surfaced
+ *   into the design planning payload blocks:
  *     - design/playbook/application_design_v1.md  -> CAF_MANAGED_BLOCK: planning_pattern_payload_v1.selected_patterns
  *     - design/playbook/control_plane_design_v1.md -> same
  *
@@ -32,6 +32,7 @@ import { internal_main as traceability_internal_main } from './worker_traceabili
 import { internal_main as retrieval_debug_internal_main } from './build_retrieval_debug_v1.mjs';
 import { internal_main as candidate_report_internal_main } from './build_candidate_selection_report_v1.mjs';
 import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { collectAdoptedOptionSelections } from './extract_adopted_decision_options_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 
@@ -209,6 +210,160 @@ function validatePromotionsShape(planningPayloadObj) {
     else if (!Array.isArray(p[k])) missing.push(`promotions.${k} (must be a list)`);
   }
   return { ok: missing.length === 0, missing };
+}
+
+function validateAdoptedOptionChoicesShape(planningPayloadObj) {
+  const arr = planningPayloadObj && typeof planningPayloadObj === 'object' ? planningPayloadObj.adopted_option_choices : null;
+  if (!Array.isArray(arr)) return { ok: false, missing: ['adopted_option_choices'] };
+  const missing = [];
+  for (let i = 0; i < arr.length; i += 1) {
+    const choice = arr[i];
+    if (!choice || typeof choice !== 'object') {
+      missing.push(`adopted_option_choices[${i}] (must be an object)`);
+      continue;
+    }
+    for (const k of ['source', 'evidence_hook_id', 'pattern_id', 'question_id', 'option_set_id', 'option_id', 'summary', 'payload']) {
+      if (!(k in choice)) missing.push(`adopted_option_choices[${i}].${k}`);
+    }
+    if ('payload' in choice && (!choice.payload || typeof choice.payload !== 'object' || Array.isArray(choice.payload))) {
+      missing.push(`adopted_option_choices[${i}].payload (must be an object)`);
+    }
+  }
+  return { ok: missing.length === 0, missing };
+}
+
+function includeInPlane(planeValue, targetPlane) {
+  const p = normalize(planeValue).toLowerCase();
+  if (!p) return true;
+  if (p === 'both') return true;
+  if (targetPlane === 'application') return p === 'application';
+  if (targetPlane === 'control') return p === 'control';
+  return true;
+}
+
+function adoptedOptionChoiceKey(choice) {
+  return [
+    normalize(choice?.source),
+    normalize(choice?.evidence_hook_id),
+    normalize(choice?.pattern_id),
+    normalize(choice?.question_id),
+    normalize(choice?.option_set_id),
+    normalize(choice?.option_id),
+  ].join('|');
+}
+
+function collectPayloadAdoptedOptionChoices(planningPayloadObj) {
+  const arr = planningPayloadObj && typeof planningPayloadObj === 'object' && Array.isArray(planningPayloadObj.adopted_option_choices)
+    ? planningPayloadObj.adopted_option_choices
+    : [];
+  const out = [];
+  const seen = new Set();
+  for (const choice of arr) {
+    if (!choice || typeof choice !== 'object') continue;
+    const normalized = {
+      source: normalize(choice.source),
+      evidence_hook_id: normalize(choice.evidence_hook_id),
+      pattern_id: normalize(choice.pattern_id),
+      question_id: normalize(choice.question_id),
+      option_set_id: normalize(choice.option_set_id),
+      option_id: normalize(choice.option_id),
+      summary: normalize(choice.summary),
+      payload: choice.payload && typeof choice.payload === 'object' && !Array.isArray(choice.payload) ? choice.payload : {},
+    };
+    const key = adoptedOptionChoiceKey(normalized);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(normalized);
+  }
+  return out;
+}
+
+function filterExpectedAdoptedOptionChoicesForPlane(adoptedOptions, targetPlane, planeById) {
+  const out = [];
+  const seen = new Set();
+  for (const choice of Array.isArray(adoptedOptions) ? adoptedOptions : []) {
+    if (!choice || typeof choice !== 'object') continue;
+    const plane = planeById.get(normalize(choice.pattern_id));
+    if (!includeInPlane(plane, targetPlane)) continue;
+    const normalized = {
+      source: normalize(choice.source),
+      evidence_hook_id: normalize(choice.evidence_hook_id),
+      pattern_id: normalize(choice.pattern_id),
+      question_id: normalize(choice.question_id),
+      option_set_id: normalize(choice.option_set_id),
+      option_id: normalize(choice.option_id),
+      summary: normalize(choice.summary),
+      payload: choice.payload && typeof choice.payload === 'object' && !Array.isArray(choice.payload) ? choice.payload : {},
+    };
+    const key = adoptedOptionChoiceKey(normalized);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(normalized);
+  }
+  return out;
+}
+
+function diffAdoptedOptionChoices(expected, actual) {
+  const expectedMap = new Map(expected.map((x) => [adoptedOptionChoiceKey(x), x]));
+  const actualMap = new Map(actual.map((x) => [adoptedOptionChoiceKey(x), x]));
+  const missing = [];
+  const unexpected = [];
+  for (const [k, v] of expectedMap.entries()) {
+    if (!actualMap.has(k)) missing.push(v);
+  }
+  for (const [k, v] of actualMap.entries()) {
+    if (!expectedMap.has(k)) unexpected.push(v);
+  }
+  return { missing, unexpected };
+}
+
+
+function isUnsafePlainScalarValue(value) {
+  const t = String(value ?? '').trim();
+  if (!t) return false;
+  if (/^["'\[{|>!&*]/.test(t)) return false;
+  return t.includes(': ');
+}
+
+function findUnsafePlainScalarLines(yamlText) {
+  const out = [];
+  const lines = String(yamlText ?? '').split(/\r?\n/);
+  let blockScalarIndent = null;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    const indent = line.match(/^\s*/)?.[0]?.length || 0;
+
+    if (blockScalarIndent !== null) {
+      if (trimmed === '') continue;
+      if (indent > blockScalarIndent) continue;
+      blockScalarIndent = null;
+    }
+
+    const blockStart = line.match(/^(\s*(?:[A-Za-z_][A-Za-z0-9_]*|-[ ]+[A-Za-z_][A-Za-z0-9_]*)\s*:\s*)([>|])(?:[+-]?\d+)?\s*$/);
+    if (blockStart) {
+      blockScalarIndent = indent;
+      continue;
+    }
+
+    const m = line.match(/^(\s*[A-Za-z_][A-Za-z0-9_]*:\s+)(.+?)\s*$/);
+    if (!m) continue;
+    const value = m[2];
+    if (!isUnsafePlainScalarValue(value)) continue;
+    out.push({ lineNumber: i + 1, excerpt: line.trim() });
+  }
+  return out;
+}
+
+function pushUnsafeScalarEvidence(evidenceLines, yamlText, blockLabel) {
+  const offenders = findUnsafePlainScalarLines(yamlText);
+  for (const offender of offenders.slice(0, 5)) {
+    evidenceLines.push(`${blockLabel}: likely unsafe plain scalar at line ${offender.lineNumber}: ${offender.excerpt}`);
+  }
+  if (offenders.length > 5) {
+    evidenceLines.push(`${blockLabel}: ${offenders.length - 5} additional likely unsafe plain scalar line(s) omitted`);
+  }
+  return offenders;
 }
 
 async function loadRetrievalSurfacePlaneIndex(repoRoot) {
@@ -425,16 +580,21 @@ if (contractRegistryVersion !== 'contract_declarations_v1' || !Array.isArray(con
   try {
     decObj = parseYamlString(decYaml, `${sysSpecPath}:decision_resolutions_v1`) || {};
   } catch (e) {
+    const evidence = [
+      `file: reference_architectures/${instanceName}/spec/playbook/system_spec_v1.md`,
+      `error: ${String(e && e.message ? e.message : e)}`,
+    ];
+    pushUnsafeScalarEvidence(evidence, decYaml, 'decision_resolutions_v1');
     const pkt = await writeFeedbackPacket(
       repoRoot,
       instanceName,
       'design-postgate-decision-resolutions-unreadable',
       'Could not parse decision_resolutions_v1 YAML',
-      ['Fix the YAML syntax inside system_spec_v1.md under decision_resolutions_v1, then rerun: /caf arch <name>.'],
       [
-        `file: reference_architectures/${instanceName}/spec/playbook/system_spec_v1.md`,
-        `error: ${String(e && e.message ? e.message : e)}`,
-      ]
+        'Fix the YAML syntax inside system_spec_v1.md under decision_resolutions_v1, then rerun: /caf arch <name>.',
+        'If a scalar contains `: ` (common in summary/question text), quote the value or rephrase it.',
+      ],
+      evidence
     );
     process.stdout.write(pkt + '\n');
     return 3;
@@ -463,16 +623,21 @@ let appDecObj;
 try {
   appDecObj = parseYamlString(appDecYaml, `${appSpecPath}:decision_resolutions_v1`) || {};
 } catch (e) {
+  const evidence = [
+    `file: reference_architectures/${instanceName}/spec/playbook/application_spec_v1.md`,
+    `error: ${String(e && e.message ? e.message : e)}`,
+  ];
+  pushUnsafeScalarEvidence(evidence, appDecYaml, 'decision_resolutions_v1');
   const pkt = await writeFeedbackPacket(
     repoRoot,
     instanceName,
     'design-postgate-decision-resolutions-unreadable',
     'Could not parse decision_resolutions_v1 YAML (application_spec_v1.md)',
-    ['Fix the YAML syntax inside application_spec_v1.md under decision_resolutions_v1, then rerun: /caf arch <name>.'],
     [
-      `file: reference_architectures/${instanceName}/spec/playbook/application_spec_v1.md`,
-      `error: ${String(e && e.message ? e.message : e)}`,
-    ]
+      'Fix the YAML syntax inside application_spec_v1.md under decision_resolutions_v1, then rerun: /caf arch <name>.',
+      'If a scalar contains `: ` (common in summary/question text), quote the value or rephrase it.',
+    ],
+    evidence
   );
   process.stdout.write(pkt + '\n');
   return 3;
@@ -517,6 +682,10 @@ if (violations.length) {
       if (!promo.ok) {
         return { ok: false, error: `planning_pattern_payload_v1 promotions shape invalid (${promo.missing.join(', ')}) in ${label}`, obj };
       }
+      const optionsShape = validateAdoptedOptionChoicesShape(obj);
+      if (!optionsShape.ok) {
+        return { ok: false, error: `planning_pattern_payload_v1 adopted_option_choices shape invalid (${optionsShape.missing.join(', ')}) in ${label}`, obj };
+      }
       return { ok: true, error: null, obj };
     } catch (e) {
       return { ok: false, error: `Could not parse planning_pattern_payload_v1 YAML in ${label}: ${String(e && e.message ? e.message : e)}`, obj: null };
@@ -555,6 +724,41 @@ if (violations.length) {
   const cpSelected = collectSelectedPatternIds(cpPayload.obj);
   const unionSelected = new Set([...appSelected, ...cpSelected]);
 
+  const canonicalAdoptedOptions = collectAdoptedOptionSelections(decObj, 'system');
+  const { surfacePath: rsPath, byId: planeById } = await loadRetrievalSurfacePlaneIndex(repoRoot);
+  const appExpectedOptions = filterExpectedAdoptedOptionChoicesForPlane(canonicalAdoptedOptions, 'application', planeById);
+  const cpExpectedOptions = filterExpectedAdoptedOptionChoicesForPlane(canonicalAdoptedOptions, 'control', planeById);
+  const appPayloadOptions = collectPayloadAdoptedOptionChoices(appPayload.obj);
+  const cpPayloadOptions = collectPayloadAdoptedOptionChoices(cpPayload.obj);
+  const appOptionDiff = diffAdoptedOptionChoices(appExpectedOptions, appPayloadOptions);
+  const cpOptionDiff = diffAdoptedOptionChoices(cpExpectedOptions, cpPayloadOptions);
+  if (appOptionDiff.missing.length || appOptionDiff.unexpected.length || cpOptionDiff.missing.length || cpOptionDiff.unexpected.length) {
+    const summarize = (choices) => choices.slice(0, 8).map((c) => `${c.pattern_id}/${c.question_id}/${c.option_id}`);
+    const evidence = [
+      `spec source: reference_architectures/${instanceName}/spec/playbook/system_spec_v1.md (decision_resolutions_v1 adopted options)`,
+      `design sources: reference_architectures/${instanceName}/design/playbook/application_design_v1.md + control_plane_design_v1.md (planning_pattern_payload_v1.adopted_option_choices)`,
+      `retrieval_surface: ${rsPath.replace(/\\/g, '/')}`,
+    ];
+    if (appOptionDiff.missing.length) evidence.push(`application missing adopted options: ${summarize(appOptionDiff.missing).join(', ')}`);
+    if (appOptionDiff.unexpected.length) evidence.push(`application unexpected adopted options: ${summarize(appOptionDiff.unexpected).join(', ')}`);
+    if (cpOptionDiff.missing.length) evidence.push(`control missing adopted options: ${summarize(cpOptionDiff.missing).join(', ')}`);
+    if (cpOptionDiff.unexpected.length) evidence.push(`control unexpected adopted options: ${summarize(cpOptionDiff.unexpected).join(', ')}`);
+    const pkt = await writeFeedbackPacket(
+      repoRoot,
+      instanceName,
+      'design-planning-adopted-option-drift',
+      'Adopted option choices in system_spec_v1.md are missing from or inconsistent with the design planning payload handoff',
+      [
+        `Preferred: rerun /caf arch ${instanceName} (design) so the CAF-managed planning payload materializes adopted_option_choices deterministically.`,
+        'If an option should not drive planning/code yet: change its decision_resolutions_v1 option status from adopt to defer, then rerun /caf arch.',
+        'Do not hotfix this by adding worker-local lore; restore the design -> planning handoff instead.',
+      ],
+      evidence
+    );
+    process.stdout.write(pkt + '\n');
+    return 3;
+  }
+
   const missingFromDesign = adopted.filter((id) => !unionSelected.has(id));
   if (missingFromDesign.length) {
     const pkt = await writeFeedbackPacket(
@@ -583,7 +787,6 @@ if (violations.length) {
   // Optional tightening: per-plane placement invariants (fail-closed).
   // Prevent control-plane design payloads from carrying application-only patterns, and vice versa.
   // This is deterministic and uses the retrieval surface metadata as the source of truth.
-  const { surfacePath: rsPath, byId: planeById } = await loadRetrievalSurfacePlaneIndex(repoRoot);
   const mismatches = [];
   for (const id of appSelected) {
     const p = planeById.get(id);
@@ -641,6 +844,11 @@ if (violations.length) {
   try {
     planeChoicesObj = parseYamlString(planeChoicesYaml, `${cpDesignPath}:plane_integration_contract_choices_v1`) || {};
   } catch (e) {
+    const evidence = [
+      `file: reference_architectures/${instanceName}/design/playbook/control_plane_design_v1.md`,
+      `error: ${String(e && e.message ? e.message : e)}`,
+    ];
+    pushUnsafeScalarEvidence(evidence, planeChoicesYaml, 'plane_integration_contract_choices_v1');
     const pkt = await writeFeedbackPacket(
       repoRoot,
       instanceName,
@@ -648,12 +856,10 @@ if (violations.length) {
       'Could not parse plane_integration_contract_choices_v1 YAML (cannot validate runtime shapes for planning)',
       [
         `Fix the YAML syntax inside plane_integration_contract_choices_v1 in control_plane_design_v1.md, then rerun /caf arch ${instanceName}.`,
+        'If a scalar contains `: ` (common in option summaries), quote the value or rephrase it.',
         'If this was produced by a script/template, open a maintainer ticket and include this packet.',
       ],
-      [
-        `file: reference_architectures/${instanceName}/design/playbook/control_plane_design_v1.md`,
-        `error: ${String(e && e.message ? e.message : e)}`,
-      ]
+      evidence
     );
     process.stdout.write(pkt + '\n');
     return 3;

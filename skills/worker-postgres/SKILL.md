@@ -73,6 +73,8 @@ Minimum outputs to materialize when PostgreSQL is resolved:
 - Materialize a small Postgres adapter module at the TBP role binding path for `postgres_adapter_module`.
 - It MUST consume `DATABASE_URL` (or POSTGRES_* + derived URL) and expose a minimal API that resource repositories can call (e.g., get_connection()/get_pool()).
 - It MUST NOT import resource modules and MUST NOT implement a resource repository.
+- It MUST read `persistence.orm` / `platform.persistence_orm` from `caf/profile_parameters_resolved.yaml` and avoid collapsing ORM-backed rails into a raw-SQL-only adapter contract.
+- When `persistence.orm == sqlalchemy_orm`, expose an ORM-compatible adapter surface (for example engine/session bootstrap helpers) rather than only a direct cursor helper.
 
 ## Behavioral requirements
 
@@ -118,12 +120,14 @@ Minimum outputs to materialize when PostgreSQL is resolved:
 - Create `infrastructure/postgres.env.example` with a minimal, local-dev-safe set of variables:
   - `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
   - `POSTGRES_HOST=postgres`, `POSTGRES_PORT=5432`
-  - `DATABASE_URL=postgresql://...@postgres:5432/...`
+  - `DATABASE_URL=postgresql+psycopg://...@postgres:5432/...`
+  - When SQLAlchemy rails are resolved, keep the emitted DATABASE_URL compatible with the SQLAlchemy-owned URL contract; do not invent a compose- or postgres-specific variant.
 
 4) Minimal adapter module
 - Materialize the Postgres adapter module at the TBP role binding path for `postgres_adapter_module`.
 - Do NOT create or modify resource repositories here.
 - Do NOT create or modify repository factories/selectors here.
+- Preserve the selected persistence realization: if ORM-backed rails are selected, the adapter surface must be usable by ORM-backed repositories and schema bootstrap hooks.
 
 5) Task report
 - Write `<companion_repo_target>/caf/task_reports/<task_id>.md`.

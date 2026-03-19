@@ -76,9 +76,27 @@ Special cases (still deterministic; still scaffolding-only):
 
 - `infrastructure/compose.yaml`: when this file is a declared output for the task, create a minimal multi-service compose stub that wires plausible `cp`, `ap`, and `db` services **without claiming it runs**.
 - `infrastructure/Containerfile`: when this file is a declared output for the task, create a minimal build stub starting with `FROM` and including only generic placeholders that are not TODO/TBD/UNKNOWN.
-- `pyproject.toml` and `requirements.txt`: if declared outputs include these files, create minimal syntactically plausible stubs, but do not assert specific frameworks unless the Task Graph DoD + trace anchors require them.
+- `requirements.txt`: when declared outputs or resolved TBP role bindings require it, create a syntactically plausible manifest with the exact stack-owned dependency lines required by the resolved TBPs. Do not invent a parallel `pyproject.toml` for the runnable candidate unless the framework contract explicitly selects it.
 
 ## Definition of Done alignment (semantic)
+
+## Role-binding enforcement (mandatory when present)
+
+Before writing config or dependency artifacts, resolve role-binding expectations for this capability and obey the returned paths and evidence markers.
+
+Run (from repo root):
+- `node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance_name> --capability observability_and_config`
+
+When multiple expectations target the same dependency-manifest path:
+- materialize one canonical artifact at the resolved path;
+- include the union of all required evidence markers from the resolved expectations;
+- keep one dependency per line when the resolved contract is a line-oriented manifest; and
+- preserve a `# CAF_TRACE:` provenance comment at the top when the resolved expectations require it.
+
+Dependency-manifest posture (v1):
+- If resolved expectations for this capability declare a canonical dependency manifest, treat that manifest as authoritative for runnable candidates.
+- Do not invent a parallel dependency-manifest format unless the task DoD or resolved role-binding expectations explicitly require it.
+- Honor dependency names and evidence markers from the resolved expectations exactly; do not substitute alternate package names or extras on worker-local judgment.
 
 - Treat `task.definition_of_done[]` as the authoritative acceptance criteria.
 - Do not invent additional acceptance checks beyond the Task Graph.

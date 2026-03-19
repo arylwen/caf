@@ -81,15 +81,27 @@ Write rails:
 
 - If the UI makes API calls, it MUST pass tenant/principal context according to the design/contract sources.
 - If the contract/design does not clearly declare how context is carried, fail closed.
+- Read resolved rails plus the task's managed DoD / semantic-review lines.
+- If the task carries a managed auth or tenant-context contract for the shared UI API helper, implement that exact contract in the helper and keep alternate carriers only to the extent the task / contract explicitly allows them.
 
-4) **Entity identity + UI fields (default)**
+4) **Wired SPA behavior is required for implemented shell/page tasks**
+
+- Static descriptive pages are **not** acceptable completion for `TG-15-ui-shell`, `TG-18-ui-policy-admin`, or `TG-25-ui-page-<resource_key>`.
+- `TG-15-ui-shell` MUST expose real navigation/router reachability to every implemented page and MUST centralize AP calls through the shared UI API helper (`src/api.js`).
+- `TG-18-ui-policy-admin` MUST bind visible form state or action controls to a real preview/submit interaction path. If the authoritative inputs do not expose a real contract/action path, FAIL-CLOSED instead of emitting a mock admin page presented as implemented.
+- `TG-25-ui-page-<resource_key>` MUST wire at least one concrete AP interaction aligned to the task/resource intent (for example list/read, or create/update when explicitly declared), using the shared API helper and the declared contract surface.
+- API-backed pages MUST render observable loading, empty, success, and failure states. Silent no-op controls or prose-only mock pages are not acceptable completion.
+- The shared UI API helper (`src/api.js`) MUST preserve backend failure detail for non-2xx responses when the emitted contract returns structured details (for example JSON `detail`) so runtime diagnosis is not reduced to status-code-only noise.
+- If authoritative inputs are insufficient to identify a real interaction path for the task, FAIL-CLOSED instead of claiming implementation.
+
+5) **Entity identity + UI fields (default)**
 
 - UI MUST treat entity identifiers (`id`, `*_id`) as **server-generated** by default.
   - Create forms MUST NOT ask the user to type an id.
   - Only include an id input if the authoritative app spec explicitly declares the id as user-provided.
 - UI pages MUST prioritize user-facing fields (e.g., title/name, description, contents/content) and MUST NOT display ids by default.
 
-5) **No placeholders**
+6) **No placeholders**
 
 - No `TBD`, `TODO`, `UNKNOWN`, `{{ }}`, `REPLACE_ME`, `<...>`.
 - Use explicit scaffold language in READMEs instead (e.g., "This is a minimal scaffold; extend by ...").
@@ -123,6 +135,13 @@ Task-specific additions:
 
 - For `TG-18-ui-policy-admin`: add `profile_v1/code/ui/src/pages/policy_admin.jsx`
 - For `TG-25-ui-page-<resource_key>`: add `profile_v1/code/ui/src/pages/<resource_key>.jsx`
+Implementation expectations for task outputs:
+
+- Every implemented page MUST be reachable from the shell/router path that claims to expose it.
+- Every implemented API-backed page MUST import/use the shared UI API helper rather than duplicating raw fetch logic.
+- The shared UI API helper MUST translate non-2xx backend responses into failure messages that preserve backend detail when available (`detail`, structured JSON, or response text) instead of throwing status-code-only errors.
+- `TG-25-ui-page-<resource_key>` outputs MUST do more than explanatory prose: they must materialize task-aligned interactions and rendered state.
+- `TG-18-ui-policy-admin` outputs MUST do more than policy copy: they must materialize real state-bound action controls and an interaction path.
 
 ## Task report (required)
 
@@ -134,6 +153,12 @@ The report MUST include:
 
 - Inputs consumed (each required `task.inputs[]` + what you derived)
 - Claims (1–5)
+- Interaction matrix for every implemented page/action surface:
+  - page/module
+  - reachable from shell/router via
+  - AP contract path or action surface used
+  - shared API helper call(s) used
+  - observable loading/success/empty/failure states rendered
 - Evidence anchors (`<relative_path>:L<start>-L<end>` under `companion_repositories/<instance>/profile_v1/`)
 
 ## Fail-closed conditions
@@ -143,3 +168,5 @@ The report MUST include:
 - Intended writes outside the derived allowed write paths.
 - Any output artifact class outside derived allowed artifact classes.
 - Any ambiguity about tenant/principal context carriers when API calls are scaffolded.
+- Any task that would otherwise be satisfied only by descriptive/static SPA copy with no real interaction path.
+- Any task report that claims implemented UI behavior but cannot provide the required interaction matrix evidence.

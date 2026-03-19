@@ -1,5 +1,12 @@
 schema_version: technology_choice_rules_v1
 rules:
+  # Dependency wiring mode selection
+  - key: platform.dependency_wiring_mode
+    when: {}
+    allowed_values: [framework_managed, manual_composition_root]
+    default_value: manual_composition_root
+    required: false
+
   # Framework selection
   - key: platform.framework
     when:

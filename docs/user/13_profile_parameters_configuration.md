@@ -63,6 +63,27 @@ CAF resolves it into:
 
 That derived view is what `/caf plan` should use for style-to-plane role mapping rather than reinterpreting architecture style from prose.
 
+### Dependency wiring mode
+
+CAF now exposes a canonical machine-consumed runtime/platform pin for dependency realization:
+
+- `platform.dependency_wiring_mode`
+
+Supported values:
+
+- `framework_managed`
+- `manual_composition_root`
+
+The intended split is now:
+
+- `architecture.architecture_style` selects the architecture style and its logical dependency shape,
+- task-level `interface_binding_hints[]` in `task_graph_v1.yaml` carry semantic binding intent when an explicit consumer/provider/assembler loop matters,
+- `interface_binding_contracts_v1.yaml` remains a CAF-managed derived worker/execution surface,
+- `platform.dependency_wiring_mode` states how runtime wiring should realize those declared bindings.
+
+Current first-pass default: `manual_composition_root`.
+That default is explicit in the canonical profile template and resolves to the same semantic mode in `profile_parameters_resolved.yaml`; CAF does not remap it through a hidden placeholder mode.
+
 ## How to apply changes
 
 1. Edit `profile_parameters.yaml`.
@@ -89,6 +110,7 @@ platform:
   runtime_language: python
   framework: fastapi
   database_engine: postgres
+  dependency_wiring_mode: manual_composition_root
   persistence_orm: sqlalchemy_orm
   auth_mode: mock
   eventing_backend: mock_in_memory
@@ -122,6 +144,7 @@ This table is a **docs/user convenience view** derived from the canonical Phase 
 | `platform.packaging` | `podman_compose`, `docker_compose`, `kubernetes`, `serverless` | `docker_compose` |
 | `platform.runtime_language` | `python`, `typescript`, `csharp`, `node`, `go`, `java` | `python` |
 | `platform.database_engine` | `postgres`, `mysql`, `sqlserver`, `sqlite`, `none` | `postgres` |
+| `platform.dependency_wiring_mode` | `framework_managed`, `manual_composition_root` | `manual_composition_root` |
 | `ui.present` | `true`, `false` | `true` |
 | `ui.kind` | `web_spa` | `web_spa` |
 | `ui.framework` | `react` | `react` |

@@ -91,6 +91,13 @@ properties:
       framework:
         type: string
         description: Optional runtime framework choice (validated deterministically by CAF guardrails).
+      dependency_wiring_mode:
+        type: string
+        enum: [framework_managed, manual_composition_root]
+        description: >
+          Optional dependency realization strategy for runtime wiring.
+          - framework_managed: a framework/container/tooling surface realizes declared bindings
+          - manual_composition_root: bindings are closed explicitly in composition/bootstrap code
       persistence_orm:
         type: string
         description: Optional persistence model choice (validated deterministically by CAF guardrails).

@@ -28,9 +28,9 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
-import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parsePrdMarkdownV1 } from './lib_prd_parse_v1.mjs';
+import { nowStampYYYYMMDD, renderFeedbackPacketV1 } from './lib_feedback_packets_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 const DEBUG = String(process.env.CAF_DEBUG ?? '').trim() === '1';
@@ -56,11 +56,6 @@ function isWithin(childAbs, parentAbs) {
   return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
 }
 
-function nowStampYYYYMMDD() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`;
-}
 
 async function readUtf8(p) {
   return await fs.readFile(p, { encoding: 'utf8' });
@@ -77,27 +72,27 @@ async function writeUtf8Allowed(repoRootAbs, instanceRootAbs, p, content) {
   await fs.writeFile(abs, content, { encoding: 'utf8' });
 }
 
-async function writeFeedbackPacket(repoRootAbs, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines) {
+async function writeFeedbackPacket(repoRootAbs, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines, humanGuidanceLines = []) {
   const fpDir = path.join(repoRootAbs, 'reference_architectures', instanceName, 'feedback_packets');
   await ensureDir(fpDir);
   const yyyyMMdd = nowStampYYYYMMDD();
   const fp = path.join(fpDir, `BP-${yyyyMMdd}-prd-extract-${slug}.md`);
-  const body = [
-    `# Feedback Packet - PRD extract`,
-    '',
-    `- Instance: ${instanceName}`,
-    `- Stuck At: tools/caf/prd_extract_v1.mjs`,
-    `- Observed Constraint: ${observedConstraint}`,
-    `- Gap Type: Missing input | Spec violation`,
-    `- Minimal Fix Proposal:`,
-    ...minimalFixLines.map((l) => `  - ${l}`),
-    `- Evidence:`,
-    ...evidenceLines.map((l) => `  - ${l}`),
-    `- Autonomous agent guidance:`,
-    `  - Autonomous agents with reasoning capabilities MUST apply the edits described in this packet before continuing.`,
-    `  - After applying the fix, resume the current CAF workflow step; rerun the relevant command (/caf arch, /caf plan, or /caf build) only if required by your runner.`,
-    '',
-  ].join('\n');
+  const body = renderFeedbackPacketV1({
+    title: 'PRD extract',
+    instanceName,
+    stuckAt: 'tools/caf/prd_extract_v1.mjs',
+    severity: 'blocker',
+    status: 'pending',
+    observedConstraint,
+    gapType: 'Missing input | Spec violation | Tool failure',
+    minimalFixLines,
+    evidenceLines,
+    agentGuidanceLines: [
+      'Apply the Minimal Fix Proposal (do not invent alternatives).',
+      'After fixing the blocking issue, rerun /caf prd for the same instance to regenerate the PRD extract artifacts.',
+    ],
+    humanGuidanceLines,
+  });
   await writeUtf8Allowed(repoRootAbs, path.join(repoRootAbs, 'reference_architectures', instanceName), fp, body);
 }
 

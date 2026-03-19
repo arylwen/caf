@@ -21,7 +21,7 @@ import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { fileURLToPath } from 'node:url';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
-import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 import { computeExpectedUiTaskIds, taskIdsFromTaskGraphObj } from './lib_ui_seed_expectations_v1.mjs';
 import { loadPlaneDomainModelViews } from './lib_plane_domain_models_v1.mjs';
 
@@ -741,6 +741,16 @@ try {
       die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 22);
     }
   }
+  // Success: resolve prior mode-specific preflight packets so packet state matches the validated seam.
+  try {
+    if (mode === 'plan' || mode === 'build') {
+      resolveFeedbackPacketsBySlugSync(packetsDir, `preflight-${mode}-`);
+      resolveFeedbackPacketsBySlugSync(packetsDir, `preflight-missing-inputs-${mode}`);
+    }
+  } catch {
+    // best-effort packet lifecycle hygiene
+  }
+
   // Success: be silent (token saver).
   return 0;
 }

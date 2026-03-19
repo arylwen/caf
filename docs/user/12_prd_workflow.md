@@ -92,8 +92,12 @@ If `/caf prd` cannot proceed safely, CAF writes a feedback packet under:
 
 If you skip `/caf prd` and run the first `/caf arch` on a bootstrap shape, CAF now writes an **advisory** feedback packet and continues. For the launch workflow, the intended fix is still command-only: review the PRD source docs if needed, run `/caf prd <instance>`, then rerun `/caf arch <instance>` if you want the scaffold refreshed from the promoted shape.
 
-## Related docs
+## Next best link
 
-- [Quickstart](03_quickstart.md)
-- [PRD-first lifecycle](15_prd_first_lifecycle.md)
-- [Instances, phases, and state](05_instances_phases_and_state.md)
+[PRD-first lifecycle](15_prd_first_lifecycle.md) — See how the promoted shape feeds the rest of the default lifecycle.
+
+## Top 3 related links
+
+- [Quickstart](03_quickstart.md) — Run the command flow that puts `/caf prd` in context.
+- [Instances, phases, and state](05_instances_phases_and_state.md) — Check where the promoted and advisory artifacts live.
+- [Architect workflows](../architect/10_architect_workflows.md) — Compare the default PRD-first path with the architect-curated override.

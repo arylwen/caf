@@ -106,6 +106,22 @@ caf:
     - Refine or replace this question text and specialization notes in the library if needed.
     anchors:
     - caf_pattern: CAF-IAM-01
+    semantic_acceptance:
+      attachments:
+      - attachment_id: principal_taxonomy_realization
+        attachment_scope: all_matching_tasks
+        required_capabilities:
+        - plane_runtime_scaffolding
+        - runtime_wiring
+        criteria:
+        - Runtime scaffolds and wiring surfaces recognize and preserve the adopted principal taxonomy coherently across plane boundaries.
+        - Identity-related runtime assumptions remain consistent with the adopted principal taxonomy and do not collapse distinct principal roles.
+        review_questions:
+        - Do runtime scaffolds and wiring surfaces realize the adopted principal taxonomy coherently?
+        - Are identity-related runtime assumptions consistent with the adopted principal taxonomy across the candidate runtime?
+        focus_areas:
+        - security
+        - architecture_alignment
 promotions:
   semantic_inputs:
   - source_path: architecture_library/patterns/caf_v1/definitions_v1/CAF-IAM-01.yaml
