@@ -23,7 +23,7 @@
 
 ## Observable artifacts
 - `reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml`: present
-- `reference_architectures/codex-saas/feedback_packets/`: present (1 file(s))
+- `reference_architectures/codex-saas/feedback_packets/`: present (no packets observed)
 
 ## State predicates
 - phase evaluated: `implementation_scaffolding`

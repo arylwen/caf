@@ -1,3 +1,8 @@
-# CAF_TRACE: generated_by=Contura Architecture Framework (CAF); task_id=TG-TBP-TBP-PG-01-postgres_persistence_wiring; capability=postgres_persistence_wiring; instance=codex-saas; trace_anchor=pattern_obligation_id:O-TBP-PG-01-env-contract
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-90-runtime-wiring
+# CAF_TRACE: capability=runtime_wiring
+# CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-COMPOSE-01-gitignore
 .env
 *.local
+

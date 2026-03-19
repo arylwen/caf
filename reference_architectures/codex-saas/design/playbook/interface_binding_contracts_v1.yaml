@@ -23,6 +23,25 @@ bindings:
       task_id: TG-90-runtime-wiring
       role_id: composition_root
       binding_action: bind_consumer_to_provider
+  - binding_id: BIND-AP-reviews
+    binding_kind: required_provided_interface_binding
+    plane_scope: AP
+    resource_key: reviews
+    description: "Bind the AP reviews consumer to a provider implementation in the assembler boundary."
+    required_interface:
+      name: ReviewsAccessInterface
+      description: "Required interface for reviews operations in the selected architecture style."
+      consumer:
+        task_id: TG-30-service-facade-reviews
+        role_id: application_use_cases
+    provider:
+      task_id: TG-40-persistence-reviews
+      role_id: outbound_adapters
+      binding_kind: provides_implementation
+    assembler:
+      task_id: TG-90-runtime-wiring
+      role_id: composition_root
+      binding_action: bind_consumer_to_provider
   - binding_id: BIND-AP-submissions
     binding_kind: required_provided_interface_binding
     plane_scope: AP

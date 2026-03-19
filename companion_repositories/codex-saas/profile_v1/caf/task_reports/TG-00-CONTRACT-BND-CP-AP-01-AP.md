@@ -1,35 +1,64 @@
+# Task Report: TG-00-CONTRACT-BND-CP-AP-01-AP
+
 ## Task Spec Digest
-- task_id: `TG-00-CONTRACT-BND-CP-AP-01-AP`
-- title: `Scaffold AP side of CP/AP contract boundary`
-- primary capability: `contract_scaffolding`
-- task graph source: `caf/task_graph_v1.yaml`
+
+- task_id: TG-00-CONTRACT-BND-CP-AP-01-AP
+- title: Scaffold AP contract surface for BND-CP-AP-01
+- primary capability: contract_scaffolding
+- source task graph: companion_repositories/codex-saas/profile_v1/caf/task_graph_v1.yaml
 
 ## Inputs declared by task
-- required: `reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml`
-- required: `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`
-- required: `reference_architectures/codex-saas/design/playbook/application_design_v1.md`
+
+- required: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- required: reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml
+- required: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
 
 ## Inputs consumed
-- `caf/contract_declarations_v1.yaml`: extracted `BND-CP-AP-01`, material boundary, and `FORM_B_EMBEDDED_SECTION` contract reference.
-- `caf/control_plane_design_v1.md`: extracted section `Plane Integration Contract (CP <-> AP)` and adopted `cp_ap_contract_surface: mixed`.
-- `caf/application_design_v1.md`: confirmed AP-side boundary intent and no new architecture choices.
+
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml: confirmed runtime language/framework rails and tenant-context posture used by CP/AP contract scaffolding.
+- reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml: grounded `BND-CP-AP-01` as material cross-plane contract with FORM_B embedded section sourcing.
+- reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md: consumed `Plane Integration Contract (CP ↔ AP)` and adopted `synchronous_http` plus CP policy precheck semantics.
 
 ## Step execution evidence
-- Read declared material cross-plane boundary `BND-CP-AP-01` from `caf/contract_declarations_v1.yaml`.
-- Defined AP-facing synchronous entrypoint seam in `code/AP/contracts/BND-CP-AP-01/http_client.py`.
-- Captured tenant/principal/correlation context requirements in `code/AP/contracts/BND-CP-AP-01/envelope.py`.
-- Aligned scaffolding to mixed sync/async contract surface with `http_client.py` plus `events.py`.
-- Recorded AP contract assumptions and trace anchors in `code/AP/contracts/BND-CP-AP-01/README.md`.
+
+- Read material cross-plane boundary metadata for BND-CP-AP-01.
+  - Evidence: AP contract README frontmatter includes `contract_boundary_id`, `contract_ref_path`, and `contract_ref_section`.
+- Scaffold AP consumer-side contract adapter and request mapping seams.
+  - Evidence: `http_client.py` materializes AP-side consumer call shape and request mapping to CP policy endpoint.
+- Define AP-facing contract namespace aligned to CP policy evaluation surface.
+  - Evidence: `code/ap/contracts/__init__.py` and `code/ap/contracts/bnd_cp_ap_01/__init__.py` establish deterministic namespace.
+- Attach semantic placeholders for tenant context and policy decision transport.
+  - Evidence: envelope dataclasses and Authorization/X-Tenant-Id headers preserve tenant/principal/correlation fields and conflict checks.
+- Capture AP contract assumptions for assembler and runtime wiring tasks.
+  - Evidence: AP contract README summarizes carrier expectations, conflict rule, and extension seams.
 
 ## Outputs produced
-- `code/AP/contracts/__init__.py`
-- `code/AP/contracts/BND-CP-AP-01/__init__.py`
-- `code/AP/contracts/BND-CP-AP-01/envelope.py`
-- `code/AP/contracts/BND-CP-AP-01/http_client.py`
-- `code/AP/contracts/BND-CP-AP-01/events.py`
-- `code/AP/contracts/BND-CP-AP-01/README.md`
+
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/envelope.py
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/http_client.py
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/README.md
 
 ## Rails and TBP satisfaction
-- All writes remained under `companion_repositories/codex-saas/profile_v1/code/**`.
-- No planner-owned or architecture files were modified.
-- Contract surface and context carrier fields are grounded in declared CP/AP boundary inputs and trace anchors.
+
+- Rails honored:
+  - all writes are under companion_repositories/codex-saas/profile_v1/code/** and companion_repositories/codex-saas/profile_v1/caf/task_reports/**.
+  - no copied planning input in companion_repositories/codex-saas/profile_v1/caf/** was modified.
+- TBP/Pins honored:
+  - contract surface remains synchronous HTTP as declared in control-plane design.
+  - tenant-context carrier and precedence are preserved by explicit claim payload fields and conflict-detection header seam.
+  - no new transport or architecture choice was introduced.
+
+## Claims
+
+- AP contract scaffolding for BND-CP-AP-01 is grounded to declared contract metadata and section anchors.
+- AP consumer HTTP contract seam exists with explicit context-bearing envelope and claim-aware header emission.
+- The scaffold is extension-ready for runtime wiring while remaining decision-preserving.
+
+## Evidence anchors
+
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/README.md:L1-L30
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/http_client.py:L1-L34
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/envelope.py:L1-L24
+

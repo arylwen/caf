@@ -1,3 +1,8 @@
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-90-runtime-wiring
+# CAF_TRACE: capability=runtime_wiring
+# CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-RUNTIME-WIRING
 schema_version: caf_interface_binding_report_v1
 binding_id: BIND-AP-reports
 status: closed
@@ -5,9 +10,9 @@ closed_by:
   task_id: TG-90-runtime-wiring
 evidence:
   consumer_artifact_paths:
-    - code/AP/interfaces/inbound/reports_router.py
+    - code/ap/service/resource_services.py
   provider_artifact_paths:
-    - code/AP/persistence/postgres_reports_repository.py
-    - code/AP/persistence/repository_factory.py
+    - code/ap/persistence/postgres_reports_repository.py
   assembler_artifact_paths:
-    - code/AP/bootstrap/runtime_wiring.py
+    - code/ap/composition/root.py
+

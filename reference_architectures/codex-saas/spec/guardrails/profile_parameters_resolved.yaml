@@ -36,6 +36,11 @@ platform:
   packaging: "docker_compose"
   runtime_language: "python"
   database_engine: "postgres"
+  framework: "fastapi"
+  dependency_wiring_mode: "manual_composition_root"
+  persistence_orm: "sqlalchemy_orm"
+  auth_mode: "mock"
+  eventing_backend: "mock_in_memory"
 profile_version: "profile_v1"
 companion_repo_target: "companion_repositories/codex-saas/profile_v1"
 runnable_code_approved: false
@@ -58,9 +63,18 @@ candidate_enforcement_bar:
 runtime:
   language: "python"
   framework: "fastapi"
+tbp_conventions:
+  module_conventions:
+    absolute_import_root: "code"
+    intra_package_import_style: "explicit_relative_preferred"
+    plane_module_roots:
+      ap: "code.ap"
+      cp: "code.cp"
 database:
   engine: "postgresql"
   schema_management_strategy: "code_bootstrap"
+persistence:
+  orm: "sqlalchemy_orm"
 ui:
   present: true
   kind: "web_spa"
@@ -80,9 +94,10 @@ meta:
   requested_by: "caf-saas-init"
   change_reason: "initial_instance_creation"
   notes: "Initialized by caf-saas-init."
+  profile_template_id: "intentionally_boring_saas_v1"
   derived_by: "tools/caf/guardrails_v1.mjs"
   derived_policy_id: "PM-default-implementation_scaffolding"
-  derived_at: "2026-03-11T20:41:43.753Z"
+  derived_at: "2026-03-19T11:17:22.244Z"
   derived_from_pins:
     evolution_stage: "stage_0_local_prototype"
     generation_phase: "implementation_scaffolding"
@@ -91,7 +106,12 @@ meta:
     packaging: "docker_compose"
     runtime_language: "python"
     database_engine: "postgres"
+    framework: "fastapi"
+    dependency_wiring_mode: "manual_composition_root"
+    persistence_orm: "sqlalchemy_orm"
     schema_management_strategy: "code_bootstrap"
+    auth_mode: "mock"
+    eventing_backend: "mock_in_memory"
     ui_present: true
     ui_kind: "web_spa"
     ui_framework: "react"

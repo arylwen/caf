@@ -1,0 +1,6 @@
+# CAF_TRACE: task_id=TG-TBP-TBP-PY-PACKAGING-01-observability_and_config capability=observability_and_config trace_anchor=pattern_obligation_id:O-TBP-PY-PACKAGING-01-requirements
+fastapi==0.116.1
+uvicorn==0.35.0
+sqlalchemy==2.0.44
+psycopg[binary]==3.2.11
+

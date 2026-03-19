@@ -1,104 +1,137 @@
-# codex-saas Companion Operator Guide
+# codex-saas Operator README
 
-## Overview
+This companion repository contains the local candidate stack for instance `codex-saas` (`profile_v1`).
 
-- Instance: `codex-saas`
-- Profile: `profile_v1`
-- Runtime: Python + FastAPI (`runtime.language: python`, `runtime.framework: fastapi`)
-- Deployment mode: `docker_compose`
-- Data store: PostgreSQL (`database.engine: postgresql`)
-- Resolved TBPs: `TBP-ASGI-01`, `TBP-COMPOSE-01`, `TBP-FASTAPI-01`, `TBP-PG-01`, `TBP-PY-01`, `TBP-UI-REACT-VITE-01`
-
-This repository contains the local runnable candidate for CP/AP/UI/Postgres with compose wiring and unit-test scaffolding.
+Pinned profile/runtime summary:
+- Runtime language/framework: Python + FastAPI
+- Packaging/deployment: docker compose
+- Database: PostgreSQL via SQLAlchemy (`DATABASE_URL` required)
+- UI: React/Vite SPA served as a separate service
+- Auth mode: mock Authorization Bearer claim contract
 
 ## Prerequisites
 
-1. Docker Desktop (or equivalent engine with `docker compose` support).
-2. Python 3.11+ available on host if you want to run tests outside containers.
-3. Local `.env` file at repository root (already scaffolded at `.env`).
+- Docker with `docker compose` available
+- Python 3.12+ with dependencies from `requirements.txt` (for local unit-test runs)
+- Open local ports: `8000` (AP), `8001` (CP), `8080` (UI), `5432` (Postgres)
 
 Optional:
-- If you prefer Podman, use `podman compose` with the same compose file and environment contract.
+- Podman compose can be used for equivalent compose flows, but pinned examples use Docker compose first.
 
 ## Quickstart
 
-1. Update secrets in `.env` before first run.
-2. Start the stack from this directory:
+From `companion_repositories/codex-saas/profile_v1`:
 
 ```bash
 docker compose --env-file ./.env -f docker/compose.candidate.yaml up --build
 ```
 
-3. Service endpoints:
-- CP API: `http://localhost:8000`
-- AP API: `http://localhost:8001`
-- UI: `http://localhost:8080`
-- Postgres: `localhost:5432`
-
-To stop:
+Useful follow-ups:
 
 ```bash
-docker compose -f docker/compose.candidate.yaml down
+docker compose --env-file ./.env -f docker/compose.candidate.yaml ps
+docker compose --env-file ./.env -f docker/compose.candidate.yaml logs -f ap cp ui postgres
+docker compose --env-file ./.env -f docker/compose.candidate.yaml down
 ```
 
 ## Environment Variables
 
-Primary runtime contract is in `.env` and `infrastructure/postgres.env.example`.
+Primary runtime env file: `.env`  
+Reference example: `infrastructure/postgres.env.example`
 
-Required variables:
-- `POSTGRES_DB` (default scaffold: `codex_saas`)
-- `POSTGRES_USER` (default scaffold: `codex_saas`)
-- `POSTGRES_PASSWORD` (set a local secret value; do not commit real credentials)
-- `POSTGRES_HOST` (default: `postgres`)
-- `POSTGRES_PORT` (default: `5432`)
-- `DATABASE_URL` (must reference the same DB settings)
-- `CP_POLICY_BASE_URL` (default internal CP URL: `http://cp:8000`)
-- `UI_API_BASE_PATH` (default: `/api`)
+Required database contract variables:
+- `DATABASE_URL` (must be PostgreSQL SQLAlchemy style, for example `postgresql+psycopg://...`)
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_HOST` (compose default is `postgres`)
+- `POSTGRES_PORT`
 
-Safe local example:
+Service ports:
+- `AP_PORT` (default `8000`)
+- `CP_PORT` (default `8001`)
+- `UI_PORT` (default `8080`)
 
-```env
-POSTGRES_DB=codex_saas
-POSTGRES_USER=codex_saas
-POSTGRES_PASSWORD=replace-with-local-secret
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-DATABASE_URL=postgresql://codex_saas:${POSTGRES_PASSWORD}@postgres:5432/codex_saas
-CP_POLICY_BASE_URL=http://cp:8000
-UI_API_BASE_PATH=/api
-```
+## Unit Tests
 
-## How to Run Unit Tests
-
-Run from repository root:
+From `companion_repositories/codex-saas/profile_v1`:
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py" -v
+pytest -q tests/unit
 ```
 
-Current unit tests are in `tests/test_unit_boundaries.py`.
+Targeted suites:
+- `tests/unit/common/auth` for mock claim parsing and tenant-header conflict handling
+- `tests/unit/cp` for CP auth-context + policy enforcement semantics
+- `tests/unit/ap` for AP policy bridge behavior
+- `tests/unit/common/persistence` for `DATABASE_URL` contract normalization/validation
 
-## Interface Binding Orientation
+## Local Auth Debugging
 
-`reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml` defines AP interface bindings:
-- `BIND-AP-reports`: `ReportsAccessInterface` consumer (`TG-30-service-facade-reports`) to provider (`TG-40-persistence-reports`)
-- `BIND-AP-submissions`: `SubmissionsAccessInterface` consumer (`TG-30-service-facade-submissions`) to provider (`TG-40-persistence-submissions`)
-- `BIND-AP-workspaces`: `WorkspacesAccessInterface` consumer (`TG-30-service-facade-workspaces`) to provider (`TG-40-persistence-workspaces`)
+Mock auth is claim-based and fail-closed.
 
-At runtime, composition-root assembly from `TG-90-runtime-wiring` binds these required/provided interfaces.
+Primary carrier:
+- `Authorization: Bearer tenant_id=<...>;principal_id=<...>;policy_version=<...>`
+
+Canonical mock claim keys:
+- `tenant_id`
+- `principal_id`
+- `policy_version`
+
+Alternate conflict-detection header:
+- `X-Tenant-Id` may be present, but claim-over-header semantics are enforced.  
+  If `X-Tenant-Id` disagrees with claim `tenant_id`, AP/CP fail closed with a tenant-context conflict.
+
+Local diagnosis steps:
+1. Follow service logs while issuing requests:
+   ```bash
+   docker compose --env-file ./.env -f docker/compose.candidate.yaml logs -f ap cp
+   ```
+2. Probe AP policy with an explicit claim:
+   ```bash
+   curl -sS http://localhost:8000/api/policy/probe \
+     -H "Authorization: Bearer tenant_id=tenant-demo;principal_id=operator-demo;policy_version=v1" \
+     -H "X-Tenant-Id: tenant-demo" \
+     -H "Content-Type: application/json" \
+     -d "{\"action\":\"list\",\"resource\":\"workspaces\"}"
+   ```
+3. If you see `tenant context conflict`, check that `X-Tenant-Id` matches the Bearer claim `tenant_id`.
+
+## Troubleshooting
+
+- UI loads but API calls fail:
+  - Confirm AP/CP are healthy and reachable through compose.
+  - Check `docker/nginx.ui.conf` proxy targets and AP/CP logs.
+- DB bootstrap or persistence errors:
+  - Verify `.env` has a valid `DATABASE_URL` and `POSTGRES_*` values.
+  - Confirm Postgres container is healthy in compose status/logs.
+- Policy denies writes unexpectedly:
+  - Write actions require an operator-style principal (`principal_id` containing `operator`) and `policy_version=v1`.
+- Auth/tenant failures:
+  - Ensure Authorization Bearer claims include all required keys and no claim/header tenant mismatch exists.
+
+## Extension Guidance
+
+When adding resources/endpoints:
+- Keep AP/CP boundary split and policy enforcement fail-closed behavior.
+- Keep `code` package/module roots aligned with existing `code.ap` and `code.cp` structure.
+- Add/extend tests under `tests/unit` for boundary, service, and persistence seams.
+- Update API helper and UI pages through shared contract paths (`/api/*`, `/cp/*`) instead of ad hoc direct backend URLs.
 
 ## Task completion evidence
 
 ### Claims
-- The README now documents pinned runtime, deployment, and database posture for `codex-saas` operators.
-- The README provides concrete local startup and shutdown commands for the compose-based CP/AP/UI/Postgres stack.
-- The README documents environment variable contract surfaces, including `DATABASE_URL`, grounded in existing `.env` and `infrastructure/postgres.env.example`.
-- The README documents how to execute unit tests and where test artifacts currently live.
-- The README includes operator-facing interface-binding orientation tied to the generated binding contract file.
+- The README now provides operator-ready compose startup/shutdown/log workflows grounded in produced runtime wiring artifacts.
+- Environment variable guidance documents `DATABASE_URL` and `POSTGRES_*` contracts aligned to generated env/compose surfaces.
+- Unit-test execution guidance is present for the Python toolchain and generated wave-7 test suites.
+- Mock-auth debugging guidance is explicit about Authorization Bearer claim keys, primary carrier semantics, and claim-over-header conflict handling.
+- Troubleshooting and extension guidance are tied to the current AP/CP/UI/runtime structure without introducing unpinned tooling.
 
 ### Evidence anchors
-- `companion_repositories/codex-saas/profile_v1/README.md:L1-L14` - supports Claim 1
-- `companion_repositories/codex-saas/profile_v1/README.md:L24-L42` - supports Claim 2
-- `companion_repositories/codex-saas/profile_v1/README.md:L44-L73` - supports Claim 3
-- `companion_repositories/codex-saas/profile_v1/README.md:L75-L83` - supports Claim 4
-- `companion_repositories/codex-saas/profile_v1/README.md:L85-L94` - supports Claim 5
+- `companion_repositories/codex-saas/profile_v1/README.md:L1-L122` - supports Claims 1, 2, 3, 4, and 5
+- `companion_repositories/codex-saas/profile_v1/docker/compose.candidate.yaml:L1-L66` - supports Claim 1
+- `companion_repositories/codex-saas/profile_v1/.env:L1-L15` - supports Claim 2
+- `companion_repositories/codex-saas/profile_v1/infrastructure/postgres.env.example:L1-L11` - supports Claim 2
+- `companion_repositories/codex-saas/profile_v1/tests/unit/common/auth/test_mock_claims.py:L1-L42` - supports Claim 4
+- `companion_repositories/codex-saas/profile_v1/code/ui/src/auth/mockAuth.js:L1-L23` - supports Claim 4
+- `companion_repositories/codex-saas/profile_v1/code/ui/src/api.js:L1-L147` - supports Claims 4 and 5

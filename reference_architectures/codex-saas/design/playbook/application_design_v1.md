@@ -1,12 +1,20 @@
 # Application Plane Design (v1)
 
-This document defines application-plane design responsibilities for `codex-saas` in `implementation_scaffolding`.
-
 ## Scope
 
-- Tenant-facing APIs and workflow orchestration
-- Review workspace, submission, and report service boundaries
-- Application-side enforcement hooks for CP-governed policy and safety outcomes
+Application plane owns tenant-facing workflow orchestration for workspaces, submissions, reviews, and report publication under CP-governed policy and safety constraints.
+
+## Application services
+
+- Workspace service for tenant-scoped workspace lifecycle.
+- Submission/review service for review workflow and decision handling.
+- Reporting service for final artifact publication and retrieval.
+
+## Integration posture
+
+- AP receives normalized tenant/principal context from CP ingress decisions.
+- AP performs use-case orchestration and repository-backed persistence access.
+- AP emits synchronous evidence and correlation metadata for governance traceability.
 
 <!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 START -->
 ```yaml
@@ -18,13 +26,37 @@ decisions: {}
 <!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 START -->
 ```yaml
 version: 1
-questions: {}
+questions:
+  ext_anti_corruption_layer__pattern_adoption:
+    question_id: "pattern_adoption__ext_anti_corruption_layer"
+    question: "Should EXT-ANTI_CORRUPTION_LAYER be adopted for AP integration seams?"
+    options:
+      - option_id: adopt_pattern
+        status: defer
+        summary: "Adopt anti-corruption adapters for external/service boundary translation."
+      - option_id: defer
+        status: adopt
+        summary: "Keep deferred while integration surfaces remain local/mock."
+      - option_id: reject_pattern
+        status: defer
+        summary: "Reject explicit anti-corruption adapters for now."
+      - option_id: custom
+        status: defer
+        summary: "Custom decision."
+    anchors:
+      - anchor_type: caf_pattern
+        anchor_ref: "EXT-ANTI_CORRUPTION_LAYER"
+      - anchor_type: evidence_hook_id
+        anchor_ref: "M-11"
 ```
 <!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 END -->
 
 <!-- CAF_MANAGED_BLOCK: decision_trace_v1 START -->
-- adopted decisions traced from `spec/playbook/system_spec_v1.md` decision_resolutions_v1
-- carried-forward question sources: EXT-BACKEND_FOR_FRONTEND_BFF, PST-01
+## Decision trace (CAF-managed)
+
+- Adopted patterns reflected in this doc include: CAF-TCTX-01, CAF-MTEN-01, CAF-PLANE-01, CAF-AI-01, CAF-COMP-01, CTX-01, PST-01, SVC-01, VAL-01, EXT-API_COMPOSITION_AGGREGATOR.
+- Source: `reference_architectures/codex-saas/spec/playbook/system_spec_v1.md` in `ARCHITECT_EDIT_BLOCK: decision_resolutions_v1`.
+- Carried-forward open questions count: 1 (from pattern_id `EXT-ANTI_CORRUPTION_LAYER`).
 <!-- CAF_MANAGED_BLOCK: decision_trace_v1 END -->
 
 <!-- CAF_MANAGED_BLOCK: planning_pattern_payload_v1 START -->
@@ -32,36 +64,115 @@ questions: {}
 ## Planning pattern payload (CAF-managed)
 
 ```yaml
-schema_version: planning_pattern_payload_v1
+schema_version: 'planning_pattern_payload_v1'
 generated_from:
-  retrieval_surface_path: architecture_library/patterns/retrieval_surface_v1/pattern_retrieval_surface_v1.jsonl
-  retrieval_profile: solution_architecture
+  retrieval_surface_path: 'architecture_library/patterns/retrieval_surface_v1/pattern_retrieval_surface_v1.jsonl'
+  retrieval_profile: 'solution_architecture'
   selected_patterns_source: 'system_spec_v1.md:decision_resolutions_v1 (status: adopt)'
-  materialized_by: tools/caf/materialize_planning_pattern_payload_v1.mjs
+  adopted_option_choices_source: 'system_spec_v1.md:decision_resolutions_v1 (questions.options status: adopt)'
+  materialized_by: 'tools/caf/materialize_planning_pattern_payload_v1.mjs'
 notes:
-  - 'Enrichment/promotions are deferred to planning (/caf plan). Reference:'
-  - reference_architectures/codex-saas/design/playbook/design_summary_v1.md
-  - reference_architectures/codex-saas/design/playbook/pattern_obligations_v1.yaml
-  - reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml
+  - 'Selected patterns and adopted option choices are materialized here as the design -> planning handoff. Planning still compiles obligations/tasks during /caf plan. Reference:'
+  - 'reference_architectures/codex-saas/design/playbook/design_summary_v1.md'
+  - 'reference_architectures/codex-saas/design/playbook/pattern_obligations_v1.yaml'
+  - 'reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml'
 selected_patterns:
   caf:
-    - CAF-TCTX-01
-    - CAF-MTEN-01
-    - CAF-AI-01
-    - CAF-PLANE-01
-    - CAF-XPLANE-01
-    - CAF-AIOBS-01
-    - CAF-COMP-02
-    - CAF-COH-02
-    - CAF-MTEN-AGOBS-01
-    - CAF-COMP-01
+    - 'CAF-TCTX-01'
+    - 'CAF-MTEN-01'
+    - 'CAF-PLANE-01'
+    - 'CAF-AI-01'
+    - 'CAF-COMP-01'
+    - 'CAF-IAM-02'
+    - 'CAF-XPLANE-01'
   core:
-    - PST-01
-    - CTX-01
+    - 'CTX-01'
+    - 'VAL-01'
+    - 'PST-01'
+    - 'SVC-01'
   external:
-    - EXT-BACKEND_FOR_FRONTEND_BFF
-    - EXT-API_COMPOSITION_AGGREGATOR
-    - EXT-BULKHEAD_ISOLATION
+    - 'EXT-API_COMPOSITION_AGGREGATOR'
+adopted_option_choices:
+  - source: 'system'
+    evidence_hook_id: 'H-1'
+    pattern_id: 'CAF-TCTX-01'
+    question_id: 'Q-AP-TENANT-CARRIER-01'
+    option_set_id: 'tenant_context.ingress_carrier'
+    option_id: 'auth_claim'
+    summary: 'Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-1'
+    pattern_id: 'CAF-TCTX-01'
+    question_id: 'Q-CPAP-TENANT-CARRIER-01'
+    option_set_id: 'tenant_context.ingress_carrier'
+    option_id: 'auth_claim'
+    summary: 'Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-1'
+    pattern_id: 'CAF-TCTX-01'
+    question_id: 'Q-CPAP-TCTX-CONFLICT-01'
+    option_set_id: 'tenant_context.conflict_precedence_rule'
+    option_id: 'claim_over_header'
+    summary: 'Verified claim wins; reject if any other carrier conflicts.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-2'
+    pattern_id: 'CAF-MTEN-01'
+    question_id: 'Q-MTEN-ISO-MODE-01'
+    option_set_id: 'tenancy.isolation_mode'
+    option_id: 'hybrid_tiered'
+    summary: 'Hybrid isolation (selective and tiered by tenant).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-3'
+    pattern_id: 'CAF-PLANE-01'
+    question_id: 'Q-CP-AP-SURFACE-01'
+    option_set_id: 'cp_ap.contract_surface'
+    option_id: 'mixed'
+    summary: 'Mix: sync for enforcement, async for lifecycle and audit.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-4'
+    pattern_id: 'CAF-AI-01'
+    question_id: 'Q-AI-PART-01'
+    option_set_id: 'ai_safety.governance_partitioning'
+    option_id: 'cp_governs_ap_enforces'
+    summary: 'Control Plane governs policy; Application Plane enforces at runtime.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-5'
+    pattern_id: 'CAF-COMP-01'
+    question_id: 'Q-CAF-COMP-01-01'
+    option_set_id: 'compliance_evidence.persistence_strategy'
+    option_id: 'stream_plus_immutable_store'
+    summary: 'Use an event stream plus an immutable store (preferred for audit readiness).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-16'
+    pattern_id: 'CAF-IAM-02'
+    question_id: 'Q-CAF-IAM-02-01'
+    option_set_id: 'iam.identity_context_propagation'
+    option_id: 'verified_token_claims'
+    summary: 'Propagate identity and tenant context via verified token claims at ingress.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-19'
+    pattern_id: 'CAF-XPLANE-01'
+    question_id: 'Q-XPLANE-MODE-01'
+    option_set_id: 'cross_plane.interaction_mode'
+    option_id: 'synchronous_api'
+    summary: 'Synchronous request/response API call across the plane boundary.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-12'
+    pattern_id: 'EXT-API_COMPOSITION_AGGREGATOR'
+    question_id: 'Q-EXT-AGG-01'
+    option_set_id: 'api.composition_ownership'
+    option_id: 'dedicated_composition_endpoint'
+    summary: 'Application plane exposes dedicated composition endpoints that orchestrate downstream calls.'
+    payload: {}
 promotions:
   semantic_inputs: []
   required_trace_anchors: []

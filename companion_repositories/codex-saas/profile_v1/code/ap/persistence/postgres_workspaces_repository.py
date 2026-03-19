@@ -1,93 +1,79 @@
-# CAF_TRACE: generated_by=Contura Architecture Framework (CAF); task_id=TG-40-persistence-workspaces; capability=persistence_implementation; instance=codex-saas; trace_anchor=pattern_obligation_id:OBL-PERSISTENCE-workspaces
-from __future__ import annotations
-
-from dataclasses import dataclass
+# CAF_TRACE: task_id=TG-40-persistence-workspaces capability=persistence_implementation trace_anchor=pattern_obligation_id:OBL-AP-RESOURCE-WORKSPACES-PERSISTENCE
+# CAF_TRACE: task_id=TG-40-persistence-workspaces capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-runtime-module
+from datetime import datetime, timezone
 from uuid import uuid4
 
-from .postgres_adapter import connect
+from sqlalchemy import select
 
-
-@dataclass(frozen=True)
-class WorkspaceRecord:
-    workspace_id: str
-    tenant_id: str
-    name: str
+from .models import WorkspaceModel
 
 
 class PostgresWorkspacesRepository:
-    def __init__(self) -> None:
-        self._ensure_schema()
+    def __init__(self, session_factory):
+        self._session_factory = session_factory
 
-    def _ensure_schema(self) -> None:
-        with connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS ap_workspaces (
-                        workspace_id TEXT PRIMARY KEY,
-                        tenant_id TEXT NOT NULL,
-                        name TEXT NOT NULL
-                    );
-                    """
+    def list_workspaces(self, tenant_id: str) -> list[dict[str, str]]:
+        with self._session_factory() as session:
+            rows = session.scalars(
+                select(WorkspaceModel).where(WorkspaceModel.tenant_id == tenant_id)
+            ).all()
+            return [self._to_dict(row) for row in rows]
+
+    def get_workspace(self, tenant_id: str, workspace_id: str) -> dict[str, str] | None:
+        with self._session_factory() as session:
+            row = session.scalar(
+                select(WorkspaceModel).where(
+                    WorkspaceModel.tenant_id == tenant_id,
+                    WorkspaceModel.workspace_id == workspace_id,
                 )
-            connection.commit()
+            )
+            if row is None:
+                return None
+            return self._to_dict(row)
+
+    def create_workspace(
+        self, tenant_id: str, name: str, description: str | None, status: str
+    ) -> dict[str, str]:
+        row = WorkspaceModel(
+            workspace_id=f"ws-{uuid4().hex[:12]}",
+            tenant_id=tenant_id,
+            name=name,
+            description=description or "",
+            status=status,
+            created_at=datetime.now(timezone.utc),
+        )
+        with self._session_factory() as session:
+            session.add(row)
+            session.commit()
+            session.refresh(row)
+            return self._to_dict(row)
+
+    def update_workspace(
+        self, tenant_id: str, workspace_id: str, name: str, description: str | None, status: str
+    ) -> dict[str, str] | None:
+        with self._session_factory() as session:
+            row = session.scalar(
+                select(WorkspaceModel).where(
+                    WorkspaceModel.tenant_id == tenant_id,
+                    WorkspaceModel.workspace_id == workspace_id,
+                )
+            )
+            if row is None:
+                return None
+            row.name = name
+            row.description = description or ""
+            row.status = status
+            session.commit()
+            session.refresh(row)
+            return self._to_dict(row)
 
     @staticmethod
-    def _require_tenant(tenant_id: str) -> str:
-        tenant = tenant_id.strip()
-        if not tenant:
-            raise ValueError("tenant context is required")
-        return tenant
-
-    def list_workspaces(self, *, tenant_id: str) -> list[dict]:
-        tenant = self._require_tenant(tenant_id)
-        with connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    SELECT workspace_id, tenant_id, name
-                    FROM ap_workspaces
-                    WHERE tenant_id = %s
-                    ORDER BY workspace_id
-                    """,
-                    (tenant,),
-                )
-                rows = cursor.fetchall()
-        return [
-            WorkspaceRecord(workspace_id=row[0], tenant_id=row[1], name=row[2]).__dict__
-            for row in rows
-        ]
-
-    def create_workspace(self, *, tenant_id: str, name: str) -> dict:
-        tenant = self._require_tenant(tenant_id)
-        workspace_id = f"ws-{uuid4().hex[:10]}"
-        with connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    INSERT INTO ap_workspaces (workspace_id, tenant_id, name)
-                    VALUES (%s, %s, %s)
-                    """,
-                    (workspace_id, tenant, name),
-                )
-            connection.commit()
-        return WorkspaceRecord(workspace_id=workspace_id, tenant_id=tenant, name=name).__dict__
-
-    def update_workspace(self, *, tenant_id: str, workspace_id: str, name: str) -> dict:
-        tenant = self._require_tenant(tenant_id)
-        with connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    UPDATE ap_workspaces
-                    SET name = %s
-                    WHERE tenant_id = %s AND workspace_id = %s
-                    RETURNING workspace_id, tenant_id, name
-                    """,
-                    (name, tenant, workspace_id),
-                )
-                row = cursor.fetchone()
-            connection.commit()
-        if row is None:
-            raise KeyError("workspace not found")
-        return WorkspaceRecord(workspace_id=row[0], tenant_id=row[1], name=row[2]).__dict__
+    def _to_dict(row: WorkspaceModel) -> dict[str, str]:
+        return {
+            "workspace_id": row.workspace_id,
+            "tenant_id": row.tenant_id,
+            "name": row.name,
+            "description": row.description,
+            "status": row.status,
+            "created_at": row.created_at.isoformat(),
+        }

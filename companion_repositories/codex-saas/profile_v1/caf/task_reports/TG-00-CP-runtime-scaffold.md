@@ -1,45 +1,64 @@
+# Task Report: TG-00-CP-runtime-scaffold
+
 ## Task Spec Digest
-- task_id: `TG-00-CP-runtime-scaffold`
-- title: `Scaffold Control Plane runtime`
-- primary capability: `plane_runtime_scaffolding`
-- task graph source: `caf/task_graph_v1.yaml`
+
+- task_id: TG-00-CP-runtime-scaffold
+- title: Scaffold control plane runtime shell
+- primary capability: plane_runtime_scaffolding
+- source task graph: companion_repositories/codex-saas/profile_v1/caf/task_graph_v1.yaml
 
 ## Inputs declared by task
-- required: `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
-- required: `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`
-- required: `reference_architectures/codex-saas/spec/guardrails/abp_pbp_resolution_v1.yaml`
+
+- required: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- required: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+- required: reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml
 
 ## Inputs consumed
-- `caf/profile_parameters_resolved.yaml`: CP runtime shape pin (`api_service_http`), fastapi/runtime constraints, and rails.
-- `caf/control_plane_design_v1.md`: CP scope and CP/AP integration contract constraints (policy/safety outcomes, mixed contract surface).
-- `caf/abp_pbp_resolution_v1.yaml`: CP scaffold root `code/CP/`, static `cp_entrypoint_stub`, and ABP-CLEAN-01 role paths.
+
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml: confirmed planes.cp.runtime_shape=api_service_http, runtime.framework=fastapi, and Python module-root conventions (code.cp).
+- reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md: grounded CP scope (ingress, policy, governance/audit) and CP to AP synchronous boundary posture.
+- reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml: grounded material boundary BND-CP-AP-01 and embedded contract source for CP/AP integration seams.
 
 ## Step execution evidence
-- Read CP runtime shape and verified `api_service_http` posture from `caf/profile_parameters_resolved.yaml`.
-- Scaffolded CP composition root and inbound boundary in `code/CP/bootstrap/main.py` and `code/CP/interfaces/inbound/http_router.py`.
-- Aligned CP paths with ABP role bindings under `code/CP/bootstrap/`, `code/CP/interfaces/inbound/`, `code/CP/application/`, `code/CP/domain/`, `code/CP/application/ports/`, and `code/CP/interfaces/outbound/`.
-- Established CP seams for policy/governance via `code/CP/application/policy_gate.py` and CP entrypoint stub `code/CP/control_plane.py`.
-- Documented CP runtime assumptions and downstream boundaries in `code/CP/README.md`.
+
+- Confirm cp runtime shape and policy surface boundaries from design inputs.
+  - Evidence: code/cp/main.py and code/cp/runtime/runtime_notes.py encode api_service_http runtime shape and policy-first CP scope.
+- Scaffold control plane package boundaries for ingress and policy orchestration.
+  - Evidence: created code/cp/boundary, code/cp/service, code/cp/persistence, and code/cp/integration packages with explicit boundary/service/persistence split.
+- Materialize composition-root placeholders for deterministic dependency wiring.
+  - Evidence: code/cp/composition/root.py defines ControlPlaneRuntimeContext and deterministic AP contract client seam wiring.
+- Reserve integration seams for CP to AP contract client stubs.
+  - Evidence: code/cp/integration/ap_client.py defines ApContractClient protocol and ApPolicyContext contract object for CP to AP calls.
+- Record runtime scaffold assumptions for downstream policy and persistence tasks.
+  - Evidence: code/cp/runtime/README.md and code/cp/runtime/runtime_notes.py document runtime shape, boundary expectations, and follow-on scope.
 
 ## Outputs produced
-- `code/CP/__init__.py`
-- `code/CP/README.md`
-- `code/CP/bootstrap/__init__.py`
-- `code/CP/bootstrap/main.py`
-- `code/CP/bootstrap/asgi.py`
-- `code/CP/control_plane.py`
-- `code/CP/interfaces/__init__.py`
-- `code/CP/interfaces/inbound/__init__.py`
-- `code/CP/interfaces/inbound/http_router.py`
-- `code/CP/application/__init__.py`
-- `code/CP/application/policy_gate.py`
-- `code/CP/application/ports/__init__.py`
-- `code/CP/domain/__init__.py`
-- `code/CP/interfaces/outbound/__init__.py`
+
+- companion_repositories/codex-saas/profile_v1/code/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/cp/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/cp/asgi.py
+- companion_repositories/codex-saas/profile_v1/code/cp/main.py
+- companion_repositories/codex-saas/profile_v1/code/cp/boundary/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/cp/boundary/models.py
+- companion_repositories/codex-saas/profile_v1/code/cp/service/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/cp/service/policy_service.py
+- companion_repositories/codex-saas/profile_v1/code/cp/persistence/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/cp/persistence/audit_store.py
+- companion_repositories/codex-saas/profile_v1/code/cp/integration/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/cp/integration/ap_client.py
+- companion_repositories/codex-saas/profile_v1/code/cp/composition/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/cp/composition/root.py
+- companion_repositories/codex-saas/profile_v1/code/cp/runtime/__init__.py
+- companion_repositories/codex-saas/profile_v1/code/cp/runtime/bootstrap.py
+- companion_repositories/codex-saas/profile_v1/code/cp/runtime/runtime_notes.py
+- companion_repositories/codex-saas/profile_v1/code/cp/runtime/README.md
 
 ## Rails and TBP satisfaction
-- Work stayed under companion repo rails: `companion_repositories/codex-saas/profile_v1/code/**`.
-- No edits to `reference_architectures/**` or planner-owned `caf/*` inputs.
-- No new architecture choices were introduced beyond AP/CP runtime shape and framework pins already resolved.
-- Added `CAF_TRACE` headers to all created scaffold files.
 
+- Rails honored:
+  - all writes are under companion_repositories/codex-saas/profile_v1/code/** and companion_repositories/codex-saas/profile_v1/caf/task_reports/**.
+  - no edits were made to CAF planning inputs under companion_repositories/codex-saas/profile_v1/caf/** other than this task report.
+- TBP/Pins honored:
+  - TBP-PY-01 module-root coherence: code/, code/cp/, and CP subpackages include Python package markers.
+  - TBP-ASGI-01 compatibility seam: code/cp/asgi.py exports app via package-relative import.
+  - fastapi/runtime pins respected with explicit CP boundary plus composition-root surfaces and no provider selection.

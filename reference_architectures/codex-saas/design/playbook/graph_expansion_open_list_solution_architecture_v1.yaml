@@ -1,6 +1,6 @@
 schema_version: caf_graph_expansion_open_list_v1
 profile: solution_architecture
-generated_at: "2026-03-11T20:31:56.931Z"
+generated_at: "2026-03-17T23:46:11.372Z"
 config:
   enabled: true
   max_hops: 2
@@ -21,16 +21,16 @@ config:
   exclude_candidate_ids:
     - CAF-MODEL-01
 seeds:
-  - EXT-API_GATEWAY
-  - EXT-BACKEND_FOR_FRONTEND_BFF
-  - CAF-IAM-01
+  - CAF-AI-01
+  - CAF-COMP-01
   - CAF-MTEN-01
   - CAF-PLANE-01
-  - CAF-POL-01
   - CAF-TCTX-01
-  - CAF-XPLANE-01
   - CTX-01
+  - POL-01
   - PST-01
+  - SVC-01
+  - VAL-01
 candidates:
   -
     id: EXT-ANTI_CORRUPTION_LAYER
@@ -55,6 +55,17 @@ candidates:
         kind: complements
         to: EXT-API_COMPOSITION_AGGREGATOR
   -
+    id: EXT-API_GATEWAY
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-API_GATEWAY
+  -
     id: EXT-AUDITABILITY
     namespace: external_v1
     hop: 1
@@ -65,6 +76,17 @@ candidates:
         from: CTX-01
         kind: complements
         to: EXT-AUDITABILITY
+  -
+    id: EXT-BACKEND_FOR_FRONTEND_BFF
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-BACKEND_FOR_FRONTEND_BFF
   -
     id: EXT-BACKUP_PITR
     namespace: external_v1
@@ -186,25 +208,3 @@ candidates:
         from: CTX-01
         kind: complements
         to: EXT-COST_ALLOCATION_CHARGEBACK
-  -
-    id: EXT-CQRS
-    namespace: external_v1
-    hop: 1
-    via_kind: complements
-    from_seed: CTX-01
-    path:
-      -
-        from: CTX-01
-        kind: complements
-        to: EXT-CQRS
-  -
-    id: EXT-DEAD_LETTER_QUEUE_DLQ
-    namespace: external_v1
-    hop: 1
-    via_kind: complements
-    from_seed: CTX-01
-    path:
-      -
-        from: CTX-01
-        kind: complements
-        to: EXT-DEAD_LETTER_QUEUE_DLQ

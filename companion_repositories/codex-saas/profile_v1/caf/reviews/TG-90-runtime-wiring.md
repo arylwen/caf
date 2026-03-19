@@ -1,41 +1,58 @@
-## Review Scope
-- task_id: `TG-90-runtime-wiring`
-- capability: `runtime_wiring`
-- severity_threshold: `high` (from `caf/task_graph_v1.yaml`)
-- task report: `caf/task_reports/TG-90-runtime-wiring.md`
+# Review Note — TG-90-runtime-wiring
 
-## Rubric Evaluation
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-SEC-01 | PASS | Runtime credentials and endpoints are externalized to compose env surfaces, not hardcoded in service code (`docker/compose.candidate.yaml`, `.env`, `code/AP/application/policy_client.py`). |
-| RR-PY-CORR-01 | PASS | AP runtime wiring imports resolve to existing modules and concrete providers (`code/AP/bootstrap/runtime_wiring.py`, `code/AP/interfaces/inbound/*.py`). |
-| RR-PY-CORR-01A | PASS | Python package markers remain present (`code/__init__.py`, `code/AP/__init__.py`, `code/CP/__init__.py`). |
-| RR-PY-CORR-02 | PASS | No bare `except`; error handling maps typed exceptions to explicit HTTP statuses in routers (`code/AP/interfaces/inbound/reports_router.py`, `submissions_router.py`, `workspaces_router.py`). |
-| RR-PY-PERF-01 | PASS | Composition is initialized once and re-used; no repeated per-request provider construction in route handlers (`code/AP/bootstrap/runtime_wiring.py`). |
-| RR-TST-BLOCK-01 | PASS | Task scope is runtime wiring; no broken placeholder tests introduced. |
-| RR-TST-HIGH-01 | PASS | Runtime behavior changes stay aligned with existing resource route contracts (`code/AP/interfaces/inbound/*.py`). |
-| RR-TST-HIGH-02 | PASS | Policy/persistence paths preserve existing negative-path behavior via explicit exception mapping. |
-| RR-COMP-CORR-01 | PASS | Compose defines coherent CP/AP/UI/Postgres services, dependencies, and runtime ports (`docker/compose.candidate.yaml`). |
-| RR-COMP-BUILD-01 | PASS | Compose uses Dockerfile-based builds with `env_file` configuration and concrete AP/CP/UI Dockerfiles (`docker/compose.candidate.yaml`, `docker/Dockerfile.ap`, `docker/Dockerfile.cp`, `docker/Dockerfile.ui`). |
-| RR-COMP-SEC-01 | PASS | Compose contains no privileged host-level escalation flags or unsafe host mounts. |
-| RR-FA-CORR-01 | PASS | AP routes are assembled through runtime composition and call service facades that enforce policy context (`code/AP/bootstrap/runtime_wiring.py`, `code/AP/interfaces/inbound/*.py`). |
-| RR-FA-SEC-01 | PASS | Inbound handlers continue using explicit headers and structured models; policy failures map to non-success HTTP status (`code/AP/interfaces/inbound/*.py`). |
-| RR-FA-ARCH-01 | PASS | Runtime assembly now closes required consumer-provider seams through composition root rather than local in-memory fallback (`code/AP/bootstrap/runtime_wiring.py`, `caf/binding_reports/*.yaml`). |
-| RR-TR-STRUCT-01 | PASS | Task report includes digest, inputs, step evidence, outputs, rails/TBP, validation, and completion evidence (`caf/task_reports/TG-90-runtime-wiring.md`). |
-| RR-TR-STEP-01 | PASS | Task report explicitly maps each task step to concrete outputs and evidence. |
-| RR-TBP-RB-01 | PASS | `runtime_wiring` role-binding expectations are materialized: `docker/compose.candidate.yaml`, `docker/Dockerfile.cp`, `docker/Dockerfile.ap`, `.env`, `.gitignore`, `docker/Dockerfile.ui`, `docker/nginx.ui.conf`. |
+| RR-PY-SEC-01 | PASS | No new secrets in Python surfaces; env defaults only in `.env` / `infrastructure/postgres.env.example`. |
+| RR-PY-CORR-01 | PASS | Existing AP/CP imports unchanged; new runtime files are compose/docker/env only. |
+| RR-PY-CORR-01A | PASS | Package markers remain present: `code/__init__.py`, `code/ap/__init__.py`, `code/cp/__init__.py`. |
+| RR-PY-CORR-02 | PASS | Existing AP/CP boundary exception mapping remains in `code/ap/main.py` and `code/cp/main.py`. |
+| RR-PY-PERF-01 | PASS | No request-path Python loops introduced by this task. |
+| RR-TST-BLOCK-01 | PASS | No tests were added; no placeholder tests introduced. |
+| RR-TST-HIGH-01 | PASS | N/A for this task: runtime wiring/config changes only; no endpoint implementation changed. |
+| RR-TST-HIGH-02 | PASS | N/A for this task: no new validation/policy code paths introduced. |
+| RR-COMP-CORR-01 | PASS | `docker/compose.candidate.yaml` defines CP/AP/UI/postgres, ports, and env-file wiring. |
+| RR-COMP-BUILD-01 | PASS | CP/AP use Dockerfile builds (`docker/Dockerfile.cp`, `docker/Dockerfile.ap`), compose uses `env_file`, `.env` exists, `.gitignore` ignores `.env` and `*.local`. |
+| RR-COMP-SEC-01 | PASS | No privileged mode, docker socket, or host network usage in compose. |
+| RR-FA-CORR-01 | PASS | AP/CP router wiring remains complete (`app.include_router(...)` in `code/ap/main.py` and `code/cp/main.py`). |
+| RR-FA-SEC-01 | PASS | AP/CP handlers keep typed request models (`pydantic` in AP, typed models in CP). |
+| RR-FA-BOUNDARY-ERR-01 | PASS | Permission/validation errors mapped fail-closed in AP/CP exception handlers. |
+| RR-FA-SCHEMA-BOOTSTRAP-01 | PASS | AP/CP lifespan bootstraps still invoke schema bootstrap hooks. |
+| RR-FA-ARCH-01 | PASS | Route-to-service delegation remains unchanged; runtime task added no inline persistence/business logic to handlers. |
+| RR-SPA-WIRE-01 | PASS | UI remains fully interactive (`App.jsx` state/navigation + API helper usage). |
+| RR-SPA-WIRE-02 | PASS | SPA navigation still wires policy/workspaces/submissions/reviews/reports pages from `App.jsx`. |
+| RR-SPA-WIRE-03 | PASS | Shared helper `code/ui/src/api.js` uses contract paths (`/api/*`) for backend calls. |
+| RR-SPA-STATE-01 | PASS | UI shell maintains loading/success/error state branches in `App.jsx`; helper throws fail-closed errors. |
+| RR-SPA-ERR-DETAIL-01 | PASS | `parseErrorDetail` preserves backend error detail before throwing in `code/ui/src/api.js`. |
+| RR-SPA-FORM-01 | PASS | Existing pages continue using API-driven form actions; task introduced no static-only action claims. |
+| RR-SPA-CONTRACT-01 | PASS | No drift introduced between UI contract wording and implemented API-helper contract paths. |
+| RR-SPA-HANDOFF-01 | PASS | Existing resource-page handoff wiring unchanged by runtime task. |
+| RR-PY-DEP-01 | PASS | Canonical manifest `requirements.txt` remains present and referenced by CP/AP Dockerfiles. |
+| RR-PY-DEP-02 | PASS | CP/AP Dockerfiles install from `requirements.txt`; no inline package duplication. |
+| RR-TR-STRUCT-01 | PASS | Task report contains all required sections in required order. |
+| RR-TR-STEP-01 | PASS | Task report addresses every task step and required inputs with concrete evidence. |
+| RR-TBP-RB-01 | PASS | Runtime-wiring role-binding expectations are materialized at expected paths with required evidence strings. |
 
-## Task Semantic Review Questions
-- Q1: Does runtime wiring externalize configuration and avoid embedded credentials?
-  Answer: Yes. Runtime values are provided by `.env` and compose environment declarations; no credentials are embedded in AP route/runtime code.
-- Q2: Are compose service roles and boundaries aligned with CP/AP contract intent?
-  Answer: Yes. CP/AP remain separate services and AP policy enforcement is wired to CP via `CP_POLICY_BASE_URL`, with UI reverse proxying AP via `/api`.
-- Q3: Does runtime wiring include UI build/proxy/service surfaces required by resolved UI pins?
-  Answer: Yes. `docker/Dockerfile.ui`, `docker/nginx.ui.conf`, and `ui` compose service wiring are present and role-binding aligned.
+## Semantic review questions
+- `Does runtime wiring preserve adopted cross-plane and gateway option decisions?` Yes; CP/AP service separation and same-origin UI proxy preserve selected gateway/runtime shape.
+- `Are compose, docker, env, and UI proxy surfaces coherent for local candidate runs?` Yes; compose, Dockerfiles, `.env`, and nginx proxy are aligned and mutually referenced.
+- `Is runtime env wiring aligned with persistence and auth carrier contracts?` Yes; `DATABASE_URL` + `POSTGRES_*` are externalized and AP/CP auth claim behavior remains unchanged.
+- `AP tenant carrier realization (2 questions)` Yes; AP boundary and runtime surfaces remain claim-driven and fail-closed.
+- `CP↔AP tenant carrier realization (2 questions)` Yes; runtime wiring preserves the existing CP/AP contract split and carrier continuity.
+- `Tenant conflict precedence realization (2 questions)` Yes; no runtime change undermines existing claim-over-header conflict behavior.
+- `CP↔AP surface realization (2 questions)` Yes; compose and proxy wiring preserve a coherent CP/AP split with explicit routes.
+- `Principal taxonomy realization (2 questions)` Yes; AP/CP health and runtime assumptions remain consistent with the adopted taxonomy.
+- `Cross-plane mode realization (2 questions)` Yes; synchronous API mode remains the only realized interaction mode.
+- `API gateway boundary realization (2 questions)` Yes; UI uses proxy routes while CP/AP remain service-owned.
+- `TBP-COMPOSE config externalization (2 questions)` Yes; configuration is env-file based and service DNS names are used (`ap`, `cp`, `postgres`).
+- `TBP-COMPOSE service roles` Yes; CP/AP/UI/postgres roles are explicit and match plane boundaries.
+- `TBP-PY module-root coherence (2 questions)` Yes; runtime entrypoints use `code.ap.asgi:app` and `code.cp.asgi:app`, consistent with resolved module roots.
+- `TBP-PY-PACKAGING canonical manifest (2 questions)` Yes; Dockerfiles install from root `requirements.txt`.
 
-## Findings
+## Summary
+- No issues at or above `blocker` threshold were found.
+
+## Issues
 - High: none
 - Medium: none
 - Low: none
 
-No issues at or above the configured threshold (`high`) were found.

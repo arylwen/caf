@@ -1,37 +1,37 @@
+# Review Note: TG-00-CP-runtime-scaffold
+
 ## Rubric evaluation
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-SEC-01 | PASS | No secrets or credentials introduced in CP scaffold files under `code/CP/**`. |
-| RR-PY-CORR-01 | PASS | CP imports resolve across `code/CP/bootstrap/main.py`, `code/CP/interfaces/inbound/http_router.py`, and `code/CP/application/policy_gate.py`. |
-| RR-PY-CORR-01A | PASS | Package markers exist for `code/`, `code/CP/`, and CP subpackages via `__init__.py` files. |
-| RR-PY-CORR-02 | PASS | No bare exception handling patterns introduced in CP files. |
-| RR-PY-PERF-01 | PASS | No persistence/network loops or unbounded scans introduced; runtime route is scaffold-level. |
-| RR-TST-BLOCK-01 | PASS | No placeholder tests introduced by this task. |
-| RR-TST-HIGH-01 | PASS | Not applicable to this scaffold-only task; endpoint behavior tests are deferred to `TG-90-unit-tests`. |
-| RR-TST-HIGH-02 | PASS | Not applicable to this scaffold-only task; negative-path tests are deferred to `TG-90-unit-tests`. |
-| RR-COMP-CORR-01 | PASS | Compose runtime wiring is deferred to `TG-90-runtime-wiring`; this task introduces no conflicting compose artifacts. |
-| RR-COMP-BUILD-01 | PASS | No compose build/env artifacts were modified in this task. |
-| RR-COMP-SEC-01 | PASS | No privileged container settings or host mounts were introduced. |
-| RR-FA-CORR-01 | PASS | CP router is wired from app entrypoint in `code/CP/bootstrap/main.py` (`app.include_router(cp_router, prefix="/cp")`). |
-| RR-FA-SEC-01 | PASS | Route uses typed response model `CPHealthResponse` and typed tenant header contract. |
-| RR-FA-ARCH-01 | PASS | Route delegates policy decision to `ControlPlanePolicyGate`, keeping handler thin. |
-| RR-TR-STRUCT-01 | PASS | Task report `caf/task_reports/TG-00-CP-runtime-scaffold.md` includes all required sections. |
-| RR-TR-STEP-01 | PASS | Task report addresses all task steps and required inputs with explicit evidence. |
-| RR-TBP-RB-01 | PASS | `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability plane_runtime_scaffolding` returned `expectations: []`; no unmet manifest role-binding outputs for this capability at this stage. |
-
-## Semantic review questions
-- Does CP scaffold reflect api_service_http shape and control-plane responsibilities? **Yes.** CP is scaffolded as HTTP runtime with governance/policy seam (`code/CP/application/policy_gate.py`).
-- Are ABP role bindings respected without collapsing layers? **Yes.** CP scaffold uses discrete clean-architecture directories for composition root, inbound, application, domain, ports, and outbound.
-- Do scaffold boundaries avoid embedding persistence or UI concerns directly? **Yes.** CP scaffold avoids persistence/UI implementation and remains boundary-oriented.
+| RR-PY-SEC-01 | PASS | No hardcoded credentials found in code/cp/main.py, code/cp/service/policy_service.py, code/cp/composition/root.py, or code/cp/persistence/audit_store.py. |
+| RR-PY-CORR-01 | PASS | Imports in code/cp/main.py resolve to existing modules (boundary/models.py, composition/root.py, service/policy_service.py). |
+| RR-PY-CORR-01A | PASS | Python package markers exist at code/__init__.py, code/cp/__init__.py, and CP subpackages. |
+| RR-PY-CORR-02 | PASS | No bare except blocks; policy conflict path raises PermissionError with explicit message in code/cp/service/policy_service.py. |
+| RR-PY-PERF-01 | PASS | No unbounded DB/network loops introduced in request paths; scaffold logic is constant-time. |
+| RR-TST-BLOCK-01 | PASS | No test files added, and no placeholder test assertions were introduced. |
+| RR-TST-HIGH-01 | PASS | Unit-test rubric is not yet activated by this runtime-scaffold task scope; no touched test surfaces. |
+| RR-TST-HIGH-02 | PASS | Negative-path policy behavior is represented in service seam (PermissionError on tenant conflict), ready for later test task. |
+| RR-COMP-CORR-01 | PASS | Compose artifacts are out-of-scope for this task wave; no conflicting compose wiring introduced. |
+| RR-COMP-BUILD-01 | PASS | No compose/Dockerfile mutations in this task; existing compose build posture remains unaffected. |
+| RR-COMP-SEC-01 | PASS | No container privilege/socket settings introduced in touched files. |
+| RR-FA-CORR-01 | PASS | FastAPI router is wired and included in entrypoint via app.include_router(router) in code/cp/main.py. |
+| RR-FA-SEC-01 | PASS | Policy evaluation boundary uses typed Pydantic models in code/cp/boundary/models.py and route signature in code/cp/main.py. |
+| RR-FA-BOUNDARY-ERR-01 | PASS | PermissionError is mapped at boundary with explicit 403 handling in code/cp/main.py. |
+| RR-FA-SCHEMA-BOOTSTRAP-01 | PASS | Runtime scaffold includes explicit bootstrap seam file at code/cp/runtime/bootstrap.py and composition root hook in code/cp/main.py lifespan. |
+| RR-FA-ARCH-01 | PASS | Route handlers are thin and delegate policy logic to PolicyService in code/cp/service/policy_service.py. |
+| RR-TR-STRUCT-01 | PASS | Task report exists at caf/task_reports/TG-00-CP-runtime-scaffold.md with all mandatory sections. |
+| RR-TR-STEP-01 | PASS | Task report evidence addresses each declared step and all required task inputs. |
+| RR-TBP-RB-01 | PASS | Ran node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability plane_runtime_scaffolding; expectations list is empty for this capability/task. |
 
 ## Summary
-CP runtime scaffold satisfies the task DoD and trace anchors while staying within rails and pinned choices.
+
+Control-plane runtime scaffold is coherent with runtime shape pins, CP/AP boundary intent, and package-root conventions.
 
 ## Issues
+
 - High: none
 - Medium: none
 - Low: none
 
-No issues at or above the configured threshold (`blocker`) were found.
-
+No issues at or above the configured threshold (blocker) were found.

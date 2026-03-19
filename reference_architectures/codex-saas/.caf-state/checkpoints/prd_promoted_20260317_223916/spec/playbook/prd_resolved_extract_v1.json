@@ -1,0 +1,99 @@
+{
+  "schema_version": "prd_extracted_v1",
+  "sections": {
+    "product_framing": "### One-liner\n\nA multi-tenant SaaS that lets teams create, organize, and share widgets within their organization.\n\n### Target users / customers\n\n- Team members who create and curate widgets\n- Team leads who organize and publish widget collections\n- Tenant admins who manage users, roles, and tenant settings\n\n### Problem statement\n\nTeams store small reusable artifacts in ad hoc places. They need a single place to create widgets, organize them, and share approved widgets within the tenant.\n\n### Value proposition\n\nA consistent tenant-scoped widget catalog with simple organization, sharing, and audit-friendly activity history.\n\n---",
+    "scope": "### In scope\n\n- Create, edit, view, list, and delete widgets\n- Organize widgets into collections and apply tags\n- Share widgets within a tenant via role-based access\n- Tenant admin for users, roles, and basic tenant settings\n- Activity history for widget changes\n\n### Out of scope\n\n- Cross-tenant marketplace or public sharing\n- Real-time collaboration editing\n- Complex workflow automation\n\n### Assumptions\n\n- The first release is web-first and keeps features intentionally limited\n- Tenant isolation is required for all data access\n\n### Dependencies\n\n- Organization identity provider for authentication (OIDC or SAML)\n\n---",
+    "quality_attributes": "| Attribute | Target / SLO | Measurement / Evidence | Notes |\n| --- | --- | --- | --- |\n| Availability | 99.9 percent | Uptime checks and incident log | Single region initially |\n| Latency | p95 300ms for list and view | API metrics | Keep queries simple |\n| Security | Least privilege and audit trail | Security checklist and scan results | Admin actions audited |\n| Privacy | Tenant isolation | Access logs and data inventory | Tenant-scoped data only |\n\n---",
+    "constraints": "| Constraint | Type (Business/Tech/Legal) | Rationale | Notes |\n| --- | --- | --- | --- |\n| Tenant isolation for all data | Tech | Prevent cross-tenant access | Tenant key required |\n| Audit-friendly activity history | Business | Change tracking is required | Keep events simple |\n| Keep first release intentionally small | Business | Fast delivery | Avoid complex workflows |\n\n---"
+  },
+  "posture": {
+    "format": "table",
+    "questions": [
+      {
+        "question_id": "PP-01",
+        "question": "PP-01",
+        "answer": "MVP"
+      },
+      {
+        "question_id": "PP-02",
+        "question": "PP-02",
+        "answer": "Confidential"
+      },
+      {
+        "question_id": "PP-03",
+        "question": "PP-03",
+        "answer": "Multi-tenant"
+      },
+      {
+        "question_id": "PP-04",
+        "question": "PP-04",
+        "answer": "SSO"
+      },
+      {
+        "question_id": "PP-05",
+        "question": "PP-05",
+        "answer": "API-first"
+      },
+      {
+        "question_id": "PP-06",
+        "question": "PP-06",
+        "answer": "None"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "capability_id": "CAP-001",
+      "capability_name": "Create and manage widgets",
+      "slug": "cap-001-create-and-manage-widgets",
+      "fields": {
+        "actor": "Team Member",
+        "trigger": "User creates a new widget or updates an existing widget.",
+        "main_flow": "1. User opens the widget editor.\n2. User enters widget fields and saves.\n3. The system validates required fields.\n4. The system stores the widget and returns the updated widget view.",
+        "postconditions": "- A widget record exists for the tenant.\n- The widget has a stable identifier and timestamps.\n- An activity event is recorded for create or update.",
+        "domain_entities": "- Widget\n- Widget Version\n- Widget Change Event\n\n---"
+      },
+      "raw_body": "#### Actor\n\nTeam Member\n\n#### Trigger\n\nUser creates a new widget or updates an existing widget.\n\n#### Main Flow\n\n1. User opens the widget editor.\n2. User enters widget fields and saves.\n3. The system validates required fields.\n4. The system stores the widget and returns the updated widget view.\n\n#### Postconditions\n\n- A widget record exists for the tenant.\n- The widget has a stable identifier and timestamps.\n- An activity event is recorded for create or update.\n\n#### Domain Entities\n\n- Widget\n- Widget Version\n- Widget Change Event\n\n---"
+    },
+    {
+      "capability_id": "CAP-002",
+      "capability_name": "Organize widgets",
+      "slug": "cap-002-organize-widgets",
+      "fields": {
+        "actor": "Team Lead",
+        "trigger": "User adds tags to a widget or adds widgets to a collection.",
+        "main_flow": "1. User opens a widget or collection.\n2. User adds or removes tags on a widget.\n3. User creates or updates a collection and adds widgets to it.\n4. The system stores the updated organization metadata.",
+        "postconditions": "- A widget has zero or more tags.\n- A collection exists and references widgets.\n- An activity event is recorded for the organization change.",
+        "domain_entities": "- Widget\n- Tag\n- Collection\n- Collection Membership\n- Widget Change Event\n\n---"
+      },
+      "raw_body": "#### Actor\n\nTeam Lead\n\n#### Trigger\n\nUser adds tags to a widget or adds widgets to a collection.\n\n#### Main Flow\n\n1. User opens a widget or collection.\n2. User adds or removes tags on a widget.\n3. User creates or updates a collection and adds widgets to it.\n4. The system stores the updated organization metadata.\n\n#### Postconditions\n\n- A widget has zero or more tags.\n- A collection exists and references widgets.\n- An activity event is recorded for the organization change.\n\n#### Domain Entities\n\n- Widget\n- Tag\n- Collection\n- Collection Membership\n- Widget Change Event\n\n---"
+    },
+    {
+      "capability_id": "CAP-003",
+      "capability_name": "Share widgets within a tenant",
+      "slug": "cap-003-share-widgets-within-a-tenant",
+      "fields": {
+        "actor": "Team Lead",
+        "trigger": "User publishes a collection for other tenant members to view.",
+        "main_flow": "1. User selects a collection to publish.\n2. User selects which roles can view or edit the collection.\n3. The system stores the published access rules.\n4. Other users list and view published collections according to their roles.",
+        "postconditions": "- A published collection is visible to permitted roles.\n- Access attempts are checked against role membership.\n- An activity event is recorded for publish or permission changes.",
+        "domain_entities": "- Collection\n- Role\n- Collection Permission\n- Widget Change Event\n\n---"
+      },
+      "raw_body": "#### Actor\n\nTeam Lead\n\n#### Trigger\n\nUser publishes a collection for other tenant members to view.\n\n#### Main Flow\n\n1. User selects a collection to publish.\n2. User selects which roles can view or edit the collection.\n3. The system stores the published access rules.\n4. Other users list and view published collections according to their roles.\n\n#### Postconditions\n\n- A published collection is visible to permitted roles.\n- Access attempts are checked against role membership.\n- An activity event is recorded for publish or permission changes.\n\n#### Domain Entities\n\n- Collection\n- Role\n- Collection Permission\n- Widget Change Event\n\n---"
+    },
+    {
+      "capability_id": "CAP-004",
+      "capability_name": "Tenant administration",
+      "slug": "cap-004-tenant-administration",
+      "fields": {
+        "actor": "Tenant Admin",
+        "trigger": "Tenant Admin manages tenant users, roles, or tenant settings.",
+        "main_flow": "1. Tenant Admin lists users for the tenant.\n2. Tenant Admin adds or removes roles for a user.\n3. Tenant Admin updates tenant settings.\n4. The system stores the changes and records an activity event.",
+        "postconditions": "- Tenant settings are updated.\n- User role assignments are updated.\n- An admin activity event is recorded.",
+        "domain_entities": "- Tenant\n- User\n- Role\n- Tenant Setting\n- Admin Activity Event\n\n---"
+      },
+      "raw_body": "#### Actor\n\nTenant Admin\n\n#### Trigger\n\nTenant Admin manages tenant users, roles, or tenant settings.\n\n#### Main Flow\n\n1. Tenant Admin lists users for the tenant.\n2. Tenant Admin adds or removes roles for a user.\n3. Tenant Admin updates tenant settings.\n4. The system stores the changes and records an activity event.\n\n#### Postconditions\n\n- Tenant settings are updated.\n- User role assignments are updated.\n- An admin activity event is recorded.\n\n#### Domain Entities\n\n- Tenant\n- User\n- Role\n- Tenant Setting\n- Admin Activity Event\n\n---"
+    }
+  ],
+  "source_prd_path": "reference_architectures/codex-saas/product/PRD.resolved.md"
+}

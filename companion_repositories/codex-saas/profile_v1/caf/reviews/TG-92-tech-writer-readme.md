@@ -1,42 +1,44 @@
-## Review Scope
-- task_id: `TG-92-tech-writer-readme`
-- capability: `repo_documentation`
-- severity_threshold: `blocker` (from `reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml`)
-- task report: `caf/task_reports/TG-92-tech-writer-readme.md`
+# Review Note - TG-92-tech-writer-readme
 
-## Rubric Evaluation
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-SEC-01 | PASS | README references env-based secret handling and avoids committed secret literals (`README.md`, `.env`, `infrastructure/postgres.env.example`). |
-| RR-PY-CORR-01 | PASS | No Python import/module changes were introduced by this documentation task; existing code layout remains intact under `code/`. |
-| RR-PY-CORR-01A | PASS | Python package markers remain present for candidate package roots (`code/__init__.py`, `code/AP/__init__.py`, `code/CP/__init__.py`). |
-| RR-PY-CORR-02 | PASS | Documentation changes do not introduce runtime error-handling regressions; API boundary code remains unchanged. |
-| RR-PY-PERF-01 | PASS | No runtime path changes were introduced; only documentation artifacts were modified. |
-| RR-TST-BLOCK-01 | PASS | Existing unit tests remain concrete and non-placeholder (`tests/test_unit_boundaries.py`). |
-| RR-TST-HIGH-01 | PASS | Unit test guidance in README points to existing behavior-asserting test suite (`tests/test_unit_boundaries.py`). |
-| RR-TST-HIGH-02 | PASS | Referenced test suite includes negative-path policy/context checks (`tests/test_unit_boundaries.py`). |
-| RR-COMP-CORR-01 | PASS | Compose candidate defines CP/AP/UI/Postgres service wiring and ports used by README quickstart (`docker/compose.candidate.yaml`, `README.md`). |
-| RR-COMP-BUILD-01 | PASS | Compose file uses Dockerfile builds for CP/AP/UI with `.env` env_file contract (`docker/compose.candidate.yaml`, `docker/Dockerfile.cp`, `docker/Dockerfile.ap`, `docker/Dockerfile.ui`, `.env`). |
-| RR-COMP-SEC-01 | PASS | No privileged compose flags or docker-socket host mounts are present (`docker/compose.candidate.yaml`). |
-| RR-FA-CORR-01 | PASS | FastAPI runtime wiring remains intact; documentation task did not alter router registration (`code/AP/bootstrap/main.py`, `code/CP/bootstrap/main.py`). |
-| RR-FA-SEC-01 | PASS | Existing FastAPI inbound handlers remain typed/model-driven; no ad-hoc parsing introduced by docs task (`code/AP/interfaces/inbound/*.py`, `code/CP/interfaces/inbound/*.py`). |
-| RR-FA-ARCH-01 | PASS | Existing route handlers continue delegating to service layer; no architectural boundary change from documentation-only task (`code/AP/interfaces/inbound/*.py`). |
-| RR-TR-STRUCT-01 | PASS | Task report includes required sections: digest, declared inputs, consumed inputs, step evidence, outputs, and rails/TBP satisfaction (`caf/task_reports/TG-92-tech-writer-readme.md`). |
-| RR-TR-STEP-01 | PASS | Task report maps all five task steps and all required inputs to concrete evidence paths (`caf/task_reports/TG-92-tech-writer-readme.md`). |
-| RR-TBP-RB-01 | PASS | `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability repo_documentation` returned `expectations: []`; no missing role-binding artifacts for this capability. |
+| RR-PY-SEC-01 | PASS | README content introduces no secrets; env guidance points to existing local-dev values and externalized variables only. |
+| RR-PY-CORR-01 | PASS | No Python runtime code/import changes were made by this task. |
+| RR-PY-CORR-01A | PASS | Package markers remain present (`code/__init__.py`, `code/ap/__init__.py`, `code/cp/__init__.py`). |
+| RR-PY-CORR-02 | PASS | Existing typed error handling is unchanged; README troubleshooting aligns with current fail-closed behavior. |
+| RR-PY-PERF-01 | PASS | Documentation-only task introduced no runtime performance regressions. |
+| RR-TST-BLOCK-01 | PASS | No placeholder tests introduced; README references concrete test paths and command. |
+| RR-TST-HIGH-01 | PASS | N/A for this task: no endpoint/service implementation change; test guidance points to existing focused suites. |
+| RR-TST-HIGH-02 | PASS | N/A for this task: no new validation/policy code paths introduced. |
+| RR-COMP-CORR-01 | PASS | README quickstart/log commands match `docker/compose.candidate.yaml` service topology and ports. |
+| RR-COMP-BUILD-01 | PASS | Documentation references compose + Dockerfile-based flow aligned with current CP/AP/UI build surfaces and `.env`. |
+| RR-COMP-SEC-01 | PASS | README does not introduce privileged-container or unsafe host-mount guidance. |
+| RR-FA-CORR-01 | PASS | Router reachability remains intact and README references existing AP/CP routes operationally. |
+| RR-FA-SEC-01 | PASS | Documentation does not suggest bypassing typed boundary validation; reflects existing FastAPI model-driven flows. |
+| RR-FA-BOUNDARY-ERR-01 | PASS | README troubleshooting correctly reflects fail-closed auth/policy error surfacing behavior. |
+| RR-FA-SCHEMA-BOOTSTRAP-01 | PASS | Startup guidance remains consistent with existing AP/CP bootstrap-at-lifespan behavior. |
+| RR-FA-ARCH-01 | PASS | No route/business-layer architecture changes were introduced. |
+| RR-SPA-WIRE-01 | PASS | README references real UI runtime wiring paths and does not claim functionality beyond implemented SPA surfaces. |
+| RR-SPA-WIRE-02 | PASS | Documentation remains consistent with existing shell/page wiring and does not misstate reachability. |
+| RR-SPA-WIRE-03 | PASS | README extension guidance preserves shared helper contract paths (`/api/*`, `/cp/*`) and avoids ad hoc direct ports. |
+| RR-SPA-STATE-01 | PASS | No regression to SPA state handling; troubleshooting guidance preserves fail-closed error visibility expectations. |
+| RR-SPA-ERR-DETAIL-01 | PASS | README debugging guidance aligns with backend-detail-preserving behavior in `code/ui/src/api.js`. |
+| RR-SPA-FORM-01 | PASS | No static-form-only claims introduced; guidance stays tied to implemented UI/API action paths. |
+| RR-SPA-CONTRACT-01 | PASS | README admin/probe wording stays aligned with declared contract surfaces and avoids undocumented CRUD claims. |
+| RR-SPA-HANDOFF-01 | PASS | Extension guidance preserves identifier handoff expectations instead of introducing hidden/manual-only flows. |
+| RR-TR-STRUCT-01 | PASS | `caf/task_reports/TG-92-tech-writer-readme.md` contains all required report sections. |
+| RR-TR-STEP-01 | PASS | Report addresses every step from task spec and covers all required inputs with direct evidence. |
+| RR-TBP-RB-01 | PASS | `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability repo_documentation` returned no expectations; no unresolved role-binding artifacts for this capability. |
 
-## Task Semantic Review Questions
-- Q1: Does README provide accurate run/test/env guidance for the candidate stack?
-  - Answer: Yes. README commands/variables align with `docker/compose.candidate.yaml`, `.env`, `infrastructure/postgres.env.example`, and `tests/test_unit_boundaries.py`.
-- Q2: Are contract surfaces and interface bindings explained at an operator-useful level?
-  - Answer: Yes. README includes AP interface binding IDs and consumer/provider mapping from `interface_binding_contracts_v1.yaml`.
-- Q3: Is documentation aligned to approved pins and TBP-resolved components only?
-  - Answer: Yes. README references the pinned stack and resolved TBPs without introducing unpinned technologies.
+## Semantic review questions
+- `Does README cover startup, env wiring, and testing flows clearly for operators?` Yes. README includes compose lifecycle, env variable contracts, and unit-test command/suite guidance.
+- `Are database and runtime contract expectations described without unapproved tech changes?` Yes. Guidance is grounded in pinned Docker compose + PostgreSQL + SQLAlchemy + FastAPI surfaces already in the companion repo.
+- `Does troubleshooting guidance address policy, tenant context, and compose wiring issues?` Yes. README includes focused troubleshooting for auth claim conflicts, policy denials, DB env/bootstrap issues, and UI/API runtime wiring.
 
-## Findings
-- Blocker: none
+## Summary
+- No issues at or above `blocker` threshold were found.
+
+## Issues
 - High: none
 - Medium: none
 - Low: none
-
-No issues at or above the configured threshold (`blocker`) were found.

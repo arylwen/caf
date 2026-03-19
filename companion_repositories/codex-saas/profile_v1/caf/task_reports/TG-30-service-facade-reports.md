@@ -1,28 +1,18 @@
-## Task Spec Digest
-- task_id: `TG-30-service-facade-reports`
-- title: `Implement service facade for reports`
-- primary capability: `service_facade_implementation`
-- task graph source: `caf/task_graph_v1.yaml`
-
-## Inputs declared by task
-- required: `reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml`
-- required: `reference_architectures/codex-saas/design/playbook/application_design_v1.md`
-- required: `reference_architectures/codex-saas/spec/playbook/system_spec_v1.md`
-- required: `reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml`
+# Task Report: TG-30-service-facade-reports
 
 ## Inputs consumed
-- `caf/application_domain_model_v1.yaml`: confirmed reports operations are list/get.
-- `caf/application_design_v1.md`: kept service layer transport-free and policy-gated.
-- `caf/system_spec_v1.md`: enforced tenant/principal context as mandatory preconditions.
-- `caf/interface_binding_contracts_v1.yaml`: consumed `BIND-AP-reports` and required `ReportsAccessInterface`.
-- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability service_facade_implementation`: validated no additional TBP path expectations for this capability.
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml: consumed AP module-root and tenant fail-closed rails.
+- reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml: consumed reports operations (`list`, `get`, `create`) and report metadata contract.
+- reference_architectures/codex-saas/design/playbook/application_design_v1.md: consumed AP composition endpoint and UI-facing report flow expectations.
+- reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml: consumed `BIND-AP-reports` required interface contract (`ReportsAccessInterface`).
 
 ## Claims
-- Declared `ReportsAccessInterface` as the required consumer-side interface for reports service facade.
-- Implemented transport-free reports facade operations (`list_reports`, `get_report`) with explicit context and policy checks.
-- Routed reports data access through the required interface boundary instead of direct adapter usage.
+- Reports service facade is implemented with explicit required interface and transport-free service orchestration wrapper.
+- Runtime composition binds reports service through provider injection, preserving interface-binding expectations for later persistence/runtime tasks.
+- Reports API boundary handlers route via the reports service facade while keeping tenant and policy context enforcement unchanged.
 
 ## Evidence anchors
-- `code/AP/application/ports/resource_access_interfaces.py:L18-L23` - `ReportsAccessInterface` contract.
-- `code/AP/application/resource_service_facades.py:L60-L73` - reports service methods with context and policy enforcement.
-- `code/AP/application/resource_service_facades.py:L50-L58` - shared policy precondition gate used before report access.
+- companion_repositories/codex-saas/profile_v1/code/ap/service/resource_services.py:L72-L82
+- companion_repositories/codex-saas/profile_v1/code/ap/service/resource_services.py:L190-L208
+- companion_repositories/codex-saas/profile_v1/code/ap/composition/root.py:L50-L76
+- companion_repositories/codex-saas/profile_v1/code/ap/api/resources.py:L284-L343

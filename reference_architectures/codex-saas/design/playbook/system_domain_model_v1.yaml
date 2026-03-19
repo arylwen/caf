@@ -2,18 +2,20 @@ schema_version: "phase8_plane_domain_model_v1"
 plane_scope: "system"
 generated_from:
   inputs:
+    - "reference_architectures/codex-saas/spec/playbook/application_spec_v1.md"
     - "reference_architectures/codex-saas/spec/playbook/system_spec_v1.md"
+    - "reference_architectures/codex-saas/spec/playbook/application_domain_model_v1.md"
     - "reference_architectures/codex-saas/spec/playbook/system_domain_model_v1.md"
 domain:
-  summary: "Control-plane model for policy governance, execution records, and auditable evidence."
+  summary: "Control-plane governance domain for policy lifecycle, governed execution evidence, and retention/deletion controls."
   bounded_contexts:
     - context_id: "POLICY_GOVERNANCE"
       name: "Policy and Governance"
-      description: "Platform-owned policy lifecycle and approval records."
+      description: "Platform-owned policy lifecycle and approval decisions."
       aggregates:
         - aggregate_id: "POLICY"
           name: "Policy"
-          description: "Named governance artifact with platform ownership."
+          description: "Named governance artifact with versioned activation lifecycle."
           canonical:
             term_id: "policy"
             status: "exact"
@@ -21,11 +23,11 @@ domain:
           persistence:
             required: true
             storage_intent: "catalog_registry"
-            notes: "Control-plane lifecycle and activation state."
+            notes: "Control-plane system of record for policy definitions."
           entities:
             - entity_id: "POLICY_VERSION"
               name: "Policy Version"
-              description: "Immutable versioned snapshot of policy content."
+              description: "Immutable snapshot used for approval and activation."
               fields:
                 - name: "policy_version_id"
                   type: "identifier"
@@ -33,21 +35,160 @@ domain:
                 - name: "policy_id"
                   type: "identifier"
                   required: true
+                - name: "version_label"
+                  type: "text"
+                  required: true
+                - name: "content_hash"
+                  type: "text"
+                  required: true
+                - name: "created_by"
+                  type: "identifier"
+                  required: true
+                - name: "created_at"
+                  type: "timestamp"
+                  required: true
                 - name: "activation_state"
                   type: "enum(draft|approved|active|superseded)"
                   required: true
             - entity_id: "APPROVAL_DECISION"
               name: "Approval Decision"
-              description: "Auditable approval or rejection record."
+              description: "Auditable approval/rejection event for governance changes."
               fields:
                 - name: "approval_decision_id"
                   type: "identifier"
+                  required: true
+                - name: "subject_type"
+                  type: "text"
                   required: true
                 - name: "subject_id"
                   type: "identifier"
                   required: true
                 - name: "decision"
                   type: "enum(approved|rejected)"
+                  required: true
+                - name: "decided_by"
+                  type: "identifier"
+                  required: true
+                - name: "decided_at"
+                  type: "timestamp"
+                  required: true
+                - name: "rationale"
+                  type: "text"
+                  required: false
+    - context_id: "EXECUTION_EVIDENCE"
+      name: "Execution and Evidence"
+      description: "Tracks governed execution outcomes and emitted evidence."
+      aggregates:
+        - aggregate_id: "EXECUTION_RECORD"
+          name: "Execution Record"
+          description: "Platform-owned record of governed execution runs."
+          persistence:
+            required: true
+            storage_intent: "audit_log"
+            notes: "Audit and operational history for governed actions."
+          entities:
+            - entity_id: "EXECUTION_RECORD_ENTITY"
+              name: "Execution Record"
+              description: "Execution identity and lifecycle status."
+              fields:
+                - name: "execution_record_id"
+                  type: "identifier"
+                  required: true
+                - name: "tenant_id"
+                  type: "identifier"
+                  required: true
+                - name: "subject_type"
+                  type: "text"
+                  required: true
+                - name: "subject_id"
+                  type: "identifier"
+                  required: true
+                - name: "started_at"
+                  type: "timestamp"
+                  required: true
+                - name: "completed_at"
+                  type: "timestamp"
+                  required: false
+                - name: "outcome"
+                  type: "enum(pending|passed|failed|blocked)"
+                  required: true
+            - entity_id: "EVIDENCE_RECORD"
+              name: "Evidence Record"
+              description: "Append-only evidence for decisions and executions."
+              fields:
+                - name: "evidence_record_id"
+                  type: "identifier"
+                  required: true
+                - name: "execution_record_id"
+                  type: "identifier"
+                  required: false
+                - name: "evidence_type"
+                  type: "text"
+                  required: true
+                - name: "emitted_at"
+                  type: "timestamp"
+                  required: true
+                - name: "principal_id"
+                  type: "identifier"
+                  required: true
+                - name: "payload_ref"
+                  type: "text"
+                  required: false
+    - context_id: "RETENTION_LIFECYCLE"
+      name: "Retention and Lifecycle"
+      description: "Retention and deletion governance records."
+      aggregates:
+        - aggregate_id: "DATA_LIFECYCLE"
+          name: "Data Lifecycle"
+          description: "Control-plane lifecycle artifacts for retention and deletion."
+          persistence:
+            required: true
+            storage_intent: "transactional_record"
+            notes: "Platform-owned retention and deletion workflow records."
+          entities:
+            - entity_id: "RETENTION_RULE"
+              name: "Retention Rule"
+              description: "Rule defining retention duration and deletion policy."
+              fields:
+                - name: "retention_rule_id"
+                  type: "identifier"
+                  required: true
+                - name: "target_type"
+                  type: "text"
+                  required: true
+                - name: "retention_period_days"
+                  type: "integer"
+                  required: true
+                - name: "hard_delete_allowed"
+                  type: "boolean"
+                  required: true
+                - name: "status"
+                  type: "enum(draft|active|retired)"
+                  required: true
+            - entity_id: "DELETION_REQUEST"
+              name: "Deletion Request"
+              description: "Tracked request to purge governed data."
+              fields:
+                - name: "deletion_request_id"
+                  type: "identifier"
+                  required: true
+                - name: "tenant_id"
+                  type: "identifier"
+                  required: true
+                - name: "target_type"
+                  type: "text"
+                  required: true
+                - name: "target_id"
+                  type: "identifier"
+                  required: true
+                - name: "requested_by"
+                  type: "identifier"
+                  required: true
+                - name: "requested_at"
+                  type: "timestamp"
+                  required: true
+                - name: "status"
+                  type: "enum(requested|approved|completed|rejected)"
                   required: true
   use_cases:
     - use_case_id: "UC-APPROVEPOLICY"
@@ -58,3 +199,17 @@ domain:
         - "Policy"
         - "Policy Version"
         - "Approval Decision"
+    - use_case_id: "UC-RECORDEXECUTION"
+      title: "Record a governed execution"
+      intent: "The platform records an execution and its outcome."
+      primary_context_id: "EXECUTION_EVIDENCE"
+      touches_entities:
+        - "Execution Record"
+        - "Evidence Record"
+    - use_case_id: "UC-MANAGERETENTION"
+      title: "Manage retention and deletion"
+      intent: "An operator defines retention rules and tracks deletion requests."
+      primary_context_id: "RETENTION_LIFECYCLE"
+      touches_entities:
+        - "Retention Rule"
+        - "Deletion Request"

@@ -1,355 +1,681 @@
 schema_version: pattern_obligations_v1
-generated_at: "2026-03-11T21:20:00Z"
 generated_from:
   inputs:
-    - "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-    - "reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml"
-    - "reference_architectures/codex-saas/spec/guardrails/abp_pbp_resolution_v1.yaml"
-    - "reference_architectures/codex-saas/spec/playbook/system_spec_v1.md"
-    - "reference_architectures/codex-saas/spec/playbook/application_spec_v1.md"
-    - "reference_architectures/codex-saas/design/playbook/application_design_v1.md"
-    - "reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md"
-    - "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-    - "reference_architectures/codex-saas/design/playbook/system_domain_model_v1.yaml"
-    - "reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml"
-    - "architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml"
-    - "architecture_library/phase_8/tbp/atoms/TBP-FASTAPI-01/tbp_manifest_v1.yaml"
-    - "architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml"
-    - "architecture_library/phase_8/tbp/atoms/TBP-PY-01/tbp_manifest_v1.yaml"
-    - "architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml"
+    - reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+    - reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml
+    - reference_architectures/codex-saas/spec/guardrails/abp_pbp_resolution_v1.yaml
+    - reference_architectures/codex-saas/spec/playbook/architecture_shape_parameters.yaml
+    - reference_architectures/codex-saas/spec/playbook/system_spec_v1.md
+    - reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+    - reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+    - reference_architectures/codex-saas/design/playbook/system_domain_model_v1.yaml
+    - reference_architectures/codex-saas/design/playbook/application_design_v1.md
+    - reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+    - reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml
+    - architecture_library/patterns/retrieval_surface_v1/pattern_retrieval_surface_v1.jsonl
+    - architecture_library/phase_8/tbp/atoms/TBP-ASGI-01/tbp_manifest_v1.yaml
+    - architecture_library/phase_8/tbp/atoms/TBP-AUTH-MOCK-01/tbp_manifest_v1.yaml
+    - architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml
+    - architecture_library/phase_8/tbp/atoms/TBP-FASTAPI-01/tbp_manifest_v1.yaml
+    - architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml
+    - architecture_library/phase_8/tbp/atoms/TBP-PY-01/tbp_manifest_v1.yaml
+    - architecture_library/phase_8/tbp/atoms/TBP-PY-PACKAGING-01/tbp_manifest_v1.yaml
+    - architecture_library/phase_8/tbp/atoms/TBP-SQLALCHEMY-01/tbp_manifest_v1.yaml
+    - architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml
 obligations:
   - obligation_id: OBL-PLANE-CP-RUNTIME-SCAFFOLD
     obligation_kind: other
     plane_scope: CP
     capability_id: plane_runtime_scaffolding
-    description: "Scaffold control-plane runtime boundary and composition root."
+    description: Scaffold the control plane runtime for the adopted api_service_http shape.
     sources:
-      - path: "reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md"
-        anchor: "plane_integration_contract_choices_v1 cp_runtime_shape=api_service_http"
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        anchor: planes.cp.runtime_shape=api_service_http
     selected_pattern_ids: []
   - obligation_id: OBL-PLANE-AP-RUNTIME-SCAFFOLD
     obligation_kind: other
     plane_scope: AP
     capability_id: plane_runtime_scaffolding
-    description: "Scaffold application-plane runtime boundary and composition root."
+    description: Scaffold the application plane runtime for the adopted api_service_http shape.
     sources:
-      - path: "reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md"
-        anchor: "plane_integration_contract_choices_v1 ap_runtime_shape=api_service_http"
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        anchor: planes.ap.runtime_shape=api_service_http
     selected_pattern_ids: []
   - obligation_id: OBL-CONTRACT-BND-CP-AP-01-AP
     obligation_kind: contract_scaffolding
-    plane_scope: AP
+    plane_scope: cross_plane
     capability_id: contract_scaffolding
-    description: "Materialize AP-side contract scaffolding for boundary BND-CP-AP-01."
+    description: Scaffold the AP side of the material BND-CP-AP-01 contract boundary.
     sources:
-      - path: "reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml"
-        anchor: "boundary_id=BND-CP-AP-01"
-    selected_pattern_ids: []
+      - path: reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml
+        anchor: contracts boundary_id=BND-CP-AP-01
+    selected_pattern_ids:
+      - CAF-PLANE-01
+      - CAF-XPLANE-01
   - obligation_id: OBL-CONTRACT-BND-CP-AP-01-CP
     obligation_kind: contract_scaffolding
-    plane_scope: CP
+    plane_scope: cross_plane
     capability_id: contract_scaffolding
-    description: "Materialize CP-side contract scaffolding for boundary BND-CP-AP-01."
+    description: Scaffold the CP side of the material BND-CP-AP-01 contract boundary.
     sources:
-      - path: "reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml"
-        anchor: "boundary_id=BND-CP-AP-01"
-    selected_pattern_ids: []
-  - obligation_id: OBL-API-workspaces
-    obligation_kind: api_boundary
-    plane_scope: AP
-    capability_id: api_boundary_implementation
-    description: "Implement API boundary for workspaces resource operations."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=workspaces"
-    selected_pattern_ids: []
-  - obligation_id: OBL-API-submissions
-    obligation_kind: api_boundary
-    plane_scope: AP
-    capability_id: api_boundary_implementation
-    description: "Implement API boundary for submissions resource operations."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=submissions"
-    selected_pattern_ids: []
-  - obligation_id: OBL-API-reports
-    obligation_kind: api_boundary
-    plane_scope: AP
-    capability_id: api_boundary_implementation
-    description: "Implement API boundary for reports resource operations."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=reports"
-    selected_pattern_ids: []
-  - obligation_id: OBL-SERVICE-workspaces
-    obligation_kind: other
-    plane_scope: AP
-    capability_id: service_facade_implementation
-    description: "Implement service facade for workspaces workflows."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=workspaces"
-    selected_pattern_ids: []
-  - obligation_id: OBL-SERVICE-submissions
-    obligation_kind: other
-    plane_scope: AP
-    capability_id: service_facade_implementation
-    description: "Implement service facade for submissions workflows."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=submissions"
-    selected_pattern_ids: []
-  - obligation_id: OBL-SERVICE-reports
-    obligation_kind: other
-    plane_scope: AP
-    capability_id: service_facade_implementation
-    description: "Implement service facade for reports workflows."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=reports"
-    selected_pattern_ids: []
-  - obligation_id: OBL-PERSISTENCE-workspaces
-    obligation_kind: persistence_boundary
-    plane_scope: AP
-    capability_id: persistence_implementation
-    description: "Implement persistence boundary for workspaces."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=workspaces"
-    selected_pattern_ids: []
-  - obligation_id: OBL-PERSISTENCE-submissions
-    obligation_kind: persistence_boundary
-    plane_scope: AP
-    capability_id: persistence_implementation
-    description: "Implement persistence boundary for submissions."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=submissions"
-    selected_pattern_ids: []
-  - obligation_id: OBL-PERSISTENCE-reports
-    obligation_kind: persistence_boundary
-    plane_scope: AP
-    capability_id: persistence_implementation
-    description: "Implement persistence boundary for reports."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=reports"
-    selected_pattern_ids: []
-  - obligation_id: OBL-PERSISTENCE-CP-policy
-    obligation_kind: persistence_boundary
-    plane_scope: CP
-    capability_id: persistence_implementation
-    description: "Implement persisted control-plane policy aggregate boundary."
-    sources:
-      - path: "reference_architectures/codex-saas/design/playbook/system_domain_model_v1.yaml"
-        anchor: "aggregates name=Policy persistence.required=true"
-    selected_pattern_ids: []
-  - obligation_id: OBL-POLICY-ENFORCEMENT
-    obligation_kind: other
+      - path: reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml
+        anchor: contracts boundary_id=BND-CP-AP-01
+    selected_pattern_ids:
+      - CAF-PLANE-01
+      - CAF-XPLANE-01
+  - obligation_id: OBL-CP-POLICY-SURFACE
+    obligation_kind: auth
     plane_scope: cross_plane
     capability_id: policy_enforcement
-    description: "Enforce CP policy and safety outcomes on AP execution boundary."
+    description: Expose the CP policy and safety evaluation surface for AP requests.
     sources:
-      - path: "reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md"
-        anchor: "plane integration contract cp_ap_contract_surface=mixed"
+      - path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+        anchor: Plane Integration Contract (CP ↔ AP)
     selected_pattern_ids:
-      - "CAF-POL-01"
-  - obligation_id: OBL-UI-SHELL
-    obligation_kind: other
-    plane_scope: AP
-    capability_id: ui_frontend_scaffolding
-    description: "Scaffold minimal UI shell for the web SPA surface."
+      - CAF-POL-01
+  - obligation_id: OBL-AP-POLICY-ENFORCEMENT
+    obligation_kind: auth
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Enforce CP-governed policy decisions on AP runtime surfaces.
     sources:
-      - path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-        anchor: "ui.present=true ui.kind=web_spa"
-    selected_pattern_ids: []
-  - obligation_id: OBL-UI-POLICY-ADMIN
-    obligation_kind: other
-    plane_scope: AP
-    capability_id: ui_frontend_scaffolding
-    description: "Scaffold policy admin UI page aligned with adopted policy pattern."
-    sources:
-      - path: "reference_architectures/codex-saas/spec/playbook/system_spec_v1.md"
-        anchor: "decision_resolutions_v1 pattern_id=CAF-POL-01 status=adopt"
+      - path: reference_architectures/codex-saas/spec/playbook/system_spec_v1.md
+        anchor: pattern_id=CAF-POL-01
     selected_pattern_ids:
-      - "CAF-POL-01"
-  - obligation_id: OBL-UI-PAGE-workspaces
+      - CAF-POL-01
+  - obligation_id: OBL-TENANT-CONTEXT-PROPAGATION
+    obligation_kind: tenant_context
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Propagate tenant context through the adopted carrier and reject conflicting carriers.
+    sources:
+      - path: reference_architectures/codex-saas/spec/playbook/system_spec_v1.md
+        anchor: pattern_id=CAF-TCTX-01
+    selected_pattern_ids:
+      - CAF-TCTX-01
+  - obligation_id: OBL-AP-AUTH-MODE
+    obligation_kind: auth
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Realize the selected mock auth runtime contract for AP ingress and CP to AP decisions.
+    sources:
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        anchor: platform.auth_mode=mock
+    selected_pattern_ids:
+      - CAF-IAM-02
+      - CAF-TCTX-01
+  - obligation_id: OBL-AP-RESOURCE-WORKSPACES-API
+    obligation_kind: api_boundary
+    plane_scope: AP
+    capability_id: api_boundary_implementation
+    description: Expose the workspaces API boundary with tenant-scoped handlers and composition endpoints.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=workspaces
+    selected_pattern_ids:
+      - EXT-API_COMPOSITION_AGGREGATOR
+  - obligation_id: OBL-AP-RESOURCE-WORKSPACES-SERVICE
     obligation_kind: other
     plane_scope: AP
-    capability_id: ui_frontend_scaffolding
-    description: "Scaffold UI page for workspaces resource."
+    capability_id: service_facade_implementation
+    description: Provide the workspaces application service facade between boundary handling and persistence.
     sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=workspaces"
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=workspaces
+    selected_pattern_ids:
+      - SVC-01
+  - obligation_id: OBL-AP-RESOURCE-WORKSPACES-PERSISTENCE
+    obligation_kind: persistence_boundary
+    plane_scope: AP
+    capability_id: persistence_implementation
+    description: Provide a tenant-scoped persistence boundary for the workspaces resource aligned to the resolved persistence rails.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=workspaces
+    selected_pattern_ids:
+      - PST-01
+  - obligation_id: OBL-AP-RESOURCE-SUBMISSIONS-API
+    obligation_kind: api_boundary
+    plane_scope: AP
+    capability_id: api_boundary_implementation
+    description: Expose the submissions API boundary with tenant-scoped handlers and composition endpoints.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=submissions
+    selected_pattern_ids:
+      - EXT-API_COMPOSITION_AGGREGATOR
+  - obligation_id: OBL-AP-RESOURCE-SUBMISSIONS-SERVICE
+    obligation_kind: other
+    plane_scope: AP
+    capability_id: service_facade_implementation
+    description: Provide the submissions application service facade between boundary handling and persistence.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=submissions
+    selected_pattern_ids:
+      - SVC-01
+  - obligation_id: OBL-AP-RESOURCE-SUBMISSIONS-PERSISTENCE
+    obligation_kind: persistence_boundary
+    plane_scope: AP
+    capability_id: persistence_implementation
+    description: Provide a tenant-scoped persistence boundary for the submissions resource aligned to the resolved persistence rails.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=submissions
+    selected_pattern_ids:
+      - PST-01
+  - obligation_id: OBL-AP-RESOURCE-REVIEWS-API
+    obligation_kind: api_boundary
+    plane_scope: AP
+    capability_id: api_boundary_implementation
+    description: Expose the reviews API boundary with tenant-scoped handlers and composition endpoints.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=reviews
+    selected_pattern_ids:
+      - EXT-API_COMPOSITION_AGGREGATOR
+  - obligation_id: OBL-AP-RESOURCE-REVIEWS-SERVICE
+    obligation_kind: other
+    plane_scope: AP
+    capability_id: service_facade_implementation
+    description: Provide the reviews application service facade between boundary handling and persistence.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=reviews
+    selected_pattern_ids:
+      - SVC-01
+  - obligation_id: OBL-AP-RESOURCE-REVIEWS-PERSISTENCE
+    obligation_kind: persistence_boundary
+    plane_scope: AP
+    capability_id: persistence_implementation
+    description: Provide a tenant-scoped persistence boundary for the reviews resource aligned to the resolved persistence rails.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=reviews
+    selected_pattern_ids:
+      - PST-01
+  - obligation_id: OBL-AP-RESOURCE-REPORTS-API
+    obligation_kind: api_boundary
+    plane_scope: AP
+    capability_id: api_boundary_implementation
+    description: Expose the reports API boundary with tenant-scoped handlers and composition endpoints.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=reports
+    selected_pattern_ids:
+      - EXT-API_COMPOSITION_AGGREGATOR
+  - obligation_id: OBL-AP-RESOURCE-REPORTS-SERVICE
+    obligation_kind: other
+    plane_scope: AP
+    capability_id: service_facade_implementation
+    description: Provide the reports application service facade between boundary handling and persistence.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=reports
+    selected_pattern_ids:
+      - SVC-01
+  - obligation_id: OBL-AP-RESOURCE-REPORTS-PERSISTENCE
+    obligation_kind: persistence_boundary
+    plane_scope: AP
+    capability_id: persistence_implementation
+    description: Provide a tenant-scoped persistence boundary for the reports resource aligned to the resolved persistence rails.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml
+        anchor: api_candidates.resources name=reports
+    selected_pattern_ids:
+      - PST-01
+  - obligation_id: OBL-CP-ENTITY-POLICY-PERSISTENCE
+    obligation_kind: other
+    plane_scope: CP
+    capability_id: persistence_implementation
+    description: Provide control-plane persistence surfaces for the Policy aggregate.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/system_domain_model_v1.yaml
+        anchor: aggregates name=Policy
     selected_pattern_ids: []
-  - obligation_id: OBL-UI-PAGE-submissions
+  - obligation_id: OBL-CP-ENTITY-EXECUTION-RECORD-PERSISTENCE
     obligation_kind: other
-    plane_scope: AP
-    capability_id: ui_frontend_scaffolding
-    description: "Scaffold UI page for submissions resource."
+    plane_scope: CP
+    capability_id: persistence_implementation
+    description: Provide control-plane persistence surfaces for the Execution Record aggregate.
     sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=submissions"
+      - path: reference_architectures/codex-saas/design/playbook/system_domain_model_v1.yaml
+        anchor: aggregates name=Execution Record
     selected_pattern_ids: []
-  - obligation_id: OBL-UI-PAGE-reports
+  - obligation_id: OBL-CP-ENTITY-DATA-LIFECYCLE-PERSISTENCE
     obligation_kind: other
-    plane_scope: AP
-    capability_id: ui_frontend_scaffolding
-    description: "Scaffold UI page for reports resource."
+    plane_scope: CP
+    capability_id: persistence_implementation
+    description: Provide control-plane persistence surfaces for the Data Lifecycle aggregate.
     sources:
-      - path: "reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml"
-        anchor: "api_candidates.resources name=reports"
+      - path: reference_architectures/codex-saas/design/playbook/system_domain_model_v1.yaml
+        anchor: aggregates name=Data Lifecycle
     selected_pattern_ids: []
   - obligation_id: OBL-RUNTIME-WIRING
     obligation_kind: other
     plane_scope: cross_plane
     capability_id: runtime_wiring
-    description: "Wire CP/AP runtimes, compose surfaces, and interface binding closure."
+    description: Wire the generated candidate runtime surfaces into one coherent local run flow.
     sources:
-      - path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-        anchor: "candidate_enforcement_bar.runnable_policy.require_runtime_wiring=true"
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        anchor: candidate_enforcement_bar.runnable_policy.require_runtime_wiring=true
     selected_pattern_ids: []
   - obligation_id: OBL-UNIT-TESTS
     obligation_kind: other
     plane_scope: cross_plane
     capability_id: unit_test_scaffolding
-    description: "Scaffold unit tests for candidate implementation tasks."
+    description: Provide unit-test coverage for the candidate runtime surfaces.
     sources:
-      - path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-        anchor: "candidate_enforcement_bar.test_policy.require_unit=true"
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        anchor: candidate_enforcement_bar.test_policy.require_unit=true
     selected_pattern_ids: []
   - obligation_id: OBL-REPO-README
     obligation_kind: other
     plane_scope: cross_plane
     capability_id: repo_documentation
-    description: "Provide operator README for local compose run, env, and tests."
+    description: Document how to run the candidate stack and diagnose the generated output locally.
     sources:
-      - path: "reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml"
-        anchor: "lifecycle.generation_phase=implementation_scaffolding"
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        anchor: lifecycle.generation_phase=implementation_scaffolding
+    selected_pattern_ids: []
+  - obligation_id: OBL-OPT-CAF-TCTX-01-Q-AP-TENANT-CARRIER-01-auth_claim
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: runtime_wiring
+    description: Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-TCTX-01 question_id=Q-AP-TENANT-CARRIER-01 option_id=auth_claim
+    selected_pattern_ids:
+      - CAF-TCTX-01
+  - obligation_id: OBL-OPT-CAF-TCTX-01-Q-CPAP-TENANT-CARRIER-01-auth_claim
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: runtime_wiring
+    description: Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-TCTX-01 question_id=Q-CPAP-TENANT-CARRIER-01 option_id=auth_claim
+    selected_pattern_ids:
+      - CAF-TCTX-01
+  - obligation_id: OBL-OPT-CAF-TCTX-01-Q-CPAP-TCTX-CONFLICT-01-claim_over_header
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: runtime_wiring
+    description: Verified claim wins; reject if any other carrier conflicts.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-TCTX-01 question_id=Q-CPAP-TCTX-CONFLICT-01 option_id=claim_over_header
+    selected_pattern_ids:
+      - CAF-TCTX-01
+  - obligation_id: OBL-OPT-CAF-MTEN-01-Q-MTEN-ISO-MODE-01-hybrid_tiered
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Hybrid isolation (selective and tiered by tenant).
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-MTEN-01 question_id=Q-MTEN-ISO-MODE-01 option_id=hybrid_tiered
+    selected_pattern_ids:
+      - CAF-MTEN-01
+  - obligation_id: OBL-OPT-CAF-PLANE-01-Q-CP-AP-SURFACE-01-mixed
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: runtime_wiring
+    description: 'Mix: sync for enforcement, async for lifecycle and audit.'
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-PLANE-01 question_id=Q-CP-AP-SURFACE-01 option_id=mixed
+    selected_pattern_ids:
+      - CAF-PLANE-01
+  - obligation_id: OBL-OPT-CAF-AI-01-Q-AI-PART-01-cp_governs_ap_enforces
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Control Plane governs policy; Application Plane enforces at runtime.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-AI-01 question_id=Q-AI-PART-01 option_id=cp_governs_ap_enforces
+    selected_pattern_ids:
+      - CAF-AI-01
+  - obligation_id: OBL-OPT-CAF-COMP-01-Q-CAF-COMP-01-01-stream_plus_immutable_store
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Use an event stream plus an immutable store (preferred for audit readiness).
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-COMP-01 question_id=Q-CAF-COMP-01-01 option_id=stream_plus_immutable_store
+    selected_pattern_ids:
+      - CAF-COMP-01
+  - obligation_id: OBL-OPT-CAF-IAM-02-Q-CAF-IAM-02-01-verified_token_claims
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Propagate identity and tenant context via verified token claims at ingress.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-IAM-02 question_id=Q-CAF-IAM-02-01 option_id=verified_token_claims
+    selected_pattern_ids:
+      - CAF-IAM-02
+  - obligation_id: OBL-OPT-CAF-XPLANE-01-Q-XPLANE-MODE-01-synchronous_api
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: runtime_wiring
+    description: Synchronous request/response API call across the plane boundary.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-XPLANE-01 question_id=Q-XPLANE-MODE-01 option_id=synchronous_api
+    selected_pattern_ids:
+      - CAF-XPLANE-01
+  - obligation_id: OBL-OPT-EXT-API_COMPOSITION_AGGREGATOR-Q-EXT-AGG-01-dedicated_composition_endpoint
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Application plane exposes dedicated composition endpoints that orchestrate downstream calls.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=EXT-API_COMPOSITION_AGGREGATOR question_id=Q-EXT-AGG-01 option_id=dedicated_composition_endpoint
+    selected_pattern_ids:
+      - EXT-API_COMPOSITION_AGGREGATOR
+  - obligation_id: OBL-OPT-CAF-IAM-01-Q-CAF-IAM-01-AUTO-01-standard_platform_tenant_service
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: runtime_wiring
+    description: 'Standard taxonomy: platform user + tenant user + service principals.'
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-IAM-01 question_id=Q-CAF-IAM-01-AUTO-01 option_id=standard_platform_tenant_service
+    selected_pattern_ids:
+      - CAF-IAM-01
+  - obligation_id: OBL-OPT-CAF-POL-01-Q-AP-POLICY-POINTS-01-gate_all_ops
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Gate all CRUD operations.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=CAF-POL-01 question_id=Q-AP-POLICY-POINTS-01 option_id=gate_all_ops
+    selected_pattern_ids:
+      - CAF-POL-01
+  - obligation_id: OBL-OPT-EXT-API_GATEWAY-Q-EXT-API-GW-01-shared_gateway_and_services
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: runtime_wiring
+    description: 'Default: implement the gateway inside the Control Plane ingress boundary (no standalone gateway product). CP enforces baseline policies; services enforce additional policies with explicit boundaries.'
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=EXT-API_GATEWAY question_id=Q-EXT-API-GW-01 option_id=shared_gateway_and_services
+    selected_pattern_ids:
+      - EXT-API_GATEWAY
+  - obligation_id: OBL-OPT-EXT-AUDITABILITY-Q-EXT-AUDIT-01-security_plus_admin_actions
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: Audit security events plus privileged admin/operator actions.
+    sources:
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        anchor: adopted_option_choices pattern_id=EXT-AUDITABILITY question_id=Q-EXT-AUDIT-01 option_id=security_plus_admin_actions
+    selected_pattern_ids:
+      - EXT-AUDITABILITY
+  - obligation_id: O-TBP-ASGI-01-server-dependency
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: observability_and_config
+    description: 'Materialize the ASGI server dependency in the canonical Python dependency manifest. (TBP: TBP-ASGI-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-ASGI-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-ASGI-01-server-dependency
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-AUTH-MOCK-01-claim-contract
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: policy_enforcement
+    description: 'Materialize the mock auth claim-bearing contract helper used by policy and boundary surfaces. (TBP: TBP-AUTH-MOCK-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-AUTH-MOCK-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-AUTH-MOCK-01-claim-contract
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-AUTH-MOCK-01-boundary-adapter
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: api_boundary_implementation
+    description: 'Materialize the AP auth-context adapter that resolves the mock Authorization/Bearer contract for HTTP boundaries. (TBP: TBP-AUTH-MOCK-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-AUTH-MOCK-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-AUTH-MOCK-01-boundary-adapter
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-AUTH-MOCK-01-ui-claim-builder
+    obligation_kind: other
+    plane_scope: AP
+    capability_id: ui_frontend_scaffolding
+    description: 'Materialize the UI claim-builder that encodes the selected mock Authorization/Bearer payload and any explicit demo persona presets required by the declared UI flows. (TBP: TBP-AUTH-MOCK-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-AUTH-MOCK-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-AUTH-MOCK-01-ui-claim-builder
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-AUTH-MOCK-01-ui-api-helper
+    obligation_kind: other
+    plane_scope: AP
+    capability_id: ui_frontend_scaffolding
+    description: 'Materialize the UI API helper that emits the selected mock Authorization/Bearer contract, preserves claim-over-header conflict behavior, and keeps any demo persona posture explicit. (TBP: TBP-AUTH-MOCK-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-AUTH-MOCK-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-AUTH-MOCK-01-ui-api-helper
     selected_pattern_ids: []
   - obligation_id: O-TBP-COMPOSE-01-compose-candidate
     obligation_kind: other
     plane_scope: cross_plane
     capability_id: runtime_wiring
-    description: "Materialize compose candidate wiring from TBP-COMPOSE-01."
+    description: 'Materialize compose candidate wiring (CP/AP and adopted support services) (TBP: TBP-COMPOSE-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-COMPOSE-01-compose-candidate"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-COMPOSE-01-compose-candidate
     selected_pattern_ids: []
   - obligation_id: O-TBP-COMPOSE-01-dockerfile-cp
     obligation_kind: other
-    plane_scope: CP
+    plane_scope: cross_plane
     capability_id: runtime_wiring
-    description: "Materialize CP Dockerfile wiring from TBP-COMPOSE-01."
+    description: 'Materialize Control Plane Dockerfile for compose builds (TBP: TBP-COMPOSE-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-COMPOSE-01-dockerfile-cp"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-COMPOSE-01-dockerfile-cp
     selected_pattern_ids: []
   - obligation_id: O-TBP-COMPOSE-01-dockerfile-ap
     obligation_kind: other
-    plane_scope: AP
+    plane_scope: cross_plane
     capability_id: runtime_wiring
-    description: "Materialize AP Dockerfile wiring from TBP-COMPOSE-01."
+    description: 'Materialize Application Plane Dockerfile for compose builds (TBP: TBP-COMPOSE-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-COMPOSE-01-dockerfile-ap"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-COMPOSE-01-dockerfile-ap
     selected_pattern_ids: []
   - obligation_id: O-TBP-COMPOSE-01-env-file
     obligation_kind: other
     plane_scope: cross_plane
     capability_id: runtime_wiring
-    description: "Materialize compose env_file contract from TBP-COMPOSE-01."
+    description: 'Materialize local .env file for compose env_file wiring (non-secret defaults) (TBP: TBP-COMPOSE-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-COMPOSE-01-env-file"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-COMPOSE-01-env-file
     selected_pattern_ids: []
   - obligation_id: O-TBP-COMPOSE-01-gitignore
     obligation_kind: other
     plane_scope: cross_plane
     capability_id: runtime_wiring
-    description: "Ensure compose local env artifacts are ignored."
+    description: 'Ensure .env and *.local are ignored in .gitignore (TBP: TBP-COMPOSE-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-COMPOSE-01-gitignore"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-COMPOSE-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-COMPOSE-01-gitignore
     selected_pattern_ids: []
   - obligation_id: O-TBP-FASTAPI-01-composition-root
     obligation_kind: other
-    plane_scope: AP
+    plane_scope: cross_plane
     capability_id: api_boundary_implementation
-    description: "Materialize FastAPI composition-root wiring for AP boundary."
+    description: 'Materialize FastAPI composition root (TBP: TBP-FASTAPI-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-FASTAPI-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-FASTAPI-01-composition-root"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-FASTAPI-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-FASTAPI-01-composition-root
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-FASTAPI-01-dependency-provider-boundary
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: api_boundary_implementation
+    description: 'Materialize FastAPI dependency provider boundary (TBP: TBP-FASTAPI-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-FASTAPI-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-FASTAPI-01-dependency-provider-boundary
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-FASTAPI-01-framework-dependency
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: observability_and_config
+    description: 'Materialize the FastAPI framework dependency in the canonical Python dependency manifest. (TBP: TBP-FASTAPI-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-FASTAPI-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-FASTAPI-01-framework-dependency
     selected_pattern_ids: []
   - obligation_id: O-TBP-PG-01-compose-postgres-service
     obligation_kind: other
-    plane_scope: AP
+    plane_scope: cross_plane
     capability_id: postgres_persistence_wiring
-    description: "Materialize PostgreSQL compose service and DATABASE_URL surface."
+    description: 'Materialize PostgreSQL service in candidate compose wiring without inlining runtime DATABASE_URL ownership (TBP: TBP-PG-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-PG-01-compose-postgres-service"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-PG-01-compose-postgres-service
     selected_pattern_ids: []
   - obligation_id: O-TBP-PG-01-env-contract
     obligation_kind: other
-    plane_scope: AP
+    plane_scope: cross_plane
     capability_id: postgres_persistence_wiring
-    description: "Materialize PostgreSQL env contract examples."
+    description: 'Materialize PostgreSQL environment contract examples (POSTGRES_* and engine-owned references as applicable) (TBP: TBP-PG-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-PG-01-env-contract"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-PG-01-env-contract
     selected_pattern_ids: []
   - obligation_id: O-TBP-PG-01-app-adapter-hook
     obligation_kind: other
-    plane_scope: AP
+    plane_scope: cross_plane
     capability_id: postgres_persistence_wiring
-    description: "Materialize minimal PostgreSQL adapter hook."
+    description: 'Materialize minimal PostgreSQL persistence adapter hook for the application plane (TBP: TBP-PG-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-PG-01-app-adapter-hook"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-PG-01-app-adapter-hook
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-PG-01-driver-dependency
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: observability_and_config
+    description: 'Materialize the PostgreSQL Python driver dependency in the canonical dependency manifest. (TBP: TBP-PG-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-PG-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-PG-01-driver-dependency
     selected_pattern_ids: []
   - obligation_id: O-TBP-PY-01-python-package-markers
     obligation_kind: other
     plane_scope: cross_plane
     capability_id: python_package_markers_materialization
-    description: "Materialize Python package marker files."
+    description: 'Materialize Python package markers for candidate code packages (TBP: TBP-PY-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-PY-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-PY-01-python-package-markers"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-PY-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-PY-01-python-package-markers
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-PY-PACKAGING-01-requirements
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: observability_and_config
+    description: 'Materialize the canonical Python dependency manifest (`requirements.txt`) for runnable candidates. (TBP: TBP-PY-PACKAGING-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-PY-PACKAGING-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-PY-PACKAGING-01-requirements
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-SQLALCHEMY-01-runtime-module
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: persistence_implementation
+    description: 'Materialize the shared SQLAlchemy runtime module (engine/session factory) for ORM-backed persistence. (TBP: TBP-SQLALCHEMY-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-SQLALCHEMY-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-SQLALCHEMY-01-runtime-module
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-SQLALCHEMY-01-metadata-module
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: persistence_implementation
+    description: 'Materialize the shared SQLAlchemy metadata/base surface used by ORM-backed repositories and models. (TBP: TBP-SQLALCHEMY-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-SQLALCHEMY-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-SQLALCHEMY-01-metadata-module
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-SQLALCHEMY-01-schema-bootstrap
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: persistence_implementation
+    description: 'Materialize the SQLAlchemy-owned schema bootstrap surface aligned to the resolved schema management strategy. (TBP: TBP-SQLALCHEMY-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-SQLALCHEMY-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-SQLALCHEMY-01-schema-bootstrap
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-SQLALCHEMY-01-runtime-env-contract
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: runtime_wiring
+    description: 'Keep emitted runtime `.env` DATABASE_URL wiring compatible with the selected SQLAlchemy-backed rails. (TBP: TBP-SQLALCHEMY-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-SQLALCHEMY-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-SQLALCHEMY-01-runtime-env-contract
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-SQLALCHEMY-01-postgres-env-example-contract
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: postgres_persistence_wiring
+    description: 'Keep PostgreSQL env examples compatible with the selected SQLAlchemy-backed rails. (TBP: TBP-SQLALCHEMY-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-SQLALCHEMY-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-SQLALCHEMY-01-postgres-env-example-contract
+    selected_pattern_ids: []
+  - obligation_id: O-TBP-SQLALCHEMY-01-orm-dependency
+    obligation_kind: other
+    plane_scope: cross_plane
+    capability_id: observability_and_config
+    description: 'Materialize the SQLAlchemy ORM dependency in the canonical Python dependency manifest. (TBP: TBP-SQLALCHEMY-01)'
+    sources:
+      - path: architecture_library/phase_8/tbp/atoms/TBP-SQLALCHEMY-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-SQLALCHEMY-01-orm-dependency
     selected_pattern_ids: []
   - obligation_id: O-TBP-UI-REACT-VITE-01-ui-source
     obligation_kind: other
     plane_scope: AP
     capability_id: ui_frontend_scaffolding
-    description: "Materialize React/Vite UI source scaffold."
+    description: 'Materialize React (Vite) SPA source scaffold for local candidate runs (TBP: TBP-UI-REACT-VITE-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-UI-REACT-VITE-01-ui-source"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-UI-REACT-VITE-01-ui-source
     selected_pattern_ids: []
   - obligation_id: O-TBP-UI-REACT-VITE-01-ui-build-container
     obligation_kind: other
-    plane_scope: AP
+    plane_scope: cross_plane
     capability_id: runtime_wiring
-    description: "Materialize UI build/serve container wiring."
+    description: 'Materialize UI build container (multi-stage) that compiles the SPA and serves it via nginx (TBP: TBP-UI-REACT-VITE-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-UI-REACT-VITE-01-ui-build-container"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-UI-REACT-VITE-01-ui-build-container
     selected_pattern_ids: []
   - obligation_id: O-TBP-UI-REACT-VITE-01-ui-nginx-proxy
     obligation_kind: other
-    plane_scope: AP
+    plane_scope: cross_plane
     capability_id: runtime_wiring
-    description: "Materialize UI nginx proxy to AP contract surface."
+    description: 'Materialize nginx proxy configuration so the UI can call the AP without CORS issues (TBP: TBP-UI-REACT-VITE-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-UI-REACT-VITE-01-ui-nginx-proxy"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-UI-REACT-VITE-01-ui-nginx-proxy
     selected_pattern_ids: []
   - obligation_id: O-TBP-UI-REACT-VITE-01-ui-compose-service
     obligation_kind: other
-    plane_scope: AP
+    plane_scope: cross_plane
     capability_id: runtime_wiring
-    description: "Materialize UI compose service for local stack."
+    description: 'Materialize UI service wiring in compose using the declared Dockerfile and nginx proxy config (TBP: TBP-UI-REACT-VITE-01)'
     sources:
-      - path: "architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml"
-        anchor: "extensions.obligations obligation_id=O-TBP-UI-REACT-VITE-01-ui-compose-service"
+      - path: architecture_library/phase_8/tbp/atoms/TBP-UI-REACT-VITE-01/tbp_manifest_v1.yaml
+        anchor: extensions.obligations obligation_id=O-TBP-UI-REACT-VITE-01-ui-compose-service
     selected_pattern_ids: []

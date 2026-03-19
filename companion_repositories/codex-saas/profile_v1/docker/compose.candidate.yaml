@@ -1,79 +1,67 @@
-# CAF_TRACE: generated_by=Contura Architecture Framework (CAF); task_id=TG-90-runtime-wiring; capability=runtime_wiring; instance=codex-saas; trace_anchor=pattern_obligation_id:OBL-RUNTIME-WIRING
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-90-runtime-wiring
+# CAF_TRACE: task_id=TG-TBP-TBP-PG-01-postgres_persistence_wiring
+# CAF_TRACE: capability=runtime_wiring
+# CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-RUNTIME-WIRING
+# CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-COMPOSE-01-compose-candidate
+# CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-PG-01-compose-postgres-service
 name: codex-saas
-
 services:
   cp:
     build:
-      context: ../
+      context: ..
       dockerfile: docker/Dockerfile.cp
-    volumes:
-      - ../:/workspace
-    ports:
-      - "8000:8000"
     env_file:
       - ../.env
+    ports:
+      - "${CP_PORT:-8001}:8001"
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-codex_saas}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-codex_saas}
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "${POSTGRES_PORT:-5432}"
-
   ap:
     build:
-      context: ../
+      context: ..
       dockerfile: docker/Dockerfile.ap
-    volumes:
-      - ../:/workspace
-    ports:
-      - "8001:8000"
     env_file:
       - ../.env
+    ports:
+      - "${AP_PORT:-8000}:8000"
     depends_on:
       cp:
         condition: service_started
       postgres:
         condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-codex_saas}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-codex_saas}
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "${POSTGRES_PORT:-5432}"
-      CP_POLICY_BASE_URL: "${CP_POLICY_BASE_URL:-http://cp:8000}"
-
   ui:
     build:
-      context: ../
+      context: ..
       dockerfile: docker/Dockerfile.ui
-    ports:
-      - "8080:80"
     env_file:
       - ../.env
+    ports:
+      - "${UI_PORT:-8080}:80"
     depends_on:
       ap:
         condition: service_started
       cp:
         condition: service_started
-    environment:
-      UI_API_BASE_PATH: /api
-    labels:
-      - caf.ui_nginx_conf=docker/nginx.ui.conf
-
   postgres:
     image: postgres:16-alpine
-    restart: unless-stopped
-    env_file:
-      - ../.env
-      - ../infrastructure/postgres.env.example
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-codex_saas}"
+      POSTGRES_USER: "${POSTGRES_USER:-codex_saas}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-codex_saas_local_dev}"
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-codex_saas} -d ${POSTGRES_DB:-codex_saas}"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
-
+      retries: 12
 volumes:
-  postgres_data: {}
+  postgres-data:
+x-caf-role-bindings:
+  ui_nginx_proxy_conf: docker/nginx.ui.conf
+  ui_api_contract_path: /api

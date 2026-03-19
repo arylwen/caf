@@ -5,16 +5,18 @@ contracts:
     materiality:
       is_material: true
       indicators:
-        - "CP policy and safety decisions directly constrain AP execution."
-        - "Tenant and identity context must cross CP/AP boundary deterministically."
+        - "cp_ap_runtime_shape_pinned_http"
+        - "policy_and_safety_prechecks_required"
     contract_form: FORM_B_EMBEDDED_SECTION
     contract_ref:
       path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
-      section_heading: Plane Integration Contract (CP <-> AP)
+      section_heading: Plane Integration Contract (CP ↔ AP)
     anchors:
       - anchor_type: design_decision
-        anchor_ref: "system_spec_v1.md:decision_resolutions_v1"
+        anchor_ref: cp_ap_contract_surface
+      - anchor_type: guardrail_ref
+        anchor_ref: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
     justification:
-      why_this_form: "The CP/AP contract is materially coupled to control-plane policy lifecycle and is managed inline with CP design."
+      why_this_form: "CP↔AP integration choices are maintained in the control plane design as a single embedded contract section for rerun-safe optionization."
       why_not_alternatives:
-        - "A separate contract file would duplicate the same runtime-shape and contract-surface choices."
+        - "Standalone contract doc would duplicate the same optionized contract choices and increase drift risk in this phase."

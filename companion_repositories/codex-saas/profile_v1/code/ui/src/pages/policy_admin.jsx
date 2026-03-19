@@ -1,59 +1,76 @@
-// CAF_TRACE: generated_by=Contura Architecture Framework (CAF); task_id=TG-18-ui-policy-admin; capability=ui_frontend_scaffolding; instance=codex-saas; trace_anchor=pattern_obligation_id:OBL-UI-POLICY-ADMIN
-import { useMemo, useState } from "react";
+// CAF_TRACE: task_id=TG-18-ui-policy-admin capability=ui_frontend_scaffolding trace_anchor=pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-source
+import { useState } from "react";
+import { evaluatePolicy } from "../api.js";
 
-import { createPolicy, listPolicies, updatePolicy } from "../api.js";
+const DEFAULT_FORM = {
+  action: "create",
+  resource: "submissions"
+};
 
-export default function PolicyAdminPage({ tenantId, principalId }) {
-  const [policyName, setPolicyName] = useState("default-policy");
-  const [activationState, setActivationState] = useState("draft");
-  const [policyId, setPolicyId] = useState("pol-0001");
+export default function PolicyAdminPage({ persona }) {
+  const [form, setForm] = useState(DEFAULT_FORM);
+  const [status, setStatus] = useState("idle");
+  const [message, setMessage] = useState("");
   const [result, setResult] = useState(null);
-  const context = useMemo(() => ({ tenantId, principalId }), [tenantId, principalId]);
-  const policyListCall = listPolicies(context);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setStatus("loading");
+    setMessage("");
+    setResult(null);
+    try {
+      const payload = await evaluatePolicy(
+        {
+          action: form.action,
+          resource: form.resource
+        },
+        persona
+      );
+      setStatus("success");
+      setResult(payload);
+      setMessage("Policy evaluation succeeded.");
+    } catch (requestError) {
+      setStatus("failure");
+      setMessage(requestError.message || "Policy evaluation failed");
+    }
+  };
 
   return (
     <section>
-      <h3>Policy Admin</h3>
-      <p>Scaffold for tenant-aware policy list/create/edit interactions bound to CP contract surfaces.</p>
-      <pre>{JSON.stringify(policyListCall, null, 2)}</pre>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          setResult(
-            createPolicy(context, {
-              name: policyName,
-              activationState,
-            })
-          );
-        }}
-      >
-        <label>
-          Policy name
-          <input value={policyName} onChange={(event) => setPolicyName(event.target.value)} />
-        </label>
-        <label>
-          Activation state
-          <input value={activationState} onChange={(event) => setActivationState(event.target.value)} />
-        </label>
-        <button type="submit">Create Policy</button>
+      <h2>Policy Admin</h2>
+      <p>Run explicit policy evaluation probes against the declared CP/AP policy decision surface.</p>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="policy-action">Action</label>
+        <select
+          id="policy-action"
+          value={form.action}
+          onChange={(event) => setForm((current) => ({ ...current, action: event.target.value }))}
+        >
+          <option value="list">list</option>
+          <option value="get">get</option>
+          <option value="create">create</option>
+          <option value="update">update</option>
+          <option value="delete">delete</option>
+        </select>
+        <label htmlFor="policy-resource">Resource</label>
+        <select
+          id="policy-resource"
+          value={form.resource}
+          onChange={(event) => setForm((current) => ({ ...current, resource: event.target.value }))}
+        >
+          <option value="workspaces">workspaces</option>
+          <option value="submissions">submissions</option>
+          <option value="reviews">reviews</option>
+          <option value="reports">reports</option>
+        </select>
+        <button type="submit">Evaluate policy</button>
       </form>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          setResult(updatePolicy(context, policyId, { activationState }));
-        }}
-      >
-        <label>
-          Policy id
-          <input value={policyId} onChange={(event) => setPolicyId(event.target.value)} />
-        </label>
-        <label>
-          New state
-          <input value={activationState} onChange={(event) => setActivationState(event.target.value)} />
-        </label>
-        <button type="submit">Update Policy State</button>
-      </form>
-      {result ? <pre>{JSON.stringify(result, null, 2)}</pre> : null}
+      {status === "loading" && <p>Submitting policy probe...</p>}
+      {status === "success" && <p>{message}</p>}
+      {status === "failure" && <p role="alert">Policy probe failed: {message}</p>}
+      {result && (
+        <pre>{JSON.stringify(result, null, 2)}</pre>
+      )}
     </section>
   );
 }

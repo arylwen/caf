@@ -27,25 +27,29 @@ exclude_candidate_ids:
 ```
 
 ## Seeds
-- EXT-API_GATEWAY
-- EXT-BACKEND_FOR_FRONTEND_BFF
-- CAF-IAM-01
+- CAF-AI-01
+- CAF-COMP-01
 - CAF-MTEN-01
 - CAF-PLANE-01
-- CAF-POL-01
 - CAF-TCTX-01
-- CAF-XPLANE-01
 - CTX-01
+- POL-01
 - PST-01
+- SVC-01
+- VAL-01
 
-## Selected candidates (open list: top 16 of 170 reachable; desired_new_grounded=4)
+## Selected candidates (open list: top 16 of 171 reachable; desired_new_grounded=4)
 
 - external_v1:EXT-ANTI_CORRUPTION_LAYER (hop=1, via=complements, from_seed=CTX-01)
   - CTX-01 -[complements]-> EXT-ANTI_CORRUPTION_LAYER
 - external_v1:EXT-API_COMPOSITION_AGGREGATOR (hop=1, via=complements, from_seed=CTX-01)
   - CTX-01 -[complements]-> EXT-API_COMPOSITION_AGGREGATOR
+- external_v1:EXT-API_GATEWAY (hop=1, via=complements, from_seed=CTX-01)
+  - CTX-01 -[complements]-> EXT-API_GATEWAY
 - external_v1:EXT-AUDITABILITY (hop=1, via=complements, from_seed=CTX-01)
   - CTX-01 -[complements]-> EXT-AUDITABILITY
+- external_v1:EXT-BACKEND_FOR_FRONTEND_BFF (hop=1, via=complements, from_seed=CTX-01)
+  - CTX-01 -[complements]-> EXT-BACKEND_FOR_FRONTEND_BFF
 - external_v1:EXT-BACKUP_PITR (hop=1, via=complements, from_seed=CTX-01)
   - CTX-01 -[complements]-> EXT-BACKUP_PITR
 - external_v1:EXT-BLUE_GREEN_DEPLOY (hop=1, via=complements, from_seed=CTX-01)
@@ -68,12 +72,10 @@ exclude_candidate_ids:
   - CTX-01 -[complements]-> EXT-CONFIG_EXTERNALIZATION
 - external_v1:EXT-COST_ALLOCATION_CHARGEBACK (hop=1, via=complements, from_seed=CTX-01)
   - CTX-01 -[complements]-> EXT-COST_ALLOCATION_CHARGEBACK
-- external_v1:EXT-CQRS (hop=1, via=complements, from_seed=CTX-01)
-  - CTX-01 -[complements]-> EXT-CQRS
-- external_v1:EXT-DEAD_LETTER_QUEUE_DLQ (hop=1, via=complements, from_seed=CTX-01)
-  - CTX-01 -[complements]-> EXT-DEAD_LETTER_QUEUE_DLQ
 
 ## Not selected (reachable but beyond reserve_slots)
+- external_v1:EXT-CQRS (hop=1, via=complements, from_seed=CTX-01)
+- external_v1:EXT-DEAD_LETTER_QUEUE_DLQ (hop=1, via=complements, from_seed=CTX-01)
 - external_v1:EXT-DEFENSE_IN_DEPTH (hop=1, via=complements, from_seed=CTX-01)
 - external_v1:EXT-DISTRIBUTED_TRACING (hop=1, via=complements, from_seed=CTX-01)
 - external_v1:EXT-EDGE_GATEWAY (hop=1, via=complements, from_seed=CTX-01)
@@ -97,6 +99,4 @@ exclude_candidate_ids:
 - external_v1:EXT-ORCHESTRATION (hop=1, via=complements, from_seed=CTX-01)
 - external_v1:EXT-OUTBOX_PATTERN (hop=1, via=complements, from_seed=CTX-01)
 - external_v1:EXT-POLICY_AS_CODE_GUARDRAILS (hop=1, via=complements, from_seed=CTX-01)
-- external_v1:EXT-POLYGLOT_PERSISTENCE (hop=1, via=complements, from_seed=CTX-01)
-- external_v1:EXT-PRIVATE_CONNECTIVITY (hop=1, via=complements, from_seed=CTX-01)
-- ... (129 more)
+- ... (130 more)

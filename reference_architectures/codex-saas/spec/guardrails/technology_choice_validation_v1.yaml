@@ -19,6 +19,15 @@ technology_choices_resolved:
       runtime_language: "python"
       runtime_shape: "api_service_http"
       generation_phase: "implementation_scaffolding"
+  platform.dependency_wiring_mode:
+    status: "adopt"
+    selected: "manual_composition_root"
+    effective: "manual_composition_root"
+    allowed_values:
+      - "framework_managed"
+      - "manual_composition_root"
+    source: "architect_choice"
+    constraints: {}
   platform.persistence_orm:
     status: "adopt"
     selected: "sqlalchemy_orm"
@@ -72,5 +81,5 @@ technology_choices_resolved:
       persistence_orm: "sqlalchemy_orm"
 meta:
   derived_by: "tools/caf/guardrails_v1.mjs"
-  derived_at: "2026-03-11T20:41:43.752Z"
+  derived_at: "2026-03-19T11:17:22.243Z"
   rules_source: "tools/caf/config/technology_choice_rules_v1.yaml"

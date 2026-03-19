@@ -1,35 +1,19 @@
-## Task Spec Digest
-- task_id: `TG-20-api-boundary-workspaces`
-- title: `Implement API boundary for workspaces`
-- primary capability: `api_boundary_implementation`
-- task graph source: `caf/task_graph_v1.yaml`
-
-## Inputs declared by task
-- required: `reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml`
-- required: `reference_architectures/codex-saas/design/playbook/application_design_v1.md`
-- required: `reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml`
+# Task Report: TG-20-api-boundary-workspaces
 
 ## Inputs consumed
-- `caf/application_domain_model_v1.yaml`: consumed `workspaces` operations (`list`, `create`, `update`) and tenant-scoped context.
-- `caf/application_design_v1.md`: enforced AP boundary/service separation and policy hook expectations.
-- `caf/contract_declarations_v1.yaml`: aligned context carriers to `BND-CP-AP-01` contract requirements.
-- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability api_boundary_implementation`: validated composition-root expectation path for FastAPI boundary capability.
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml: consumed FastAPI composition-root and mock-auth rails.
+- reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml: consumed `workspaces` operations (`list`, `get`, `create`, `update`).
+- reference_architectures/codex-saas/design/playbook/application_design_v1.md: consumed AP boundary and tenant isolation constraints.
+- reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml: consumed resolved TBP set for auth + FastAPI role bindings.
 
-## Step execution evidence
-- Read workspace operation scope and constrained routing to list/create/update only.
-- Added workspace handlers in `code/AP/interfaces/inbound/workspaces_router.py` with required tenant/principal headers.
-- Kept boundary logic thin by delegating to `code/AP/application/resource_services.py`.
-- Enforced policy and context propagation before every business action using CP policy client integration.
-- Materialized FastAPI composition root for trace anchor `O-TBP-FASTAPI-01-composition-root` at `code/AP/main.py`.
+## Claims
+- Workspace API boundary is implemented with tenant-scoped auth and policy checks.
+- FastAPI boundary adapter/dependency seams are materialized at TBP-bound paths under `code/ap/api`.
+- Workspace handler contracts are stable for service facade and UI integration.
 
-## Outputs produced
-- `code/AP/interfaces/inbound/workspaces_router.py`
-- `code/AP/application/resource_services.py`
-- `code/AP/application/policy_client.py`
-- `code/AP/main.py`
-- `code/AP/interfaces/inbound/http_router.py`
+## Evidence anchors
+- companion_repositories/codex-saas/profile_v1/code/ap/api/auth_context.py:L1-L11
+- companion_repositories/codex-saas/profile_v1/code/ap/api/dependencies.py:L1-L27
+- companion_repositories/codex-saas/profile_v1/code/ap/api/resources.py:L40-L99
+- companion_repositories/codex-saas/profile_v1/code/ap/main.py:L1-L63
 
-## Rails and TBP satisfaction
-- All writes remained under `companion_repositories/codex-saas/profile_v1/code/**`.
-- Boundary handlers avoid persistence access and delegate through service seam.
-- TBP role-binding expectation for `api_boundary_implementation` is satisfied at `code/AP/main.py` with required evidence strings (`FastAPI`, `include_router`).
