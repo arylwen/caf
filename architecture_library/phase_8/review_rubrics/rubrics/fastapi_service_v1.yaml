@@ -25,12 +25,13 @@ checks:
       - "inspect the FastAPI composition root and boundary wiring for exception handlers or equivalent fail-closed mapping"
       - "fail if PermissionError/authorization failure paths can bubble through API routes as uncaught framework 500s"
   - check_id: RR-FA-SCHEMA-BOOTSTRAP-01
-    severity: high
+    severity: blocker
     category: correctness
-    rule: "When resolved schema_management_strategy is code_bootstrap, the FastAPI composition root invokes the shared schema bootstrap hook before serving traffic."
+    rule: "When resolved schema_management_strategy is code_bootstrap, the FastAPI composition root invokes the shared schema bootstrap hook before serving traffic, and repository/request paths are not the primary bootstrap owner."
     evidence_hints:
       - "inspect main/app factory surfaces for lifespan or startup wiring that calls the shared bootstrap hook"
-      - "fail if code_bootstrap is selected but schema bootstrap remains a dormant helper that is never invoked at runtime"
+      - "inspect repository factory / dependency-provider surfaces for request-path-first bootstrap ownership"
+      - "fail if code_bootstrap is selected but schema bootstrap remains dormant, or if repository factories own the primary schema bootstrap path at request time"
   - check_id: RR-FA-ARCH-01
     severity: medium
     category: architecture

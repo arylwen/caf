@@ -3,14 +3,14 @@ kind: review_rubric
 rubric_id: RR-WEB-SPA-01
 title: Web SPA frontend wiring and interaction completeness (v1)
 applies_when:
-  - condition: "task.required_capabilities contains ui_frontend_scaffolding"
+  - condition: "task.required_capabilities contains ui_frontend_scaffolding OR task.required_capabilities contains ux_frontend_realization"
 checks:
   - check_id: RR-SPA-WIRE-01
     severity: blocker
     category: correctness
     rule: "SPA shell/page tasks must materialize real UI wiring, not only descriptive or placeholder content presented as implemented functionality."
     evidence_hints:
-      - "inspect code/ui/src/App.jsx, code/ui/src/api.js, and the task-touched page files"
+      - "inspect code/ui/src/App.jsx or code/ux/src/App.jsx, the matching shared api helper, and the task-touched page files"
       - "look for event handlers, route/page selection wiring, useEffect/useMemo/useState backed data flow, or submit handlers that are actually used by rendered UI"
       - "fail if task reports claim implementation but touched pages only render static explanatory prose/lists with no observable interaction path"
   - check_id: RR-SPA-WIRE-02
@@ -25,7 +25,7 @@ checks:
     category: architecture
     rule: "API-backed SPA interactions must use the shared UI API helper / declared contract surface rather than ad hoc raw fetch calls or disconnected mock data."
     evidence_hints:
-      - "inspect code/ui/src/api.js and confirm task pages import or use the shared helper when API interaction is claimed"
+      - "inspect code/ui/src/api.js or code/ux/src/api.js and confirm task pages import or use the shared helper when API interaction is claimed"
       - "prefer declared local contract paths such as /api/* and /cp/* over hard-coded localhost ports"
       - "fail when same-origin proxy wiring is expected locally but the shared helper still targets direct localhost backend ports"
   - check_id: RR-SPA-STATE-01
@@ -40,7 +40,7 @@ checks:
     category: operability
     rule: "The shared UI API helper must preserve backend error detail for non-2xx responses when available, so emitted SPA failures remain diagnosable instead of collapsing into status-code-only noise."
     evidence_hints:
-      - "inspect code/ui/src/api.js for a shared non-2xx path that reads JSON detail and/or response text before throwing"
+      - "inspect the shared UI/UX api helper for a non-2xx path that reads JSON detail and/or response text before throwing"
       - "fail if the helper only throws messages like API request failed: 401 with no backend detail path"
       - "prefer one shared helper behavior over per-page ad hoc parsing"
   - check_id: RR-SPA-FORM-01
@@ -67,3 +67,19 @@ checks:
       - "inspect list/detail rendering for identifiers such as workspace_id, submission_id, or similar keys when downstream forms require them"
       - "prefer direct select/copy/prefill controls or clearly visible IDs over hidden state that users cannot act on"
       - "fail if a downstream create/update form requires an upstream identifier that the page never exposes or hands off"
+  - check_id: RR-SPA-ACTION-01
+    severity: blocker
+    category: completeness
+    rule: "Explicit primary actions and main surfaces declared in application_product_surface_v1.md must remain visibly reachable from realized SPA surfaces; they may not be silently compressed away."
+    evidence_hints:
+      - "inspect caf/application_product_surface_v1.md for the explicit primary actions, main surfaces, and shell expectations"
+      - "verify each declared action is either reachable from a visible control/path, clearly co-located into another realized surface, or explicitly deferred in the task report"
+      - "fail when the shell claims completion while an explicit product action such as create, publish, or admin management has no reachable owner"
+  - check_id: RR-SPA-ACTION-02
+    severity: blocker
+    category: correctness
+    rule: "Rendered create/update/publish controls must call a coherent shared helper path that matches the named action; import/call mismatches and semantic inversions fail closed."
+    evidence_hints:
+      - "compare imported helper symbols to the handlers bound to visible controls"
+      - "fail when create/update/publish labels call the wrong helper, call a missing symbol, or rely on dead code paths"
+      - "prefer one shared API/helper seam over per-control ad hoc fetch logic"

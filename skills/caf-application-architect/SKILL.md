@@ -219,6 +219,8 @@ C2) Application plane domain model (planner-facing)
 - Derive `resource_names` from this file only:
   - preferred: `api_candidates.resources[*].name`
   - fallback: entity names from `domain.bounded_contexts[*].aggregates[*].entities[*].name`
+- When `api_candidates.resources[*].name` is present, treat it as the canonical machine resource key for resource-scoped task ids and downstream post-plan helpers.
+- Preserve the declared separator shape in that machine key (for example `widget_versions` stays `widget_versions`; do not silently rewrite it to `widget-versions`).
 - If neither yields names, fall back only as a last resort to a narrative resource list in the application spec or the `domain_and_resources_v1` bridge block.
 
 C3) System/control-plane domain model (planner-facing)
@@ -263,7 +265,7 @@ F) Adopted decision options (fail-closed)
 	    - Minimal fix proposal (no repair scripts):
 	      1) Preferred: rerun `/caf arch <name>` (design) so the CAF-managed planning payloads include all adopted decisions.
 	      2) If a pattern should not drive planning/code yet: change its `status` in `system_spec_v1.md` → `decision_resolutions_v1` from `adopt` to `defer`, then rerun `/caf arch <name>`.
-	      3) If you must hotfix: manually edit the CAF-managed `planning_pattern_payload_v1.selected_patterns` blocks to add the missing IDs (keep YAML valid), then rerun `/caf arch <name>`.
+	      3) Do not return a manual hotfix to the CAF-managed `planning_pattern_payload_v1` blocks. Treat missing IDs there as producer drift, fix the producing framework seam, and rerun `/caf arch <name>` so the handoff is regenerated cleanly.
 - If the payload union and the spec-derived tuples disagree, FAIL-CLOSED with a feedback packet. The design post-gate should have caught this earlier; do not continue planning on drift.
 - Record the adopted option’s `summary` and `payload` (verbatim) for grounding; do not reinterpret.
 
@@ -274,9 +276,10 @@ G) Resolved UI pins (optional; fail-closed when required but invalid)
   - `ui.kind`
   - `ui.framework`
   - `ui.deployment_preference`
+  - `ui.component_system`
 - Technology/runtime choices MUST come only from this resolved `ui` object.
-- Separately, read `reference_architectures/<name>/spec/playbook/application_spec_v1.md` → `ARCHITECT_EDIT_BLOCK: ui_product_surface_v1` as narrative grounding for shell/navigation/page wording.
-- Treat `ui_product_surface_v1` as product-surface intent only; it MUST NOT override or duplicate technology pins.
+- Separately, read `reference_architectures/<name>/spec/playbook/application_product_surface_v1.md` (fallback: legacy `application_spec_v1.md` → `ARCHITECT_EDIT_BLOCK: ui_product_surface_v1`) as narrative grounding for shell/navigation/page wording.
+- Treat `application_product_surface_v1.md` (or legacy `ui_product_surface_v1`) as product-surface intent only; it MUST NOT override or duplicate technology pins.
 - If the resolved file is missing or the `ui` object cannot be read when required, FAIL-CLOSED.
 
 ### Step 2 — Consume compiler-owned `pattern_obligations_v1.yaml`
@@ -383,6 +386,9 @@ A) Plane runtime scaffold tasks
 B) Contract scaffolding tasks (two per boundary)
 - `TG-00-CONTRACT-<boundary_id>-AP` → `contract_scaffolding`
 - `TG-00-CONTRACT-<boundary_id>-CP` → `contract_scaffolding`
+- Never emit an unsuffixed boundary-wide contract task such as `TG-00-CONTRACT-<boundary_id>`. That shape is invalid for new planning output.
+- For every material boundary, emit exactly two contract tasks in new planning output: one `-AP` task and one `-CP` task.
+- If you cannot justify both plane-specific tasks from the boundary declaration, stop and surface a blocker rather than collapsing them into one task.
 
 Contract trace anchors (required; deterministic):
 
@@ -500,7 +506,7 @@ Rules (non-negotiable):
   - `selected_pattern:<PATTERN_ID>` (for adopted-pattern-triggered seeds), or
   - `pinned_input:<PIN_KEY>` (for pin-triggered seeds), or
   - `pinned_input:ui.present` (for UI-triggered seeds driven by resolved profile parameters).
-- When `ui_product_surface_v1` is present and non-placeholder, use it to refine task titles, steps, DoD wording, and review questions for the already-authoritative UI tasks; do not invent extra task ids from prose alone.
+- When `application_product_surface_v1.md` (or legacy `ui_product_surface_v1`) is present and non-placeholder, use it to refine task titles, steps, DoD wording, and review questions for the already-authoritative UI tasks; do not invent extra task ids from prose alone.
 
 F) Cross-cutting decision option tasks (when applicable)
 

@@ -1,0 +1,50 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-UI-REACT-VITE-SHADCN-01
+binds_to:
+  - atom_path: ui.present
+    atom_value: true
+  - atom_path: ui.kind
+    atom_value: web_spa
+  - atom_path: ui.framework
+    atom_value: react
+  - atom_path: ui.component_system
+    atom_value: shadcn
+requires_tbps:
+  - TBP-UI-REACT-VITE-01
+conflicts_with_tbps: []
+layout:
+  scaffold_directories:
+    - code/ux/
+    - code/ux/src/components/ui/
+  role_bindings:
+    ux_components_json:
+      path_template: code/ux/components.json
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - style
+        - aliases
+        - components
+    ux_ui_primitives_dir:
+      path_template: code/ux/src/components/ui/
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - ui
+extensions:
+  obligations:
+    - obligation_id: O-TBP-UI-REACT-VITE-SHADCN-01-ux-components-registry
+      title: Materialize shadcn-oriented component-system configuration for the richer UX web lane
+      required_capability: ux_frontend_realization
+      role_binding_key: ux_components_json
+  gates:
+    - gate_id: G-UX-SHADCN-COMPONENT-SYSTEM
+      title: Resolved shadcn component-system choice must remain an implementation substrate rather than the owner of UX meaning
+      gate_kind: coding_standard
+      required_capability: ux_frontend_realization
+      criteria:
+        - UX meaning and primitive/composite family selection stay owned by ux_design_v1.md and ux_visual_system_v1.md.
+        - shadcn-backed primitives align to the semantic visual-system families instead of redefining product intent in component code.
+      review_questions:
+        - Are shadcn-backed primitives grounded in the semantic visual-system families rather than ad-hoc component naming?
+        - Does the UX lane keep `components.json` and primitive scaffolding under `code/ux/` without mutating the smoke-test UI lane?
+      focus_areas: [correctness, portability]
+      severity_threshold_override: high

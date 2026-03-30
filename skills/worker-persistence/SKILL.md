@@ -91,7 +91,7 @@ Persistence ORM realization rule (non-negotiable):
 - If `persistence.orm == sqlalchemy_orm`, production persistence code MUST realize ORM-backed surfaces explicitly.
   - Acceptable signals include SQLAlchemy engine/session/model/bootstrap surfaces (for example `create_engine`, `Session`/`sessionmaker`, mapped models, or metadata bootstrap hooks).
   - Do NOT satisfy ORM-backed rails with raw `psycopg`/cursor-only repository logic in production modules.
-  - If `schema_management_strategy == code_bootstrap`, the ORM-backed persistence boundary MUST expose and invoke a deterministic bootstrap hook (for example metadata create-all) without leaking transport concerns.
+  - If `schema_management_strategy == code_bootstrap`, the ORM-backed persistence boundary MUST expose a deterministic bootstrap hook (for example metadata create-all), and the runtime composition root MUST invoke it before serving traffic without leaking transport concerns. Repository factories and request-scoped handlers MUST NOT be the primary schema-materialization path.
 - If `persistence.orm == raw_sql`, direct driver/cursor delegation may be used, but the repository boundary and fail-closed runtime selection rules above still apply.
 - If the selected ORM cannot be realized from the available TBP/adapter surfaces, FAIL-CLOSED instead of silently degrading to a different persistence posture.
 
@@ -121,8 +121,10 @@ Operation completeness invariants (generic; avoid combinatorial sprawl):
 Schema management strategy alignment (generic):
 - Read `schema_management_strategy` from `caf/profile_parameters_resolved.yaml`.
 - If `schema_management_strategy: code_bootstrap`:
-  - Ensure there is a deterministic schema initialization hook within the persistence boundary (either provided by the adapter surface or implemented in persistence code) that is invoked at startup or on first use, without leaking transport concerns into persistence.
+  - Ensure there is a deterministic schema initialization hook within the persistence boundary (either provided by the adapter surface or implemented in persistence code).
+  - Runtime composition roots MUST invoke that hook before serving traffic; do not treat repository factories, route handlers, or first-request code paths as the primary schema-materialization path.
   - When `persistence.orm` is ORM-backed, the bootstrap hook MUST remain ORM-owned (for example metadata/bootstrap surfaces), not a raw driver-only cursor bootstrap.
+  - A request-path fallback is only acceptable as a secondary convergence guard when it is synchronized and does not replace startup/bootstrap ownership.
 - If `schema_management_strategy` indicates migrations (e.g., `alembic_migrations`):
   - Do not silently bootstrap schema at runtime.
   - Ensure the persistence boundary is compatible with migrations posture (the schema init hook must be absent or a no-op, and the companion repo includes clear entrypoints/docs for applying migrations per the TBP).

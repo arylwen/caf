@@ -44,11 +44,11 @@ These are not documentation and should not be treated as library canon:
 - Do not duplicate normative guidance across maintainer docs, skills, and playbooks when a canonical contract already exists.
 - Prefer links and concise summaries over copy-pasted doctrine.
 
-## Next
+## Find out more
 
 [Skill authoring](03_skill_authoring.md) — Apply the boundary rules on this page to an actual maintainer workflow.
 
-## Related
+## You might also be interested in
 
 - [Pattern library workflow](04_pattern_library_workflow.md) — See how canonical ownership affects pattern-library edits and reviews.
 - [Feedback packets and fail-closed](07_feedback_packets_and_fail_closed.md) — Understand how boundary violations and missing evidence surface operationally.

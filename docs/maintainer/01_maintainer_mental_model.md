@@ -40,11 +40,11 @@ Archive retired or superseded documents here when they still have historical val
 - If it is a working note, private operational note, roadmap, experiment, or postmortem, put it in `docs/dev/maintainer/`.
 - If it is retired but worth preserving, archive it under `docs/dev/history/`.
 
-## Next
+## Find out more
 
 [Canonical sources and boundaries](02_canonical_sources_and_boundaries.md) — Learn where framework rules live so you can change CAF without creating duplicate doctrine.
 
-## Related
+## You might also be interested in
 
 - [Skill authoring](03_skill_authoring.md) — Add or adjust a skill while preserving CAF ownership boundaries.
 - [Command surfaces and routing](05_command_surfaces_and_routing.md) — Understand where maintainer-facing commands are allowed to operate.

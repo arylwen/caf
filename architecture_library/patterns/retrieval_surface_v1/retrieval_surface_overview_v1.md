@@ -22,7 +22,7 @@ To reduce token footprint, CAF also maintains **derived split surfaces**:
 Each line is a JSON object with fields:
 
 - `key` (string; globally unique)
-- `namespace` (string; one of `caf_v1 | core_v1 | external_v1`)
+- `namespace` (string; one of `caf_v1 | core_v1 | external_v1 | ux_v1`)
 - `id` (string; pattern_id)
 - `name` (string)
 - `summary` (string)
@@ -87,6 +87,7 @@ Two profiles are defined:
 
 - `arch_scaffolding`: pins→spec scaffolding. Narrow scope (`caf_v1 + core_v1`).
 - `solution_architecture`: spec→design work. Wider scope (`caf_v1 + core_v1 + external_v1`).
+- `ux_design`: `/caf ux` work. Uses the same canonical substrate, but normally consumes the curated `static_semantic_subset_ux_design_v1.jsonl` shortlist plus typed graph expansion rather than the full surface.
 
 The retrieval owner worker always loads the same JSONL and then applies the chosen view.
 
@@ -120,3 +121,8 @@ Legacy indices/playbooks have been retired. If you observe retrieval regressions
 - 
 
 
+
+
+## UX retrieval scaling posture
+
+Package 7 adds `ux_v1` to the canonical substrate but does **not** change the token-discipline rule. The UX lane should normally load `static_semantic_subset_ux_design_v1.jsonl` (30 records) and then widen via graph expansion. This is the same anti-context-exhaustion pattern already used elsewhere in CAF: curated shortlist first, full graph only for deterministic widening.

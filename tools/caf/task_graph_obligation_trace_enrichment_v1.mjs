@@ -5,7 +5,8 @@ import { createRequire } from 'node:module';
 import { parseYamlString } from './lib_yaml_v2.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
-import { renderFeedbackPacketV1, nowStampYYYYMMDD } from './lib_feedback_packets_v1.mjs';
+import { renderFeedbackPacketV1, nowStampYYYYMMDD, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
+import { normalizeResourceTaskKey } from './lib_plane_domain_models_v1.mjs';
 
 const require = createRequire(import.meta.url);
 const jsyaml = require('./vendor/js-yaml.min.js');
@@ -79,6 +80,41 @@ function parseAdoptedOptionSourceAnchor(anchor) {
     option_id: optionMatch[1],
   };
 }
+
+function uniqueStrings(values) {
+  const out = [];
+  const seen = new Set();
+  for (const value of Array.isArray(values) ? values : []) {
+    const s = String(value || '').trim();
+    if (!s || seen.has(s)) continue;
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+function parseApResourceKeyFromSourceAnchor(anchor) {
+  const s = String(anchor || '').trim();
+  if (!s) return '';
+  const m = s.match(/(?:^|\s)api_candidates\.resources(?:\s+resource_key|\s+name)=([A-Za-z0-9_-]+)/);
+  if (!m) return '';
+  return normalizeResourceTaskKey(m[1]);
+}
+function apResourceTaskKeysFromObligation(obligation, token) {
+  const fromSources = [];
+  for (const src of Array.isArray(obligation?.sources) ? obligation.sources : []) {
+    const key = parseApResourceKeyFromSourceAnchor(src?.anchor);
+    if (key) fromSources.push(key);
+  }
+  const upperToken = String(token || '').trim();
+  const lowerToken = upperToken.toLowerCase();
+  const fromFallbacks = [
+    normalizeResourceTaskKey(lowerToken.replace(/-/g, '_')),
+    normalizeResourceTaskKey(lowerToken),
+    slugify(upperToken),
+  ];
+  return uniqueStrings(fromSources.concat(fromFallbacks));
+}
+
 function parseOptionFromObligation(obligation) {
   for (const src of Array.isArray(obligation?.sources) ? obligation.sources : []) {
     const parsed = parseAdoptedOptionSourceAnchor(src?.anchor);
@@ -105,9 +141,18 @@ function resolveCandidates(tasks, obligation) {
   if (['OBL-CP-POLICY-SURFACE', 'OBL-AP-POLICY-ENFORCEMENT', 'OBL-TENANT-CONTEXT-PROPAGATION', 'OBL-AP-AUTH-MODE'].includes(id)) return byId('TG-35-policy-enforcement-core');
   m = id.match(/^OBL-AP-RESOURCE-(.+)-(API|SERVICE|PERSISTENCE)$/);
   if (m) {
-    const slug = slugify(m[1]);
     const prefix = m[2] === 'API' ? 'TG-20-api-boundary-' : m[2] === 'SERVICE' ? 'TG-30-service-facade-' : 'TG-40-persistence-';
-    return byId(`${prefix}${slug}`);
+    const matches = [];
+    const seenTaskIds = new Set();
+    for (const key of apResourceTaskKeysFromObligation(obligation, m[1])) {
+      for (const task of byId(`${prefix}${key}`)) {
+        const taskId = String(task?.task_id || '').trim();
+        if (!taskId || seenTaskIds.has(taskId)) continue;
+        seenTaskIds.add(taskId);
+        matches.push(task);
+      }
+    }
+    return matches;
   }
   m = id.match(/^OBL-CP-ENTITY-(.+)-PERSISTENCE$/);
   if (m) return byId(`TG-40-persistence-cp-${slugify(m[1])}`);

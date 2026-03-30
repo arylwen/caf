@@ -64,11 +64,11 @@ This is a deterministic selection of the smallest artifact set needed to answer:
 
 See: [`06_caf_ask_internals.md`](06_caf_ask_internals.md)
 
-## Next
+## Find out more
 
 [CAF ask internals](06_caf_ask_internals.md) — See how CAF assembles a bounded context pack from the traceability surfaces described here.
 
-## Related
+## You might also be interested in
 
 - [Decision visibility](02_decision_visibility.md) — Focus on the artifacts used to answer “what did we decide?”.
 - [Work visibility and sizing](03_work_visibility_sizing.md) — Focus on the artifacts used to answer “what work exists and how big is it?”.

@@ -1,0 +1,77 @@
+schema_version: phase8_tbp_manifest_v1
+tbp_id: TBP-UX-SERVICE-REACT-VITE-01
+binds_to:
+  - atom_path: ui.present
+    atom_value: true
+  - atom_path: ui.kind
+    atom_value: web_spa
+  - atom_path: ui.framework
+    atom_value: react
+  - atom_path: deployment.mode
+    atom_value: docker_compose
+  - atom_path: deployment.mode
+    atom_value: podman_compose
+requires_tbps:
+  - TBP-COMPOSE-01
+  - TBP-UI-REACT-VITE-01
+conflicts_with_tbps: []
+layout:
+  scaffold_directories:
+    - docker/
+  role_bindings:
+    ux_dockerfile:
+      path_template: docker/Dockerfile.ux
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - node
+        - npm
+        - nginx
+        - npm run build
+    ux_nginx_proxy_conf:
+      path_template: docker/nginx.ux.conf
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - proxy_pass
+        - ap:8000
+        - cp:8001
+        - /api
+        - /cp
+    ux_compose_service:
+      path_template: docker/compose.candidate.yaml
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+        - "ux:"
+        - Dockerfile.ux
+extensions:
+  obligations:
+    - obligation_id: O-TBP-UX-SERVICE-REACT-VITE-01-ux-build-container
+      title: Materialize UX build container (multi-stage) that compiles the separate UX lane and serves it via nginx
+      required_capability: ux_service_packaging_wiring
+      role_binding_key: ux_dockerfile
+    - obligation_id: O-TBP-UX-SERVICE-REACT-VITE-01-ux-nginx-proxy
+      title: Materialize nginx proxy configuration for the separate UX lane so it can call AP/CP without CORS issues
+      required_capability: ux_service_packaging_wiring
+      role_binding_key: ux_nginx_proxy_conf
+    - obligation_id: O-TBP-UX-SERVICE-REACT-VITE-01-ux-compose-service
+      title: Materialize dedicated ux service wiring in compose using the declared Dockerfile and nginx proxy config
+      required_capability: ux_service_packaging_wiring
+      role_binding_key: ux_compose_service
+  gates:
+    - gate_id: G-UX-SERVICE-SEPARATE-PACKAGING
+      title: Separate UX packaging must remain isolated from the smoke-test UI lane
+      gate_kind: coding_standard
+      required_capability: ux_service_packaging_wiring
+      criteria:
+        - "Dockerfile.ux, nginx.ux.conf, and compose ux: wiring target code/ux and must not replace the existing ui: service or code/ui root."
+        - The ux service remains on the current REST/OpenAPI AP/CP boundary rather than introducing a new backend integration model.
+        - When the selected UX Dockerfile copies sources or baked config from the companion repo root, the compose build context remains aligned to that COPY root unless both surfaces are rewritten coherently in the same task.
+        - UX packaging must be runnable directly from companion-repo state; do not assume a pre-existing `code/ux/package-lock.json` unless the same bounded task intentionally materializes and copies it.
+      review_questions:
+        - Does the ux service packaging stay separate from the smoke-test UI lane?
+        - Do compose and nginx wiring keep AP/CP calls on stable same-origin /api and /cp paths?
+        - Does UX packaging keep compose build.context aligned with the Dockerfile COPY root rather than narrowing context under code/ux by accident?
+      focus_areas: [portability, correctness]
+      severity_threshold_override: high
+      notes: |
+        Implementation hint (non-normative): prefer a multi-stage Dockerfile that copies `package.json`, runs `npm install --no-audit --no-fund`, then runs `npm run build` in a Node image, and copies `dist/` into an nginx image.
+        Only switch to `npm ci` + `package-lock.json` when the lockfile is intentionally materialized as a committed companion-repo artifact in the same bounded task.

@@ -15,6 +15,7 @@ ADDS_EVIDENCE_HOOKS:
 - E-TBP-SQLALCHEMY-01-01: SQLAlchemy runtime surfaces are present (for example `create_engine`, `sessionmaker`, `DeclarativeBase`, or mapped metadata ownership).
 - E-TBP-SQLALCHEMY-01-02: Repository modules adopt SQLAlchemy session/engine helpers rather than issuing raw cursor-only persistence logic.
 - E-TBP-SQLALCHEMY-01-03: When schema management is `code_bootstrap`, a deterministic ORM-owned bootstrap hook is present (for example metadata bootstrap / `create_all`).
+- E-TBP-SQLALCHEMY-01-04: FastAPI/ASGI composition roots invoke the SQLAlchemy bootstrap hook before serving traffic; request-path repository factories are not the primary schema materialization path.
 
 ADDS_STRUCTURAL_VALIDATIONS:
 - V-TBP-SQLALCHEMY-01-01: SQLAlchemy realization complements, but does not replace, the selected database engine TBP (for example `TBP-PG-01` still owns PostgreSQL wiring/env/service concerns).

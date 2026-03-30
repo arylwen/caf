@@ -115,11 +115,11 @@ Fix:
 - `architecture_library/patterns/caf_meta_v1/caf_command_surface_meta_patterns_v1.md`
 - `architecture_library/patterns/caf_meta_v1/caf_skill_portability_and_adapter_shim_meta_patterns_v1.md`
 
-## Next
+## Find out more
 
 [Feedback packets and fail-closed](07_feedback_packets_and_fail_closed.md) — See how routing mistakes or missing prerequisites surface when CAF stops progression.
 
-## Related
+## You might also be interested in
 
 - [Skill authoring](03_skill_authoring.md) — Pair command-surface changes with the worker and skill changes they often require.
 - [Debugging generated outputs](06_debugging_generated_outputs.md) — Inspect the most useful maintainer-facing evidence when routing or dispatch goes wrong.

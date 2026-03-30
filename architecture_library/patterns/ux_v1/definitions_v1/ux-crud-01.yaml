@@ -1,0 +1,43 @@
+pattern_id: UX-CRUD-01
+name: List-Detail-Edit Flow
+summary: Use a consistent list → detail → create/edit flow when the product must support routine record navigation, editing, validation, and stateful save/submit behavior.
+intent: Provide a stable resource-oriented UX flow for common create, view, update, and status-changing work without forcing users through ad hoc route transitions.
+context: Resource management products, tenant administration, catalog/configuration screens, business object maintenance, and routine user-initiated updates.
+problem: Without an explicit CRUD/detail/edit posture, navigation and validation drift across screens, drafts become unclear, and repeated edits accumulate inconsistent save/submit behavior.
+forces_tradeoffs: Consistency vs local optimization; fast inline edits vs safe validation; shallow flows vs explicit state transitions; generic scaffolding vs real domain behavior.
+solution_structure_behavior: Model the flow as list/detail/edit with explicit entry/exit points, clear dirty-state handling, consistent save/cancel semantics, and visible status changes. Use inline editing only where it does not hide validation or transition consequences.
+consequences: Improves predictability and training cost; may feel heavier than inline editing if overused. Requires coordination with validation, session, and wizard patterns where workflows become staged or privileged.
+implementation_notes: Do not treat every business flow as CRUD. When state transitions, approvals, or staged entry dominate, switch to review, wizard, or async patterns instead of stretching CRUD too far.
+examples_known_uses: Workspace settings, policy records, customer profiles, project definitions, configuration catalogs.
+related_patterns: |
+  depends_on: SVC-01
+  depends_on: VAL-01
+  depends_on: CTX-01
+  complements: UX-WIZARD-01
+  complements: UX-SESSION-01
+extended_definition: |
+  Model the flow as list/detail/edit with explicit entry/exit points, clear dirty-state handling, consistent save/cancel semantics, and visible status changes. Use inline editing only where it does not hide validation or transition consequences.
+
+caf:
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-UX-CRUD-01
+  minimum_evidence:
+  - Use a consistent list → detail → create/edit flow when the product must support routine record navigation, editing, validation, and stateful save/submit behavior.
+  - Without an explicit CRUD/detail/edit posture, navigation and validation drift across screens, drafts become unclear, and repeated edits accumulate inconsistent save/submit behavior.
+  definition_of_done:
+  - UX design shows where this interaction pattern is used and what state/recovery posture it requires.
+  - Planning artifacts preserve the interaction pattern without collapsing it into generic smoke-test UI scaffolding.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No frontend framework, component library, or vendor choice is implied by this pattern.

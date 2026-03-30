@@ -21,3 +21,12 @@ checks:
       is N/A), and inputs consumed include all required task inputs (or explain omissions).
     evidence_hints:
       - "compare task report sections to the task's steps and inputs in caf/task_graph_v1.yaml"
+  - check_id: RR-TR-UX-COVERAGE-01
+    severity: high
+    category: completeness
+    rule: >
+      For ui_frontend_scaffolding or ux_frontend_realization tasks, the task report includes both an
+      interaction matrix and a primary action coverage matrix grounded in the declared product surface.
+    evidence_hints:
+      - "inspect caf/task_reports/<task_id>.md for the interaction matrix and primary action coverage matrix"
+      - "compare the coverage matrix against caf/application_product_surface_v1.md when the task implements UI/UX surfaces"

@@ -114,14 +114,16 @@ Minimum outputs to materialize when PostgreSQL is resolved:
 - Use env var substitution for configuration (e.g., `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`).
 - Add a named volume for persistence.
 - Ensure AP depends on postgres (in addition to CP where applicable).
-- Ensure AP exports a `DATABASE_URL` env var (string form) for the in-repo runtime to consume.
+- When AP/CP run inside compose against the `postgres` service, set each container service `DATABASE_URL` explicitly to a compose-internal DSN built from `POSTGRES_*` variables and the service DNS name `postgres`; do not blindly forward the shared repo-root `${DATABASE_URL}` into those containers.
+- Keep the shared repo-root/local env contract host-runnable; the compose file owns the container-local override.
 
 3) Env example contract
 - Create `infrastructure/postgres.env.example` with a minimal, local-dev-safe set of variables:
   - `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
-  - `POSTGRES_HOST=postgres`, `POSTGRES_PORT=5432`
-  - `DATABASE_URL=postgresql+psycopg://...@postgres:5432/...`
-  - When SQLAlchemy rails are resolved, keep the emitted DATABASE_URL compatible with the SQLAlchemy-owned URL contract; do not invent a compose- or postgres-specific variant.
+  - `POSTGRES_HOST=localhost`, `POSTGRES_PORT=5432`
+  - `DATABASE_URL=postgresql+psycopg://...@localhost:5432/...`
+  - For compose-backed AP/CP services, emit the container-local `DATABASE_URL` override in `docker/compose.candidate.yaml` using the internal service DNS name `postgres`.
+  - When SQLAlchemy rails are resolved, keep emitted DATABASE_URL values compatible with the SQLAlchemy-owned URL contract; do not invent a non-SQLAlchemy compose-specific variant.
 
 4) Minimal adapter module
 - Materialize the Postgres adapter module at the TBP role binding path for `postgres_adapter_module`.

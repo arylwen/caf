@@ -1,0 +1,42 @@
+pattern_id: UX-DENSITY-01
+name: Dense Panel, Card, and Toolbar Rhythm
+summary: Use a repeatable rhythm for cards, panels, toolbars, and tables so information-dense screens stay readable and visually composed.
+intent: Help operational screens feel intentionally designed by controlling spacing, grouping, and toolbar/action placement across worklists and detail surfaces.
+context: Worklists, split-view detail screens, review surfaces, dashboards, data-heavy SaaS pages.
+problem: Information-dense pages become visually exhausting when cards, tables, side panels, and toolbars use inconsistent spacing and grouping logic.
+forces_tradeoffs: Density vs readability; reuse vs local optimization; panel nesting vs simplicity; more visual grouping vs heavier chrome.
+solution_structure_behavior: Establish a small number of repeatable surface patterns for header+actions, primary content panel, side rail, summary cards, and inline status sections. Keep spacing and grouping consistent across pages.
+consequences: Makes dense screens easier to scan and style consistently; may constrain local freedom in individual screens.
+implementation_notes: Favor consistent panel padding, toolbar alignment, compact-but-readable row density, and predictable side-rail widths.
+examples_known_uses: Review queues, submission detail screens, admin workspaces, analytics dashboards, report preparation tools.
+related_patterns: |
+  complements: UX-WORKLIST-01
+  complements: UX-REVIEW-01
+  complements: UX-VISUAL-01
+  complements: UX-SEARCH-01
+extended_definition: |
+  Establish a small number of repeatable surface patterns for header+actions, primary content panel, side rail, summary cards, and inline status sections. Keep spacing and grouping consistent across pages.
+
+caf:
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-UX-DENSITY-01
+  minimum_evidence:
+  - Use a repeatable rhythm for cards, panels, toolbars, and tables so information-dense screens stay readable and visually composed.
+  - Information-dense pages become visually exhausting when cards, tables, side panels, and toolbars use inconsistent spacing and grouping logic.
+  definition_of_done:
+  - UX design describes the primary surface rhythm for list, detail, and split-view screens.
+  - Planning/build artifacts can point to a finite set of reusable surface compositions rather than one-off page styling.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No CSS framework or charting library choice is implied by this pattern.

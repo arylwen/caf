@@ -141,6 +141,11 @@ For each task in the selected execution set:
 2) Immediately run `worker-code-reviewer` for that task’s artifacts (fail-closed).
 3) Mark the task completed only if both worker + review succeed.
 
+Current-session dispatch rule:
+- When this build lane is already running inside a CAF CLI runner session, dispatch worker + reviewer work in the CURRENT session.
+- Do NOT spawn a nested `codex exec`, nested `claude` runner, or any equivalent child runner merely to hop into a worker skill.
+- The deterministic requirement is capability → worker selection and fail-closed review, not runner recursion.
+
 **Context rule:** do NOT paste the entire task graph into a worker prompt. Provide only:
 - the selected task object (task_id/title/steps/DoD/inputs/trace_anchors), and
 - the list of its `depends_on` task_ids (so the worker knows upstream context), and
@@ -151,6 +156,14 @@ For each task in the selected execution set:
 - The `build_dispatch_manifest_v1.md` file (Step 2b) is a precomputed view of this mapping.
 
 On any worker/review failure: write a feedback packet and STOP.
+
+Nested-runner denial rule:
+- Treat nested runner execution as an escape hatch, not the default dispatch mechanism.
+- If you are already inside a CAF CLI runner session, an `Access is denied`, `permission denied`, `EPERM`, or equivalent nested-runner refusal means you chose the wrong dispatch path; switch to CURRENT-session worker + reviewer dispatch and continue.
+- Only emit the scripted access-denied packet when worker/reviewer dispatch truly requires a nested runner in the current environment and no current-session dispatch path is available.
+- If that rare case occurs, do NOT hand-write a packet. Instead run:
+  - `node tools/caf/build_dispatch_exec_access_denied_packet_v1.mjs <instance_name> Codex <error summary ...>`
+- Then STOP and print only the resulting packet path.
 
 After the selected execution set succeeds, rerun the same helper command from Step 2c to refresh `.caf-state` from the newly written evidence.
 

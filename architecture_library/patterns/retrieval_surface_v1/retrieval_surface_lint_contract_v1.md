@@ -108,7 +108,7 @@ If a pattern lacks explicit trigger cues, derive them only from grounded text al
 
 ## Bridge cue coverage (ship blockers)
 
-To keep retrieval aligned across namespaces, every `core_v1` and `external_v1` pattern record MUST include:
+To keep retrieval aligned across namespaces, every `core_v1`, `external_v1`, and `ux_v1` pattern record MUST include:
 
 - at least **2** `terms[]` entries where:
   - `kind: trigger_cue`, and

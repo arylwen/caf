@@ -45,6 +45,7 @@ That split keeps technical bindings explicit without burying architectural reaso
   - `ui.kind`
   - `ui.framework`
   - `ui.deployment_preference`
+  - `ui.component_system`
 - `application_spec_v1.md` owns the **product-facing UI description**:
   - who the UI is for
   - key pages/journeys
@@ -149,6 +150,7 @@ This table is a **docs/user convenience view** derived from the canonical Phase 
 | `ui.kind` | `web_spa` | `web_spa` |
 | `ui.framework` | `react` | `react` |
 | `ui.deployment_preference` | `separate_ui_service`, `served_by_application_plane` | `separate_ui_service` |
+| `ui.component_system` | `shadcn` | `shadcn` |
 
 ### Recommendation for docs/user
 

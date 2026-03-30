@@ -59,11 +59,11 @@ If you add a new question class, do it in a drift-resistant way:
 
 This keeps the token footprint predictable while maintaining answer quality.
 
-## Next
+## Find out more
 
 [Patterns to obligations to tasks](07_patterns_to_obligations_to_tasks.md) — Follow how the ask context ultimately ties back to adopted patterns and downstream work.
 
-## Related
+## You might also be interested in
 
 - [Gates and fail-closed](08_gates_and_fail_closed.md) — See how CAF stops progression when the required evidence for an answer or downstream step is missing.
 - [Architect workflows](10_architect_workflows.md) — Apply the ask surfaces in the main architect-facing review loops.

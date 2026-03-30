@@ -604,6 +604,7 @@ function extractUiAtomsFromPins(pinsObj) {
   add('ui.kind', ui.kind);
   add('ui.framework', ui.framework);
   add('ui.deployment_preference', ui.deployment_preference);
+  add('ui.component_system', ui.component_system);
   return { atoms: out, ui };
 }
 
@@ -1163,6 +1164,7 @@ if (invalidPlaneShapePins.length > 0) {
         ...(normalizeScalar(uiSignal?.kind) ? { kind: normalizeScalar(uiSignal.kind) } : {}),
         ...(normalizeScalar(uiSignal?.framework) ? { framework: normalizeScalar(uiSignal.framework) } : {}),
         ...(normalizeScalar(uiSignal?.deployment_preference) ? { deployment_preference: normalizeScalar(uiSignal.deployment_preference) } : {}),
+        ...(normalizeScalar(uiSignal?.component_system) ? { component_system: normalizeScalar(uiSignal.component_system) } : {}),
       },
     } : {}),
     deployment: {
@@ -1327,6 +1329,7 @@ if (invalidPlaneShapePins.length > 0) {
       'ui.kind': normalizeScalar(resolvedObj?.ui?.kind),
       'ui.framework': normalizeScalar(resolvedObj?.ui?.framework),
       'ui.deployment_preference': normalizeScalar(resolvedObj?.ui?.deployment_preference),
+      'ui.component_system': normalizeScalar(resolvedObj?.ui?.component_system),
     } : {}),
   };
 
@@ -1431,6 +1434,7 @@ if (invalidPlaneShapePins.length > 0) {
       ...(atomsForResolution['ui.kind'] ? { 'ui.kind': atomsForResolution['ui.kind'] } : {}),
       ...(atomsForResolution['ui.framework'] ? { 'ui.framework': atomsForResolution['ui.framework'] } : {}),
       ...(atomsForResolution['ui.deployment_preference'] ? { 'ui.deployment_preference': atomsForResolution['ui.deployment_preference'] } : {}),
+      ...(atomsForResolution['ui.component_system'] ? { 'ui.component_system': atomsForResolution['ui.component_system'] } : {}),
     },
     seed_tbps: res.seed,
     resolved_tbps: res.resolved,

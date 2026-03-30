@@ -65,11 +65,11 @@ The goal is to make “what to fix next” explicit and auditable.
 - **Gate** — A deterministic contract check that blocks progress on mismatch.
 - **Feedback packet** — A structured failure report telling you what to fix next.
 
-## Next
+## Find out more
 
 [Instances, phases, and state](05_instances_phases_and_state.md) — See where the concepts on this page show up in a real CAF instance.
 
-## Related
+## You might also be interested in
 
 - [PRD workflow](12_prd_workflow.md) — Follow how requirement text becomes pins, decisions, and later obligations.
 - [Architecture library](06_architecture_library.md) — Browse the reusable patterns and rules that CAF retrieves and applies.

@@ -1,0 +1,43 @@
+pattern_id: UX-ASYNC-01
+name: Async Job Progress and Result Surface
+summary: Use an async progress/result surface when work continues after the initiating interaction and users need trustworthy visibility into pending, running, completed, or failed outcomes.
+intent: Provide a UX shape for background execution that preserves operator trust, supports refresh/retry behavior, and prevents hidden long-running work.
+context: Evaluations, exports, imports, report generation, background processing, queued jobs, AI-assisted generation, workflow execution.
+problem: If background execution is hidden behind synchronous UI assumptions, users do not know whether work started, what state it is in, or how to recover from failure.
+forces_tradeoffs: Immediate feedback vs truthful latency; live updates vs polling simplicity; per-job detail vs list-level overview; retry convenience vs idempotency and duplicate-work risks.
+solution_structure_behavior: Use explicit job states, progress/result surfaces, status transitions, and retry-safe actions. Connect initiation points to result lookup and failure-recovery guidance.
+consequences: Improves trust for long-running work; adds status/state complexity and may require coordination with queues, notifications, or rate limits.
+implementation_notes: Async UX is not only a spinner. It needs durable state, clear transitions, and visible recovery posture.
+examples_known_uses: Background report generation, AI evaluation runs, exports/imports, file processing, batch workflows.
+related_patterns: |
+  depends_on: OBS-01
+  depends_on: EXT-QUEUE_BASED_LOAD_LEVELING
+  complements: UX-RECOVERY-01
+  complements: UX-WORKLIST-01
+  complements: UX-BULK-01
+extended_definition: |
+  Use explicit job states, progress/result surfaces, status transitions, and retry-safe actions. Connect initiation points to result lookup and failure-recovery guidance.
+
+caf:
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-UX-ASYNC-01
+  minimum_evidence:
+  - Use an async progress/result surface when work continues after the initiating interaction and users need trustworthy visibility into pending, running, completed, or failed outcomes.
+  - If background execution is hidden behind synchronous UI assumptions, users do not know whether work started, what state it is in, or how to recover from failure.
+  definition_of_done:
+  - UX design shows where this interaction pattern is used and what state/recovery posture it requires.
+  - Planning artifacts preserve the interaction pattern without collapsing it into generic smoke-test UI scaffolding.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No frontend framework, component library, or vendor choice is implied by this pattern.

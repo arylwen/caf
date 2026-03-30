@@ -3,23 +3,72 @@ surface:
   path: architecture_library/patterns/retrieval_surface_v1/pattern_retrieval_surface_v1.jsonl
   record_schema: key, namespace, id, name, summary, plane, family, definition_path, relations[{kind, id}], terms[{value, kind}]
 profiles:
+  ux_design:
+    description: Retrieval view for the UX lane. Prefer patterns that help interpret journeys, interaction pressures, state/recovery posture, and browser/session consequences without stealing upstream system-design ownership.
+    include_namespaces:
+    - ux_v1
+    - caf_v1
+    - core_v1
+    - external_v1
+    max_candidates: 30
+    open_definitions_top_k: 30
+    diversity_constraints:
+      max_per_plane: 20
+      max_per_family: 4
+    namespace_coverage:
+      min_ux_v1: 4
+      min_external_v1: 3
+      min_core_v1: 2
+      min_caf_v1: 2
+      note: UX retrieval should center ux_v1 patterns first, then bridge into CAF/core/external patterns that explain constraints, session posture, and system touchpoints.
+    fill_to_max_candidates: true
+    exclude_candidate_ids:
+    - CAF-MODEL-01
+    graph_expansion:
+      enabled: true
+      reserve_slots: 4
+      oversample_factor: 3
+      max_hops: 2
+      relation_kinds:
+      - depends_on
+      - refines
+      - complements
+      - alternative_to
+      max_new_candidates: 6
+      max_opened_definitions_for_graph: 12
+    coverage_rules:
+    - id: review_or_approval
+      when_any_terms:
+      - review
+      - approval
+      - approve
+      - reject
+      - reviewer
+      require_families:
+        VAL: 1
+      note: When review/approval pressure is present, ensure at least one boundary/validation-oriented pattern remains visible to the UX lane.
+    - id: async_or_progress
+      when_any_terms:
+      - async
+      - progress
+      - pending
+      - running
+      - completed
+      - failed
+      require_namespaces:
+        external_v1: 1
+      note: Long-running or progress-shaped UX should retain at least one external pattern candidate that informs async/result posture.
   arch_scaffolding:
-    description: "Narrow retrieval view for pins\u2192spec scaffolding. Prefer CAF + core patterns; exclude external patterns\
-      \ by default.\n"
+    description: "Narrow retrieval view for pins\u2192spec scaffolding. Prefer CAF + core patterns; exclude external patterns by default.\n"
     include_namespaces:
     - caf_v1
     - core_v1
-    # Hard cap (token budget): the worker must not emit/ground more than this count.
-    # If recall is insufficient, rely on graph expansion rather than raising this.
     max_candidates: 15
     open_definitions_top_k: 15
     diversity_constraints:
       max_per_plane: 20
       max_per_family: 5
     fill_to_max_candidates: true
-    # Active-retrieval exclusions for new-work profiles.
-    # These ids remain in the canonical library for legacy traceability, but MUST NOT
-    # be surfaced as first-class retrieval candidates for new instances.
     exclude_candidate_ids:
     - CAF-MODEL-01
     graph_expansion:
@@ -46,16 +95,13 @@ profiles:
       - tenant-scoped
       require_families:
         MTEN: 1
-      note: "If tenant signals are present in the retrieval blob, ensure \u22651 MTEN-family candidate is emitted (prefer\
-        \ CAF-MTEN-01)."
+      note: "If tenant signals are present in the retrieval blob, ensure \u22651 MTEN-family candidate is emitted (prefer CAF-MTEN-01)."
   solution_architecture:
-    description: "Widened retrieval view for spec\u2192design (solution architecture) work. Includes external patterns when\
-      \ required by the design.\n"
+    description: "Widened retrieval view for spec\u2192design (solution architecture) work. Includes external patterns when required by the design.\n"
     include_namespaces:
     - caf_v1
     - core_v1
     - external_v1
-    # Hard cap (token budget): higher than arch_scaffolding due to broader solution coverage.
     max_candidates: 30
     open_definitions_top_k: 30
     diversity_constraints:
@@ -64,8 +110,7 @@ profiles:
     namespace_coverage:
       min_external_v1: 3
       min_core_v1: 2
-      note: "Ship blocker: ensure external patterns are present in candidates for solution architecture retrieval. Ship blocker:\
-        \ ensure caf_v1 patterns are present (\u22653) so CAF obligations and contracts are not starved."
+      note: "Ship blocker: ensure external patterns are present in candidates for solution architecture retrieval. Ship blocker: ensure caf_v1 patterns are present (\u22653) so CAF obligations and contracts are not starved."
       min_caf_v1: 2
     fill_to_max_candidates: true
     exclude_candidate_ids:

@@ -18,6 +18,8 @@ Tips:
 - Keep real platform-owned entities here even if the application plane also references them.
 - It is fine to leave the starter example in place for a first CAF run.
 - This file is the main place to make control-plane persistence visible to planning.
+- If you author `### Aggregate: <Name>` with direct `Fields`, CAF should normalize those fields into the aggregate-root entity in the planner-facing YAML. Use separate `### Entity:` sections only for distinct child records.
+- In the derived YAML, every field becomes `name` / `type` / `required`. Mark optional fields explicitly with words like `optional`, `nullable`, `may be omitted`, or a trailing `?`; otherwise CAF should treat the field as required.
 
 ---
 
@@ -217,6 +219,11 @@ Persist as a control-plane lifecycle record.
 ---
 
 ## Operational use cases
+
+Authoring rule:
+- Every name listed under `**Touches**` must match an aggregate or entity declared above in this same plane document.
+- If an operational use case depends on a concept that is not yet modeled in this plane, add the platform-owned aggregate/entity above or leave the use case out until ownership is clear.
+- Do not rely on another plane document to satisfy `Touches` names for this system-plane file.
 
 ### Approve a policy change
 

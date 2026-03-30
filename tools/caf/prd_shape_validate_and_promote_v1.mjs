@@ -24,7 +24,7 @@ import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlString } from './lib_yaml_v2.mjs';
 import { annotatePrdPromoted, dumpYamlStable } from './lib_shape_lifecycle_v1.mjs';
 import { createScopedCheckpoint } from './lib_checkpoint_v1.mjs';
-import { renderFeedbackPacketV1 } from './lib_feedback_packets_v1.mjs';
+import { renderFeedbackPacketV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 import { parsePrdMarkdownV1 } from './lib_prd_parse_v1.mjs';
 import { extractAllowedValuesFromParameterizedTemplatesMd } from './lib_param_allowed_values_from_md_v1.mjs';
 
@@ -53,6 +53,10 @@ function nowStampYYYYMMDD() {
 
 function nowIsoTimestamp() {
   return new Date().toISOString();
+}
+
+function stripLeadingBom(text) {
+  return String(text ?? '').replace(/^[\uFEFF\u200B]+/, '');
 }
 
 function normalizeScalar(v) {
@@ -494,7 +498,7 @@ export async function internal_main(argv) {
   // V-05
   let rationaleObj = null;
   try {
-    rationaleObj = JSON.parse(rationaleText);
+    rationaleObj = JSON.parse(stripLeadingBom(rationaleText));
   } catch (e) {
     errors.push(`rationale JSON parse error: ${String(e?.message ?? e)}`);
   }
@@ -618,6 +622,9 @@ export async function internal_main(argv) {
       die('PRD checkpoint creation failed after promotion.', 5);
     }
   }
+
+  resolveFeedbackPacketsBySlugSync(feedbackDirAbs, 'prd-shape-validate-failed');
+  if (args.promote) resolveFeedbackPacketsBySlugSync(feedbackDirAbs, 'prd-checkpoint-create-failed');
 
   console.log(`OK: PRD shape proposal validated${args.promote ? ' and promoted' : ''} for instance '${instanceName}'.`);
   return 0;

@@ -1,0 +1,42 @@
+pattern_id: UX-REPORT-01
+name: Editorial Findings and Report Composition
+summary: Present findings, evidence, and exported reports with editorial readability so users can scan, trust, and present outcomes without deciphering raw scaffolding.
+intent: Give review/result/report surfaces a readable narrative structure that supports trust, auditability, and hero-demo quality.
+context: Review result pages, exported reports, evidence summaries, compliance findings, AI-assisted decisions, executive-ready output pages.
+problem: Findings and reports lose credibility when dense evidence is dumped into raw tables or unstructured cards with little hierarchy.
+forces_tradeoffs: Brevity vs completeness; narrative readability vs raw evidence density; export fidelity vs interactive richness.
+solution_structure_behavior: Use a readable summary-first layout with section hierarchy, callout metrics, grouped findings, evidence drawers/appendices, and export-friendly composition.
+consequences: Improves trust and presentation quality; requires stronger content hierarchy and more careful layout than generic CRUD detail pages.
+implementation_notes: Use strong headings, summary callouts, restrained metric emphasis, readable line lengths, and clear transitions between summary, findings, and supporting evidence.
+examples_known_uses: Compliance reports, review findings, decision memos, exported audit summaries, AI result summaries.
+related_patterns: |
+  complements: UX-EXPLAIN-01
+  complements: UX-REVIEW-01
+  complements: UX-VISUAL-01
+  complements: UX-ASYNC-01
+extended_definition: |
+  Use a readable summary-first layout with section hierarchy, callout metrics, grouped findings, evidence drawers/appendices, and export-friendly composition.
+
+caf:
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-UX-REPORT-01
+  minimum_evidence:
+  - Present findings, evidence, and exported reports with editorial readability so users can scan, trust, and present outcomes without deciphering raw scaffolding.
+  - Findings and reports lose credibility when dense evidence is dumped into raw tables or unstructured cards with little hierarchy.
+  definition_of_done:
+  - UX design identifies which surfaces need editorial/report readability rather than generic detail-page treatment.
+  - Planning/build artifacts preserve summary-first composition and evidence readability expectations.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No PDF engine, rich-text editor, or export vendor is implied by this pattern.

@@ -31,7 +31,7 @@ import { parseYamlString } from './lib_yaml_v2.mjs';
 import { internal_main as traceability_internal_main } from './worker_traceability_mindmap_v3.mjs';
 import { internal_main as retrieval_debug_internal_main } from './build_retrieval_debug_v1.mjs';
 import { internal_main as candidate_report_internal_main } from './build_candidate_selection_report_v1.mjs';
-import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 import { collectAdoptedOptionSelections } from './extract_adopted_decision_options_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
@@ -456,23 +456,6 @@ function collectAdoptedOptionIdsFromChoice(choiceObj) {
   return out;
 }
 
-function resolveRuntimeShapeAdoption(planeIntegrationChoicesObj, key) {
-  // Expected structure:
-  // { choices: { cp_runtime_shape: { options: [...]|{...} }, ap_runtime_shape: ... } }
-  const choices = planeIntegrationChoicesObj && typeof planeIntegrationChoicesObj === 'object' ? planeIntegrationChoicesObj.choices : null;
-  const choiceObj = choices && typeof choices === 'object' ? choices[key] : null;
-  if (!choiceObj) return { ok: false, reason: `Missing ${key} choice block`, adopted: null, adopted_all: [] };
-  const { adopted } = collectAdoptedOptionIdsFromChoice(choiceObj);
-  if (adopted.length !== 1) {
-    return {
-      ok: false,
-      reason: `${key} must have exactly one adopted option (found ${adopted.length})`,
-      adopted: null,
-      adopted_all: adopted,
-    };
-  }
-  return { ok: true, reason: null, adopted: adopted[0], adopted_all: adopted };
-}
 
 export async function internal_main(argv = process.argv.slice(2)) {
   argv = Array.isArray(argv) ? argv : [];
@@ -819,79 +802,6 @@ if (violations.length) {
   }
 
 
-  // Planning runtime-shape preconditions should be satisfied by design outputs (token-saver).
-  // Validate CP/AP runtime shape adoptions are materialized in control_plane_design_v1.md.
-  const cpMd = await readUtf8(cpDesignPath);
-  const planeChoicesYaml = extractArchitectEditYaml(cpMd, 'plane_integration_contract_choices_v1');
-  if (!planeChoicesYaml) {
-    const pkt = await writeFeedbackPacket(
-      repoRoot,
-      instanceName,
-      'design-postgate-runtime-shapes-missing',
-      'Missing ARCHITECT_EDIT_BLOCK: plane_integration_contract_choices_v1 (cannot read runtime shapes for planning)',
-      [
-        `Rerun /caf arch ${instanceName} (design) so control_plane_design_v1.md materializes cp_runtime_shape + ap_runtime_shape adoptions.`,
-        'Maintainer: ensure the CP design producer emits the canonical plane_integration_contract_choices_v1 schema (cp_runtime_shape + ap_runtime_shape + cp_ap_contract_surface).',
-        'Reference: architecture_library/phase_8/86_phase_8_plane_integration_contract_choices_schema_v1.yaml and templates/plane_integration_contract_v1.template.md.',
-      ],
-      [`file: reference_architectures/${instanceName}/design/playbook/control_plane_design_v1.md`]
-    );
-    process.stdout.write(pkt + '\n');
-    return 3;
-  }
-
-  let planeChoicesObj;
-  try {
-    planeChoicesObj = parseYamlString(planeChoicesYaml, `${cpDesignPath}:plane_integration_contract_choices_v1`) || {};
-  } catch (e) {
-    const evidence = [
-      `file: reference_architectures/${instanceName}/design/playbook/control_plane_design_v1.md`,
-      `error: ${String(e && e.message ? e.message : e)}`,
-    ];
-    pushUnsafeScalarEvidence(evidence, planeChoicesYaml, 'plane_integration_contract_choices_v1');
-    const pkt = await writeFeedbackPacket(
-      repoRoot,
-      instanceName,
-      'design-postgate-runtime-shapes-missing',
-      'Could not parse plane_integration_contract_choices_v1 YAML (cannot validate runtime shapes for planning)',
-      [
-        `Fix the YAML syntax inside plane_integration_contract_choices_v1 in control_plane_design_v1.md, then rerun /caf arch ${instanceName}.`,
-        'If a scalar contains `: ` (common in option summaries), quote the value or rephrase it.',
-        'If this was produced by a script/template, open a maintainer ticket and include this packet.',
-      ],
-      evidence
-    );
-    process.stdout.write(pkt + '\n');
-    return 3;
-  }
-
-  const cpShape = resolveRuntimeShapeAdoption(planeChoicesObj, 'cp_runtime_shape');
-  const apShape = resolveRuntimeShapeAdoption(planeChoicesObj, 'ap_runtime_shape');
-  if (!cpShape.ok || !apShape.ok) {
-    const reasons = [];
-    if (!cpShape.ok) reasons.push(cpShape.reason);
-    if (!apShape.ok) reasons.push(apShape.reason);
-    const pkt = await writeFeedbackPacket(
-      repoRoot,
-      instanceName,
-      'design-postgate-runtime-shapes-missing',
-      'Planning requires CP/AP runtime shape adoptions to be materialized in control_plane_design_v1.md',
-      [
-        `Preferred: rerun /caf arch ${instanceName} (design) so the CP design producer materializes runtime shape facts.`,
-        'If you intentionally deferred runtime shapes: adopt exactly one option for each (cp_runtime_shape and ap_runtime_shape) or set the planning run aside.',
-        'Maintainer: open a ticket to fix the CP design producer/template to emit the canonical runtime-shape choices block (schema + required keys) and ensure adopted options are carried forward.',
-        'Reference: architecture_library/phase_8/86_phase_8_plane_integration_contract_choices_schema_v1.yaml and templates/plane_integration_contract_v1.template.md.',
-      ],
-      [
-        `file: reference_architectures/${instanceName}/design/playbook/control_plane_design_v1.md`,
-        `missing/ambiguous: ${reasons.join(' | ')}`,
-        `expected keys: cp_runtime_shape, ap_runtime_shape (each exactly one option status=adopt)`,
-      ]
-    );
-    process.stdout.write(pkt + '\n');
-    return 3;
-  }
-
   // Emit deterministic derived views for the design phase (MP-19: import + call).
   // These are projections only; they must not introduce new decisions.
   //
@@ -962,6 +872,9 @@ if (violations.length) {
     }
   }
 
+
+  const packetsDir = path.join(layout.instRoot, 'feedback_packets');
+  resolveFeedbackPacketsBySlugSync(packetsDir, 'design-postgate-planning-payload-unreadable');
 
   return 0;
 }

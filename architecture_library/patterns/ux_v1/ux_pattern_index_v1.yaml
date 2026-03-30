@@ -1,0 +1,80 @@
+index_version: ux_pattern_index_v1
+patterns:
+- pattern_id: UX-WORKLIST-01
+  name: Operational Worklist and Triage Surface
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-worklist-01.yaml
+- pattern_id: UX-CRUD-01
+  name: List-Detail-Edit Flow
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-crud-01.yaml
+- pattern_id: UX-REVIEW-01
+  name: Review and Approval Workspace
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-review-01.yaml
+- pattern_id: UX-SEARCH-01
+  name: Search, Filter, and Sort Workspace
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-search-01.yaml
+- pattern_id: UX-BULK-01
+  name: Bulk Action with Preview and Partial Results
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-bulk-01.yaml
+- pattern_id: UX-WIZARD-01
+  name: Multi-Step Wizard and Resume
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-wizard-01.yaml
+- pattern_id: UX-ASYNC-01
+  name: Async Job Progress and Result Surface
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-async-01.yaml
+- pattern_id: UX-SESSION-01
+  name: Session, Role, and Tenant-Aware Browser Posture
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-session-01.yaml
+- pattern_id: UX-RECOVERY-01
+  name: Empty, Error, and Recovery Guidance
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-recovery-01.yaml
+- pattern_id: UX-EXPLAIN-01
+  name: Auditability and Explainability Surface
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-explain-01.yaml
+- pattern_id: UX-VISUAL-01
+  name: Calm Operational Shell and Visual Hierarchy
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-visual-01.yaml
+- pattern_id: UX-DENSITY-01
+  name: Dense Panel, Card, and Toolbar Rhythm
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-density-01.yaml
+- pattern_id: UX-REPORT-01
+  name: Editorial Findings and Report Composition
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  source_path: architecture_library/patterns/ux_v1/definitions_v1/ux-report-01.yaml

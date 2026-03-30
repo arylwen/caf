@@ -111,15 +111,49 @@ This does **not** replace architect adoption. It exists so downstream phases can
 
 ### 5) Second `/caf arch <instance>`
 
-Elaborates the next phase, typically design-oriented outputs that planning depends on.
+Consumes the adopted spec-side architecture state and elaborates the design bundle that planning depends on.
+
+Typical inputs include:
+
+- adopted `*_spec` playbooks
+- spec-side domain-model source docs
+- resolved guardrails and checkpointed lifecycle state
+- supporting instance files that materially affect design retrieval
+
+Typical outputs include:
+
+- `design/playbook/control_plane_design_v1.md`
+- `design/playbook/application_design_v1.md`
+- `design/playbook/contract_declarations_v1.yaml`
+- normalized YAML domain-model views
+- `design/playbook/design_summary_v1.md`
+- CAF-managed planning payload blocks
+
+This is where CAF should currently make UX-relevant **system/design** choices legible, such as interface posture, BFF-adjacent shaping, and application-side interaction structure that planning or a later UX lane may need.
 
 ### 6) `/caf plan <instance>`
 
 Consumes the adopted / elaborated architecture state and produces obligations, task graph, and other planning artifacts.
 
+Planning depends mainly on the main design documents, contract declarations, normalized domain-model YAML views, and any CAF-managed planning bridge surfaces emitted by the later architecture step.
+
+Summaries and retrieval/debug sidecars still matter for explanation and audit, but they should support the handoff rather than become the only thing planning reads.
+
 ### 7) `/caf build <instance>`
 
 Generates candidate build outputs after the earlier lifecycle gates have been satisfied.
+
+### 8) `/caf ux <instance>`, `/caf ux plan <instance>`, `/caf ux build <instance>`
+
+These are public follow-on commands for the richer UX lane.
+
+Run them in order:
+
+- `/caf ux <instance>` after the second `/caf arch <instance>` to derive the canonical UX design and visual-system artifacts
+- `/caf ux plan <instance>` after `/caf ux <instance>` to compile the UX task graph, plan, and backlog
+- `/caf ux build <instance>` after the main `/caf build <instance>` to realize the richer UX lane against the already-built backend/runtime truth
+
+This lane is additive. It stays on top of the current REST/OpenAPI runtime surfaces and does not replace the smoke-test UI path.
 
 ## How architect control is preserved
 
@@ -160,11 +194,21 @@ Operationally, CAF now treats `/caf prd` as **strongly expected by default**.
 
 For the launch workflow, the practical rule is simple: run `/caf prd` before you treat the first `/caf arch` scaffold as your stable baseline. If you skip it, CAF will surface an advisory packet so you can correct course without getting blocked.
 
-## Next best link
+Advanced fallback: when a detailed PRD is not yet available, an architect may curate the authoritative shape directly and use domain-model source material to support the later lifecycle. That path is valid, but it is intentionally documented as a fallback rather than the main lifecycle story because CAF will carry less prose-derived product intent downstream.
+
+There is also an architect-operated fallback for cases where a detailed PRD is not yet available. In that path, the architect can:
+
+- curate `spec/playbook/architecture_shape_parameters.yaml` directly,
+- mark it as `architect_curated`, and
+- provide enough domain-model source material for the first scaffold to be meaningful.
+
+That fallback is valid, but it is intentionally **not** the recommended default because it carries less prose-derived intent downstream than the PRD-first path.
+
+## Find out more
 
 [Quickstart](03_quickstart.md) — Run the default sequence on a fresh instance after you understand the lifecycle model.
 
-## Top 3 related links
+## You might also be interested in
 
 - [PRD → Architecture Shape](12_prd_workflow.md) — Go deeper on the promotion step that makes the lifecycle safe.
 - [Answering questions with CAF](14_answering_questions_with_caf.md) — Use the ask surface to inspect the lifecycle state you just created.

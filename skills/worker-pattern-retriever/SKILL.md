@@ -16,6 +16,7 @@ This worker is the **single owner** of pattern retrieval across CAF phases.
 **Execution routing (ship rule):** For phase execution, invoke the phase-specialized skills:
 - `skills/worker-pattern-retriever-arch-scaffolding/SKILL.md`
 - `skills/worker-pattern-retriever-solution-architecture/SKILL.md`
+- `skills/worker-pattern-retriever-ux-design/SKILL.md`
 
 This SKILL remains the canonical reference for shared constraints and format rules.
 
@@ -240,7 +241,7 @@ NOTE (ship blocker): the retrieval context blob is **script-owned**.
     - single-line `terms[*].value`
     - length caps for capped kinds
     - ≥1 `trigger_cue`
-    - for `core_v1` and `external_v1`: ≥2 `trigger_cue` entries that are **exact** phrases from `bridge_lexicon_v1.yaml`
+    - for `core_v1`, `external_v1`, and `ux_v1`: ≥2 `trigger_cue` entries that are **exact** phrases from `bridge_lexicon_v1.yaml`
 
 - If any strict check fails for an opened/emitted record:
   - write a feedback packet `BP-YYYYMMDD-pattern-retrieval-lint.md` naming the offending record `key` + `definition_path` + violated rule(s)

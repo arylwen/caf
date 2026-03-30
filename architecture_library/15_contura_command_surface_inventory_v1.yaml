@@ -48,6 +48,28 @@ commands:
           - name: instance_name
             required: true
             kind: string
+      - verb: ux
+        skill: skills/caf-ux/SKILL.md
+        summary: Derive and ground the canonical UX design artifact after the second architecture pass.
+        args:
+          - name: instance_name
+            required: true
+            kind: string
+        nested_subcommands:
+          - verb: plan
+            skill: skills/caf-ux-plan/SKILL.md
+            summary: Generate the first bounded UX planning artifacts from the canonical UX design surface.
+            args:
+              - name: instance_name
+                required: true
+                kind: string
+          - verb: build
+            skill: skills/caf-ux-build/SKILL.md
+            summary: Realize the separate UX build lane from ux_task_graph_v1.yaml after the main build lane has completed.
+            args:
+              - name: instance_name
+                required: true
+                kind: string
       - verb: next
         skill: skills/caf-next/SKILL.md
         summary: Preview or apply the next phase transition.

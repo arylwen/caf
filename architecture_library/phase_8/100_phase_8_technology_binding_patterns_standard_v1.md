@@ -83,6 +83,7 @@ A TBP contributes **implementation hints** that help workers realize a binding w
 - `layout.module_conventions` provides deterministic cross-worker convention signals (for example language import/module roots) that should be merged during normal TBP resolution and exposed via existing resolved artifacts rather than via ad hoc micro-resolvers.
 - `layout.role_bindings.*.evidence_contains` / `evidence_not_contains` (when present) are implementation hints for workers and reviews.
 - When deterministic realization verification is required, role bindings SHOULD declare a library-owned `validator_kind` (plus optional `validator_config`) that generic `tools/caf` gates consume, instead of hardcoding stack/package lore directly in generic gates.
+- When ownership is intentionally split across a proxy surface and an owning helper surface, the TBP SHOULD express that delegated proof through a role-binding validator configuration (for example sibling role binding + owner evidence markers) rather than requiring the proxy file to duplicate owner-local markers.
 
 CAF build is **semantic-first**:
 

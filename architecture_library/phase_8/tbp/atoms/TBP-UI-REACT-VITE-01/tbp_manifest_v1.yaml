@@ -17,6 +17,7 @@ conflicts_with_tbps: []
 layout:
   scaffold_directories:
     - code/ui/
+    - code/ux/
     - docker/
   role_bindings:
     ui_package_json:
@@ -26,14 +27,35 @@ layout:
         - vite
         - react
         - build
+        - "@vitejs/plugin-react"
     ui_vite_config:
       path_template: code/ui/vite.config.js
       artifact_class: code_runnable_candidate
       evidence_contains:
-        - proxy
-        - /api
+        - "@vitejs/plugin-react"
+        - react()
     ui_src_entrypoints:
       path_template: code/ui/src/main.jsx
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - React
+        - App
+    ux_package_json:
+      path_template: code/ux/package.json
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - vite
+        - react
+        - build
+        - "@vitejs/plugin-react"
+    ux_vite_config:
+      path_template: code/ux/vite.config.js
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - "@vitejs/plugin-react"
+        - react()
+    ux_src_entrypoints:
+      path_template: code/ux/src/main.jsx
       artifact_class: code_runnable_candidate
       evidence_contains:
         - React
@@ -45,7 +67,7 @@ layout:
         - node
         - npm
         - nginx
-        - vite
+        - npm run build
     ui_nginx_proxy_conf:
       path_template: docker/nginx.ui.conf
       artifact_class: config_stubs_non_executable
@@ -61,14 +83,32 @@ layout:
       evidence_contains:
         - "ui:"
         - Dockerfile.ui
-        - nginx.ui.conf
-        - /api
 extensions:
   obligations:
-    - obligation_id: O-TBP-UI-REACT-VITE-01-ui-source
-      title: Materialize React (Vite) SPA source scaffold for local candidate runs
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ui-source-package
+      title: Materialize React (Vite) SPA package metadata for local candidate runs
       required_capability: ui_frontend_scaffolding
       role_binding_key: ui_package_json
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ui-source-config
+      title: Materialize React (Vite) SPA bundler configuration for local candidate runs
+      required_capability: ui_frontend_scaffolding
+      role_binding_key: ui_vite_config
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ui-source-entrypoint
+      title: Materialize React (Vite) SPA source entrypoint for local candidate runs
+      required_capability: ui_frontend_scaffolding
+      role_binding_key: ui_src_entrypoints
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ux-source-package
+      title: Materialize React (Vite) UX-lane package metadata for the separate UX build lane
+      required_capability: ux_frontend_realization
+      role_binding_key: ux_package_json
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ux-source-config
+      title: Materialize React (Vite) UX-lane bundler configuration for the separate UX build lane
+      required_capability: ux_frontend_realization
+      role_binding_key: ux_vite_config
+    - obligation_id: O-TBP-UI-REACT-VITE-01-ux-source-entrypoint
+      title: Materialize React (Vite) UX-lane source entrypoint for the separate UX build lane
+      required_capability: ux_frontend_realization
+      role_binding_key: ux_src_entrypoints
     - obligation_id: O-TBP-UI-REACT-VITE-01-ui-build-container
       title: Materialize UI build container (multi-stage) that compiles the SPA and serves it via nginx
       required_capability: runtime_wiring
@@ -87,13 +127,18 @@ extensions:
       gate_kind: coding_standard
       required_capability: ui_frontend_scaffolding
       criteria:
-        - UI source uses JSX/React and is compiled into browser-runnable assets as part of the candidate run flow (no serving raw JSX directly to browsers).
+        - UI and UX source that use JSX/React are compiled into browser-runnable assets as part of the candidate run flow (no serving raw JSX directly to browsers).
+        - React + Vite scaffolds must materialize the Vite React plugin contract (`@vitejs/plugin-react` in package.json and `react()` wired in vite.config.js) rather than relying on implicit classic-JSX globals.
         - UI calls CP/AP surfaces via stable local contract paths (prefer same-origin via reverse proxy) without requiring ad-hoc CORS bypasses.
+        - When the selected UI Dockerfile copies sources or baked config from the companion repo root, the compose build context remains aligned to that COPY root unless both surfaces are rewritten coherently in the same task.
+        - UI packaging must be runnable directly from companion-repo state; do not assume a pre-existing `code/ui/package-lock.json` unless the same bounded task intentionally materializes and copies it.
       review_questions:
         - Does the UI run end-to-end via the compose stack without manual build steps on the host?
         - Are UI backend calls made via stable local contract surfaces (for example /api/* and /cp/*) rather than hard-coded localhost ports in UI code?
+        - Does UI packaging keep compose build.context aligned with the Dockerfile COPY root rather than narrowing context under code/ui by accident?
       focus_areas: [portability, correctness]
       severity_threshold_override: high
       notes: |
-        Implementation hint (non-normative): prefer a multi-stage Dockerfile that runs `npm ci` + `npm run build` in a Node image, then copies `dist/` into an nginx image.
+        Implementation hint (non-normative): prefer a multi-stage Dockerfile that copies `package.json`, runs `npm install --no-audit --no-fund`, then runs `npm run build` in a Node image, and copies `dist/` into an nginx image.
+        Only switch to `npm ci` + `package-lock.json` when the lockfile is intentionally materialized as a committed companion-repo artifact in the same bounded task.
         For local same-origin behavior, configure nginx to serve the SPA and proxy `/api/*` to `http://ap:8000` and `/cp/*` to `http://cp:8001` (compose service DNS).

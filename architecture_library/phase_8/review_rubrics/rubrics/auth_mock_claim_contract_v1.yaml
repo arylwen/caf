@@ -13,15 +13,17 @@ checks:
       realize one coherent mock Authorization/Bearer claim contract when the task-managed auth
       contract requires it; the contract must not disappear into generic tenant/principal
       header-only behavior, the canonical Bearer payload must carry `tenant_id`, `principal_id`,
-      and `policy_version`, and HTTP header access must remain case-insensitive at the runtime
-      boundary.
+      and `policy_version`, runtime-boundary header access must remain case-insensitive, and
+      Python runtime surfaces must import the shared auth helper through the real shared package
+      path rather than a plane-local pseudo-package.
     evidence_hints:
       - "inspect the task-touched shared auth helper, AP boundary, UI claim-builder, and UI API helper files"
-      - "run node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance> --capability policy_enforcement|api_boundary_implementation|ui_frontend_scaffolding as needed"
+      - "run node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance> --capability policy_enforcement|api_boundary_implementation|ui_frontend_scaffolding|ux_frontend_realization as needed"
       - "look for one coherent Bearer/Authorization contract rather than per-file ad hoc token parsing"
       - "fail if the UI claim payload omits `policy_version` or packs unrelated request metadata into the canonical auth claim"
+      - "fail if the frontend helper emits a different bearer token shape than the shared auth helper (current canonical shape: `mock.<base64-json>.token`)"
       - "fail if the TBP points at a proxy UI file while the real contract is split across separate claim-builder and API helper surfaces"
-      - "prefer validator-backed authenticated AP runtime proof on the TBP role binding rather than a bespoke post-build branch"
+      - "for Python runtime surfaces, fail if the shared auth helper under code/common is imported through code.ap.common or code.cp.common style paths"
   - check_id: RR-AUTH-MOCK-02
     severity: high
     category: security

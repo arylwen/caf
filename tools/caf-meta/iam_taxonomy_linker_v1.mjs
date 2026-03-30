@@ -145,6 +145,7 @@ function main() {
     path.join(REPO_ROOT, 'architecture_library/patterns/caf_v1/definitions_v1'),
     path.join(REPO_ROOT, 'architecture_library/patterns/core_v1/definitions_v1'),
     path.join(REPO_ROOT, 'architecture_library/patterns/external_v1/definitions_v1'),
+    path.join(REPO_ROOT, 'architecture_library/patterns/ux_v1/definitions_v1'),
   ].filter((p) => fs.existsSync(p));
 
   const files = patternRoots.flatMap((p) => walk(p));

@@ -34,6 +34,7 @@ ui:
   kind: "web_spa"
   framework: "react"
   deployment_preference: "separate_ui_service"
+  component_system: "shadcn"
 
 # Optional: plane runtime shape pins.
 # If omitted, CAF derives defaults deterministically.

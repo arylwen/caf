@@ -14,9 +14,11 @@ checks:
   - check_id: RR-PY-CORR-01
     severity: blocker
     category: correctness
-    rule: "Imports resolve within the repo: no broken imports or circular import traps introduced by recent changes."
+    rule: "Imports resolve within the repo: no broken imports or circular import traps introduced by recent changes. Under the canonical `code` root, sibling shared packages (for example `code/common`) must be imported via module-root-coherent relative or absolute imports rather than plane-local pseudo-packages such as `code.ap.common`."
     evidence_hints:
       - "inspect import statements in touched files and their targets"
+      - "for modules under code/ap or code/cp, verify relative import depth lands on a real package path beneath code/"
+      - "fail if a shared helper under code/common is imported as though it lived inside code/ap/common or code/cp/common"
   - check_id: RR-PY-CORR-01A
     severity: blocker
     category: correctness

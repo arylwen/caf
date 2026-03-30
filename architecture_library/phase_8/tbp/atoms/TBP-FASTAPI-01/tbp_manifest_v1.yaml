@@ -13,6 +13,52 @@ conflicts_with_tbps:
 - TBP-DRF-01
 layout:
   role_bindings:
+    cp_runtime_repository_health_owner:
+      path_template: code/cp/application/services.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - class
+      - def
+    cp_ap_contract_shared_transport_module:
+      path_template: code/common/contracts/{boundary_id_snake}/transport.py
+      artifact_class: code_contract_surface
+      evidence_contains:
+      - payload
+      - correlation_id
+    cp_ap_contract_ap_http_emitter:
+      path_template: code/ap/contracts/{boundary_id_snake}/http_client.py
+      artifact_class: code_contract_surface
+      evidence_contains:
+      - ContractRequestEnvelope
+      - payload
+    cp_ap_contract_cp_http_handler:
+      path_template: code/cp/contracts/{boundary_id_snake}/http_server.py
+      artifact_class: code_contract_surface
+      evidence_contains:
+      - ContractRequestEnvelope
+      - ContractResponseEnvelope
+    cp_ap_contract_ap_envelope:
+      path_template: code/ap/contracts/{boundary_id_snake}/envelope.py
+      artifact_class: code_contract_surface
+      evidence_contains:
+      - tenant_id
+      - principal_id
+      - correlation_id
+      - payload
+    cp_ap_contract_cp_envelope:
+      path_template: code/cp/contracts/{boundary_id_snake}/envelope.py
+      artifact_class: code_contract_surface
+      evidence_contains:
+      - tenant_id
+      - principal_id
+      - correlation_id
+      - payload
+    cp_ap_contract_cp_boundary_router:
+      path_template: code/cp/api/routers/cp_ap_boundary.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - APIRouter
+      - payload
     api_boundary:
       path_template: code/ap/api/{resource_snake}_router.py
       artifact_class: code_runnable_candidate

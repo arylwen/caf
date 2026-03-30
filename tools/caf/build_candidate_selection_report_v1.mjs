@@ -115,7 +115,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
   const layout = getInstanceLayout(repoRoot, instanceName);
 
   const specPlaybookDir = layout.specPlaybookDir;
-  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding') ? layout.designPlaybookDir : layout.specPlaybookDir;
+  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design') ? layout.designPlaybookDir : layout.specPlaybookDir;
   const systemSpec = path.join(specPlaybookDir, 'system_spec_v1.md');
   const appSpec = path.join(specPlaybookDir, 'application_spec_v1.md');
   const semanticSubset = path.join(playbookDir, `semantic_candidate_subset_${profile}_v1.jsonl`);
@@ -200,7 +200,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
 
   const outName = `pattern_candidate_selection_report_${profile}_v1.md`;
 
-  const isDesignProfile = (profile === 'solution_architecture' || profile === 'implementation_scaffolding');
+  const isDesignProfile = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design');
   const cafMetaDir = isDesignProfile
     ? path.join(layout.designDir, 'caf_meta')
     : (layout.specMetaDir ?? path.join(layout.specDir, 'caf_meta'));

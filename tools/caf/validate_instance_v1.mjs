@@ -24,6 +24,8 @@ import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 import { computeExpectedUiTaskIds, taskIdsFromTaskGraphObj } from './lib_ui_seed_expectations_v1.mjs';
 import { loadPlaneDomainModelViews } from './lib_plane_domain_models_v1.mjs';
+import { validatePlaneDomainModelObject } from './lib_plane_domain_model_validation_v1.mjs';
+import { parsePlaneIntegrationContractChoicesMarkdown } from './lib_plane_integration_contract_choices_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 
@@ -653,6 +655,122 @@ async function validateInstanceMain(argv) {
         ]
       );
       die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 24);
+    }
+
+    const cpDesignPath = path.join(designPlaybookDir, 'control_plane_design_v1.md');
+    let cpDesignText = null;
+    try {
+      cpDesignText = await readUtf8(cpDesignPath);
+    } catch (e) {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        mode === 'build' ? 'preflight-build-plane-integration-contract-read-failure' : 'preflight-plan-plane-integration-contract-read-failure',
+        'Unable to read design/playbook/control_plane_design_v1.md for the planning-facing plane integration contract choices block',
+        [
+          'Restore or regenerate design/playbook/control_plane_design_v1.md via /caf arch <name>, then rerun.',
+        ],
+        [`${safeRel(repoRoot, cpDesignPath)}: ${String(e.message ?? e)}`]
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 24);
+    }
+    const planeIntegrationParsed = parsePlaneIntegrationContractChoicesMarkdown(cpDesignText, `${cpDesignPath}:plane_integration_contract_choices_v1`);
+    if (planeIntegrationParsed.kind === 'missing_block') {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        mode === 'build' ? 'preflight-build-plane-integration-contract-missing-block' : 'preflight-plan-plane-integration-contract-missing-block',
+        'Missing the canonical plane integration contract choices block required by planning consumers of control_plane_design_v1.md',
+        [
+          'Regenerate design/playbook/control_plane_design_v1.md via /caf arch <name> so the canonical plane_integration_contract_choices_v1 block is present.',
+          mode === 'build'
+            ? 'Then rerun /caf plan <name> and /caf build <name>.'
+            : 'Then rerun /caf plan <name>.',
+        ],
+        [safeRel(repoRoot, cpDesignPath)]
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 24);
+    }
+    if (planeIntegrationParsed.kind === 'yaml_parse') {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        mode === 'build' ? 'preflight-build-plane-integration-contract-yaml-parse' : 'preflight-plan-plane-integration-contract-yaml-parse',
+        'Unable to parse plane_integration_contract_choices_v1 YAML in control_plane_design_v1.md',
+        [
+          'Fix YAML syntax in the plane integration contract choices block and rerun /caf arch <name>.',
+          mode === 'build'
+            ? 'Then rerun /caf plan <name> and /caf build <name>.'
+            : 'Then rerun /caf plan <name>.',
+        ],
+        [
+          safeRel(repoRoot, cpDesignPath),
+          ...planeIntegrationParsed.issues.slice(0, 12),
+        ]
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 24);
+    }
+    if (!planeIntegrationParsed.ok) {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        mode === 'build' ? 'preflight-build-plane-integration-contract-invalid' : 'preflight-plan-plane-integration-contract-invalid',
+        'plane_integration_contract_choices_v1 does not satisfy the canonical planning-facing contract expected by /caf plan consumers',
+        [
+          'Fix the canonical plane integration contract choices block in control_plane_design_v1.md and rerun /caf arch <name>.',
+          'Adopt exactly one option for cp_runtime_shape, ap_runtime_shape, and cp_ap_contract_surface.',
+          mode === 'build'
+            ? 'Then rerun /caf plan <name> and /caf build <name>.'
+            : 'Then rerun /caf plan <name>.',
+        ],
+        [
+          safeRel(repoRoot, cpDesignPath),
+          ...planeIntegrationParsed.issues.slice(0, 20),
+        ]
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 24);
+    }
+
+    const planeDomainPaths = [
+      { absPath: path.join(designPlaybookDir, 'application_domain_model_v1.yaml'), expectedPlane: 'application' },
+      { absPath: path.join(designPlaybookDir, 'system_domain_model_v1.yaml'), expectedPlane: 'system' },
+    ];
+    for (const entry of planeDomainPaths) {
+      let planeDoc = null;
+      try {
+        planeDoc = parseYamlString(await readUtf8(entry.absPath), entry.absPath) || {};
+      } catch (e) {
+        const fp = await writeFeedbackPacket(
+          repoRoot,
+          instanceName,
+          mode === 'build' ? 'preflight-build-plane-domain-model-yaml-parse' : 'preflight-plan-plane-domain-model-yaml-parse',
+          `${safeRel(repoRoot, entry.absPath)} could not be parsed as YAML`,
+          [
+            `Regenerate or rewrite ${safeRel(repoRoot, entry.absPath)} to the canonical plane-domain-model YAML shape, then rerun ${mode === 'build' ? '/caf plan <name> and /caf build <name>' : '/caf plan <name>'}.`,
+            'Do not let planning/build continue with malformed normalized plane-domain-model views.',
+          ],
+          [`${safeRel(repoRoot, entry.absPath)}: ${String(e.message ?? e)}`]
+        );
+        die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 24);
+      }
+      const planeIssues = validatePlaneDomainModelObject(planeDoc, { expectedPlane: entry.expectedPlane, instanceName });
+      if (planeIssues.length > 0) {
+        const fp = await writeFeedbackPacket(
+          repoRoot,
+          instanceName,
+          mode === 'build' ? 'preflight-build-plane-domain-model-invalid' : 'preflight-plan-plane-domain-model-invalid',
+          `${safeRel(repoRoot, entry.absPath)} does not satisfy the canonical planning-facing plane-domain-model contract`,
+          [
+            `Fix the ${entry.expectedPlane} plane-domain-model source/derived seam and rerun ${mode === 'build' ? '/caf plan <name> and /caf build <name>' : '/caf plan <name>'}.`,
+            'Keep the normalized YAML views canonical; do not weaken downstream planning/build consumers to compensate.',
+          ],
+          [
+            safeRel(repoRoot, entry.absPath),
+            ...planeIssues.slice(0, 20),
+          ]
+        );
+        die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 24);
+      }
     }
 
     const tgErrors = validateTaskGraphObj(tg, { activeCapabilityIds });

@@ -11,29 +11,32 @@
  */
 
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
-
-import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
+import { renderFeedbackPacketV1, setFeedbackPacketStatusSync } from './lib_feedback_packets_v1.mjs';
 const require = createRequire(import.meta.url);
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableYamlParseError(err) {
+  const msg = String(err?.message || err || '');
+  return msg.includes('YAML parse failed for ');
+}
+
+function shouldRetryYamlRead(absPath) {
+  const norm = String(absPath || '').replace(/\\/g, '/');
+  return norm.includes('/reference_architectures/') || norm.includes('/companion_repositories/');
+}
 
 // Vendored UMD build exports CommonJS symbols.
 // eslint-disable-next-line import/no-commonjs
 const jsyaml = require('./vendor/js-yaml.min.js');
 
-function nowDateYYYYMMDD() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-}
-
-function nowStampYYYYMMDD() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`;
-}
 
 function isPlainObject(x) {
   if (!x || typeof x !== 'object') return false;
@@ -80,17 +83,54 @@ function inferInstanceNameFromPath(absPath) {
   return seg;
 }
 
+function sourcePathForPacketMatching(sourcePath) {
+  return String(sourcePath || '').trim();
+}
+
+function resolveYamlFeedbackPacketsForSourceIfPossible(sourcePath) {
+  let repoRoot = null;
+  let instance = null;
+  let abs = null;
+  try {
+    repoRoot = resolveRepoRoot();
+    abs = path.resolve(sourcePath || '.');
+    instance = inferInstanceNameFromPath(abs);
+  } catch {
+    return [];
+  }
+  if (!repoRoot || !instance) return [];
+
+  const packetsDir = path.join(repoRoot, 'reference_architectures', instance, 'feedback_packets');
+  let names = [];
+  try {
+    names = fsSync.readdirSync(packetsDir).filter((name) => /yaml-parse-failed/i.test(name) && /\.md$/i.test(name));
+  } catch {
+    return [];
+  }
+
+  const sourceNeedle = `- Source: ${sourcePathForPacketMatching(sourcePath)}`;
+  const changed = [];
+  for (const name of names) {
+    const absPacket = path.join(packetsDir, name);
+    let txt = '';
+    try {
+      txt = fsSync.readFileSync(absPacket, 'utf8');
+    } catch {
+      continue;
+    }
+    if (!txt.includes(sourceNeedle)) continue;
+    if (setFeedbackPacketStatusSync(absPacket, 'resolved')) changed.push(absPacket);
+  }
+  return changed;
+}
+
 async function writeYamlFeedbackPacketIfPossible(sourcePath, slug, observedConstraint, evidenceLines) {
   let repoRoot = null;
   let instance = null;
+  let abs = null;
   try {
     repoRoot = resolveRepoRoot();
-  } catch {
-    return null;
-  }
-
-  try {
-    const abs = path.resolve(sourcePath || '.');
+    abs = path.resolve(sourcePath || '.');
     instance = inferInstanceNameFromPath(abs);
   } catch {
     return null;
@@ -99,31 +139,33 @@ async function writeYamlFeedbackPacketIfPossible(sourcePath, slug, observedConst
 
   const packetsDir = path.join(repoRoot, 'reference_architectures', instance, 'feedback_packets');
   await fs.mkdir(packetsDir, { recursive: true });
-  const fp = path.join(packetsDir, `BP-${nowStampYYYYMMDD()}-${slug}.md`);
-  const body = [
-    `# Feedback Packet - lib_yaml_v2`,
-    '',
-    `- Date: ${nowDateYYYYMMDD()}`,
-    cafBulletStampLine(),
-    `- Instance: ${instance}`,
-    `- Stuck At: tools/caf/lib_yaml_v2.mjs`,
-    `- Observed Constraint: ${observedConstraint}`,
-    `- Gap Type: YAML parse/shape validation`,
-    '',
-    `## Minimal Fix Proposal`,
-    `- Fix the YAML syntax and/or CAF-required structure in: ${path
-      .relative(repoRoot, path.resolve(sourcePath))
-      .replace(/\\/g, '/')}`,
-    `- Re-run the CAF tool that attempted to parse this file`,
-    '',
-    `## Evidence`,
-    ...evidenceLines.map((l) => `- ${l}`),
-    '',
-    `## Autonomous agent guidance`,
-    `- Autonomous agents with reasoning capabilities MUST apply the edits described in this packet before continuing.`,
-    `- After applying the fix, resume the current CAF workflow step; rerun the relevant command (/caf arch, /caf plan, or /caf build) only if required by your runner.`,
-    '',
-  ].join('\n');
+  const relTarget = path.relative(repoRoot, abs).replace(/\\/g, '/');
+  const fp = path.join(
+    packetsDir,
+    `BP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${slug}.md`
+  );
+  const body = renderFeedbackPacketV1({
+    title: 'lib_yaml_v2',
+    instanceName: instance,
+    stuckAt: 'tools/caf/lib_yaml_v2.mjs',
+    severity: 'blocker',
+    status: 'pending',
+    observedConstraint,
+    gapType: 'YAML parse/shape validation',
+    minimalFixLines: [
+      `Fix the YAML syntax and/or CAF-required structure in: ${relTarget}`,
+      'Re-run the CAF tool that attempted to parse this file',
+    ],
+    evidenceLines,
+    agentGuidanceLines: [
+      'Do not treat CAF-managed or framework-owned YAML as an instance-only hotfix target in returned work.',
+      'Patch the producer/gate/contract seam when the defect is systemic; use sandbox-local edits only for diagnosis if needed.',
+      'After the producer-side fix lands, rerun the relevant CAF command so the artifact is regenerated cleanly.',
+    ],
+    humanGuidanceLines: [
+      'If this YAML came from a CAF-managed block or deterministic helper, fix the producer and regenerate instead of hand-editing emitted instances.',
+    ],
+  });
   await fs.writeFile(fp, body, { encoding: 'utf8' });
   return fp;
 }
@@ -177,6 +219,7 @@ export function parseYamlString(text, sourcePath = '(string)') {
     const doc = docs.length === 0 ? null : docs[0];
     const plain = toPlain(doc);
     validateDecisionPatternShape(plain, src);
+    resolveYamlFeedbackPacketsForSourceIfPossible(src);
     return plain;
   } catch (e) {
     const msg = e?.message ? String(e.message) : String(e);
@@ -191,6 +234,17 @@ export function parseYamlString(text, sourcePath = '(string)') {
 
 export async function parseYamlFile(p) {
   const abs = path.resolve(p);
-  const text = await fs.readFile(abs, { encoding: 'utf8' });
-  return parseYamlString(text, abs);
+  const maxAttempts = shouldRetryYamlRead(abs) ? 4 : 1;
+  let lastErr = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const text = await fs.readFile(abs, { encoding: 'utf8' });
+    try {
+      return parseYamlString(text, abs);
+    } catch (err) {
+      lastErr = err;
+      if (attempt >= maxAttempts || !isRetryableYamlParseError(err)) throw err;
+      await sleep(75 * attempt);
+    }
+  }
+  throw lastErr || new Error(`YAML parse failed for ${abs}`);
 }

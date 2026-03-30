@@ -16,7 +16,7 @@
  * - reference_architectures/<instance>/spec/playbook/semantic_prefilter_debug_<profile>_v1.md
  *
  * Usage:
- *   node tools/caf/prefilter_semantic_candidates_v1.mjs <instance> --profile=<arch_scaffolding|solution_architecture|implementation_scaffolding> [--limit=180]
+ *   node tools/caf/prefilter_semantic_candidates_v1.mjs <instance> --profile=<arch_scaffolding|solution_architecture|implementation_scaffolding|ux_design> [--limit=180]
  */
 
 import fs from "node:fs/promises";
@@ -208,7 +208,7 @@ function parseArgs(argv) {
 }
 
 async function writeStaticSubset(repoRoot, instance, profile, layout, staticSubsetAbs) {
-  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding') ? layout.designPlaybookDir : layout.specPlaybookDir;
+  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design') ? layout.designPlaybookDir : layout.specPlaybookDir;
   const outSubset = path.join(playbookDir, `semantic_candidate_subset_${profile}_v1.jsonl`);
   const outDebug = path.join(playbookDir, `semantic_prefilter_debug_${profile}_v1.md`);
 
@@ -250,7 +250,7 @@ async function main() {
     die("Usage: node tools/caf/prefilter_semantic_candidates_v1.mjs <instance> --profile=<...> [--limit=180]", 2);
   }
   const { profile, limit } = parseArgs(process.argv.slice(3));
-  if (!profile) die("Missing --profile=<arch_scaffolding|solution_architecture|implementation_scaffolding>", 2);
+  if (!profile) die("Missing --profile=<arch_scaffolding|solution_architecture|implementation_scaffolding|ux_design>", 2);
 
   const repoRoot = resolveRepoRoot();
   const semSurface = path.join(
@@ -308,7 +308,7 @@ async function main() {
   const cap = Math.max(1, Number.isFinite(limit) ? limit : 180);
   const top = sorted.slice(0, cap);
 
-  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding') ? layout.designPlaybookDir : layout.specPlaybookDir;
+  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design') ? layout.designPlaybookDir : layout.specPlaybookDir;
   const outSubset = path.join(playbookDir, `semantic_candidate_subset_${profile}_v1.jsonl`);
   const outDebug = path.join(playbookDir, `semantic_prefilter_debug_${profile}_v1.md`);
 

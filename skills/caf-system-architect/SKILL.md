@@ -30,7 +30,7 @@ The skill:
 
 This skill MUST NOT invent new technology choices.
 It MAY prepopulate the technology choice points block using only CAF v1 option sets (including mocks), and MUST preserve human edits.
-It MUST keep `application_spec_v1.md` and `system_spec_v1.md` lean; detailed application/system entity catalogs belong in the plane-specific domain model source docs seeded during architecture scaffolding.
+It MUST keep `application_spec_v1.md` and `system_spec_v1.md` lean; detailed application/system entity catalogs belong in the plane-specific domain model source docs seeded during architecture scaffolding, and the detailed product-facing application surface belongs in `application_product_surface_v1.md`.
 
 ## Inputs (required, fail-closed)
 
@@ -120,7 +120,7 @@ The orchestrator (`caf-arch-architecture-scaffolding`) invokes the retrieval own
 
 Application specification required blocks:
 
-Note: `domain_and_resources_v1` is a lightweight narrative bridge only. It must not become the detailed canonical domain model; that detail belongs in `application_domain_model_v1.md`.
+Note: `domain_and_resources_v1` is a lightweight narrative bridge only. It must not become the detailed canonical domain model; that detail belongs in `application_domain_model_v1.md`. Product-facing surface wording belongs in `application_product_surface_v1.md`.
 
 - `<!-- CAF_MANAGED_BLOCK: intent_derived_app_plane_constraints_v1 START -->`
 - `<!-- CAF_MANAGED_BLOCK: caf_decision_pattern_candidates_v1 START -->`

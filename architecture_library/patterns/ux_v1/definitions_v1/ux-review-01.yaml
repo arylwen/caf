@@ -1,0 +1,43 @@
+pattern_id: UX-REVIEW-01
+name: Review and Approval Workspace
+summary: Use a review-centric workspace when users must inspect evidence, compare states, record rationale, and approve, reject, or escalate decisions.
+intent: Provide a safe and auditable interaction shape for reviewer/operator decisions that require visible status, rationale, and permission-aware actions.
+context: Approvals, moderation, exception handling, compliance sign-off, QA review, manual validation, AI-assisted decision confirmation.
+problem: When review flows are hidden inside generic detail pages, decision rationale, evidence visibility, and permission-sensitive actions become inconsistent and hard to audit.
+forces_tradeoffs: Fast throughput vs careful inspection; visible rationale vs clutter; irreversible decisions vs reversible drafts; shared evidence vs tenant/role isolation.
+solution_structure_behavior: Use a dedicated review workspace that foregrounds submitted state, evidence, comparisons, rationale capture, and approve/reject/escalate actions. Make read-only, locked, and privileged states explicit.
+consequences: Improves clarity and traceability for high-consequence actions; adds UX complexity and more states than plain detail/edit flows.
+implementation_notes: Review surfaces often need explainability and audit cues even when those cues already exist in logs. Keep the operator-facing evidence concise and task-relevant.
+examples_known_uses: Manual approval queues, moderation panels, policy exception review, AI output verification, change approval boards.
+related_patterns: |
+  depends_on: POL-01
+  depends_on: VAL-01
+  depends_on: EXT-AUDITABILITY
+  complements: UX-SEARCH-01
+  complements: UX-EXPLAIN-01
+extended_definition: |
+  Use a dedicated review workspace that foregrounds submitted state, evidence, comparisons, rationale capture, and approve/reject/escalate actions. Make read-only, locked, and privileged states explicit.
+
+caf:
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-UX-REVIEW-01
+  minimum_evidence:
+  - Use a review-centric workspace when users must inspect evidence, compare states, record rationale, and approve, reject, or escalate decisions.
+  - When review flows are hidden inside generic detail pages, decision rationale, evidence visibility, and permission-sensitive actions become inconsistent and hard to audit.
+  definition_of_done:
+  - UX design shows where this interaction pattern is used and what state/recovery posture it requires.
+  - Planning artifacts preserve the interaction pattern without collapsing it into generic smoke-test UI scaffolding.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No frontend framework, component library, or vendor choice is implied by this pattern.

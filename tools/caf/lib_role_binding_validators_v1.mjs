@@ -9,10 +9,45 @@
  * - Runtime-proof validators remain deferred until container-owned proof phases land.
  */
 
+import path from 'node:path';
+import { existsSync } from 'node:fs';
 import { parsePythonRequirementsManifest, manifestHasAnyPackage, manifestMissingAllPackages, normalizePythonPackageName } from './lib_python_dependency_manifest_v1.mjs';
+import { loadTbpManifest, collectRoleBindingMatchesForKey } from './lib_tbp_role_bindings_v1.mjs';
+
+function hasTemplateVariables(pathTemplate) {
+  return /\{[^}]+\}/.test(String(pathTemplate ?? ''));
+}
+
+function candidateRoleBindingRelPaths(expectation) {
+  const rels = ensureArray(expectation?.path_templates_any_of).length > 0
+    ? ensureArray(expectation?.path_templates_any_of).map(normalizeRelPath)
+    : [normalizeRelPath(expectation?.path_template)];
+  return Array.from(new Set(rels)).filter((rel) => rel && !hasTemplateVariables(rel));
+}
+
+async function resolveSiblingRoleBindingExpectation(expectation, context, ownerRoleBindingKey) {
+  const repoRoot = String(context?.repoRoot ?? '').trim();
+  const companionRoot = String(context?.companionRoot ?? '').trim();
+  const tbpId = normalizeScalar(expectation?.tbp_id);
+  if (!repoRoot || !companionRoot || !tbpId) return null;
+  const { manifest } = await loadTbpManifest(repoRoot, tbpId);
+  const matches = collectRoleBindingMatchesForKey(tbpId, manifest, ownerRoleBindingKey);
+  for (const match of matches) {
+    for (const rel of candidateRoleBindingRelPaths(match)) {
+      const abs = path.join(companionRoot, rel);
+      if (!existsSync(abs)) continue;
+      return { ...match, path_template: rel, abs_path: abs };
+    }
+  }
+  return null;
+}
 
 function normalizeScalar(v) {
   return String(v ?? '').trim();
+}
+
+function safeLabel(label) {
+  return normalizeScalar(label) || 'Contract';
 }
 
 function ensureArray(v) {
@@ -112,8 +147,36 @@ export async function executeRoleBindingValidator(expectation, context) {
   if (!validatorKind || validatorKind === 'python_requirements_manifest' || validatorKind === 'dotenv_required_var_prefix_any_of' || validatorKind === 'dotenv_optional_var_prefix_any_of') {
     return [];
   }
-  if (validatorKind === 'python_module_import_smoke' || validatorKind === 'python_mock_auth_request_smoke') {
-    return [`${context?.label || 'Role binding'} contract output ${normalizeRelPath(expectation?.path_template)} declares deferred runtime-proof validator kind \`${validatorKind}\`; keep runtime proof in roadmap/proof-phase work until container-owned proof phases are implemented.`];
+  if (validatorKind === 'delegated_role_binding_evidence') {
+    const config = expectation?.validator_config || {};
+    const ownerRoleBindingKey = normalizeScalar(config?.owner_role_binding_key);
+    const ownerMarkersAllOf = ensureArray(config?.owner_markers_all_of).map(normalizeScalar).filter(Boolean);
+    if (!ownerRoleBindingKey) {
+      return [`${safeLabel(context?.label)} contract output ${normalizeRelPath(expectation?.path_template)} declares validator ${validatorKind} without validator_config.owner_role_binding_key.`];
+    }
+    if (ownerMarkersAllOf.length === 0) {
+      return [`${safeLabel(context?.label)} contract output ${normalizeRelPath(expectation?.path_template)} declares validator ${validatorKind} without validator_config.owner_markers_all_of.`];
+    }
+    const localRel = normalizeRelPath(expectation?.path_template);
+    const localText = localRel && context?.companionRoot && existsSync(path.join(context.companionRoot, localRel))
+      ? String(await context.readUtf8(path.join(context.companionRoot, localRel)))
+      : '';
+    if (localText && ownerMarkersAllOf.every((marker) => localText.includes(marker))) {
+      return [];
+    }
+    const ownerExpectation = await resolveSiblingRoleBindingExpectation(expectation, context, ownerRoleBindingKey);
+    if (!ownerExpectation) {
+      return [`${safeLabel(context?.label)} contract output ${normalizeRelPath(expectation?.path_template)} requires delegated owner role binding \`${ownerRoleBindingKey}\`, but no resolved owner artifact exists for TBP ${normalizeScalar(expectation?.tbp_id) || '(unknown)'}.`];
+    }
+    const ownerText = String(await context.readUtf8(ownerExpectation.abs_path));
+    const missing = ownerMarkersAllOf.filter((marker) => !ownerText.includes(marker));
+    if (missing.length > 0) {
+      return [`${safeLabel(context?.label)} contract output ${normalizeRelPath(expectation?.path_template)} is missing delegated/local marker(s) [${missing.join(', ')}]; checked local surface first and owner surface ${normalizeRelPath(ownerExpectation.path_template)}.`];
+    }
+    return [];
   }
-  return [`${context?.label || 'Role binding'} contract output ${normalizeRelPath(expectation?.path_template)} declares unsupported validator kind \`${validatorKind}\`.`];
+  if (validatorKind === 'python_module_import_smoke' || validatorKind === 'python_mock_auth_request_smoke') {
+    return [`${safeLabel(context?.label)} contract output ${normalizeRelPath(expectation?.path_template)} declares deferred runtime-proof validator kind \`${validatorKind}\`; keep runtime proof in roadmap/proof-phase work until container-owned proof phases are implemented.`];
+  }
+  return [`${safeLabel(context?.label)} contract output ${normalizeRelPath(expectation?.path_template)} declares unsupported validator kind \`${validatorKind}\`.`];
 }

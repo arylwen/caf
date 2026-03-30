@@ -52,6 +52,7 @@ This folder is primarily **maintainer-facing**. If you are using CAF to generate
 - `caf_adr_governance_meta_patterns_v1.md`
 - `caf_anti_repair_scripts_meta_patterns_v1.md`
 - `caf_no_tbp_id_leakage_in_worker_skills_meta_pattern_v1.md`
+- `caf_contract_execution_and_validator_ownership_meta_pattern_v1.md`
 
 
 ## User-facing pattern browsing

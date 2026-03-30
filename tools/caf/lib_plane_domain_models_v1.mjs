@@ -12,6 +12,16 @@ function ensureArray(v) {
   return Array.isArray(v) ? v : [];
 }
 
+export function normalizeResourceTaskKey(s) {
+  const t = normalizeScalar(s).toLowerCase();
+  if (!t) return '';
+  return t
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/_+/g, '_')
+    .replace(/^[-_]+|[-_]+$/g, '');
+}
+
 export function normalizeKey(s) {
   const t = normalizeScalar(s).toLowerCase();
   if (!t) return '';
@@ -60,7 +70,7 @@ export async function loadPlaneDomainModelViews({ designPlaybookDir }) {
 export function extractResourceKeysFromApplicationDomainModel(applicationDomainModelObj) {
   const out = [];
   for (const r of ensureArray(applicationDomainModelObj?.api_candidates?.resources)) {
-    const key = normalizeKey(r?.name);
+    const key = normalizeResourceTaskKey(r?.resource_key || r?.name);
     if (key) out.push(key);
   }
   if (out.length > 0) return Array.from(new Set(out)).sort();

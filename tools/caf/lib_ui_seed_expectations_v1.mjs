@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parseYamlString } from './lib_yaml_v2.mjs';
-import { extractResourceKeysFromApplicationDomainModel, normalizeKey as normalizeDomainKey } from './lib_plane_domain_models_v1.mjs';
+import { extractResourceKeysFromApplicationDomainModel, normalizeResourceTaskKey } from './lib_plane_domain_models_v1.mjs';
 
 function normalizeScalar(v) {
   if (v === null || v === undefined) return '';
@@ -164,7 +164,7 @@ export async function computeExpectedUiTaskMatches({ repoRoot, resolvedObj, syst
       const templateId = normalizeScalar(seed?.task_template?.task_id);
       if (!templateId) continue;
       for (const key of resourceKeys) {
-        const normalizedResourceKey = normalizeDomainKey(key) || normalizeKey(key);
+        const normalizedResourceKey = normalizeResourceTaskKey(key) || normalizeKey(key);
         const replacements = {
           resource_key: normalizedResourceKey,
           resource_name: humanizeResourceKey(normalizedResourceKey),

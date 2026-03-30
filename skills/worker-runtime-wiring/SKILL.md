@@ -3,7 +3,6 @@ name: worker-runtime-wiring
 description: >
   Wire plane runtimes into a runnable candidate shape per Task Graph Definition of Done.
   Focuses on integration wiring (routers, app entrypoints, compose wiring) without running scripts.
-status: active
 ---
 
 > **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
@@ -15,23 +14,27 @@ status: active
 ## Capabilities
 
 - runtime_wiring
+- ux_service_packaging_wiring
 
 ## Purpose
 
 This worker performs **runtime wiring** work required for a runnable candidate demo:
 
 - Ensure AP/CP runtime scaffolds are wired into clear entrypoints.
-- Ensure HTTP routing is connected (e.g., router registration) when the runtime shape is HTTP API.
-- Ensure packaging wiring is coherent for local runs (e.g., compose service commands/env) when required by the task DoD.
+- Ensure HTTP routing is connected when the runtime shape is HTTP API.
+- Ensure packaging wiring is coherent for local runs when the task DoD requires runnable behavior.
 
-This worker is **not** responsible for production hardening.
+This worker is **not** responsible for production hardening, and it must not invent stack-specific semantics that are not declared by framework-owned contracts, resolved role bindings, or selected TBP gates.
 
 ## Inputs (authoritative)
 
 - `companion_repositories/<name>/**` (candidate repo)
-- The assigned Task Graph task (from `caf/task_graph_v1.yaml` or the reference_architectures copy)
+- the assigned Task Graph task (from `caf/task_graph_v1.yaml` or the reference-architectures copy)
 - `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` (pins + allowed write paths)
 - `caf/interface_binding_contracts_v1.yaml` when present
+- `tools/caf/contracts/runtime_wiring_compose_posture_contract_v1.md`
+- `tools/caf/contracts/interface_binding_contract_v1.md` when interface bindings apply
+- `tools/caf/contracts/ux_service_packaging_and_wiring_contract_v1.md` when the current capability is `ux_service_packaging_wiring`
 
 ## Resolved TBP module conventions (mandatory when present)
 
@@ -49,16 +52,19 @@ Required behavior when this surface is present:
 Before writing or relocating any runtime wiring artifacts, you MUST resolve TBP role bindings for this capability and obey the manifest-declared paths.
 
 Run (from repo root):
-- `node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance_name> --capability runtime_wiring`
+- `node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance_name> --capability <current_runtime_capability>`
+
+Where `<current_runtime_capability>` is the single task capability being executed (`runtime_wiring` or `ux_service_packaging_wiring`).
 
 Then:
 - For each returned expectation, materialize the artifact at `path_template` (relative to the companion repo root), and ensure the file contains the listed `evidence_contains` strings.
-- Do NOT invent alternate directory layouts (e.g., do not place Dockerfiles at repo root) unless the TBP manifest path_template explicitly requires it.
+- Treat resolved role bindings and their owning TBP gates as the authoritative stack/provider realization surface; do not restate those semantics from memory in worker-local logic.
+- Do NOT invent alternate directory layouts unless the TBP manifest `path_template` explicitly requires them.
 - If expectations are non-empty but you cannot satisfy them within write rails: FAIL-CLOSED with a feedback packet.
 
 ## Eligibility
 
-A task is eligible if `required_capabilities` contains `runtime_wiring`.
+A task is eligible if `required_capabilities` contains `runtime_wiring` or `ux_service_packaging_wiring`.
 
 If not eligible: refuse.
 
@@ -66,11 +72,14 @@ If not eligible: refuse.
 
 - Use the task's **Definition of Done** as the completion contract.
 - You MAY create/update any files needed to satisfy the DoD, but ONLY within allowed write paths.
+- Treat framework-owned contracts as normative for generic behavior and resolved role bindings/gates as authoritative for stack/provider-specific realization.
+- Do not solve runtime-wiring drift by inventing worker-local stack lore; if the needed rule is missing from a contract, role binding, or gate, fail closed and surface the ownership gap.
 - You MUST write a task report to `caf/task_reports/<task_id>.md` listing:
   - files touched
   - how to validate manually (commands are OK to suggest, but do not run them)
+- For UI/UX package surfaces, do not run host-side package-manager or bundler commands in the companion repo as task validation. Dockerfiles own that build path; task reports may suggest manual commands but the worker must not execute them.
 - Do not introduce placeholder tokens: `TBD`, `TODO`, `REPLACE_ME`, `FIXME`.
-
+- When the assigned task requires `ux_service_packaging_wiring`, keep the richer UX lane additive to the existing stack; do not rewrite `code/ui/`, `docker/Dockerfile.ui`, or `docker/nginx.ui.conf` unless shared compose-file coherence requires a bounded edit in the owning assembly surface.
 - Any file you create or substantially rewrite MUST include a `CAF_TRACE:` header block at the top, using the correct comment syntax for the file type (see CAF Operating Contract: "CAF trace headers").
 
 ## Guidance (semantic)
@@ -78,107 +87,30 @@ If not eligible: refuse.
 When wiring an HTTP API service:
 
 - Ensure the main application registers all routers.
-- Ensure the service entrypoint is clear (e.g., `main.py` exports `app`).
-- Ensure there is a coherent local run path (uvicorn invocation or equivalent) if the DoD requires runnable behavior.
+- Ensure the service entrypoint is clear (for example `main.py` exports `app`).
+- Ensure there is a coherent local run path if the DoD requires runnable behavior.
 
-When wiring compose:
+When wiring compose-backed runtime surfaces:
 
-- Ensure AP and CP services are both present when required.
-- Ensure service dependencies are declared (e.g., AP depends_on CP when needed).
-- Ensure environment variables are consistent (ports, hostnames, DB connection strings) without inventing secrets.
-- Ensure deployment/IaC identity is stable and Guardrails-owned:
-  - Read `deployment.stack_name` from `profile_parameters_resolved.yaml` and use that canonical value for any IaC surface you materialize.
-  - For compose packaging, top-level `name:` MUST equal `deployment.stack_name`.
+- Read `tools/caf/contracts/runtime_wiring_compose_posture_contract_v1.md` before editing compose/Dockerfile/env surfaces.
+- Treat `docker/compose.candidate.yaml` as the shared runtime assembly surface for this capability family; if prior compose drift exists, repair it here and keep the file coherent.
+- Materialize the services required by the task DoD, the task graph, the applicable contracts, and the resolved role bindings.
+- If shared compose must incorporate support services or browser services selected by other tasks, integrate them without taking ownership of their provider- or stack-specific contract semantics.
+- Keep deployment identity Guardrails-owned: read `deployment.stack_name` from `profile_parameters_resolved.yaml` and use that canonical value for any deployment/compose identity surface you materialize.
+- For Node/Vite UI or UX Dockerfiles, do not assume `code/ui/package-lock.json` or `code/ux/package-lock.json` exists unless a committed lockfile is already present in the companion repo or the same bounded task intentionally materializes it. Default to copying `package.json` and using `npm install --no-audit --no-fund`; use `npm ci` only when the matching lockfile is actually owned and copied in the same task.
+- When the current capability is `ux_service_packaging_wiring`, use `tools/caf/contracts/ux_service_packaging_and_wiring_contract_v1.md` as the normative same-stack packaging posture.
 
-Compose ownership rule (tight leash):
-- `docker/compose.candidate.yaml` is owned by this capability (`runtime_wiring`).
-- Other workers MUST NOT rewrite compose; if you detect prior compose drift, fix it here and keep the file coherent.
+When interface bindings apply:
 
-Support service wiring (instance-driven):
-- If the instance task graph contains a task requiring `postgres_persistence_wiring`, compose MUST include a `postgres` service and AP MUST be wired with `DATABASE_URL` (or equivalent) for in-network connectivity.
-- When PostgreSQL + SQLAlchemy rails are resolved, the emitted instance `.env` MUST satisfy the SQLAlchemy role-binding contract for accepted DATABASE_URL shapes; prefer the canonical form `postgresql+psycopg://...` and keep runtime wiring coherent with the shared persistence helper and env examples.
-- For local compose runs, the `postgres` service MUST expose the container port on the host for developer testing:
-  - Add `ports: ["${POSTGRES_PORT:-5432}:5432"]` (or YAML list form) on the `postgres` service.
-  - Use the instance `.env` `POSTGRES_PORT` default of 5432 when present.
-  - Keep in-network AP connectivity via `POSTGRES_HOST=postgres` / `DATABASE_URL` unchanged.
-- If the instance task graph contains a task requiring `ui_frontend_scaffolding`, compose MUST include a `ui` service and keep the UI wiring consistent with the UI Dockerfile + nginx config declared by role bindings for the UI capability.
-- When the resolved UI TBP is `TBP-UI-REACT-VITE-01`, `docker/Dockerfile.ui` MUST realize an explicit Vite build path in the image build surface (for example `npm exec vite build` or equivalent) rather than relying on an opaque generic build step alone. The Dockerfile and task report MUST satisfy the resolved `ui_dockerfile` role binding evidence before claiming completion.
-
-UI config mount policy (portability + podman/docker parity):
-- Compose MUST NOT bind-mount `nginx.ui.conf` (or other UI server config) by default.
-  - Reason: the UI Dockerfile already bakes the config into the image; bind-mounts are a frequent cross-platform foot-gun (WSL/Podman path resolution).
-- If a bind-mount is explicitly required for local debug iteration, the host path MUST be:
-  - relative to the directory containing `docker/compose.candidate.yaml`, and
-  - resolvable on disk (no `./docker/...` double-prefix mistakes; use `./nginx.ui.conf` when compose is in `docker/`).
-
-Compose command override policy (portability + podman/docker parity):
-- Prefer the Dockerfile `CMD` for CP/AP/UI containers; do NOT set `command:` in compose unless an override is explicitly required.
-- Compose `command:` MUST NOT rely on `${...}` interpolation (including `CAF_*_RUNTIME_CMD` patterns).
-  - Reason: compose variable interpolation is evaluated by the compose CLI from the host environment at parse time; `env_file:` does not supply values for interpolation.
-  - This is a common cross-platform foot-gun that can start containers with an empty command and yield confusing 502/connection errors.
-- If an override is required for local debug, use an explicit command string/array with no `${...}` variables.
-
-YAML validity invariant:
-- Under `services:`, every service key MUST map to an object (not null).
-- Do not introduce placeholder keys like `ui: null` under `services:`. If a role-binding marker is desired, place it under a dedicated top-level extension key (e.g., `x-caf-role-bindings:`), not inside `services:`.
-
-Compose project naming invariant:
-- `docker/compose.candidate.yaml` MUST include a top-level `name:` field equal to `deployment.stack_name` from the resolved guardrails view.
-
-Compose-based packaging (docker_compose or podman_compose) standard outputs:
-
-- `docker/compose.candidate.yaml`
-  - MUST use `build:` for CP/AP (Dockerfile-based builds; no local pip prerequisite)
-  - MUST use `env_file: ../.env` (or `${VAR}` interpolation) for configuration externalization
-- `docker/Dockerfile.cp` and `docker/Dockerfile.ap`
-  - MUST install dependencies in-image from the canonical dependency manifest when task DoD / resolved role-binding expectations establish one; do not duplicate inline package lists when the contract selects a shared manifest.
-- `.env` (real local defaults; no secrets)
-- `.gitignore` ignores `.env` and `*.local`
-
-## Dependency wiring mode selection (mandatory when interface bindings apply)
-
-Before deciding where to close a declared interface binding, read `platform.dependency_wiring_mode` from `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml`.
-
-Backward-compatibility default:
-- If the field is absent, treat it as `manual_composition_root`.
-
-Mode handling:
-- `manual_composition_root`
-  - Close each binding explicitly in composition/bootstrap code.
-  - Prefer the TBP-declared composition-root path when a `composition_root` role binding exists.
-  - Keep the binding closure concentrated in a clear assembly surface; do not scatter manual provider selection across unrelated runtime modules.
-- `framework_managed`
-  - Close each binding in an existing framework-managed assembly boundary already supported by the selected runtime stack/TBP/task inputs.
-  - Valid examples include an application bootstrap module, provider-registration module, dependency module, or equivalent assembly file that already belongs to the stack.
-  - Prefer a TBP-declared `dependency_provider_boundary` role binding when one exists; use that boundary as the primary closure surface for framework-managed binding evidence.
-  - Keep the application bootstrap/composition file as bootstrap glue only when the stack already exposes a dedicated dependency-provider boundary; do not duplicate provider selection in both places.
-  - Do NOT introduce a new DI container, registry product, lifetime model, or framework-specific registration topology just because this mode was selected.
-  - Do NOT create a duplicate manual composition root solely to satisfy interface binding evidence when the stack already has a framework-managed assembly surface.
-- If `framework_managed` is selected but the runtime stack/TBP inputs do not expose a clear supported assembly surface, FAIL-CLOSED instead of inventing one.
+- If `caf/interface_binding_contracts_v1.yaml` contains an entry whose `assembler.task_id` matches the current task, follow `tools/caf/contracts/interface_binding_contract_v1.md` for dependency-wiring-mode selection and closure-surface rules.
+- For each closed binding, write `caf/binding_reports/<binding_id>.yaml` as the build-owned evidence artifact.
+- `evidence.assembler_artifact_paths[]` must point to the actual closure surface used by the selected realization mode.
+- Unless an artifact truly lives outside the companion repo, record evidence paths relative to the companion repo root.
+- Wave order, imports, or incidental reachability alone are not evidence of binding closure.
 
 ## Failure modes
 
 - Any required input missing or outside rails → fail closed.
-- Ambiguous runtime shape not declared by planner → fail closed.
-- `platform.dependency_wiring_mode=framework_managed` but no existing framework-managed assembly surface is available → fail closed.
-- `platform.dependency_wiring_mode=framework_managed` and the resolved TBP declares `dependency_provider_boundary`, but the worker cannot point closure evidence to that TBP-declared boundary (or an equivalent declared framework-managed surface) → fail closed.
-
-
-## Interface binding evidence (mandatory when present)
-
-- If `caf/interface_binding_contracts_v1.yaml` contains an entry whose `assembler.task_id` matches the current task, you MUST close that interface binding explicitly in the runtime assembly boundary selected by `platform.dependency_wiring_mode`.
-- Do not mark a binding closed if the consumer still keeps a silent production fallback to a local demo/in-memory/default provider.
-- For each closed interface binding, write `caf/binding_reports/<binding_id>.yaml` with:
-  - `schema_version: caf_interface_binding_report_v1`
-  - `binding_id`
-  - `status: closed`
-  - `closed_by.task_id`
-  - `evidence.consumer_artifact_paths[]`
-  - `evidence.provider_artifact_paths[]`
-  - `evidence.assembler_artifact_paths[]`
-- `evidence.assembler_artifact_paths[]` MUST point to the actual assembly artifact(s) that realize the selected mode:
-  - manual composition/bootstrap file(s) for `manual_composition_root`, or
-  - existing framework-managed registration/bootstrap file(s) for `framework_managed`.
-- When a resolved TBP role binding such as `dependency_provider_boundary` exists, prefer that TBP-declared file as the assembler evidence path for `framework_managed` rather than only the application bootstrap file.
-- Unless an artifact truly lives outside the companion repo, record those evidence paths relative to the companion repo root (for example `code/AP/main.py`, not a repo-absolute path).
-- Router imports, service imports, or wave order alone are not evidence of binding closure unless they are the actual selected assembly boundary.
+- Ambiguous runtime shape not declared by the planner → fail closed.
+- A required contract or resolved role-binding expectation for the selected runtime task is missing, contradictory, or cannot be satisfied within rails → fail closed.
+- An interface binding applies but no valid closure surface can be evidenced for the selected dependency-wiring mode → fail closed.

@@ -42,6 +42,15 @@ Turn a PRD into an **architecture shape** for the instance:
 - Platform posture brief (architect-owned; file name is stable):
   - `reference_architectures/<instance>/product/PLATFORM_PRD.md`
 
+## Additional source input (bounded consumption)
+
+- UX vision / design brief (human-owned source; seeded by `/caf saas`):
+  - `reference_architectures/<instance>/product/UX_VISION.md`
+
+Consumption rule:
+- `/caf prd` may read only the architecture-shape-relevant subset defined by `tools/caf/contracts/ux_vision_source_and_prd_consumption_contract_v1.md`.
+- `/caf prd` must not treat logo/color/component-system choices as architecture pins.
+
 ## Outputs
 
 - Proposed (semantic):

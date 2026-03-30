@@ -179,6 +179,61 @@ then the producer MUST fail-closed and write a feedback packet pointing to:
 
 ---
 
+## Canonical human-signal block: application-design carried-forward open questions
+
+Canonical location:
+
+- `reference_architectures/<name>/design/playbook/application_design_v1.md`
+- `<!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 START -->` … `END`
+
+Purpose:
+
+- carry forward unresolved **application-plane design questions** in a compact, planning-visible form;
+- keep those questions in a library-owned human-signal shape instead of leaving the structure to skill-local convention;
+- avoid forcing `/caf plan` or downstream workers to rediscover unresolved design semantics from surrounding prose.
+
+Canonical block shape (new output):
+
+```yaml
+schema_version: open_questions_v1
+questions: {}
+```
+
+Where `questions` is a **topic-keyed mapping**. Each topic entry SHOULD use this shape:
+
+```yaml
+<topic_key>:
+  question_id: "<stable question id>"
+  question: "<human-readable question>"
+  options:
+    - option_id: <stable option id>
+      status: adopt | defer | reject
+      summary: "<optional concise summary>"
+      payload: {}
+  anchors: []
+```
+
+Normative constraints:
+
+- New CAF output for this block MUST use `schema_version: open_questions_v1`; older `version: 1` scaffolds are compatibility-only and MUST NOT be treated as the new canonical output shape.
+- New CAF output for this block MUST use a **mapping** under `questions`, not a top-level list.
+- Topic keys are a merge/locality aid; downstream logic MUST key on `question_id`, not on map order.
+
+Pattern-backed advisory interpretation (non-blocking):
+
+- When a carried-forward question is anchored to a library-owned pattern (for example via `caf_pattern`), advisory/reporting tooling SHOULD read the referenced pattern definition directly for:
+  - `summary` / `intent` (what capability is being postponed),
+  - `problem` / `consequences` / `forces_tradeoffs` (what risk/trade-off remains visible while deferred), and
+  - `human_questions` / `option_sets` (the library-owned follow-on option inventory if the pattern is later adopted).
+- Do **not** add a seam-local YAML mapping file just to restate deferred-pattern warnings or allowed follow-on options when the pattern definition already owns that information.
+- Options use the same human-signal semantics as other choice/open-question blocks: exactly one `status: adopt` only when the question is resolved for a gated hop; otherwise leave all options unresolved/deferred.
+
+Current promotion posture:
+
+- This block is **not yet** promoted to a dedicated fail-closed later-design handoff boundary.
+- First establish a bounded downstream consumer and a deterministic validator path. Until then, treat the block as a library-owned design-handoff surface whose shape must stay stable, but whose absence/resolution state is not yet a standalone `/caf plan` preflight rule.
+- CAF MAY surface a non-empty block through an **advisory-only** checker so planning/build operators can see which `question_id` values remain carried forward, but advisory visibility does not change blocker posture.
+
 ---
 
 ## Library-owned inventories for decisions and open questions

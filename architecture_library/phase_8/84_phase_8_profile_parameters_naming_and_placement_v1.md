@@ -71,7 +71,7 @@ Phase 8 readiness validation MUST include:
    - architecture style pin (`architecture.architecture_style`) resolves uniquely to an ABP catalog entry
    - platform pins (infra_target/packaging/runtime_language/database_engine) resolve uniquely in the declared catalog_version
    - companion repo target exists and meets skeleton requirements
-   - UI pins (`ui.present`, `ui.kind`, `ui.framework`, `ui.deployment_preference`) are the only machine-consumed UI source of truth
+   - UI pins (`ui.present`, `ui.kind`, `ui.framework`, `ui.deployment_preference`, `ui.component_system`) are the only machine-consumed UI source of truth
 
 On FAIL, the system MUST emit a feedback packet and stop.
 
@@ -84,7 +84,7 @@ Architects should edit only the pinned UX knobs:
 - `lifecycle.generation_phase`
 - `architecture.architecture_style`
 - platform pins (`infra_target`, `packaging`, `runtime_language`, `database_engine`)
-- UI pins (`ui.present`, `ui.kind`, `ui.framework`, `ui.deployment_preference`) when a browser UI is in scope
+- UI pins (`ui.present`, `ui.kind`, `ui.framework`, `ui.deployment_preference`, `ui.component_system`) when a browser UI is in scope
 
 `profile_parameters.yaml` MAY also include the minimal envelope fields required for schema validation and traceability:
 

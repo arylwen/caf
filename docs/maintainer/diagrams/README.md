@@ -11,11 +11,17 @@ Why they live here:
 ## Diagrams
 
 - [CAF lifecycle state machine](caf_lifecycle_state_machine_v1.md)
+- [CAF lifecycle artifact handoff](caf_lifecycle_artifact_handoff_v1.md)
 - [CAF plan post-chain](caf_plan_post_chain_v1.md)
 - [CAF planning ownership split](caf_planning_ownership_split_v1.md)
+- [CAF UX lane workflow](caf_ux_lane_workflow_v1.md)
 
 ## Editing posture
 
 - Treat these pages as the canonical workflow-diagram sources.
 - Narrative maintainer pages should link here rather than re-owning the diagram body.
 - If a workflow changes, update the diagram page first, then adjust any narrative pages that explain it.
+
+## Companion reference
+
+- [Lifecycle artifact reference](../11_lifecycle_artifact_reference.md) — Explains the documents shown in the artifact-handoff diagram.

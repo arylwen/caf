@@ -53,7 +53,7 @@ Rubric selection:
    - If `platform.runtime_language == python`: apply `RR-PY-GENERAL-01` and `RR-PY-TESTS-01`.
    - If `platform.packaging` is `docker_compose` or `podman_compose`: apply `RR-COMPOSE-01`.
    - If `profile_parameters_resolved.yaml` contains `runtime.framework: fastapi`: apply `RR-FASTAPI-SVC-01`.
-   - If the task's required capabilities include `ui_frontend_scaffolding`, or the resolved pins indicate `ui.kind: web_spa`, apply `RR-WEB-SPA-01`.
+   - If the task's required capabilities include `ui_frontend_scaffolding` or `ux_frontend_realization`, or the resolved pins indicate `ui.kind: web_spa`, apply `RR-WEB-SPA-01`.
    - If the task's managed DoD / review questions include `G-PY-PACKAGING-CANONICAL-MANIFEST`, apply `RR-PY-DEPENDENCY-MANIFEST-01`.
    - If the task's managed DoD / review questions include `G-AUTH-MOCK-CONTRACT-REALIZATION` or `G-AUTH-MOCK-HEADER-PRECEDENCE-COHERENCE`, apply `RR-AUTH-MOCK-CLAIM-CONTRACT-01`.
    - Always apply `RR-TASK-REPORT-01` (task report structure + step evidence).
@@ -66,11 +66,13 @@ Rubric evaluation:
   - `node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance_name> --capability <task.required_capabilities[0]>`
   and verify each expected `path_template` exists under the companion repo and contains every `evidence_contains` string.
 
+- For `RR-PY-GENERAL-01` / `RR-PY-CORR-01`, inspect every touched Python import and the imported target path it implies under the canonical `code` root. When a module under `code/ap/` or `code/cp/` imports a shared helper from `code/common/`, fail if the import path would land on a plane-local pseudo-package such as `code.ap.common` instead of the real sibling package.
+
 - For `RR-PY-DEPENDENCY-MANIFEST-01`, inspect the canonical dependency manifest and the runtime-wiring/container build surfaces named by the task report or touched files. Verify the build installs from the canonical manifest selected by the task-managed packaging contract rather than duplicating inline package lists.
 
-- For `RR-AUTH-MOCK-CLAIM-CONTRACT-01`, inspect the policy, API-boundary, and UI helper surfaces touched by the task (plus any resolved auth role-binding paths) and verify they preserve one coherent mock Authorization/Bearer claim contract; alternate tenant/principal headers may appear only for conflict rejection when the task-managed contract says so.
+- For `RR-AUTH-MOCK-CLAIM-CONTRACT-01`, inspect the policy, API-boundary, and UI helper surfaces touched by the task (plus any resolved auth role-binding paths) and verify they preserve one coherent mock Authorization/Bearer claim contract. When Python runtime surfaces import the shared auth helper, verify the import path lands on the resolved `mock_auth_claims_module` package root rather than a plane-local pseudo-package.
 
-- For `RR-WEB-SPA-01`, you MUST inspect the rendered shell/page wiring evidence directly in the touched UI files (at minimum `code/ui/src/App.jsx`, `code/ui/src/api.js`, and any touched `code/ui/src/pages/*.jsx`). Treat descriptive/static pages presented as implemented functionality as a blocker.
+- For `RR-WEB-SPA-01`, you MUST inspect the rendered shell/page wiring evidence directly in the touched SPA files. For the smoke-test lane, inspect at minimum `code/ui/src/App.jsx`, `code/ui/src/api.js`, and any touched `code/ui/src/pages/*.jsx`. For the separate UX lane, inspect at minimum `code/ux/src/App.jsx`, `code/ux/src/api.js`, and any touched `code/ux/src/pages/*`. Treat descriptive/static pages presented as implemented functionality as a blocker.
 
 - For each rubric check, decide PASS or FAIL with brief evidence.
 - Any FAIL at or above the configured threshold MUST be emitted as a finding.

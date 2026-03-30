@@ -24,13 +24,14 @@ layout:
         - tenant_id
         - principal_id
         - policy_version
+        - mock.
+        - .token
     mock_auth_ap_boundary_adapter:
       path_template: code/ap/api/auth_context.py
       artifact_class: code_runnable_candidate
       evidence_contains:
         - resolve_auth_context
         - HTTPException
-        - request.headers
     mock_auth_ui_claim_builder:
       path_template: code/ui/src/auth/mockAuth.js
       artifact_class: code_runnable_candidate
@@ -39,13 +40,38 @@ layout:
         - tenant_id
         - principal_id
         - policy_version
+        - mock.
+        - .token
     mock_auth_ui_api_helper:
       path_template: code/ui/src/api.js
       artifact_class: code_runnable_candidate
       evidence_contains:
-        - Authorization
-        - X-Tenant-Id
-        - tenant context conflict
+        - buildAuthHeaders
+      validator_kind: delegated_role_binding_evidence
+      validator_config:
+        owner_role_binding_key: mock_auth_ui_claim_builder
+        owner_markers_all_of:
+          - tenant context conflict
+    mock_auth_ux_claim_builder:
+      path_template: code/ux/src/auth/mockAuth.js
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - Bearer
+        - tenant_id
+        - principal_id
+        - policy_version
+        - mock.
+        - .token
+    mock_auth_ux_api_helper:
+      path_template: code/ux/src/api.js
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+        - buildAuthHeaders
+      validator_kind: delegated_role_binding_evidence
+      validator_config:
+        owner_role_binding_key: mock_auth_ux_claim_builder
+        owner_markers_all_of:
+          - tenant context conflict
 extensions:
   obligations:
     - obligation_id: O-TBP-AUTH-MOCK-01-claim-contract
@@ -64,6 +90,14 @@ extensions:
       title: Materialize the UI API helper that emits the selected mock Authorization/Bearer contract, preserves claim-over-header conflict behavior, and keeps any demo persona posture explicit.
       required_capability: ui_frontend_scaffolding
       role_binding_key: mock_auth_ui_api_helper
+    - obligation_id: O-TBP-AUTH-MOCK-01-ux-claim-builder
+      title: Materialize the UX claim-builder that encodes the selected mock Authorization/Bearer payload for the separate UX lane.
+      required_capability: ux_frontend_realization
+      role_binding_key: mock_auth_ux_claim_builder
+    - obligation_id: O-TBP-AUTH-MOCK-01-ux-api-helper
+      title: Materialize the UX API helper that emits the selected mock Authorization/Bearer contract for the separate UX lane.
+      required_capability: ux_frontend_realization
+      role_binding_key: mock_auth_ux_api_helper
   gates:
     - gate_id: G-AUTH-MOCK-CONTRACT-REALIZATION
       title: Preserve the selected mock auth runtime contract across AP, policy, and UI surfaces
@@ -73,11 +107,13 @@ extensions:
         - api_boundary_implementation
         - policy_enforcement
         - ui_frontend_scaffolding
+        - ux_frontend_realization
       criteria:
         - The selected auth mode `mock` is realized through an explicit request-auth contract rather than disappearing behind generic policy or header-only prose.
         - When tenant context adopts `auth_claim`, the canonical mock contract is an Authorization/Bearer claim surface; alternate tenant/principal headers are only inspected to reject conflicting carriers, not emitted as the primary happy-path contract.
         - Mock auth helpers keep claim parsing and precedence behavior inside the stack-owned auth helper, AP boundary adapter, and UI API helper surfaces rather than scattering ad hoc token parsing across unrelated modules.
         - The canonical mock Authorization/Bearer payload uses `tenant_id`, `principal_id`, and `policy_version`; unrelated request metadata stays outside the auth claim payload.
+        - "UI/UX claim builders must emit the same canonical bearer token shape resolved by the shared auth helper (current canonical shape: `mock.<base64-json>.token`) rather than a lane-local raw base64 variant."
         - UI claim construction and UI API header emission live in their actual owning surfaces rather than relying on a single proxy file to carry all evidence.
         - When scaffolded UI flows include create/admin paths, the mock auth helper surfaces keep demo persona posture explicit (for example via named presets or clearly selected identities) rather than silently hardcoding a non-elevated principal that blocks the declared happy path.
         - Runtime boundary handling preserves case-insensitive HTTP header access for Authorization/Bearer and alternate conflict-detection headers.
@@ -99,6 +135,7 @@ extensions:
         - api_boundary_implementation
         - policy_enforcement
         - ui_frontend_scaffolding
+        - ux_frontend_realization
       criteria:
         - Mock auth realization honors the adopted tenant-context carrier and conflict rule semantics instead of silently reverting to gateway-header precedence.
         - Boundary, policy, and UI API helper surfaces fail explicitly when required tenant/principal identity cannot be derived from the selected mock contract.

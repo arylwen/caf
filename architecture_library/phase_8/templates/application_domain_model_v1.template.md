@@ -13,185 +13,87 @@ Use this file when you want to define:
 - persistence intent
 - use cases that touch those entities
 
-Tips:
+Rules:
 
-- You do not need perfect modeling on the first pass.
-- It is acceptable to keep the starter example below for an initial CAF walkthrough.
-- Replace names and details only when you know your real domain.
-- Preserve the overall structure so later derivation stays easy and predictable.
+- Keep the source names meaningful in business language.
+- Do not assume the seeded text is authoritative forever; `/caf arch` may project this file from the resolved PRD when it still contains default starter content.
+- Preserve the overall structure so later derivation stays predictable.
 
 ---
 
-## Starter example
+## Domain overview
 
-### Bounded context: Review Workspace
+Describe the main bounded context(s) and the product problem this model supports.
 
-**Scope**
-Manage the tenant-facing workflow for submitting items, reviewing findings, and publishing reports.
+Suggested prompts:
 
-**Key invariants**
+- What is the primary business capability of the product?
+- Which bounded contexts or major subdomains matter first?
+- What must remain tenant-scoped or governed?
 
-- every record is tenant-scoped
-- a submission belongs to exactly one workspace
-- a report is produced from a completed review state
+## Aggregates and entities
 
-### Aggregate: Workspace
+Repeat this structure for the most important business objects.
+
+### Aggregate or entity: <replace with source name>
+
+Authoring note:
+- If you write `### Aggregate: <Name>` and place `Fields` directly under that section, CAF will normalize those fields into the aggregate-root entity in the derived YAML view.
+- If the aggregate also has subordinate child records, add separate `### Entity:` sections for them.
+- In the derived YAML, every field becomes `name` / `type` / `required`. Mark optional fields explicitly with words like `optional`, `nullable`, `may be omitted`, or a trailing `?`; otherwise CAF should treat the field as required.
 
 **Description**
-A tenant-scoped container that groups review activity and provides a stable place for users to manage submissions.
+Describe what the business object represents and why it matters.
 
 **Fields**
 
-- workspace_id: identifier
-- tenant_id: identifier
-- name: text
-- description: text, optional
-- status: enum (`active | archived`)
-- created_at: timestamp
+- <field_name>: <type / short meaning>
+- <optional_field_name>: <type / short meaning>, optional
 
 **Invariants**
 
-- `tenant_id` is required
-- archived workspaces cannot accept new submissions
-- workspace names are unique within a tenant
+- <business rule that must always remain true>
 
 **Persistence intent**
-Persist as a primary application-plane aggregate with tenant-keyed storage and standard CRUD operations.
+Describe how this object should be stored or queried at a high level.
 
 **Canonical normalization (optional)**
 
 ```yaml
 canonical:
-  term_id: workspace
+  term_id: <optional canonical term>
   status: exact
   matched_by: architect_selected
 ```
 
-### Aggregate: Submission
-
-**Description**
-A business item submitted by a user for review.
-
-**Fields**
-
-- submission_id: identifier
-- tenant_id: identifier
-- workspace_id: identifier
-- title: text
-- source_uri: text, optional
-- submitted_by: identifier
-- status: enum (`draft | submitted | in_review | approved | rejected`)
-- submitted_at: timestamp, optional
-
-**Invariants**
-
-- a submission belongs to one workspace
-- only `draft` submissions can be edited freely
-- a submission must reach a terminal review status before report publication
-
-**Persistence intent**
-Persist as a core application-plane aggregate. Query by tenant, workspace, status, and submitter.
-
-### Entity: Review
-
-**Description**
-Tracks the current evaluation state and findings for a submission.
-
-**Fields**
-
-- review_id: identifier
-- submission_id: identifier
-- decision: enum (`pending | approved | rejected`)
-- findings_summary: text
-- reviewed_by: identifier, optional
-- reviewed_at: timestamp, optional
-
-**Invariants**
-
-- at most one active review per submission in the first release
-- a final decision requires a review timestamp
-
-**Persistence intent**
-Persist with the submission lifecycle; may be stored as a separate table/entity if that keeps status history cleaner.
-
-### Entity: Report
-
-**Description**
-A generated or stored representation of the final review outcome.
-
-**Fields**
-
-- report_id: identifier
-- submission_id: identifier
-- tenant_id: identifier
-- format: enum (`html | pdf | json`)
-- generated_at: timestamp
-- published_by: identifier, optional
-
-**Invariants**
-
-- reports are produced only for completed reviews
-- a published report must be reproducible from the final review state
-
-**Persistence intent**
-Persist report metadata in the application plane; the binary/rendered artifact may live in object storage if pinned elsewhere.
-
----
-
 ## Use cases
 
-### Submit item for review
+Authoring rule:
+- Every name listed under `**Touches**` must match an aggregate or entity declared above in this same plane document.
+- If a use case depends on concepts such as Role, User, Tenant, or Activity Event, model the plane-owned business object explicitly above (for example a role-assignment or activity aggregate) instead of leaving the touch reference implicit.
+- Do not rely on another plane document to satisfy `Touches` names for this application-plane file.
+
+### <replace with use-case name>
 
 **Intent**
-A tenant user submits an item into the review workflow.
+Describe the business outcome the user or system is trying to achieve.
 
 **Touches**
 
-- Workspace
-- Submission
-
-### Complete review decision
-
-**Intent**
-A reviewer inspects findings and marks the submission approved or rejected.
-
-**Touches**
-
-- Submission
-- Review
-
-### Publish report
-
-**Intent**
-A user exports or publishes the final review outcome.
-
-**Touches**
-
-- Review
-- Report
-
----
+- <aggregate/entity names involved>
 
 ## API candidates (optional)
 
 These are only starter hints for the architect. Planner derivation should come from the domain content above, not from this section alone.
 
-- workspaces: list, create, get, update, archive
-- submissions: list, create, get, update, submit
-- reviews: get, decide
-- reports: list, get, publish
+Authoring note:
+- CAF should normalize each bullet into `api_candidates.resources[]` object entries in the derived YAML, using `name` plus optional `operations[]`.
 
----
+- <resource>: list, create, get, update
 
 ## Open questions
 
-Starter examples:
-
-- do we need revision history for submissions in the first release?
-- should reports be immutable snapshots or regenerated views?
-- do approvals require one reviewer or more than one?
-
----
+Capture unresolved domain questions here.
 
 ## Canonical normalization notes (optional)
 

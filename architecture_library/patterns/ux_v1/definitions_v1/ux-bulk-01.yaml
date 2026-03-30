@@ -1,0 +1,44 @@
+pattern_id: UX-BULK-01
+name: Bulk Action with Preview and Partial Results
+summary: Use a bulk-action interaction when users need to apply the same operation to many items with safe confirmation, preview, and clear reporting of partial success or failure.
+intent: Provide a bounded UX posture for repeated actions over result sets without hiding permissions, rate limits, or per-item errors.
+context: Operational worklists, admin actions, review queues, migrations, content moderation, batch retries, mass configuration changes.
+problem: Without a dedicated bulk-action pattern, teams either force repetitive one-by-one actions or create dangerous “apply to all” shortcuts with poor confirmation and error reporting.
+forces_tradeoffs: Throughput vs safety; whole-batch simplicity vs per-item transparency; synchronous confirmation vs async execution; permission checks vs user convenience.
+solution_structure_behavior: Use bulk selection, preview, explicit confirmation, and a result model that can show success, skipped items, and failures. Keep the selection scope and action consequences visible before execution.
+consequences: Improves operator efficiency and trust; requires careful recovery states, idempotency expectations, and alignment with async/result posture when actions are long-running.
+implementation_notes: Bulk actions are not just buttons. They need clear selection scope, preview, permission handling, and result explanation.
+examples_known_uses: Bulk approve/reject, archive selected items, retry failed jobs, assign many queue items, batch enable/disable settings.
+related_patterns: |
+  depends_on: VAL-01
+  depends_on: OBS-01
+  depends_on: EXT-RATE_LIMITING_QUOTAS
+  complements: UX-WORKLIST-01
+  complements: UX-ASYNC-01
+  complements: UX-RECOVERY-01
+extended_definition: |
+  Use bulk selection, preview, explicit confirmation, and a result model that can show success, skipped items, and failures. Keep the selection scope and action consequences visible before execution.
+
+caf:
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-UX-BULK-01
+  minimum_evidence:
+  - Use a bulk-action interaction when users need to apply the same operation to many items with safe confirmation, preview, and clear reporting of partial success or failure.
+  - Without a dedicated bulk-action pattern, teams either force repetitive one-by-one actions or create dangerous “apply to all” shortcuts with poor confirmation and error reporting.
+  definition_of_done:
+  - UX design shows where this interaction pattern is used and what state/recovery posture it requires.
+  - Planning artifacts preserve the interaction pattern without collapsing it into generic smoke-test UI scaffolding.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No frontend framework, component library, or vendor choice is implied by this pattern.

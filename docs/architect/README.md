@@ -67,11 +67,11 @@ For deeper mechanics, start with:
 - `docs/maintainer/README.md`
 
 
-## Next best link
+## Find out more
 
 [Mental model](01_mental_model.md) — Start with the traceability model behind the three architect questions CAF is designed to answer.
 
-## Top 3 related links
+## You might also be interested in
 
 - [Architect workflows](10_architect_workflows.md) — See how the PRD-first launch path fits into day-to-day architect use.
 - [CAF ask internals](06_caf_ask_internals.md) — Understand how architect questions map to durable ask context packs.

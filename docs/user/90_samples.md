@@ -4,7 +4,7 @@ CAF is easiest to understand with a concrete instance story.
 
 ## Canonical public sample
 
-CAF uses one canonical public sample name across the public docs, demos, and ask-first UX:
+CAF uses one canonical public sample name across the public docs, sample walkthroughs, and ask-first UX:
 
 - `codex-saas`
 
@@ -54,7 +54,7 @@ Before publishing a sample:
 - candidate-code snapshot after:
   - `/caf build codex-saas`
 
-## Related
+## You might also be interested in
 
 - [Answering questions with CAF](14_answering_questions_with_caf.md)
 - [Quickstart](03_quickstart.md)

@@ -3,10 +3,12 @@ TITLE: Mock Auth Claim Contract for Python HTTP Surfaces
 INTENT: Bind mock auth mode to an explicit claim-bearing Authorization/Bearer runtime contract for Python HTTP services without pushing auth-mode realization into planner prose or bespoke scanners.
 
 ROLE BINDINGS:
-- mock_auth_claims_module: shared helper that parses the mock Authorization/Bearer claim contract using the canonical claim keys `tenant_id`, `principal_id`, and `policy_version`.
-- mock_auth_ap_boundary_adapter: AP HTTP boundary helper that resolves Authorization/Bearer inputs using case-insensitive HTTP header access; alternate tenant/principal headers are read only to reject conflicting carriers when claim-over-header is adopted.
+- mock_auth_claims_module: shared helper that parses the mock Authorization/Bearer claim contract using the canonical claim keys `tenant_id`, `principal_id`, and `policy_version`. The current canonical bearer token shape is `mock.<base64-json>.token`.
+- mock_auth_ap_boundary_adapter: AP HTTP boundary helper that resolves Authorization/Bearer inputs using case-insensitive HTTP header access; alternate tenant/principal headers are read only to reject conflicting carriers when claim-over-header is adopted. The request-object handoff may be split with the framework-owned dependency provider boundary, so deterministic proof must not require every request-surface marker to live in `auth_context.py` itself.
 - mock_auth_ui_claim_builder: UI claim builder that encodes the selected mock Authorization/Bearer payload and owns the canonical mock claim shape.
 - mock_auth_ui_api_helper: UI API helper that emits the selected Authorization/Bearer header and preserves claim-over-header conflict behavior at the browser/client edge.
+- UI API-helper evidence may be satisfied through explicit delegation to the owning claim/header helper (for example `buildAuthHeaders(...)`) as long as the API helper keeps claim-over-header conflict behavior explicit; deterministic proof may be satisfied either locally in the API helper or in the declared owner surface when the split is explicit.
+- Deterministic realization checks for delegated proxy/owner pairs MUST be declared from the TBP role binding (for example via `validator_kind` + `validator_config`) and executed by generic gates; do not hardcode proxy-file string rules into workers or generic build/UX gates.
 
 EVIDENCE EXPECTATIONS:
 - E-TBP-AUTH-MOCK-01-01: Mock auth mode is realized through an explicit Authorization/Bearer contract in the shared auth helper, AP boundary adapter, and UI helper surfaces.

@@ -88,11 +88,11 @@ Notes:
 - CAF remains fail closed: ambiguity should produce a feedback packet rather than speculation.
 
 
-## Next best link
+## Find out more
 
 [PRD-first lifecycle](15_prd_first_lifecycle.md) — Make sure the right lifecycle artifacts exist before you lean on `/caf ask`.
 
-## Top 3 related links
+## You might also be interested in
 
 - [Quickstart](03_quickstart.md) — Build the minimal artifact path for a new instance.
 - [Feedback packets and debugging](08_feedback_packets_and_debugging.md) — Recover cleanly when the ask surface fails closed.

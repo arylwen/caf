@@ -168,8 +168,8 @@ Each plane design doc MUST include these architect-editable blocks (preserved on
 - `<!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 START -->` ... `END -->`
 
   **Open questions formatting rule (low-friction):**
-  - In `design/playbook/application_design_v1.md`, open questions MUST be emitted as **topic-keyed option sets** (a YAML mapping) so the architect only flips `status: adopt` (matching the ergonomics of the CP plane-integration *choices* blocks).
-  - Avoid the higher-noise list form (`questions: - question_id: ...`). Use `questions: <topic_key>: {question_id, question, options, anchors}` instead.
+  - In `design/playbook/application_design_v1.md`, emit `open_questions_v1` using the library-owned canonical shape defined in `architecture_library/phase_8/82_phase_8_human_signal_blocks_contract_v2.md` under **Canonical human-signal block: application-design carried-forward open questions**.
+  - That means: `schema_version: open_questions_v1` plus a topic-keyed `questions` mapping (not a list form).
   - Include `summary` on each option where it improves readability.
 
 - `<!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_choices_v1 START -->` ... `END -->` (inside the Plane Integration Contract section)
@@ -323,10 +323,11 @@ Carry-forward rules (required):
 - Minimum scaffold (if empty):
 
 ```yaml
-version: 1
+schema_version: open_questions_v1
 questions: {}
 ```
 
+- Use the library-owned canonical shape from `architecture_library/phase_8/82_phase_8_human_signal_blocks_contract_v2.md`; do not invent a skill-local variant.
 - **Merge rule:** preserve existing `questions` entries verbatim; only add missing topics.
 - If the block is present but cannot be parsed as YAML, treat it as a CAF-generated placeholder **only if** it contains no fenced YAML at all; in that case you MAY replace it with the scaffold above and then populate carried-forward questions.
 - If there is fenced YAML but it is invalid, FAIL-CLOSED (assume human edited).

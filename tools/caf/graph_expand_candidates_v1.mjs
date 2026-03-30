@@ -380,7 +380,7 @@ function main() {
   if (Number.isFinite(maxCandidates) && maxCandidates > 0 && seeds.length >= maxCandidates) {
     const layout = getInstanceLayout(repoRoot, instance);
     const instRoot = layout.instRoot;
-    const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding')
+    const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design')
       ? layout.designPlaybookDir
       : layout.specPlaybookDir;
     if (!fs.existsSync(instRoot)) die(`Missing instance folder: ${instRoot}`);
@@ -587,6 +587,13 @@ function main() {
   // Namespace preference affects OPEN LIST ordering only (not reachability).
   // For solution_architecture we prefer external_v1 so EXT candidates don't get starved.
   const nsPref = (ns) => {
+    if (profile === 'ux_design') {
+      if (ns === 'ux_v1') return 0;
+      if (ns === 'external_v1') return 1;
+      if (ns === 'caf_v1') return 2;
+      if (ns === 'core_v1') return 3;
+      return 4;
+    }
     if (profile === 'solution_architecture') {
       if (ns === 'external_v1') return 0;
       if (ns === 'caf_v1') return 1;
@@ -639,7 +646,7 @@ function main() {
 
   const layout = getInstanceLayout(repoRoot, instance);
   const instRoot = layout.instRoot;
-  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding') ? layout.designPlaybookDir : layout.specPlaybookDir;
+  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design') ? layout.designPlaybookDir : layout.specPlaybookDir;
   if (!fs.existsSync(instRoot)) die(`Missing instance folder: ${instRoot}`);
   ensureDir(playbookDir);
 

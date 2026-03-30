@@ -218,7 +218,7 @@ function collectLegacyApBindings(taskGraphObj, roleIds, existingBindings = []) {
 
   const out = [];
   for (const taskId of byId.keys()) {
-    const m = taskId.match(/^TG-30-service-facade-([a-z0-9][a-z0-9-]*)$/);
+    const m = taskId.match(/^TG-30-service-facade-([a-z0-9][a-z0-9_-]*)$/);
     if (!m) continue;
     const resourceKey = m[1];
     const providerTaskId = `TG-40-persistence-${resourceKey}`;

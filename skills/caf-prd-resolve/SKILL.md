@@ -19,6 +19,8 @@ Produce two resolved documents used by `/caf prd`:
 
 The resolved docs MUST satisfy the Phase 8 PRD Source Contract and MUST be safe inputs for deterministic extraction.
 
+When `product/UX_VISION.md` exists, the resolver may use only the architecture-shape-relevant subset of that source to clarify the resolved PRDs. Do not copy logo/palette/component-system details into the resolved PRDs.
+
 ## Inputs (must exist)
 
 - `reference_architectures/<instance>/product/PRD.md`
@@ -29,9 +31,14 @@ Optional token-savers (if present):
 - `reference_architectures/<instance>/spec/playbook/prd_extract_v1.json`
 - `reference_architectures/<instance>/spec/playbook/platform_prd_extract_v1.json`
 
+Additional contextual source (read when present):
+
+- `reference_architectures/<instance>/product/UX_VISION.md`
+
 ## Normative sources
 
 - `architecture_library/phase_8/78_phase_8_prd_source_contract_v1.md`
+- `tools/caf/contracts/ux_vision_source_and_prd_consumption_contract_v1.md`
 
 ## Resolver invariants (MUST)
 

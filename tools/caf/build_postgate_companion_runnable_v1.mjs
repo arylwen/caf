@@ -20,9 +20,10 @@ import { parseYamlString } from './lib_yaml_v2.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
-import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 import { loadInterfaceBindingContractsForInstance } from './lib_interface_binding_contracts_v1.mjs';
 import { internal_main as buildTechnologyChoiceRealizationGate } from './build_technology_choice_realization_gate_v1.mjs';
+import { internal_main as buildUxCollectionsWorkspaceSurfaceGate } from './build_postgate_ux_collections_workspace_surface_v1.mjs';
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 let WRITE_ALLOWED_ROOTS = null;
 function isWithin(childAbs, parentAbs) {
@@ -67,6 +68,52 @@ async function readUtf8(p) {
 function safeRel(repoRoot, absPath) {
   return path.relative(repoRoot, absPath).replace(/\\/g, '/');
 }
+function getComposeBuildSpec(serviceCfg) {
+  const build = serviceCfg?.build;
+  if (!build) return null;
+  if (typeof build === 'string') return { context: build, dockerfile: null };
+  if (build && typeof build === 'object' && !Array.isArray(build)) {
+    return { context: build.context || null, dockerfile: build.dockerfile || null };
+  }
+  return null;
+}
+function dockerfileCopiesRequireRepoRoot(dockerfileText, codeRoot, nginxFile) {
+  return [
+    `COPY ${codeRoot}/package.json`,
+    `COPY ${codeRoot}/ ./`,
+    `COPY ${nginxFile}`,
+  ].some((snippet) => dockerfileText.includes(snippet));
+}
+
+function dockerfileAssumesPackageLock(dockerfileText, codeRoot) {
+  const text = String(dockerfileText || '');
+  return text.includes(`COPY ${codeRoot}/package-lock.json`) || /\bnpm\s+ci\b/.test(text);
+}
+async function writeHelperRuntimeErrorPacket(repoRoot, instanceName, errorLike) {
+  const stackOrError = String(errorLike?.stack || errorLike || '').trim();
+  const evidence = stackOrError
+    ? stackOrError.split(/\r?\n/).slice(0, 12).map((line) => `Error: ${line}`)
+    : ['Error: (no stack available)'];
+  return await writeFeedbackPacket(
+    repoRoot,
+    instanceName,
+    'build-postgate-helper-runtime-error',
+    'A framework-owned runnable build post-gate helper crashed before returning normal status',
+    [
+      'Treat this as a framework/helper failure first; do not assume the currently surfaced companion packet or generated instance artifact is the root cause.',
+      'Fix the failing framework-owned helper/runtime seam before trusting any previously pending runnable/build packets surfaced by wrapper tooling.',
+      'Prefer strengthening the helper, shared validator library, or TBP-declared validator path over hand-editing instance artifacts.',
+      'Rerun `/caf build <instance>` after the helper/runtime bug is corrected.',
+    ],
+    evidence,
+  );
+}
+
+async function resolveHelperRuntimePacketIfPresent(repoRoot, instanceName) {
+  const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
+  resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-helper-runtime-error');
+}
+
 async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines, opts = {}) {
   const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
   await ensureDir(packetsDir);
@@ -201,7 +248,174 @@ function failClosedAssemblySurfaceLabel(mode) {
     ? 'framework-managed assembly surface'
     : 'composition root';
 }
-function listProductionPersistenceFiles(rootAbs) {
+function isPotentialPersistenceAssemblySurface(relPath) {
+  const rel = normalizeRelPath(relPath).toLowerCase();
+  if (!rel) return false;
+  const base = path.basename(rel);
+  if (base.startsWith('repository_factory.')) return true;
+  if (/\/(?:api\/dependencies|bootstrap|main)\.(?:py|ts|tsx|js|jsx)$/.test(rel)) return true;
+  return false;
+}
+
+
+async function listFilesRecursive(dirAbs) {
+  const out = [];
+  if (!existsSync(dirAbs)) return out;
+  const queue = [dirAbs];
+  while (queue.length > 0) {
+    const current = queue.pop();
+    const entries = await fs.readdir(current, { withFileTypes: true });
+    for (const entry of entries) {
+      const abs = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        queue.push(abs);
+      } else if (entry.isFile()) {
+        out.push(abs);
+      }
+    }
+  }
+  return out;
+}
+
+function hasReactPluginPackageContract(packageText) {
+  return /@vitejs\/plugin-react/.test(String(packageText || ''));
+}
+
+function hasReactPluginViteContract(viteText) {
+  const text = String(viteText || '');
+  return /@vitejs\/plugin-react/.test(text) && /react\s*\(/.test(text);
+}
+
+function hasExplicitClassicReactImport(sourceText) {
+  const text = String(sourceText || '');
+  return /^\s*import\s+React\s+from\s+["']react["'];?/m.test(text)
+    || /^\s*import\s+\*\s+as\s+React\s+from\s+["']react["'];?/m.test(text);
+}
+
+async function runReactViteJsxRuntimeGapPostgate(repoRoot, instanceName) {
+  const companionRoot = path.join(repoRoot, 'companion_repositories', instanceName, 'profile_v1');
+  const lanes = [
+    { lane: 'ui', root: path.join(companionRoot, 'code', 'ui') },
+    { lane: 'ux', root: path.join(companionRoot, 'code', 'ux') },
+  ];
+  const issues = [];
+  for (const { lane, root } of lanes) {
+    const packagePath = path.join(root, 'package.json');
+    const viteConfigPath = path.join(root, 'vite.config.js');
+    const srcDir = path.join(root, 'src');
+    if (![packagePath, viteConfigPath, srcDir].every((p) => existsSync(p))) continue;
+    const sourceFiles = await listFilesRecursive(srcDir);
+    const jsxFiles = sourceFiles.filter((abs) => /\.(jsx|tsx)$/.test(abs));
+    if (jsxFiles.length === 0) continue;
+    const packageText = await readUtf8(packagePath);
+    const viteText = await readUtf8(viteConfigPath);
+    const hasPluginContract = hasReactPluginPackageContract(packageText) && hasReactPluginViteContract(viteText);
+    if (hasPluginContract) continue;
+
+    const missingClassicImports = [];
+    for (const jsxPath of jsxFiles) {
+      const sourceText = await readUtf8(jsxPath);
+      if (!hasExplicitClassicReactImport(sourceText)) {
+        missingClassicImports.push(safeRel(repoRoot, jsxPath));
+      }
+    }
+    if (missingClassicImports.length === 0) continue;
+
+    if (!hasReactPluginPackageContract(packageText)) {
+      issues.push(`${safeRel(repoRoot, packagePath)}: React/Vite lane ${lane} uses JSX but package.json is missing the selected JSX/runtime plugin contract`);
+    }
+    if (!hasReactPluginViteContract(viteText)) {
+      issues.push(`${safeRel(repoRoot, viteConfigPath)}: React/Vite lane ${lane} uses JSX but vite.config.js is missing the selected JSX/runtime plugin wiring`);
+    }
+    issues.push(`${lane} lane classic JSX fallback is incomplete because these JSX files omit an explicit React import: ${missingClassicImports.join(', ')}`);
+  }
+  if (issues.length > 0) {
+    const fp = await writeFeedbackPacket(
+      repoRoot,
+      instanceName,
+      'build-postgate-react-vite-jsx-runtime-gap',
+      'JSX runtime contract is incomplete for browser-runnable UI or UX lanes',
+      [
+        'Strengthen the framework-owned selected JSX/runtime producer contract at the TBP seam and regenerate the affected lane from the owning worker/TBP seam rather than hand-debugging Docker or nginx first.',
+        'When the selected realization expects a framework-managed JSX/runtime plugin contract, materialize the required package/config files declared by that contract.',
+        'Only keep a classic JSX runtime when a bounded repair intentionally does so and every JSX-bearing file imports React explicitly.',
+      ],
+      issues,
+    );
+    die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 38);
+  }
+  return 0;
+}
+
+async function runUxSurfacePageModuleGapPostgate(repoRoot, instanceName, taskReportsDir, freshnessFloorMs) {
+  const uxTaskIds = [
+    'UX-TG-20-primary-worklist-surface',
+    'UX-TG-30-detail-review-report-surface',
+    'UX-TG-40-collections-publish-surface',
+    'UX-TG-50-admin-and-activity-governance-surface',
+  ];
+  const completed = uxTaskIds.filter((taskId) => taskEvidenceFresh(taskReportsDir, path.join(repoRoot, 'companion_repositories', instanceName, 'profile_v1'), taskId, freshnessFloorMs));
+  if (completed.length === 0) return 0;
+  const pagesDir = path.join(repoRoot, 'companion_repositories', instanceName, 'profile_v1', 'code', 'ux', 'src', 'pages');
+  const pageFiles = (await listFilesRecursive(pagesDir)).filter((abs) => /\.(jsx|tsx)$/.test(abs));
+  if (pageFiles.length > 0) return 0;
+  const fp = await writeFeedbackPacket(
+    repoRoot,
+    instanceName,
+    'build-postgate-ux-surface-page-module-gap',
+    'Richer UX tasks completed without materializing any route/page modules under code/ux/src/pages',
+    [
+      'Strengthen the framework-owned UX worker contract so UX-TG-20/30/40/50 materialize page modules under code/ux/src/pages instead of collapsing all major surfaces into App.jsx.',
+      'Keep App.jsx as the stable shell/router composition surface and move task-owned workspaces into page modules.',
+      'Regenerate the UX lane from the owning framework seam rather than hand-editing the witness companion as the primary fix.',
+    ],
+    [
+      ...completed.map((taskId) => `Completed richer UX task: ${safeRel(repoRoot, path.join(taskReportsDir, `${taskId}.md`))}`),
+      `Missing page modules under: ${safeRel(repoRoot, pagesDir)}`,
+    ],
+  );
+  die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 39);
+}
+
+async function runCpApTransportBoundaryPostgate(repoRoot, instanceName) {
+  const scriptPath = path.join(repoRoot, 'tools', 'caf', 'build_postgate_cp_ap_contract_transport_v1.mjs');
+  if (!existsSync(scriptPath)) return 0;
+  const mod = await import(pathToFileURL(scriptPath).href);
+  if (!mod || typeof mod.internal_main !== 'function') return 0;
+  return await mod.internal_main([instanceName]);
+}
+
+async function runPolicyPreviewActionAlignmentPostgate(repoRoot, instanceName) {
+  const scriptPath = path.join(repoRoot, 'tools', 'caf', 'build_postgate_policy_preview_action_alignment_v1.mjs');
+  if (!existsSync(scriptPath)) return 0;
+  const mod = await import(pathToFileURL(scriptPath).href);
+  if (!mod || typeof mod.internal_main !== 'function') return 0;
+  return await mod.internal_main([instanceName]);
+}
+
+async function runCpRuntimeRepositoryHealthPostgate(repoRoot, instanceName) {
+  const scriptPath = path.join(repoRoot, 'tools', 'caf', 'build_postgate_cp_runtime_repository_health_v1.mjs');
+  if (!existsSync(scriptPath)) return 0;
+  const mod = await import(pathToFileURL(scriptPath).href);
+  if (!mod || typeof mod.internal_main !== 'function') return 0;
+  return await mod.internal_main([instanceName]);
+}
+
+function listProductionPersistenceFiles(rootAbs, preferredRelPaths = []) {
+  const requested = Array.isArray(preferredRelPaths)
+    ? preferredRelPaths.map((x) => normalizeRelPath(x)).filter(Boolean)
+    : [];
+  const requestedAbs = [];
+  const requestedSeen = new Set();
+  for (const rel of requested) {
+    const abs = path.join(rootAbs, rel);
+    const norm = path.normalize(abs);
+    if (requestedSeen.has(norm) || !existsSync(norm)) continue;
+    requestedSeen.add(norm);
+    requestedAbs.push(norm);
+  }
+  if (requestedAbs.length > 0) return Promise.resolve(requestedAbs.sort());
+
   const out = [];
   async function walk(dirAbs) {
     let ents = [];
@@ -219,8 +433,7 @@ function listProductionPersistenceFiles(rootAbs) {
       const rel = normalizeRelPath(path.relative(rootAbs, abs));
       if (!rel) continue;
       if (rel.includes('/tests/') || rel.endsWith('_test.py') || rel.endsWith('.test.py') || rel.endsWith('.spec.py') || rel.endsWith('.test.ts') || rel.endsWith('.spec.ts') || rel.endsWith('.test.js') || rel.endsWith('.spec.js')) continue;
-      const base = path.basename(rel).toLowerCase();
-      if (rel.includes('/persistence/') || base.startsWith('repository_factory.')) out.push(abs);
+      if (isPotentialPersistenceAssemblySurface(rel)) out.push(abs);
     }
   }
   return walk(rootAbs).then(() => out.sort());
@@ -257,6 +470,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
     }
   }
   let runtimeWiringTaskIds = [];
+  let allTaskIds = [];
   if (existsSync(taskGraphPath)) {
     try {
       const taskGraphObj = parseYamlString(await readUtf8(taskGraphPath), taskGraphPath);
@@ -267,25 +481,69 @@ export async function internal_main(argv = process.argv.slice(2)) {
         .filter((t) => isPlainObject(t) && Array.isArray(t.required_capabilities) && t.required_capabilities.includes('runtime_wiring'))
         .map((t) => String(t.task_id || '').trim())
         .filter(Boolean);
+      allTaskIds = taskList
+        .map((t) => String(t?.task_id || '').trim())
+        .filter(Boolean);
     } catch {
       runtimeWiringTaskIds = [];
+      allTaskIds = [];
     }
   }
   const runtimeWiringCompleted = runtimeWiringTaskIds.some((taskId) =>
+    taskEvidenceFresh(taskReportsDir, companionRoot, taskId, taskGraphFreshnessFloorMs)
+  );
+  const buildCompleted = allTaskIds.length > 0 && allTaskIds.every((taskId) =>
     taskEvidenceFresh(taskReportsDir, companionRoot, taskId, taskGraphFreshnessFloorMs)
   );
   if (!runtimeWiringCompleted) {
     process.stdout.write("SKIP: runnable post-gate deferred until runtime wiring has completed.\n");
     return 0;
   }
+  const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
+  if (!buildCompleted) {
+    process.stdout.write("SKIP: full-build technology-choice post-gate deferred until all build tasks have completed.\n");
+  } else {
+    try {
+      const techChoiceCode = await buildTechnologyChoiceRealizationGate([instanceName]);
+      const uxCollectionsWorkspaceCode = await buildUxCollectionsWorkspaceSurfaceGate([instanceName]);
+      if (typeof techChoiceCode === 'number' && techChoiceCode !== 0) return techChoiceCode;
+      if (typeof uxCollectionsWorkspaceCode === 'number' && uxCollectionsWorkspaceCode !== 0) return uxCollectionsWorkspaceCode;
+      resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-ux-collections-workspace-surface-drift');
+    } catch (e) {
+      if (typeof e?.code === 'number') return e.code;
+      throw e;
+    }
+  }
   try {
-    const techChoiceCode = await buildTechnologyChoiceRealizationGate([instanceName]);
-    if (typeof techChoiceCode === 'number' && techChoiceCode !== 0) return techChoiceCode;
+    const reactViteRuntimeCode = await runReactViteJsxRuntimeGapPostgate(repoRoot, instanceName);
+    if (typeof reactViteRuntimeCode === 'number' && reactViteRuntimeCode !== 0) return reactViteRuntimeCode;
+  } catch (e) {
+    if (typeof e?.code === 'number') return e.code;
+    throw e;
+  }
+  try {
+    const uxSurfacePageCode = await runUxSurfacePageModuleGapPostgate(repoRoot, instanceName, taskReportsDir, taskGraphFreshnessFloorMs);
+    if (typeof uxSurfacePageCode === 'number' && uxSurfacePageCode !== 0) return uxSurfacePageCode;
+  } catch (e) {
+    if (typeof e?.code === 'number') return e.code;
+    throw e;
+  }
+  try {
+    const cpApTransportCode = await runCpApTransportBoundaryPostgate(repoRoot, instanceName);
+    if (typeof cpApTransportCode === 'number' && cpApTransportCode !== 0) return cpApTransportCode;
+  } catch (e) {
+    if (typeof e?.code === 'number') return e.code;
+    throw e;
+  }
+  try {
+    const cpRuntimeRepositoryHealthCode = await runCpRuntimeRepositoryHealthPostgate(repoRoot, instanceName);
+    if (typeof cpRuntimeRepositoryHealthCode === 'number' && cpRuntimeRepositoryHealthCode !== 0) return cpRuntimeRepositoryHealthCode;
   } catch (e) {
     if (typeof e?.code === 'number') return e.code;
     throw e;
   }
   const bindingReportDir = path.join(companionRoot, 'caf', 'binding_reports');
+  const activePersistenceAssemblyRelPaths = new Set();
   const bindingContractsCompanionPath = path.join(companionRoot, 'caf', 'interface_binding_contracts_v1.yaml');
   const bindingContractsSourcePath = path.join(repoRoot, 'reference_architectures', instanceName, 'design', 'playbook', 'interface_binding_contracts_v1.yaml');
   let bindingContracts = null;
@@ -384,6 +642,9 @@ export async function internal_main(argv = process.argv.slice(2)) {
           const rel = normalizeRelPath(relMaybe);
           if (!rel) continue;
           const artifactAbs = resolveReferencedArtifactAbs(repoRoot, companionRoot, rel);
+          if (assemblerArtifacts.map((x) => normalizeRelPath(x)).includes(rel)) {
+            activePersistenceAssemblyRelPaths.add(rel);
+          }
           if (!artifactAbs || !existsSync(artifactAbs)) {
             bindingIssues.push(`${safeRel(repoRoot, reportPath)}: missing referenced artifact ${rel}`);
             continue;
@@ -429,7 +690,12 @@ export async function internal_main(argv = process.argv.slice(2)) {
   const dbRequiresEngineBackedRuntime = !!databaseEngine && !['none', 'mock', 'mock_in_memory', 'in_memory'].includes(databaseEngine);
   if (runtimeWiringCompleted && dbRequiresEngineBackedRuntime) {
     const fallbackIssues = [];
-    for (const artifactAbs of await listProductionPersistenceFiles(companionRoot)) {
+    const fallbackEvidenceRelPaths = [
+      ...activePersistenceAssemblyRelPaths,
+      'code/ap/persistence/repository_factory.py',
+      'code/cp/persistence/repository_factory.py',
+    ];
+    for (const artifactAbs of await listProductionPersistenceFiles(companionRoot, fallbackEvidenceRelPaths)) {
       const rel = safeRel(repoRoot, artifactAbs);
       const content = await readUtf8(artifactAbs);
       if (isLikelyTestArtifact(rel, content)) continue;
@@ -438,16 +704,18 @@ export async function internal_main(argv = process.argv.slice(2)) {
         fallbackIssues.push(`${rel}: ${finding}`);
       }
     }
+    const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
     if (fallbackIssues.length > 0) {
       const fp = await writeFeedbackPacket(
         repoRoot,
         instanceName,
         'build-postgate-forbidden-production-persistence-fallback',
-        'Resolved database rails require an engine-backed runtime, but production persistence code still retains in-memory/demo fallback behavior',
+        'Resolved database rails require an engine-backed runtime, but active runtime assembly surfaces still retain in-memory/demo fallback behavior',
         [
-          'Generate or preserve only the engine-backed repository + adapter path in production runtime modules.',
+          'Generate or preserve only the engine-backed repository + adapter path in the active runtime assembly surfaces.',
           `Make repository_factory (or equivalent ${failClosedAssemblySurfaceLabel(dependencyWiringMode)}) fail closed when DATABASE_URL is missing/empty or does not match the resolved engine.`,
-          'Move fakes/in-memory test doubles under tests/** instead of production code paths.',
+          'Do not wire or instantiate in-memory/demo persistence providers from production assembler artifacts.',
+          'Move true test-only doubles under tests/** or mark them CAF_TEST_ONLY when they cannot be selected by production assembly.',
           'Rerun `/caf build <instance>` after fixing persistence generation or runtime wiring outputs.',
         ],
         [
@@ -458,6 +726,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
       );
       die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 18);
     }
+    resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-forbidden-production-persistence-fallback');
   }
   // 1) Compose sanity: services must all be objects (no null placeholders).
   let composeObj;
@@ -566,7 +835,7 @@ if (missingBindMountSources.length > 0) {
     'build-postgate-compose-missing-bind-mount-sources',
     'Compose contains bind-mounts whose source paths do not exist (likely path resolution / double-prefix issue)',
     [
-      'Prefer baking config into the Docker image (avoid bind-mounts) unless explicitly required for local debug.',
+      'Prefer baking config into the Docker image (avoid bind-mounts) unless explicitly required for local debug; see tools/caf/contracts/runtime_wiring_compose_posture_contract_v1.md.',
       'If a bind-mount is required, ensure the source path is relative to the directory containing docker/compose.candidate.yaml and exists on disk.',
       'Rerun `/caf build <instance>` after fixing runtime wiring outputs.',
     ],
@@ -574,7 +843,161 @@ if (missingBindMountSources.length > 0) {
   );
   die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 16);
 }
-  // 1d) Compose command interpolation foot-gun: disallow `${...}` in command overrides.
+// 1d) UI/UX Docker context invariant: if the Dockerfile copies code/* and docker/nginx.* from the companion root,
+// the compose build context must also be the companion root (typically `..` from docker/compose.candidate.yaml).
+const buildContextViolations = [];
+for (const spec of [
+  { service: 'ui', dockerfileName: 'Dockerfile.ui', codeRoot: 'code/ui', nginxFile: 'docker/nginx.ui.conf' },
+  { service: 'ux', dockerfileName: 'Dockerfile.ux', codeRoot: 'code/ux', nginxFile: 'docker/nginx.ux.conf' },
+]) {
+  const svcCfg = services?.[spec.service];
+  if (!svcCfg || typeof svcCfg !== 'object' || Array.isArray(svcCfg)) continue;
+  const buildSpec = getComposeBuildSpec(svcCfg);
+  if (!buildSpec || typeof buildSpec.context !== 'string' || typeof buildSpec.dockerfile !== 'string') continue;
+  const resolvedDockerfile = path.resolve(composeDir, buildSpec.dockerfile);
+  const expectedDockerfile = path.join(companionRoot, 'docker', spec.dockerfileName);
+  if (resolvedDockerfile !== expectedDockerfile || !existsSync(expectedDockerfile)) continue;
+  const dockerfileText = await readUtf8(expectedDockerfile);
+  if (!dockerfileCopiesRequireRepoRoot(dockerfileText, spec.codeRoot, spec.nginxFile)) continue;
+  const resolvedContext = path.resolve(composeDir, buildSpec.context);
+  if (resolvedContext !== companionRoot) {
+    buildContextViolations.push(`${spec.service}: build.context=${JSON.stringify(buildSpec.context)} resolves to ${safeRel(repoRoot, resolvedContext)} but ${spec.dockerfileName} copies ${spec.codeRoot}/... and ${spec.nginxFile} from the companion root`);
+  }
+}
+if (buildContextViolations.length > 0) {
+  const fp = await writeFeedbackPacket(
+    repoRoot,
+    instanceName,
+    'build-postgate-compose-build-context-root-mismatch',
+    'Compose build context does not match the Dockerfile COPY root for UI/UX packaging',
+    [
+      'When docker/Dockerfile.ui or docker/Dockerfile.ux copies code/* and docker/nginx.* from the companion repo root, keep the corresponding compose build.context pointed at the companion root (typically `..` from docker/compose.candidate.yaml); see tools/caf/contracts/runtime_wiring_compose_posture_contract_v1.md.',
+      'Keep build.dockerfile aligned with docker/Dockerfile.ui or docker/Dockerfile.ux unless the Dockerfile COPY paths are rewritten coherently in the same task.',
+      'Rerun `/caf build <instance>` or `/caf ux build <instance>` after fixing runtime wiring outputs.',
+    ],
+    [`File: ${safeRel(repoRoot, composePath)}`, ...buildContextViolations.map((s) => `Violation: ${s}`)],
+  );
+  die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 17);
+}
+const lockfileAssumptionViolations = [];
+for (const spec of [
+  { service: 'ui', dockerfileName: 'Dockerfile.ui', codeRoot: 'code/ui' },
+  { service: 'ux', dockerfileName: 'Dockerfile.ux', codeRoot: 'code/ux' },
+]) {
+  const dockerfileAbs = path.join(companionRoot, 'docker', spec.dockerfileName);
+  if (!existsSync(dockerfileAbs)) continue;
+  const dockerfileText = await readUtf8(dockerfileAbs);
+  if (!dockerfileAssumesPackageLock(dockerfileText, spec.codeRoot)) continue;
+  const lockfileAbs = path.join(companionRoot, spec.codeRoot, 'package-lock.json');
+  if (existsSync(lockfileAbs)) continue;
+  lockfileAssumptionViolations.push(`${spec.service}: ${safeRel(repoRoot, dockerfileAbs)} assumes ${spec.codeRoot}/package-lock.json or npm ci, but no committed lockfile exists in the companion repo`);
+}
+if (lockfileAssumptionViolations.length > 0) {
+  const fp = await writeFeedbackPacket(
+    repoRoot,
+    instanceName,
+    'build-postgate-ui-ux-lockfile-assumption-gap',
+    'UI/UX Docker packaging assumes a package-lock.json that is not present in the companion repo',
+    [
+      'Do not copy `code/ui/package-lock.json` or `code/ux/package-lock.json` unless the same bounded task intentionally materializes that committed lockfile artifact.',
+      'For runnable candidates without an owned lockfile, copy only `package.json` and use `npm install --no-audit --no-fund` before `npm run build`.',
+      'Strengthen the producing runtime-wiring TBP/contract surfaces rather than hand-editing generated instance Dockerfiles.',
+      'Rerun `/caf build <instance>` or `/caf ux build <instance>` after fixing the producer seam.',
+    ],
+    lockfileAssumptionViolations.map((s) => `Violation: ${s}`),
+  );
+  die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 18);
+}
+resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-ui-ux-lockfile-assumption-gap');
+  // 1d) When compose materializes a postgres service, AP/CP must not blindly forward the shared repo-root
+  // DATABASE_URL into containers. Host-local env defaults (typically localhost) and container-local DNS
+  // (`postgres`) are different contexts and must be wired separately at the compose service boundary.
+  const postgresSvc = services.postgres;
+  const containerDbUrlViolations = [];
+  if (postgresSvc && typeof postgresSvc === 'object') {
+    for (const svcName of ['cp', 'ap']) {
+      const cfg = services[svcName];
+      if (!cfg || typeof cfg !== 'object') continue;
+      const env = cfg.environment && typeof cfg.environment === 'object' ? cfg.environment : null;
+      const dbUrl = env && typeof env.DATABASE_URL === 'string' ? env.DATABASE_URL.trim() : '';
+      if (!dbUrl) {
+        containerDbUrlViolations.push(`${svcName}: missing explicit environment.DATABASE_URL override for compose-backed postgres service`);
+        continue;
+      }
+      if (dbUrl === '${DATABASE_URL}') {
+        containerDbUrlViolations.push(`${svcName}: environment.DATABASE_URL blindly forwards the shared repo-root \${DATABASE_URL} into a compose-backed container`);
+        continue;
+      }
+      const lowered = dbUrl.toLowerCase();
+      if (!lowered.includes('@postgres:5432/')) {
+        containerDbUrlViolations.push(`${svcName}: environment.DATABASE_URL does not target the compose service DNS name postgres:5432 (${JSON.stringify(dbUrl)})`);
+      }
+    }
+  }
+  if (containerDbUrlViolations.length > 0) {
+    const fp = await writeFeedbackPacket(
+      repoRoot,
+      instanceName,
+      'build-postgate-compose-postgres-database-url-posture-gap',
+      'Compose-backed AP/CP services do not use a container-local DATABASE_URL for the postgres service',
+      [
+        'Keep the shared repo-root `.env` / `infrastructure/postgres.env.example` host-runnable by default (typically `localhost:5432` for local operator/helper runs).',
+        'When docker/compose.candidate.yaml materializes a `postgres` service, set AP/CP `environment.DATABASE_URL` explicitly to a container-local DSN that targets `postgres:5432` and is built from the `POSTGRES_*` variables.',
+        'Do not blindly forward the shared `${DATABASE_URL}` value into compose-backed containers; host-local and container-local connectivity are different runtime contexts.',
+        'Rerun `/caf build <instance>` after fixing the producer seam.',
+      ],
+      [`File: ${safeRel(repoRoot, composePath)}`, ...containerDbUrlViolations.map((s) => `Violation: ${s}`)],
+    );
+    die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 18);
+  }
+  resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-compose-postgres-database-url-posture-gap');
+  // 1e) Compose readiness posture: when postgres is materialized as an in-stack support service,
+  // AP/CP startup must wait for postgres health instead of relying on container creation order alone.
+  // This prevents eager startup/bootstrap exits that later surface as 502s from UI/UX nginx lanes.
+  function hasComposeHealthcheck(cfg) {
+    if (!isPlainObject(cfg?.healthcheck)) return false;
+    const test = cfg.healthcheck.test;
+    if (Array.isArray(test)) return test.some((part) => String(part ?? '').trim().length > 0);
+    return typeof test === 'string' && test.trim().length > 0;
+  }
+  function dependsOnServiceHealthy(cfg, depName) {
+    const dependsOn = cfg?.depends_on;
+    if (!isPlainObject(dependsOn)) return false;
+    const dep = dependsOn?.[depName];
+    if (typeof dep === 'string') return dep.trim() === 'service_healthy';
+    return isPlainObject(dep) && String(dep.condition ?? '').trim() === 'service_healthy';
+  }
+  const composeReadinessViolations = [];
+  if (postgresSvc && typeof postgresSvc === 'object') {
+    if (!hasComposeHealthcheck(postgresSvc)) {
+      composeReadinessViolations.push('postgres: missing compose healthcheck required for dependent AP/CP startup');
+    }
+    for (const svcName of ['cp', 'ap']) {
+      const cfg = services[svcName];
+      if (!cfg || typeof cfg !== 'object') continue;
+      if (!dependsOnServiceHealthy(cfg, 'postgres')) {
+        composeReadinessViolations.push(`${svcName}: depends_on.postgres must use condition: service_healthy when compose materializes postgres`);
+      }
+    }
+  }
+  if (composeReadinessViolations.length > 0) {
+    const fp = await writeFeedbackPacket(
+      repoRoot,
+      instanceName,
+      'build-postgate-compose-startup-readiness-gap',
+      'Compose runtime wiring relies on service creation order instead of health-gated startup for the postgres support service',
+      [
+        'When docker/compose.candidate.yaml materializes an in-stack `postgres` service, add a postgres `healthcheck:` and make AP/CP `depends_on.postgres.condition` use `service_healthy`.',
+        'Do not rely on bare `depends_on: [postgres]` or startup order alone for services that eagerly touch the database during startup/bootstrap.',
+        'Keep the readiness contract in the framework-owned compose assembly surface rather than patching only one generated witness.',
+        'Rerun `/caf build <instance>` or `/caf ux build <instance>` after fixing runtime wiring outputs.',
+      ],
+      [`File: ${safeRel(repoRoot, composePath)}`, ...composeReadinessViolations.map((s) => `Violation: ${s}`)],
+    );
+    die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 18);
+  }
+  resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-compose-startup-readiness-gap');
+  // 1e) Compose command interpolation foot-gun: disallow `${...}` in command overrides.
   // Rationale: compose variable interpolation is evaluated by the compose CLI from the host environment at parse time;
   // `env_file:` does not provide values for interpolation. This can start containers with an empty command and yield confusing
   // upstream connectivity errors (e.g., 502 from UI).
@@ -594,13 +1017,13 @@ if (missingBindMountSources.length > 0) {
       'build-postgate-compose-command-interpolation-footgun',
       'Compose uses `${...}` interpolation inside `command:` (cross-platform foot-gun)',
       [
-        'Prefer the Dockerfile `CMD` for CP/AP/UI containers; omit `command:` unless an override is explicitly required.',
+        'Prefer the Dockerfile `CMD` for CP/AP/UI containers; omit `command:` unless an override is explicitly required; see tools/caf/contracts/runtime_wiring_compose_posture_contract_v1.md.',
         'If an override is required, use an explicit command string/array with no `${...}` variables.',
         'Rerun `/caf build <instance>` after fixing runtime wiring outputs.',
       ],
       [`File: ${safeRel(repoRoot, composePath)}`, ...commandInterpolationViolations.map((s) => `Violation: ${s}`)],
     );
-    die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 17);
+    die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 18);
   }
   // 2) Stray root entrypoint: root main.py should not appear when a plane-scoped main exists.
   const rootMain = path.join(companionRoot, 'main.py');
@@ -623,19 +1046,38 @@ if (missingBindMountSources.length > 0) {
     );
     die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 14);
   }
+  resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-helper-runtime-error');
   return 0;
 }
 async function main() {
+  const args = process.argv.slice(2);
+  const instanceName = String(args?.[0] ?? '').trim();
+  const hasValidInstanceName = NAME_RE.test(instanceName);
+  const repoRoot = hasValidInstanceName ? resolveRepoRoot() : '';
   try {
     const code = await internal_main();
+    if (hasValidInstanceName) {
+      await resolveHelperRuntimePacketIfPresent(repoRoot, instanceName);
+    }
     if (typeof code === 'number' && code !== 0) {
       process.exit(code);
     }
   } catch (e) {
     if (e instanceof CafExit) {
+      if (hasValidInstanceName) {
+        await resolveHelperRuntimePacketIfPresent(repoRoot, instanceName);
+      }
       process.stderr.write(`${e.message}\n`);
       process.exit(e.code);
     }
+    try {
+      if (hasValidInstanceName) {
+        const layout = getInstanceLayout(repoRoot, instanceName);
+        WRITE_ALLOWED_ROOTS = [path.join(layout.instRoot, 'feedback_packets')];
+        const fp = await writeHelperRuntimeErrorPacket(repoRoot, instanceName, e);
+        process.stderr.write(`Fail-closed. Wrote feedback packet: ${path.relative(repoRoot, fp).replace(/\\/g, '/')}\n`);
+      }
+    } catch {}
     process.stderr.write(`${String(e?.stack || e)}\n`);
     process.exit(1);
   }

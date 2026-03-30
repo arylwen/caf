@@ -3,7 +3,6 @@ name: worker-ui-frontend
 description: >
   Worker skill that implements ui_frontend_scaffolding capability by generating a minimal web UI (SPA)
   scaffold and basic admin/demo pages per Task Graph. Bounded to companion repo write rails.
-status: active
 ---
 
 > **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
@@ -35,7 +34,7 @@ Run (from repo root):
 - `node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance_name> --capability ui_frontend_scaffolding`
 
 Then:
-- If the returned expectations are non-empty, you MUST implement the UI using the TBP-declared layout and role_binding outputs (for example, a Vite/React project rooted at the returned `path_template`).
+- If the returned expectations are non-empty, you MUST implement the UI using the TBP-declared layout and MUST materialize every returned role_binding output for this capability. Treat each returned `path_template` plus its `evidence_contains` markers as producer-owned requirements, not optional hints.
 - If the returned expectations are empty, you MUST NOT introduce new build tools; fall back to static-browser UI scaffolding as described below.
 - Do NOT invent alternate layouts (e.g., `ui/` at repo root) unless a TBP path_template explicitly requires it.
 - If expectations are non-empty but you cannot satisfy them within write rails: FAIL-CLOSED with a feedback packet.
@@ -68,13 +67,16 @@ Write rails:
 1) **No new technology decisions**
 
 - UI framework choice must come from `reference_architectures/<name>/spec/guardrails/profile_parameters_resolved.yaml` → `ui.framework`.
-- Product-facing shell/page wording must come from `reference_architectures/<name>/spec/playbook/application_spec_v1.md` → `ARCHITECT_EDIT_BLOCK: ui_product_surface_v1` when that block is populated.
+- Product-facing shell/page wording must come from `reference_architectures/<name>/spec/playbook/application_product_surface_v1.md` (fallback: legacy `application_spec_v1.md` → `ARCHITECT_EDIT_BLOCK: ui_product_surface_v1`) when that block is populated.
 - If the resolved pins prefer `react`, generate React-compatible UI code.
 - If the resolved UI pins are missing or conflict with the task intent → fail closed.
 
 2) **Build pipeline is TBP-driven**
 
-- If TBP role-binding expectations exist for this capability (e.g., a Vite/React UI TBP), you MUST scaffold a Vite/React project and assume the build happens inside the candidate container build (no host Node required).
+- If TBP role-binding expectations exist for this capability, you MUST scaffold the selected UI stack and assume the build happens inside the candidate container build (no host Node required).
+- For every returned expectation, open the owning TBP manifest when needed and emit the concrete artifact so the file content satisfies the declared `evidence_contains` markers. Do not substitute a near-equivalent build setup that omits required role-binding evidence.
+- If the selected runtime intentionally uses a classic JSX fallback instead of the resolved managed runtime contract, every JSX-bearing file MUST import `React` explicitly and the task report must call out that deliberate choice.
+- Do not run host-side `npm install`, `npm ci`, `npm run build`, `pnpm`, or `yarn` commands inside `profile_v1/code/ui/` merely to prove completion.
 - If no TBP expectations exist, default UI scaffolding MUST be runnable as static assets (browser-native ES modules; React via ESM CDN).
 
 3) **Tenant + principal context is mandatory**
@@ -114,8 +116,7 @@ Always place UI artifacts under `profile_v1/code/ui/`.
 
 Ensure these exist:
 
-- `profile_v1/code/ui/package.json`
-- `profile_v1/code/ui/vite.config.js`
+- every TBP-resolved source/config artifact returned for this capability (for example the package metadata, bundler config, and source entrypoint surfaces declared by the selected UI TBP)
 - `profile_v1/code/ui/index.html`
 - `profile_v1/code/ui/src/main.jsx`
 - `profile_v1/code/ui/src/App.jsx`

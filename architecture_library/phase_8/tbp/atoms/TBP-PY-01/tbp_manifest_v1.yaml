@@ -68,9 +68,11 @@ extensions:
     criteria:
     - Runtime package structure, imports, and entrypoints align to the resolved Python module-root conventions across generated plane surfaces.
     - Canonical plane module roots are realized consistently across runtime scaffolds, operator entrypoints, and tests.
+    - Cross-package imports into sibling packages beneath the canonical `code` root (for example shared helpers under `code/common/`) use module-root-coherent relative or absolute imports rather than inventing plane-local pseudo-packages such as `code.ap.common`.
     review_questions:
     - Do generated Python package roots, imports, and entrypoints all reflect the same resolved module-root conventions?
     - Are plane package markers and import paths coherent across runtime surfaces?
+    - When a runtime surface imports a shared helper from a sibling package under `code/`, does the import path land on the real package root rather than a non-existent plane-local child package?
     focus_areas:
     - maintainability
     - correctness

@@ -93,6 +93,9 @@ function runOne(key) {
   if (!spec) throw new Error(`Unknown command: ${key}`);
 
   const scriptPath = path.join(__dirname, spec.file);
+  const logStem = spec.file
+    .replace(/^(\.\.\/)+/, '')
+    .replace(/[\/]/g, '__');
   // Pass-through extra args after `audit <cmd>`
   const extraArgs = process.argv.slice(4);
   const res = spawnSync(process.execPath, [scriptPath, ...spec.args, ...extraArgs], {
@@ -100,8 +103,8 @@ function runOne(key) {
     maxBuffer: 50 * 1024 * 1024,
   });
 
-  const stdoutPath = path.join(RUNS_DIR, `${spec.file}.stdout.txt`);
-  const stderrPath = path.join(RUNS_DIR, `${spec.file}.stderr.txt`);
+  const stdoutPath = path.join(RUNS_DIR, `${logStem}.stdout.txt`);
+  const stderrPath = path.join(RUNS_DIR, `${logStem}.stderr.txt`);
   fs.writeFileSync(stdoutPath, res.stdout || "", "utf8");
   fs.writeFileSync(stderrPath, res.stderr || "", "utf8");
 

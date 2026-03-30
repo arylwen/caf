@@ -1,0 +1,42 @@
+pattern_id: UX-EXPLAIN-01
+name: Auditability and Explainability Surface
+summary: Use an explainability/audit surface when users need visible rationale, evidence, or trace context for decisions, results, or high-consequence actions.
+intent: Provide an operator-facing surface for “why did this happen?” and “what evidence supports this?” without forcing people into logs or backend-only diagnostics.
+context: Approvals, AI-assisted workflows, policy-sensitive actions, anomaly review, compliance-facing operations, tenant admin and support tooling.
+problem: When rationale and evidence remain hidden in logs or developer tools, users cannot safely review, challenge, or explain decisions in the product.
+forces_tradeoffs: Transparency vs clutter; concise explanation vs full evidence detail; operator trust vs confidential internals; audit depth vs UI simplicity.
+solution_structure_behavior: Show concise rationale, evidence provenance, or relevant trace links in the UX where decisions/results are consumed. Keep detail layered and permission-aware.
+consequences: Improves trust, audit readiness, and supportability; adds content-design and permission complexity.
+implementation_notes: Explainability in the UX lane should complement, not replace, architecture-level observability and audit patterns.
+examples_known_uses: Decision rationale panels, evidence drawers, policy evaluation summaries, AI output provenance, audit-friendly review details.
+related_patterns: |
+  depends_on: EXT-AUDITABILITY
+  depends_on: OBS-01
+  depends_on: POL-01
+  complements: UX-REVIEW-01
+extended_definition: |
+  Show concise rationale, evidence provenance, or relevant trace links in the UX where decisions/results are consumed. Keep detail layered and permission-aware.
+
+caf:
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-UX-EXPLAIN-01
+  minimum_evidence:
+  - Use an explainability/audit surface when users need visible rationale, evidence, or trace context for decisions, results, or high-consequence actions.
+  - When rationale and evidence remain hidden in logs or developer tools, users cannot safely review, challenge, or explain decisions in the product.
+  definition_of_done:
+  - UX design shows where this interaction pattern is used and what state/recovery posture it requires.
+  - Planning artifacts preserve the interaction pattern without collapsing it into generic smoke-test UI scaffolding.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No frontend framework, component library, or vendor choice is implied by this pattern.

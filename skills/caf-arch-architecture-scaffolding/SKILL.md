@@ -42,7 +42,7 @@ Steps:
 
 1) Deterministic playbook spec seeding (token-saver; mandatory; fail-closed):
 
-   Rationale: `build_pin_value_explanations_v1.mjs` writes into `spec/playbook/system_spec_v1.md`, and the architect should also receive the two plane domain-model source docs during architecture scaffolding. Seed all four human-edit playbook documents before pin enrichment runs.
+   Rationale: `build_pin_value_explanations_v1.mjs` writes into `spec/playbook/system_spec_v1.md`, and the architect should also receive the two plane domain-model source docs and the externalized application product-surface source during architecture scaffolding. Seed all externalized human-edit playbook documents before pin enrichment runs.
 
    - Run: `node tools/caf/seed_playbook_specs_v1.mjs <name>`
 
@@ -80,6 +80,15 @@ Steps:
    - This step MUST (re)write `tech_profile_explanations_v1` from the resolved rails view.
 
    If a feedback packet was produced, STOP.
+
+4.5) Project PRD-grounded playbook source docs when the seeded sources still contain default or legacy starter content:
+   - Invoke: `skills/worker-playbook-source-projector/SKILL.md`
+
+   Rules:
+   - This step owns automatic replacement of still-default `application_domain_model_v1.md` and `application_product_surface_v1.md`.
+   - Preserve meaningful human edits.
+   - Do not move this ownership into `/caf prd`.
+
 
 5) Deterministic prefilter (token-saver; mandatory; fail-closed):
 

@@ -20,7 +20,7 @@
  * - Fail-closed: propagate the first failing helper error.
  *
  * Usage:
- *   node tools/caf/retrieval_postprocess_v1.mjs <instance_name> --profile=<arch_scaffolding|solution_architecture> [--require-pattern-definition-evidence]
+ *   node tools/caf/retrieval_postprocess_v1.mjs <instance_name> --profile=<arch_scaffolding|solution_architecture|ux_design> [--require-pattern-definition-evidence]
  */
 
 import path from 'node:path';
@@ -57,19 +57,23 @@ function parseArgs(argv) {
 export async function internal_main(argv = process.argv.slice(2)) {
   argv = Array.isArray(argv) ? argv : [];
   if (argv.length < 1) {
-    die('Usage: node tools/caf/retrieval_postprocess_v1.mjs <instance_name> --profile=<arch_scaffolding|solution_architecture> [--require-pattern-definition-evidence]', 2);
+    die('Usage: node tools/caf/retrieval_postprocess_v1.mjs <instance_name> --profile=<arch_scaffolding|solution_architecture|ux_design> [--require-pattern-definition-evidence]', 2);
   }
   const instanceName = String(argv[0] ?? '').trim();
   if (!NAME_RE.test(instanceName)) die(`Invalid instance_name: ${instanceName}`, 2);
 
   const { profile, require_pattern_definition_evidence } = parseArgs(argv.slice(1));
-  if (!profile) die('Missing required arg: --profile=<arch_scaffolding|solution_architecture>', 2);
+  if (!profile) die('Missing required arg: --profile=<arch_scaffolding|solution_architecture|ux_design>', 2);
 
   // 1) Apply grounded candidates into CAF-managed blocks.
   await applyCandidates([instanceName, `--profile=${profile}`]);
 
   // 2) Merge-safe scaffold refresh (decision_resolutions hydration).
-  await scaffoldMerge([instanceName]);
+  // UX retrieval reuses the same overall postprocess discipline but does not hydrate
+  // system-spec decision scaffolds from UX-specific candidate writeback.
+  if (profile !== 'ux_design') {
+    await scaffoldMerge([instanceName]);
+  }
 
   // 3) Retrieval gate enforcement.
   const gateArgs = [instanceName, `--profile=${profile}`];

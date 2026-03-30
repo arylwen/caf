@@ -64,9 +64,23 @@ Input discipline (required):
 
 Write rails:
 - Only write within the companion repo Guardrails rails.
-- Materialize stubs under: `code/<plane_id>/contracts/<boundary_id>/...` using the repo’s established layout.
+- Do **not** assume a literal `code/<plane_id>/contracts/<boundary_id>/...` folder. Resolve the concrete owner paths from the selected TBP role bindings first and write to those role-bound paths.
 - Always create a `README.md` explaining the contract surface, context carrier, and how to extend.
 - Create additional modules only as needed to satisfy the task DoD (http client/server, events, envelope).
+
+Role-binding path resolution (required):
+- Open `caf/tbp_resolution_v1.yaml` and use the resolved TBP manifests as the source of truth for contract surface locations.
+- Resolve the concrete role bindings that apply to this task from the selected TBP(s), especially:
+  - `cp_ap_contract_ap_http_emitter`
+  - `cp_ap_contract_cp_http_handler`
+  - `cp_ap_contract_ap_envelope`
+  - `cp_ap_contract_cp_envelope`
+  - `cp_ap_contract_shared_transport_module`
+  - `cp_ap_contract_cp_boundary_router`
+- Use the framework helpers when available (for example `tools/caf/resolve_tbp_role_binding_key_v1.mjs` / `tools/caf/resolve_tbp_role_bindings_v1.mjs`) instead of inventing stack-specific paths.
+- When a role-binding path template contains `{boundary_id_snake}`, derive it deterministically from the boundary id by lowercasing and replacing non-alphanumeric runs with underscores (for example `BND-CP-AP-01` -> `bnd_cp_ap_01`).
+- Materialize files only at the resolved role-bound paths. Do not create a parallel sibling directory using the literal boundary id unless the resolved role binding itself requires that exact path.
+- In the task report and README evidence anchors, cite the resolved role-bound paths that were actually written.
 
 
 ## Stub content rules (strict)

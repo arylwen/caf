@@ -1,0 +1,43 @@
+pattern_id: UX-WIZARD-01
+name: Multi-Step Wizard and Resume
+summary: Use a staged wizard when data entry or setup spans multiple steps, needs progressive validation, or benefits from resumable draft posture.
+intent: Provide a stepwise interaction that reduces cognitive load, clarifies progression, and preserves partial work across sessions or interruptions.
+context: Onboarding, tenant/workspace setup, complex configuration, long forms, staged submissions, conditional forms with branching.
+problem: Single-page forms become error-prone and overwhelming when setup or submission has many stages, dependencies, or deferred information.
+forces_tradeoffs: Progressive disclosure vs global visibility; resumability vs implementation complexity; strict step gating vs flexible navigation; early validation vs user freedom.
+solution_structure_behavior: Use an explicit multi-step wizard with step status, clear navigation, save/resume behavior, and validation rules that distinguish draft progression from final submission.
+consequences: Improves completion rates and clarity for staged work; introduces more route/state machinery and demands stronger session and recovery handling.
+implementation_notes: A wizard is warranted when staged progression is intrinsic to the task, not merely because a form is long.
+examples_known_uses: Workspace onboarding, tenant setup, complex policy creation, guided import/configuration, compliance attestations.
+related_patterns: |
+  depends_on: VAL-01
+  depends_on: CTX-01
+  complements: UX-CRUD-01
+  complements: UX-SESSION-01
+  complements: UX-RECOVERY-01
+extended_definition: |
+  Use an explicit multi-step wizard with step status, clear navigation, save/resume behavior, and validation rules that distinguish draft progression from final submission.
+
+caf:
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-UX-WIZARD-01
+  minimum_evidence:
+  - Use a staged wizard when data entry or setup spans multiple steps, needs progressive validation, or benefits from resumable draft posture.
+  - Single-page forms become error-prone and overwhelming when setup or submission has many stages, dependencies, or deferred information.
+  definition_of_done:
+  - UX design shows where this interaction pattern is used and what state/recovery posture it requires.
+  - Planning artifacts preserve the interaction pattern without collapsing it into generic smoke-test UI scaffolding.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No frontend framework, component library, or vendor choice is implied by this pattern.

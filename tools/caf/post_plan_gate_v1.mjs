@@ -46,6 +46,7 @@ const planningTechChoiceGate = path.join(cafToolsDir, "planning_technology_choic
 
 const semanticAcceptanceEnrichment = path.join(cafToolsDir, "task_graph_semantic_acceptance_enrichment_v1.mjs");
 const requiredInputEnrichment = path.join(cafToolsDir, "task_graph_required_input_enrichment_v1.mjs");
+const resolvedRailsVisibilityEnrichment = path.join(cafToolsDir, "task_graph_resolved_rails_visibility_enrichment_v1.mjs");
 const uiSeedEnrichment = path.join(cafToolsDir, "task_graph_ui_seed_semantic_enrichment_v1.mjs");
 const obligationTraceEnrichment = path.join(cafToolsDir, "task_graph_obligation_trace_enrichment_v1.mjs");
 const genInterfaceBindingContracts = path.join(cafToolsDir, "gen_interface_binding_contracts_v1.mjs");
@@ -63,6 +64,7 @@ if (!fs.existsSync(taskGraphShapeGate)) die("Missing helper: tools/caf/task_grap
 if (!fs.existsSync(planningTechChoiceGate)) die("Missing helper: tools/caf/planning_technology_choice_realization_gate_v1.mjs");
 if (!fs.existsSync(semanticAcceptanceEnrichment)) die("Missing helper: tools/caf/task_graph_semantic_acceptance_enrichment_v1.mjs");
 if (!fs.existsSync(requiredInputEnrichment)) die("Missing helper: tools/caf/task_graph_required_input_enrichment_v1.mjs");
+if (!fs.existsSync(resolvedRailsVisibilityEnrichment)) die("Missing helper: tools/caf/task_graph_resolved_rails_visibility_enrichment_v1.mjs");
 if (!fs.existsSync(uiSeedEnrichment)) die("Missing helper: tools/caf/task_graph_ui_seed_semantic_enrichment_v1.mjs");
 if (!fs.existsSync(obligationTraceEnrichment)) die("Missing helper: tools/caf/task_graph_obligation_trace_enrichment_v1.mjs");
 if (!fs.existsSync(genInterfaceBindingContracts)) die("Missing helper: tools/caf/gen_interface_binding_contracts_v1.mjs");
@@ -92,11 +94,15 @@ if (code !== 0) process.exit(code);
 code = runGate(requiredInputEnrichment);
 if (code !== 0) process.exit(code);
 
-// Step 5d.3 (Library-owned UI seed semantic pressure preservation)
+// Step 5d.3 (Framework-owned resolved rails visibility preservation)
+code = runGate(resolvedRailsVisibilityEnrichment);
+if (code !== 0) process.exit(code);
+
+// Step 5d.4 (Library-owned UI seed semantic pressure preservation)
 code = runGate(uiSeedEnrichment);
 if (code !== 0) process.exit(code);
 
-// Step 5d.4 (Compiler-owned obligation trace attachment)
+// Step 5d.5 (Compiler-owned obligation trace attachment)
 code = runGate(obligationTraceEnrichment);
 if (code !== 0) process.exit(code);
 

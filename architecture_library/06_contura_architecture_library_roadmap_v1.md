@@ -1,5 +1,7 @@
 # Contura Architecture Library Roadmap v1 (Draft)
 
+> **Scope note (2026-03-29):** This file is the architecture-library authoring/order roadmap. It is not the primary CAF product/platform roadmap. For current CAF roadmap planning, use `docs/dev/roadmaps/roadmap_north_star_v1.md`, `docs/dev/roadmaps/roadmap_combined_v1.md`, and `docs/dev/roadmaps/caf_product_roadmap_v1.md`.
+
 Version: v1  
 Status: Draft for Review  
 Last Updated: 2026-03-15

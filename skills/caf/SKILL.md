@@ -1,7 +1,7 @@
 ---
 name: caf
 version: 1
-summary: Single-entry CAF router command. Dispatches to core CAF workflows (help/ask/saas/arch/plan/next/build/prd).
+summary: Single-entry CAF router command. Dispatches to core CAF workflows (help/ask/saas/prd/arch/next/plan/build/ux and ux plan).
 ---
 
 > **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
@@ -21,6 +21,8 @@ Use **one** command:
 - `/caf plan <instance_name>`
 - `/caf next <instance_name> [apply]`
 - `/caf build <instance_name> [wave_index]`
+- `/caf ux <instance_name>`
+- `/caf ux plan <instance_name>`
 - `/caf prd <instance_name> [promote=true|false]`
 
 Examples:
@@ -34,15 +36,23 @@ Examples:
 - `/caf next hello-saas apply`
 - `/caf build hello-saas`
 - `/caf build hello-saas 0`
+- `/caf ux hello-saas`
+- `/caf ux plan hello-saas`
+- `/caf ux build hello-saas`
 - `/caf prd hello-saas`
 
 ## Routing rules (deterministic)
 
 1) Parse the first token after `/caf` as `subcommand`.
-2) Fail closed if `subcommand` is missing or not one of: `help | saas | arch | plan | next | build | prd | ask`.
-3) Dispatch by **executing the canonical skill** listed below. Do not invent alternate steps.
+2) Fail closed if `subcommand` is missing or not one of: `help | saas | arch | plan | next | build | prd | ask | ux`.
+3) Special case: if the first token is `ux` and the second token is the literal `plan`, dispatch to the canonical `/caf ux plan` skill.
+4) Special case: if the first token is `ux` and the second token is the literal `build`, dispatch to the canonical `/caf ux build` skill.
+5) Dispatch by **executing the canonical skill** listed below. Do not invent alternate steps.
 
 Canonical skills (authoritative):
+
+- `ux plan` → `skills/caf-ux-plan/SKILL.md`
+- `ux build` → `skills/caf-ux-build/SKILL.md`
 
 - `help` → `skills/caf-help/SKILL.md`
 - `ask` → `skills/caf-ask/SKILL.md`
@@ -51,6 +61,7 @@ Canonical skills (authoritative):
 - `plan` → `skills/caf-plan/SKILL.md`
 - `next` → `skills/caf-next/SKILL.md`
 - `build` → `skills/caf-build-candidate/SKILL.md`  *(current canonical build skill; invoked via router)*
+- `ux` → `skills/caf-ux/SKILL.md`
 - `prd` → `skills/caf-prd/SKILL.md`
 
 ## Global invariants (router-enforced)
@@ -106,6 +117,27 @@ If a step seems to “need scripting,” treat that as a CAF design bug and fail
 - `wave_index` is optional at the router level, but build policy may make it required for larger task graphs.
 - Do not invent a different multi-wave control surface. The canonical operator-managed form is `/caf build <instance_name> <wave_index>`.
 - In build wave mode, prior-wave completion evidence is read from `companion_repositories/<instance_name>/profile_v1/caf/task_reports/` and `companion_repositories/<instance_name>/profile_v1/caf/reviews/`, not from `reference_architectures/<instance_name>/`.
+
+### `/caf ux <instance_name>`
+
+- `instance_name` is required.
+- `/caf ux` is the bounded UX derivation lane. It materializes and refreshes `ux_design_v1.md`, runs the same retrieval discipline as the other lanes, writes grounded UX candidates back into the canonical UX artifact, and stops before `/caf ux plan`.
+- `/caf ux` is expected after the second `/caf arch <instance_name>`. It may be run after `/caf plan` or `/caf build` when the goal is a richer governed UX surface over the existing REST APIs.
+
+### `/caf ux plan <instance_name>`
+
+- Parse this as a special routed form: first token `ux`, second token `plan`, third token `instance_name`.
+- `instance_name` is required.
+- `/caf ux plan` is the first bounded UX planning proof. It reads `ux_design_v1.md`, `ux_visual_system_v1.md`, and the UX retrieval blob, invokes an instruction-owned UX planner that emits `ux_task_graph_v1.yaml`, then projects `ux_task_plan_v1.md` and `ux_task_backlog_v1.md`, and stops before `/caf ux build`.
+- `/caf ux plan` keeps the current smoke-test UI lane separate and assumes the richer UX lane remains on top of the current REST/OpenAPI AP/CP surfaces.
+
+### `/caf ux build <instance_name>`
+
+- Parse this as a special routed form: first token `ux`, second token `build`, third token `instance_name`.
+- `instance_name` is required.
+- `/caf ux build` realizes the separate UX build lane from `ux_task_graph_v1.yaml`.
+- `/caf ux build` requires the main `/caf build <instance_name>` lane to have completed first; it does not replace the smoke-test UI build path.
+- `/caf ux build` writes the richer UX surface into a separate companion-repo namespace/root so it does not conflict with the smoke-test UI lane.
 
 ### `/caf prd <instance_name> [promote=true|false]`
 

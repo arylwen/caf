@@ -51,6 +51,18 @@ entries:
   status: active
   notes: Scaffold and extend a minimal UI (web SPA) in the companion repo, grounded in profile_parameters_resolved.yaml ui.* pins and the application-spec UI product surface.
 
+- capability_id: ux_frontend_realization
+  worker_id: worker-ux-frontend
+  role_kind: worker
+  status: active
+  notes: Realize the separate UX lane surface in the companion repo under a dedicated UX namespace/root, without mutating the smoke-test UI lane.
+
+- capability_id: ux_service_packaging_wiring
+  worker_id: worker-runtime-wiring
+  role_kind: worker
+  status: active
+  notes: "Package the separate UX lane as its own service/container in the same stack (Dockerfile.ux, nginx.ux.conf, compose ux: wiring)."
+
 - capability_id: runtime_wiring
   worker_id: worker-runtime-wiring
   role_kind: worker

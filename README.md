@@ -48,15 +48,44 @@ Questions you can ask right away:
 
 Replace `<instance>` with your own name.
 
-```text
-/caf saas <instance>
-/caf prd <instance>           # default next step: resolve PRD and promote a lifecycle-ready shape
-/caf arch <instance>
-/caf next <instance> apply
-/caf arch <instance>
-/caf plan <instance>
-/caf build <instance>
+| Command | Why you run it | Learn more |
+| --- | --- | --- |
+| `/caf saas <instance>` | Seed a new workspace with editable source docs, including PRD, platform PRD, UX vision, and guardrail defaults. Product manager and architect refine these seeded sources before downstream derivation. | [Installation](docs/user/02_installation.md), [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md), [Product manager view](docs/user/11_product_manager_view.md) |
+| `/caf prd <instance>` | Resolve the PRD sources into lifecycle-ready product intent and architecture shape. This is the normal bridge from seeded documents into a usable downstream architecture flow. | [PRD workflow](docs/user/12_prd_workflow.md), [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md) |
+| `/caf arch <instance>` | First architecture discovery pass. CAF proposes best-fit architectural choices and patterns from the promoted shape; the architect reviews and adjusts options before checkpointing. Examples include auth/session posture, deployment/runtime shape, persistence and API boundary structure. | [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md), [Core concepts](docs/user/04_core_concepts.md), [Pattern browser](docs/patterns/README.md) |
+| `/caf next <instance> apply` | Checkpoint the adopted architecture so later phases consume a deterministic, auditable state instead of an in-progress scaffold. | [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md), [Instances, phases, and state](docs/user/05_instances_phases_and_state.md) |
+| `/caf arch <instance>` | Second architecture/design pass. CAF elaborates technology and design choices needed for planning, such as contract declarations, control-plane/application design, normalized domain models, and implementation-oriented pattern choices. | [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md), [Core concepts](docs/user/04_core_concepts.md) |
+| `/caf plan <instance>` | Compile obligations and adopted technology choices into the planner-owned task graph, task plan, and backlog that drive build. | [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md), [Feedback packets and debugging](docs/user/08_feedback_packets_and_debugging.md) |
+| `/caf build <instance>` | Run the candidate build lane. CAF dispatches the planned tasks, tracks wave-state, and produces candidate code plus task reports/reviews. | [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md), [Traceability](docs/user/15_caf_traceability.md) |
+| `/caf ux <instance>` | Derive the canonical richer UX artifacts after the second `/caf arch`, including UX design and visual-system semantics. | [Skills, runners, and command surface](docs/user/07_skills_runners_and_command_surface.md) |
+| `/caf ux plan <instance>` | Turn the UX artifacts into the UX task graph, plan, and backlog for the separate UX realization lane. | [Skills, runners, and command surface](docs/user/07_skills_runners_and_command_surface.md), [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md) |
+| `/caf ux build <instance>` | Realize the richer UX lane against the already-built backend/runtime truth, typically in a separate `ux` namespace/service within the same stack. | [Skills, runners, and command surface](docs/user/07_skills_runners_and_command_surface.md), [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md) |
+
+The UX commands are public quick-start commands. Run `/caf ux` after the second `/caf arch`, run `/caf ux plan` after `/caf ux`, and run `/caf ux build` after the main `/caf build` for the same instance.
+
+## Runner CLI helpers
+
+CAF itself stays runner-neutral and uses the `/caf ...` command surface inside the agent. For terminal runners, this repo also includes resumable helper wrappers under `tools/caf/cli/`:
+
+- **Codex**: `tools/caf/cli/codex/`
+  - default helper model: `gpt-5.3-codex`
+  - default reasoning effort: `medium`
+- **Claude Code**: `tools/caf/cli/claude/`
+  - uses Claude print mode and skips permission prompts unless you override that behavior
+- **Antigravity**: use the repo `.agent/` runner surface today; a packaged terminal wrapper is not included yet
+
+Preferred launcher examples from the repo root:
+
+```powershell
+# Preferred on Windows: call the Node entrypoint directly
+node .\tools\caf\cli\codex\run_caf_flow_v1.mjs codex-saas
+node .\tools\caf\cli\claude\run_caf_flow_v1.mjs codex-saas
 ```
+
+See the runner-specific READMEs for flags and resume behavior:
+
+- [Codex CLI helper](tools/caf/cli/codex/README.md)
+- [Claude CLI helper](tools/caf/cli/claude/README.md)
 
 ## What you get (and what you don’t)
 
@@ -64,11 +93,11 @@ Replace `<instance>` with your own name.
 - CAF is **not** a “ship-to-prod” generator: outputs are **candidate-only** and require human review.
 - CAF is **fail-closed**: if inputs are missing or ambiguous, it emits a feedback packet instead of guessing.
 
-## Next best link
+## Find out more
 
 [What is CAF?](docs/user/01_what_is_caf.md) — Get the shortest public explanation of what CAF does and why it exists.
 
-## Top 3 related links
+## You might also be interested in
 
 - [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md) — Follow the default product-intent to architecture to plan to build path.
 - [Answering questions with CAF](docs/user/14_answering_questions_with_caf.md) — See how `/caf ask` turns CAF into a queryable delivery surface.

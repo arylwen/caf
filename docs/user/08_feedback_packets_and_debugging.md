@@ -52,6 +52,38 @@ Do not treat report/mindmap regeneration as a universal fix. Some blockers, such
 
 Where a gate can deterministically prove a condition is fixed, CAF should mark the matching packet `resolved` automatically. Manual status edits are not the preferred operator workflow.
 
+## Codex troubleshooting note
+
+For Codex-style runs, a blocker packet does **not** always mean you must manually unwind the entire workflow.
+
+When routed step state is still intact, the safest next move is often to rerun the owning top-level CAF command (for example `/caf arch <instance>`, `/caf plan <instance>`, or `/caf build <instance>`), because CAF can often resume from the last incomplete checkpoint.
+
+Use this approach when:
+
+- the packet came from a deterministic postgate or helper after a partially completed run;
+- no reset-first instruction was given in the packet;
+- the step is part of the normal idempotent routed lifecycle.
+
+Do **not** use this as a blanket rule. Follow the packet instead when it tells you to:
+
+- run an explicit reset helper first;
+- inspect/fix a concrete blocker artifact before rerunning;
+- stop because the phase is not safe to replay blindly.
+
+Current practical rule:
+
+1. read the newest packet;
+2. check whether it instructs a reset-first action;
+3. if not, rerun the owning top-level CAF workflow command and let routed step state pick up from where it left off.
+
+Important wording caveat:
+
+CAF can surface the newest visible blocker packet after another helper/runtime problem. That can make it look like you "hit an old packet" when the real first failure was a separate helper bug. When in doubt, compare:
+
+- the helper/runtime stderr output,
+- the packet timestamp/status,
+- and whether a fresh helper-runtime packet was produced.
+
 ## Example: README was not generated
 
 Symptom:

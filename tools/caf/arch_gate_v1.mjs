@@ -116,6 +116,7 @@ function listArchitectureScaffoldingDeliverables(layout) {
     path.join(layout.specPlaybookDir, 'system_spec_v1.md'),
     path.join(layout.specPlaybookDir, 'application_spec_v1.md'),
     path.join(layout.specPlaybookDir, 'application_domain_model_v1.md'),
+    path.join(layout.specPlaybookDir, 'application_product_surface_v1.md'),
     path.join(layout.specPlaybookDir, 'system_domain_model_v1.md'),
     path.join(layout.specPlaybookDir, 'semantic_candidate_subset_arch_scaffolding_v1.jsonl'),
     path.join(layout.specPlaybookDir, 'grounded_candidate_records_arch_scaffolding_v1.md'),

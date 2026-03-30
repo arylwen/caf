@@ -263,7 +263,7 @@ F) Adopted decision options (fail-closed)
 	    - Minimal fix proposal (no repair scripts):
 	      1) Preferred: rerun `/caf arch <name>` (design) so the CAF-managed planning payloads include all adopted decisions.
 	      2) If a pattern should not drive planning/code yet: change its `status` in `system_spec_v1.md` → `decision_resolutions_v1` from `adopt` to `defer`, then rerun `/caf arch <name>`.
-	      3) If you must hotfix: manually edit the CAF-managed `planning_pattern_payload_v1.selected_patterns` blocks to add the missing IDs (keep YAML valid), then rerun `/caf arch <name>`.
+	      3) Do not return a manual hotfix to the CAF-managed `planning_pattern_payload_v1` blocks. Treat missing IDs there as producer drift, fix the producing framework seam, and rerun `/caf arch <name>` so the handoff is regenerated cleanly.
 - If the payload union and the spec-derived tuples disagree, FAIL-CLOSED with a feedback packet. The design post-gate should have caught this earlier; do not continue planning on drift.
 - Record the adopted option’s `summary` and `payload` (verbatim) for grounding; do not reinterpret.
 
@@ -383,6 +383,9 @@ A) Plane runtime scaffold tasks
 B) Contract scaffolding tasks (two per boundary)
 - `TG-00-CONTRACT-<boundary_id>-AP` → `contract_scaffolding`
 - `TG-00-CONTRACT-<boundary_id>-CP` → `contract_scaffolding`
+- Never emit an unsuffixed boundary-wide contract task such as `TG-00-CONTRACT-<boundary_id>`. That shape is invalid for new planning output.
+- For every material boundary, emit exactly two contract tasks in new planning output: one `-AP` task and one `-CP` task.
+- If you cannot justify both plane-specific tasks from the boundary declaration, stop and surface a blocker rather than collapsing them into one task.
 
 Contract trace anchors (required; deterministic):
 

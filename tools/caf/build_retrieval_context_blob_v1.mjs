@@ -29,6 +29,7 @@ import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafMarkdownStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { renderFeedbackPacketV1, nowStampYYYYMMDD, markPendingFeedbackPacketsStaleSync } from './lib_feedback_packets_v1.mjs';
+import { extractAcceptedProductSurface } from './lib_ux_selection_v1.mjs';
 
 class CafFailClosed extends Error {
   constructor(message, exitCode = 1) {
@@ -103,7 +104,17 @@ function extractArchitectEditBody(text, blockName) {
   return String(text ?? '').slice(s + start.length, e).trim();
 }
 
-function extractUiProductSurface(appText) {
+function extractUiProductSurface(appText, appSpecTemplateText, productSurfaceText, productSurfaceTemplateText) {
+  const selected = extractAcceptedProductSurface({
+    productSurfaceText,
+    productSurfaceTemplateText,
+    appSpecText: appText,
+    appSpecTemplateText,
+  });
+  if (selected.accepted) {
+    return (selected.lines || []).map((line) => `- ${capLineLen(line, 160)}`).slice(0, 12);
+  }
+
   const body = extractArchitectEditBody(appText, 'ui_product_surface_v1');
   if (!body) return [];
   const lines = body
@@ -630,6 +641,9 @@ export async function internal_main(argv = process.argv.slice(2)) {
   const railsPath = path.join(guardrailsDir, 'profile_parameters_resolved.yaml');
   const systemSpecPath = path.join(playbookDir, 'system_spec_v1.md');
   const appSpecPath = path.join(playbookDir, 'application_spec_v1.md');
+  const productSurfacePath = path.join(playbookDir, 'application_product_surface_v1.md');
+  const productSurfaceTemplatePath = path.join(repoRoot, 'architecture_library', 'phase_8', 'templates', 'application_product_surface_v1.template.md');
+  const appSpecTemplatePath = path.join(repoRoot, 'architecture_library', 'phase_8', 'templates', 'application_spec_v1.template.md');
 
   const missing = [pinsPath, railsPath, systemSpecPath, appSpecPath].filter((p) => !fileExists(p));
   if (missing.length > 0) {
@@ -644,11 +658,14 @@ export async function internal_main(argv = process.argv.slice(2)) {
     die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 12);
   }
 
-  const [pinsText, railsText, sysText, appText] = await Promise.all([
+  const [pinsText, railsText, sysText, appText, productSurfaceText, productSurfaceTemplateText, appSpecTemplateText] = await Promise.all([
     readUtf8(pinsPath),
     readUtf8(railsPath),
     readUtf8(systemSpecPath),
     readUtf8(appSpecPath),
+    fileExists(productSurfacePath) ? readUtf8(productSurfacePath) : Promise.resolve(''),
+    fileExists(productSurfaceTemplatePath) ? readUtf8(productSurfaceTemplatePath) : Promise.resolve(''),
+    fileExists(appSpecTemplatePath) ? readUtf8(appSpecTemplatePath) : Promise.resolve(''),
   ]);
 
   const pinsObj = parseYamlString(pinsText, pinsPath);
@@ -792,7 +809,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
     blobLines.push('');
   }
 
-  const uiProductSurface = extractUiProductSurface(appText);
+  const uiProductSurface = extractUiProductSurface(appText, appSpecTemplateText, productSurfaceText, productSurfaceTemplateText);
   if (uiProductSurface.length > 0) {
     blobLines.push('## UI_PRODUCT_SURFACE');
     blobLines.push(...uiProductSurface);
@@ -855,6 +872,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
       SPEC_SIGNAL: [safeRel(repoRoot, systemSpecPath), safeRel(repoRoot, appSpecPath)],
       ...((profile === 'solution_architecture' || profile === 'implementation_scaffolding') ? { DOMAIN_RESOURCES: [safeRel(repoRoot, appSpecPath)] } : {}),
       ...(ui ? { UI_SIGNAL: [safeRel(repoRoot, railsPath)] } : {}),
+      ...(uiProductSurface.length > 0 ? { UI_PRODUCT_SURFACE: [fileExists(productSurfacePath) ? safeRel(repoRoot, productSurfacePath) : safeRel(repoRoot, appSpecPath)] } : {}),
       BRIDGE_ECHO: ['tools/caf/build_retrieval_context_blob_v1.mjs'],
     },
   };

@@ -49,6 +49,7 @@ function buildPatternQuestionsIndex(repoRoot) {
     path.join(repoRoot, 'architecture_library', 'patterns', 'caf_v1', 'definitions_v1'),
     path.join(repoRoot, 'architecture_library', 'patterns', 'core_v1', 'definitions_v1'),
     path.join(repoRoot, 'architecture_library', 'patterns', 'external_v1', 'definitions_v1'),
+    path.join(repoRoot, 'architecture_library', 'patterns', 'ux_v1', 'definitions_v1'),
   ];
 
   const idx = new Map();

@@ -118,14 +118,43 @@ function buildCapabilityMap(catalogDoc) {
   return m;
 }
 
+function parseCliArgs(argv = process.argv.slice(2)) {
+  const args = Array.isArray(argv) ? argv : [];
+  const positional = [];
+  let taskGraphName = 'task_graph_v1.yaml';
+  let outputName = 'build_dispatch_manifest_v1.md';
+  for (let i = 0; i < args.length; i += 1) {
+    const token = String(args[i] || '').trim();
+    if (!token) continue;
+    if (token === '--task-graph') {
+      const next = String(args[i + 1] || '').trim();
+      if (!next) die('Missing value for --task-graph', 2);
+      taskGraphName = next;
+      i += 1;
+      continue;
+    }
+    if (token === '--out') {
+      const next = String(args[i + 1] || '').trim();
+      if (!next) die('Missing value for --out', 2);
+      outputName = next;
+      i += 1;
+      continue;
+    }
+    if (token.startsWith('--')) die(`Unknown flag: ${token}`, 2);
+    positional.push(token);
+  }
+  return { instance: positional[0] || '', taskGraphName, outputName };
+}
+
 async function main() {
-  const instance = process.argv[2];
-  if (!instance) die('Usage: node tools/caf/gen_build_dispatch_manifest_v1.mjs <instance_name>');
+  const { instance, taskGraphName, outputName } = parseCliArgs(process.argv.slice(2));
+  if (!instance) die('Usage: node tools/caf/gen_build_dispatch_manifest_v1.mjs <instance_name> [--task-graph <file>] [--out <file>]', 2);
 
   const repoRoot = resolveRepoRoot();
-  const tgPath = path.join(repoRoot, 'reference_architectures', instance, 'design', 'playbook', 'task_graph_v1.yaml');
+  const tgPath = path.join(repoRoot, 'reference_architectures', instance, 'design', 'playbook', taskGraphName);
   const catalogPath = path.join(repoRoot, 'architecture_library', 'phase_8', '80_phase_8_worker_capability_catalog_v1.yaml');
-  const outPath = path.join(repoRoot, 'reference_architectures', instance, 'design', 'playbook', 'build_dispatch_manifest_v1.md');
+  const outPath = path.join(repoRoot, 'reference_architectures', instance, 'design', 'playbook', outputName);
+  const planningCommand = taskGraphName === 'ux_task_graph_v1.yaml' ? '/caf ux plan <name>' : '/caf plan <name>';
 
   if (!fs.existsSync(tgPath)) die(`Missing task graph: ${tgPath}`);
   if (!fs.existsSync(catalogPath)) die(`Missing worker capability catalog: ${catalogPath}`);
@@ -189,7 +218,7 @@ async function main() {
       'build-dispatch-mapping-issues',
       'Task Graph tasks do not satisfy deterministic dispatch constraints (exactly 1 required_capability per task + active worker mapping)',
       [
-        'Regenerate planning outputs via /caf plan <name> so each task has exactly 1 required_capability.',
+        `Regenerate planning outputs via ${planningCommand} so each task has exactly 1 required_capability.`,
         'If a task currently lists multiple required_capabilities, split it into multiple tasks (one capability each).',
         'Ensure every required_capability is present as an active entry in architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml.',
       ],
@@ -211,7 +240,7 @@ async function main() {
   lines.push('# Build Dispatch Manifest (v1)');
   lines.push('');
   lines.push('Derived mechanically from:');
-  lines.push(`- \`reference_architectures/${instance}/design/playbook/task_graph_v1.yaml\``);
+  lines.push(`- \`reference_architectures/${instance}/design/playbook/${taskGraphName}\``);
   lines.push(`- \`architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml\``);
   lines.push('');
   lines.push('This file is a dispatch aid for `caf-build-candidate` Step 3.');

@@ -370,6 +370,11 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
       required: true,
     },
     {
+      srcAbs: path.join(layout.specPlaybookDir, 'application_product_surface_v1.md'),
+      dstRel: 'caf/application_product_surface_v1.md',
+      required: existsSync(path.join(layout.specPlaybookDir, 'application_product_surface_v1.md')),
+    },
+    {
       srcAbs: path.join(layout.designPlaybookDir, 'application_design_v1.md'),
       dstRel: 'caf/application_design_v1.md',
       required: true,
@@ -406,6 +411,15 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
     },
   ];
 
+  const optionalUxMirrors = [
+    { srcAbs: path.join(layout.designPlaybookDir, 'ux_design_v1.md'), dstRel: 'caf/ux_design_v1.md' },
+    { srcAbs: path.join(layout.designPlaybookDir, 'ux_visual_system_v1.md'), dstRel: 'caf/ux_visual_system_v1.md' },
+    { srcAbs: path.join(layout.designPlaybookDir, 'retrieval_context_blob_ux_design_v1.md'), dstRel: 'caf/retrieval_context_blob_ux_design_v1.md' },
+    { srcAbs: path.join(layout.designPlaybookDir, 'ux_task_graph_v1.yaml'), dstRel: 'caf/ux_task_graph_v1.yaml' },
+    { srcAbs: path.join(layout.designPlaybookDir, 'ux_task_plan_v1.md'), dstRel: 'caf/ux_task_plan_v1.md' },
+    { srcAbs: path.join(layout.designPlaybookDir, 'ux_task_backlog_v1.md'), dstRel: 'caf/ux_task_backlog_v1.md' },
+  ];
+
   const missing = requiredMirrors.filter((m) => m.required && !existsSync(m.srcAbs));
   if (missing.length > 0) {
     await writeFeedbackPacket(
@@ -420,6 +434,12 @@ export async function internal_main(argv = process.argv.slice(2), deps = {}) {
   }
 
   for (const m of requiredMirrors) {
+    const dstAbs = path.join(targetAbs, m.dstRel);
+    await copyIfMissingOrOverwrite(m.srcAbs, dstAbs, overwrite);
+    await stampFileBestEffort(dstAbs, stamps);
+  }
+  for (const m of optionalUxMirrors) {
+    if (!existsSync(m.srcAbs)) continue;
     const dstAbs = path.join(targetAbs, m.dstRel);
     await copyIfMissingOrOverwrite(m.srcAbs, dstAbs, overwrite);
     await stampFileBestEffort(dstAbs, stamps);

@@ -26,6 +26,7 @@ Catalog integrity (normative):
 | TBP-AUTH-MOCK-01 | Application Auth/Runtime | IAM-01; BND-01 | TBP-PY-01 | None | Mock auth binding (Python HTTP) (claim-bearing Authorization contract + boundary/UI helpers) |
 | TBP-PG-TS-01 | Application Persistence | PST-01 | TBP-TS-01 | None | PostgreSQL binding (TypeScript) (config + wiring hooks) |
 | TBP-UI-REACT-VITE-01 | UI | UI-01 | TBP-COMPOSE-01 | None | React SPA (Vite) binding with containerized build + nginx proxy for local compose runs |
+| TBP-UI-REACT-VITE-SHADCN-01 | UI | UI-01 | TBP-UI-REACT-VITE-01 | None | shadcn-backed React/Vite component-system substrate for the richer UX web lane |
 | TBP-DJANGO-01 | Application | BND-01 | TBP-PY-01 | TBP-FASTAPI-01 | Django framework binding (project/app layout, routing, settings) |
 | TBP-DRF-01 | Application | BND-01 | TBP-DJANGO-01 | TBP-FASTAPI-01 | Django REST Framework binding (serializers, viewsets, routers) |
 

@@ -37,8 +37,46 @@ CAF SHOULD normalize the human-authored Markdown into planner-consumable YAML vi
 - `reference_architectures/<name>/design/playbook/application_domain_model_v1.yaml`
 - `reference_architectures/<name>/design/playbook/system_domain_model_v1.yaml`
 
+
 These are derived artifacts.
 They are never the primary human source of truth.
+
+## Aggregate-root normalization into planner-facing YAML (normative)
+
+The planner-facing YAML schema requires each emitted aggregate to contain at least one `entities[]` entry.
+When the architect-edit Markdown describes an aggregate with direct fields/invariants/persistence intent but does not declare separate subordinate `### Entity:` sections, CAF MUST derive an aggregate-root entity rather than emitting an empty `entities` array or dropping the aggregate fields.
+
+Normalization rules:
+
+- preserve the aggregate `name` and aggregate identity as authored
+- carry aggregate-root fields into a derived entity inside that aggregate’s `entities[]`
+- prefer the same business name for the root entity as the aggregate itself unless that would collide with an explicitly declared child entity name
+- derive a deterministic `entity_id` from the aggregate id; if the plain aggregate id would collide with an explicit child entity id, use `<AGGREGATE_ID>_ROOT`
+
+This keeps the human authoring surface concise while still satisfying the canonical planner-facing handoff contract.
+
+## Field requiredness and API candidate normalization (normative)
+
+Planner-facing plane YAML is a typed contract, not a prose mirror. Therefore:
+
+- every emitted `fields[]` item MUST include `name`, `type`, and `required`
+- CAF MUST derive `required: false` only when the source explicitly marks a field as optional / nullable / may be omitted / trailing `?`
+- if the source does not explicitly mark optionality, CAF MUST emit `required: true` rather than omitting the property
+- `api_candidates.resources[]` in the derived YAML MUST use the canonical object shape with at least `name` and optional `operations[]`
+- CAF MUST NOT serialize `api_candidates.resources[]` as plain strings in the planner-facing YAML
+
+This keeps downstream planner consumers deterministic and prevents shape drift caused by under-specified worker output.
+
+## Use-case touch closure and explicit source preservation (normative)
+
+Planner-facing plane YAML is a closed-world handoff for `/caf plan`. Therefore:
+
+- every `domain.use_cases[*].touches_entities[]` entry MUST resolve to an aggregate or entity name present in that same plane YAML view
+- if the architect-edit source Markdown explicitly defines a plane-owned `### Aggregate:` or `### Entity:` section, CAF MUST preserve that section in the derived YAML when it remains grounded by the source/spec/PRD inputs
+- CAF MUST NOT emit dangling touch references to concepts such as `Role`, `User`, or `ActivityEvent` unless those concepts are also represented as same-plane aggregates/entities in the derived YAML view
+- when a source use case clearly depends on a same-plane concept that is still missing from the authored model, CAF may derive a minimal grounded aggregate/entity from the source/spec inputs; otherwise CAF MUST fail closed instead of producing an invalid planner-facing view
+
+This prevents later planning from inheriting use-case/entity drift and makes small support contexts (for example activity/audit aggregates) visible to the deterministic handoff contract.
 
 ## Relationship to existing specs (normative)
 
@@ -113,11 +151,16 @@ Each derived plane domain model YAML file MUST conform to:
 Each derived file MUST include at least:
 
 - `plane_scope` (`application` or `system`),
-- bounded contexts,
+- `generated_from.inputs`,
+- a `domain` mapping containing:
+  - `domain.summary`,
+  - `domain.bounded_contexts`,
+  - `domain.use_cases`,
 - aggregates/entities,
 - persistence posture for persisted aggregates/entities,
-- API/UI candidates when applicable,
-- derivation inputs.
+- API/UI candidates when applicable.
+
+`use_cases` is part of the `domain` mapping in the canonical derived YAML shape. It must not appear as a top-level sibling of `domain`.
 
 ## Active-plane derivation clarification (normative)
 

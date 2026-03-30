@@ -54,7 +54,31 @@ Specs are prerequisites for design/planning.
 - `spec/playbook/system_spec_v1.md`
 - `spec/playbook/application_spec_v1.md`
 
-### Step 2 - Plane-separated domain model derivation from architect-edit sources (semantic intermediate; required before design-stage retrieval)
+### Step 2 - Project PRD-grounded playbook sources when defaults or legacy starter content remain
+
+Invoke:
+
+- `skills/worker-playbook-source-projector/SKILL.md`
+
+Hard rules:
+
+- This step owns automatic PRD-grounded replacement for still-default or legacy-starter:
+  - `spec/playbook/application_domain_model_v1.md`
+  - `spec/playbook/application_product_surface_v1.md`
+- Preserve meaningful human edits.
+- Do not move this ownership into `/caf prd`.
+
+Deterministic drift gate (required; fail-closed):
+
+Run (do not print invocation):
+
+- `node tools/caf/playbook_source_projection_drift_gate_v1.mjs <name>`
+
+Rules:
+- If it exits non-zero, it will print a feedback packet path. STOP and surface only that path.
+- Do not continue into domain-model derivation when default or legacy playbook source docs are still in place and the resolved PRD is already specific.
+
+### Step 3 - Plane-separated domain model derivation from architect-edit sources (semantic intermediate; required before design-stage retrieval)
 
 Invoke:
 
@@ -75,7 +99,18 @@ Hard rules:
 
 If a feedback packet was produced, STOP.
 
-### Step 3 - Refresh design-stage pattern candidates (baseline retrieval)
+Deterministic post-gate (required; fail-closed):
+
+Run (do not print invocation):
+
+- `node tools/caf/design_postgate_plane_domain_model_views_coherence_v1.mjs <name>`
+
+Rules:
+- If it exits non-zero, it will print a feedback packet path. STOP and surface only that path.
+- This validator is the canonical deterministic contract check for the planner-facing plane domain-model YAML views.
+- Do not continue into design-stage retrieval or planning handoff with missing/malformed plane domain-model views.
+
+### Step 4 - Refresh design-stage pattern candidates (baseline retrieval)
 
 Deterministic pre-retrieval helpers (MUST RUN; fail-closed):
 
@@ -116,14 +151,14 @@ Invoke canonical retrieval owner:
 
    Packet handling policy for design-stage retrieval (profile=solution_architecture):
 
-   - Identify NEW feedback packets produced during Step 3 (retrieval owner + retriever).
-     - Compare `reference_architectures/<instance>/feedback_packets/` before vs after Step 3.
+   - Identify NEW feedback packets produced during Step 4 (retrieval owner + retriever).
+     - Compare `reference_architectures/<instance>/feedback_packets/` before vs after Step 4.
 
    - If the ONLY new feedback packets have `Severity: advisory`:
      - DO NOT STOP.
      - Surface the packet paths as warnings.
      - Do NOT attempt to fix advisory packets. (Advisory is informational; token-saver rule.)
-     - Continue to Step 4.
+     - Continue to Step 6.
 
    - If ANY new feedback packet has `Severity: blocker`:
      - STOP and surface the newest blocker packet path.
@@ -142,7 +177,7 @@ Optional interactive checkpoint (allowed; preferred over shortcuts):
     3) Stop with no action.
 - Forbidden: skipping the retrieval owner and then failing at a gate due to missing retrieval-owned outputs.
 
-### Step 4 - Design pre-gate scaffolding (deterministic; required)
+### Step 5 - Design pre-gate scaffolding (deterministic; required)
 
 This is the MP-20 **pre-gate** scaffold for contract-first planning.
 It ensures `design/playbook/contract_declarations_v1.yaml` exists and uses the canonical Phase-8 registry schema **before** the semantic design producer runs.
@@ -155,7 +190,7 @@ Rules:
 - If it exits non-zero, it will print a feedback packet path. STOP and surface only that path.
 - If it detects a legacy/non-canonical file shape, it will back up the original under `design/playbook/` with a `.legacy.YYYYMMDD` suffix and reseed the canonical template.
 
-### Step 5 - Run caf-solution-architect (first pass)
+### Step 6 - Run caf-solution-architect (first pass)
 
 Solution architect is the canonical producer of design artifacts. This step is required to produce the design docs and contract declarations that are prerequisites for planning.
 It is an instruction only step, but it MUST be run at least once to produce the initial design artifacts. You cannot skip it or shortcut it with feedback packets. This step has no deterministic scripted path, so you must execute the instructions in the skill. Do not jump to the postcondition checks before running the skill.
@@ -190,7 +225,7 @@ Notes:
 
 - `caf-solution-architect` MUST enforce the subset rule.
 
-### Step 6 - Design postprocess: materialize script-owned planning handoff artifacts (deterministic; required)
+### Step 7 - Design postprocess: materialize script-owned planning handoff artifacts (deterministic; required)
 
 This is a deterministic postprocess step that makes the CAF-managed design → planning handoff resilient to agent formatting drift.
 It is NOT a repair script; it is a script-owned projection of already-adopted decisions.
@@ -205,7 +240,7 @@ Rules:
 - `materialize_planning_pattern_payload_v1` overwrites only the YAML inside `CAF_MANAGED_BLOCK: planning_pattern_payload_v1` in BOTH design docs.
 - `materialize_design_summary_v1` overwrites `reference_architectures/<name>/design/playbook/design_summary_v1.md`.
 
-### Step 7 - Design post-gate invariants (fail-closed)
+### Step 8 - Design post-gate invariants (fail-closed)
 
 This is the MP-20 **post-gate** after the semantic design step (`caf-solution-architect`) and the deterministic materialization of script-owned planning handoff artifacts.
 Its job is to fail early if:
@@ -215,6 +250,7 @@ Its job is to fail early if:
 Run (do not print invocation):
 
 - `node tools/caf/design_postgate_contract_declarations_coherence_v1.mjs <name>`
+- `node tools/caf/design_postgate_plane_integration_contract_choices_coherence_v1.mjs <name>`
 - `node tools/caf/design_postgate_planning_coherence_v1.mjs <name>`
 
 Rules:
@@ -222,7 +258,7 @@ Rules:
 - Do NOT attempt to “repair” by writing ad-hoc scripts. The first-line mitigation is strengthening gates and rerunning `/caf arch`.
 
 
-### Step 8 - STOP (planning moved to `/caf plan`)
+### Step 9 - STOP (planning moved to `/caf plan`)
 
 At this point, the design bundle is complete for this phase.
 

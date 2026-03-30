@@ -21,7 +21,7 @@ import { parseYamlString } from './lib_yaml_v2.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
-import { ensureFeedbackPacketHeaderV1, markPendingFeedbackPacketsStaleSync } from './lib_feedback_packets_v1.mjs';
+import { ensureFeedbackPacketHeaderV1, markPendingFeedbackPacketsStaleSync, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 const MAX_PACKET_EVIDENCE = 24;
@@ -271,15 +271,58 @@ async function writeStateFile(stateAbs, summary) {
   await writeUtf8(stateAbs, JSON.stringify(stateDoc, null, 2) + '\n');
 }
 
-export async function internal_main(argv = process.argv.slice(2)) {
+function commandStemForTaskGraph(taskGraphName, instanceName) {
+  return taskGraphName === 'ux_task_graph_v1.yaml' ? `/caf ux build ${instanceName}` : `/caf build ${instanceName}`;
+}
+
+function planningCommandForTaskGraph(taskGraphName, instanceName) {
+  return taskGraphName === 'ux_task_graph_v1.yaml' ? `/caf ux plan ${instanceName}` : `/caf plan ${instanceName}`;
+}
+
+function parseCliArgs(argv = process.argv.slice(2)) {
   const args = Array.isArray(argv) ? argv : [];
-  if (args.length < 1) die('Usage: node tools/caf/build_wave_state_v1.mjs <instance_name> [wave_index]', 2);
-  const instanceName = normalizeScalar(args[0]);
+  const positional = [];
+  let taskGraphName = 'task_graph_v1.yaml';
+  let stateFileName = 'build_wave_state_v1.json';
+  for (let i = 0; i < args.length; i += 1) {
+    const token = normalizeScalar(args[i]);
+    if (!token) continue;
+    if (token === '--task-graph') {
+      const next = normalizeScalar(args[i + 1]);
+      if (!next) die('Missing value for --task-graph', 2);
+      taskGraphName = next;
+      i += 1;
+      continue;
+    }
+    if (token === '--state-file') {
+      const next = normalizeScalar(args[i + 1]);
+      if (!next) die('Missing value for --state-file', 2);
+      stateFileName = next;
+      i += 1;
+      continue;
+    }
+    if (token.startsWith('--')) die(`Unknown flag: ${token}`, 2);
+    positional.push(token);
+  }
+  return {
+    instanceName: positional[0] || '',
+    waveIndexRaw: positional.length >= 2 ? positional[1] : '',
+    taskGraphName,
+    stateFileName,
+  };
+}
+
+export async function internal_main(argv = process.argv.slice(2)) {
+  const { instanceName, waveIndexRaw, taskGraphName, stateFileName } = parseCliArgs(argv);
+  if (!instanceName) die('Usage: node tools/caf/build_wave_state_v1.mjs <instance_name> [wave_index] [--task-graph <file>] [--state-file <file>]', 2);
   if (!NAME_RE.test(instanceName)) die(`Invalid instance_name: ${instanceName}`, 2);
 
+  const commandStem = commandStemForTaskGraph(taskGraphName, instanceName);
+  const planningCommand = planningCommandForTaskGraph(taskGraphName, instanceName);
+
   let explicitWaveIndex = null;
-  if (args.length >= 2 && String(args[1]).trim() !== '') {
-    const raw = String(args[1]).trim();
+  if (String(waveIndexRaw).trim() !== '') {
+    const raw = String(waveIndexRaw).trim();
     if (!/^\d+$/.test(raw)) {
       const repoRoot = resolveRepoRoot();
       const fp = await writePacket(
@@ -288,8 +331,8 @@ export async function internal_main(argv = process.argv.slice(2)) {
         'build-wave-invalid-index',
         'Explicit build wave index is not a non-negative integer',
         [
-          `Use '/caf build ${instanceName}' for automatic wave selection.`,
-          `If you intentionally want the escape hatch, use '/caf build ${instanceName} <wave>' with a non-negative integer.`,
+          `Use '${commandStem}' for automatic wave selection.`,
+          `If you intentionally want the escape hatch, use '${commandStem} <wave>' with a non-negative integer.`,
         ],
         [`observed_wave_index: ${raw}`],
       );
@@ -300,8 +343,8 @@ export async function internal_main(argv = process.argv.slice(2)) {
 
   const repoRoot = resolveRepoRoot();
   const layout = getInstanceLayout(repoRoot, instanceName);
-  const taskGraphAbs = path.join(layout.designPlaybookDir, 'task_graph_v1.yaml');
-  const stateAbs = path.join(layout.instanceRoot, '.caf-state', 'build_wave_state_v1.json');
+  const taskGraphAbs = path.join(layout.designPlaybookDir, taskGraphName);
+  const stateAbs = path.join(layout.instanceRoot, '.caf-state', stateFileName);
   const packetsDirAbs = layout.feedbackDir;
   const companionRoot = path.join(repoRoot, 'companion_repositories', instanceName, 'profile_v1');
 
@@ -312,8 +355,8 @@ export async function internal_main(argv = process.argv.slice(2)) {
       repoRoot,
       instanceName,
       'build-wave-missing-task-graph',
-      'Cannot compute build wave state because task_graph_v1.yaml is missing',
-      [`Run '/caf plan ${instanceName}' to generate planning outputs before building.`],
+      `Cannot compute build wave state because ${taskGraphName} is missing`,
+      [`Run '${planningCommand}' to generate planning outputs before building.`],
       [`missing: ${safeRel(repoRoot, taskGraphAbs)}`],
     );
     die(fp, 12);
@@ -338,7 +381,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
   let nextWaveIndex = null;
   let currentWaveStatus = completed ? 'complete' : (earliestIncompleteWave?.status || 'not_started');
   let message = '';
-  const nextCommand = completed ? '(none)' : `/caf build ${instanceName}`;
+  const nextCommand = completed ? '(none)' : commandStem;
 
   if (completed) {
     message = totalTasks <= 10
@@ -352,7 +395,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
           instanceName,
           'build-wave-index-out-of-range',
           'Explicit build wave index is outside the valid wave range',
-          [`Use '/caf build ${instanceName}' for automatic full-run selection.`, `Valid wave range: 0..${Math.max(0, totalWaves - 1)}.`],
+          [`Use '${commandStem}' for automatic full-run selection.`, `Valid wave range: 0..${Math.max(0, totalWaves - 1)}.`],
           [`requested_wave_index: ${explicitWaveIndex}`, `valid_range: 0..${Math.max(0, totalWaves - 1)}`],
         );
         die(fp, 13);
@@ -376,7 +419,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
           instanceName,
           'build-wave-index-out-of-range',
           'Explicit build wave index is outside the valid wave range',
-          [`Use '/caf build ${instanceName}' for automatic wave selection.`, `Valid wave range: 0..${Math.max(0, totalWaves - 1)}.`],
+          [`Use '${commandStem}' for automatic wave selection.`, `Valid wave range: 0..${Math.max(0, totalWaves - 1)}.`],
           [`requested_wave_index: ${explicitWaveIndex}`, `valid_range: 0..${Math.max(0, totalWaves - 1)}`],
         );
         die(fp, 14);
@@ -400,7 +443,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
           'build-wave-prior-wave-incomplete',
           'An explicit build wave was requested before all prior waves had complete evidence',
           [
-            `Run '/caf build ${instanceName}' for automatic resume, or '/caf build ${instanceName} ${earliestIncompleteWave.wave_index}' if you intentionally want the explicit escape hatch.`,
+            `Run '${commandStem}' for automatic resume, or '${commandStem} ${earliestIncompleteWave.wave_index}' if you intentionally want the explicit escape hatch.`,
             'Do not skip earlier waves when companion task reports or reviews are missing.',
           ],
           evidence,
@@ -440,6 +483,10 @@ export async function internal_main(argv = process.argv.slice(2)) {
     next_command: nextCommand,
     message,
   };
+
+  if (completed && taskGraphName === 'task_graph_v1.yaml') {
+    resolveFeedbackPacketsBySlugSync(packetsDirAbs, 'build-dispatch-exec-access-denied');
+  }
 
   await writeStateFile(stateAbs, summary);
   process.stdout.write(JSON.stringify(summary, null, 2) + '\n');

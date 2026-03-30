@@ -24,7 +24,7 @@ import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlString } from './lib_yaml_v2.mjs';
-import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
+import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 
@@ -426,6 +426,8 @@ export async function internal_main(argv = process.argv.slice(2)) {
   }
 
 
+  const packetsDir = path.join(layout.instanceRoot, 'feedback_packets');
+  resolveFeedbackPacketsBySlugSync(packetsDir, 'design-postgate-contract-declarations-');
   return 0;
 }
 

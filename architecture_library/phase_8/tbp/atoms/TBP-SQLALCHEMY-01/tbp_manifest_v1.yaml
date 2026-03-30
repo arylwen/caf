@@ -14,22 +14,30 @@ layout:
   role_bindings:
     sqlalchemy_runtime_module:
       path_template: code/common/persistence/sqlalchemy_runtime.py
+      path_templates_any_of:
+        - code/cp/persistence/postgres_runtime.py
+        - code/ap/persistence/postgres_runtime.py
       artifact_class: code_runnable_candidate
       evidence_contains:
-        - DATABASE_URL
         - create_engine
         - sessionmaker
     sqlalchemy_metadata_module:
       path_template: code/common/persistence/sqlalchemy_metadata.py
+      path_templates_any_of:
+        - code/cp/persistence/postgres_runtime.py
+        - code/ap/persistence/postgres_runtime.py
       artifact_class: code_runnable_candidate
       evidence_contains:
-        - DeclarativeBase
-        - MetaData
+        - Base = declarative_base()
     sqlalchemy_schema_bootstrap:
       path_template: code/common/persistence/sqlalchemy_schema_bootstrap.py
+      path_templates_any_of:
+        - code/cp/persistence/postgres_runtime.py
+        - code/ap/persistence/postgres_runtime.py
       artifact_class: code_runnable_candidate
       evidence_contains:
-        - metadata.create_all
+        - bootstrap_schema
+        - create_all
     sqlalchemy_runtime_env_contract:
       path_template: .env
       artifact_class: config_stubs_non_executable
@@ -115,9 +123,12 @@ extensions:
       criteria:
         - When schema management is code_bootstrap, SQLAlchemy metadata bootstrap remains ORM-owned, imports or registers mapped model modules before `create_all`, and is exposed through a deterministic persistence boundary hook.
         - When schema management is code_bootstrap, runtime composition roots invoke the shared ORM bootstrap hook before serving traffic instead of relying on first-write failures to materialize schema.
+        - When schema management is code_bootstrap, repository factories and request-scoped handlers do not own unsynchronized lazy schema bootstrap as the primary realization path; any fallback convergence stays secondary to startup ownership.
         - When schema management uses migrations, runtime persistence code avoids silently creating schema and remains compatible with migration-owned evolution.
       review_questions:
         - Does the ORM bootstrap hook register mapped models before metadata bootstrap executes?
+        - Does runtime composition invoke the shared bootstrap hook before traffic reaches persistence adapters?
+        - Do repository factories avoid request-path-first schema bootstrap as the primary realization path?
         - Does runtime persistence behavior match the resolved schema_management_strategy without introducing silent schema drift?
       focus_areas:
         - correctness

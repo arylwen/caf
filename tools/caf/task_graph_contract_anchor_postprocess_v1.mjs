@@ -23,6 +23,7 @@ import { createRequire } from 'node:module';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { parseYamlString } from './lib_yaml_v2.mjs';
+import { parsePlaneIntegrationContractChoicesMarkdown, deriveContractSurfaceFromPlaneIntegrationChoices } from './lib_plane_integration_contract_choices_v1.mjs';
 import { ensureFeedbackPacketHeaderV1 } from './lib_feedback_packets_v1.mjs';
 
 const require = createRequire(import.meta.url);
@@ -56,67 +57,9 @@ function normalizeScalar(v) {
   return s.trim();
 }
 
-function extractBlock(text, startMarker, endMarker) {
-  const s = String(text ?? '').indexOf(startMarker);
-  if (s < 0) return null;
-  const e = String(text ?? '').indexOf(endMarker, s);
-  if (e < 0) return null;
-  return String(text ?? '').slice(s, e + endMarker.length);
-}
 
-function extractYamlFence(blockText) {
-  const lines = String(blockText ?? '').split(/\r?\n/);
-  let startLine = -1;
-  for (let i = 0; i < lines.length; i++) {
-    const t = lines[i].trim();
-    if (t === '```yaml' || t.startsWith('```yaml ')) {
-      startLine = i + 1;
-      break;
-    }
-  }
-  if (startLine < 0) return null;
-  let endLine = -1;
-  for (let i = startLine; i < lines.length; i++) {
-    if (lines[i].trim() === '```') {
-      endLine = i;
-      break;
-    }
-  }
-  if (endLine < 0) return null;
-  return lines.slice(startLine, endLine).join('\n');
-}
 
-function extractArchitectEditYaml(mdText, blockId) {
-  const block = extractBlock(
-    mdText,
-    `<!-- ARCHITECT_EDIT_BLOCK: ${blockId} START -->`,
-    `<!-- ARCHITECT_EDIT_BLOCK: ${blockId} END -->`
-  );
-  if (!block) return null;
-  return extractYamlFence(block);
-}
 
-function deriveContractSurfaceFromRefDoc(mdText) {
-  const planeChoicesYaml = extractArchitectEditYaml(mdText, 'plane_integration_contract_choices_v1');
-  if (!planeChoicesYaml) return 'custom';
-  let obj;
-  try {
-    obj = parseYamlString(planeChoicesYaml, 'plane_integration_contract_choices_v1') || {};
-  } catch {
-    return 'custom';
-  }
-  const choices = obj?.choices && typeof obj.choices === 'object' ? obj.choices : {};
-  const block = choices?.cp_ap_contract_surface && typeof choices.cp_ap_contract_surface === 'object'
-    ? choices.cp_ap_contract_surface
-    : null;
-  const options = Array.isArray(block?.options) ? block.options : [];
-  const adopted = options.find((o) => normalizeScalar(o?.status) === 'adopt');
-  const optionId = normalizeScalar(adopted?.option_id);
-  if (optionId === 'mixed') return 'mixed';
-  if (optionId === 'async_events') return 'async_events';
-  if (optionId === 'synchronous_api' || optionId === 'synchronous_http') return 'synchronous_http';
-  return 'custom';
-}
 
 function nowDateYYYYMMDD() {
   const d = new Date();
@@ -269,7 +212,8 @@ export async function internal_main(argv = process.argv.slice(2)) {
       if (existsSync(refAbsPath)) {
         try {
           const mdText = await fs.readFile(refAbsPath, { encoding: 'utf8' });
-          contractSurface = deriveContractSurfaceFromRefDoc(mdText);
+          const parsed = parsePlaneIntegrationContractChoicesMarkdown(mdText, `${refAbsPath}:plane_integration_contract_choices_v1`);
+          contractSurface = parsed.ok ? deriveContractSurfaceFromPlaneIntegrationChoices(parsed.obj) : 'custom';
         } catch {
           contractSurface = 'custom';
         }

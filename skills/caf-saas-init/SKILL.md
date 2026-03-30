@@ -10,7 +10,7 @@ FILE: skills/caf-saas-init/SKILL.md
 name: caf-saas-init
 description: >
   Initialize a reference architecture instance by copying Phase 8 profile template inputs into
-  spec/playbook and spec/guardrails. Optionally seed a fully-filled PRD sample if provided by the
+  spec/playbook and spec/guardrails. Optionally seed filled source-document samples if provided by the
   selected profile template pack. Fail-closed; write feedback packets to disk.
 ---
 
@@ -27,13 +27,13 @@ Create:
 - `reference_architectures/<instance_name>/spec/playbook/`
 - `reference_architectures/<instance_name>/feedback_packets/`
 
-Then copy **ONLY** the YAML template files from:
+Then copy the canonical YAML template files from:
 
 - `architecture_library/phase_8/profile_templates/<profile_template_id>/`
 
 into the instance, applying only minimal safe substitutions.
 
-If the selected profile template pack includes fully-filled PRD samples, seed them:
+If the selected profile template pack includes filled source-document samples, seed them:
 
 - Product PRD sample (PM-owned):
   - source: `architecture_library/phase_8/profile_templates/<profile_template_id>/prd_v1.sample.md`
@@ -42,6 +42,10 @@ If the selected profile template pack includes fully-filled PRD samples, seed th
 - Platform posture brief sample (architect-owned; file name is stable):
   - source: `architecture_library/phase_8/profile_templates/<profile_template_id>/platform_prd_v1.sample.md`
   - destination: `reference_architectures/<instance_name>/product/PLATFORM_PRD.md`
+
+- UX vision / design brief sample:
+  - source: `architecture_library/phase_8/profile_templates/<profile_template_id>/ux_vision_v1.sample.md`
+  - destination: `reference_architectures/<instance_name>/product/UX_VISION.md`
 
 These seeds are mechanical only and must pass CAF placeholder hygiene (no `<`, TBD, TODO, UNKNOWN).
 
@@ -60,16 +64,18 @@ These seeds are mechanical only and must pass CAF placeholder hygiene (no `<`, T
 
 - `architecture_library/phase_8/profile_templates/<profile_template_id>/prd_v1.sample.md`
 - `architecture_library/phase_8/profile_templates/<profile_template_id>/platform_prd_v1.sample.md`
+- `architecture_library/phase_8/profile_templates/<profile_template_id>/ux_vision_v1.sample.md`
 
 ## Outputs
 
 - `reference_architectures/<instance_name>/spec/playbook/architecture_shape_parameters.yaml`
 - `reference_architectures/<instance_name>/spec/guardrails/profile_parameters.yaml`
 
-If optional PRD samples exist:
+If optional source-document samples exist:
 
 - `reference_architectures/<instance_name>/product/PRD.md`
 - `reference_architectures/<instance_name>/product/PLATFORM_PRD.md`
+- `reference_architectures/<instance_name>/product/UX_VISION.md`
 
 ## Minimal safe substitutions (instance-name only)
 

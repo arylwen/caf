@@ -158,7 +158,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
   const repoRoot = resolveRepoRoot();
   const layout = getInstanceLayout(repoRoot, instanceName);
   const specPlaybookDir = layout.specPlaybookDir;
-  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding') ? layout.designPlaybookDir : layout.specPlaybookDir;
+  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design') ? layout.designPlaybookDir : layout.specPlaybookDir;
 
   const systemSpec = path.join(specPlaybookDir, 'system_spec_v1.md');
   const appSpec = path.join(specPlaybookDir, 'application_spec_v1.md');
@@ -296,7 +296,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
   // Phase-owned output:
   // - spec-stage profiles write under spec/caf_meta
   // - design-stage profiles write under design/caf_meta
-  const isDesignProfile = (profile === 'solution_architecture' || profile === 'implementation_scaffolding');
+  const isDesignProfile = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design');
   const cafMetaDir = isDesignProfile
     ? path.join(layout.designDir, 'caf_meta')
     : (layout.specMetaDir ?? path.join(layout.specDir, 'caf_meta'));
@@ -370,7 +370,7 @@ async function main() {
         lines.push('');
         lines.push('## Expected Artifact');
         lines.push('');
-        const isDesignProfile = (profile === 'solution_architecture' || profile === 'implementation_scaffolding');
+        const isDesignProfile = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design');
         const expectedDir = isDesignProfile ? 'design/caf_meta' : 'spec/caf_meta';
         lines.push('- reference_architectures/' + instanceName + '/' + expectedDir + '/retrieval_debug_computed_' + profile + '_v1.md');
         lines.push('');

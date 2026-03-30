@@ -104,7 +104,7 @@ The canonical obligations artifact remains YAML:
 
 Optional TSV / JSONL outputs are derived debug or search projections only. They should not replace the canonical YAML artifact unless CAF intentionally changes the ownership/model later.
 
-## Related
+## You might also be interested in
 
 - [Planning workflows and post-chain](09_planning_workflows_and_post_chain.md)
 - [`80_phase_8_pattern_obligations_schema_v1.yaml`](../../architecture_library/phase_8/80_phase_8_pattern_obligations_schema_v1.yaml)

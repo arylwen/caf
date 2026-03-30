@@ -8,6 +8,15 @@ Create your own SaaS instance and follow the default PRD-first path into archite
 
 Replace `<instance>` with your own instance name. `/caf saas` also accepts an optional second argument for a profile template id. The default remains the simple boring SaaS starter.
 
+If you are using the packaged terminal helpers, prefer the direct Node entrypoints from the repo root:
+
+```powershell
+node .\tools\caf\cli\codex\run_caf_flow_v1.mjs codex-saas
+node .\tools\caf\cli\claude\run_caf_flow_v1.mjs codex-saas
+```
+
+The `.cmd`, `.sh`, and `.ps1` wrappers remain available, but the direct Node entrypoint avoids PowerShell script-policy friction on some systems.
+
 ```text
 /caf saas <instance>
 /caf prd <instance>           # default next step: resolve PRD and promote a lifecycle-ready shape
@@ -22,7 +31,7 @@ Notes:
 
 - CAF is **fail-closed**: missing or ambiguous inputs produce feedback packets.
 - Default starter: `/caf saas <instance>` seeds the simple SaaS path via `intentionally_boring_saas_v1`.
-- Agentic demo starter: `/caf saas <instance> governed_agentic_review_v1` keeps the same boring review domain but adds governed AI-assisted and bounded agentic workflow seeds.
+- Agentic review starter: `/caf saas <instance> governed_agentic_review_v1` keeps the same boring review domain but adds governed AI-assisted and bounded agentic workflow seeds.
 - Outputs are **candidate-only** and require human review.
 - `/caf prd` is a single workflow; you should not need to run any `tools/caf/*` scripts directly.
 - The canonical public sample instance for ask-first exploration is `codex-saas`.
@@ -34,15 +43,16 @@ Notes:
 - If you skip `/caf prd`, the first `/caf arch` now warns via an advisory feedback packet, but the recommended launch path is still `/caf prd` first.
 - The first `/caf arch` derives architecture scaffolding and decision candidates from that promoted or architect-curated shape.
 - `/caf next <instance> apply` checkpoints your adopted decisions so downstream steps can proceed deterministically.
-- The second `/caf arch` derives the next phase (typically design and planning inputs).
+- The second `/caf arch` derives the design bundle that planning consumes, including control-plane/application design docs, contract declarations, and normalized domain-model views.
 - `/caf plan` produces obligations, task graph, and backlog artifacts.
+- If a detailed PRD is unavailable, CAF also supports an architect-operated fallback starting from curated pins plus domain-model source material; see the architect workflows before using that path.
 - `/caf build` generates **candidate** code under `companion_repositories/<instance>/`.
 
-## Next best link
+## Find out more
 
 [PRD-first lifecycle](15_prd_first_lifecycle.md) — See why this command order exists and where the human checkpoints live.
 
-## Top 3 related links
+## You might also be interested in
 
 - [PRD → Architecture Shape](12_prd_workflow.md) — Understand what `/caf prd` promotes before the first architecture scaffold.
 - [Instances, phases, and state](05_instances_phases_and_state.md) — Learn where each lifecycle artifact lands.

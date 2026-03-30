@@ -120,6 +120,13 @@ function taskGraphHasCapability(taskGraph, capabilityId) {
   });
 }
 
+function detectRepositoryFactoryLazySchemaBootstrap(text) {
+  const src = String(text ?? '');
+  return /\b_SCHEMA_BOOTSTRAPPED\b/.test(src)
+    || /\b_ensure_schema_bootstrap\s*\(/.test(src)
+    || /\bbootstrap_schema\s*\(/.test(src);
+}
+
 
 async function collectPersistenceTerminalExpectations(repoRoot, instanceName, persistenceOrm, capabilityId) {
   const expectations = [];
@@ -146,10 +153,14 @@ async function validateResolvedExpectations(repoRoot, companionRoot, expectation
   const seen = new Set();
   let concreteCount = 0;
   for (const ex of expectations) {
-    const rel = normalizeRelPath(ex?.path_template);
-    if (!rel || hasTemplateVariables(rel)) continue;
+    const candidateRels = Array.from(new Set(
+      ensureArray(ex?.path_templates_any_of).length > 0
+        ? ensureArray(ex?.path_templates_any_of).map(normalizeRelPath)
+        : [normalizeRelPath(ex?.path_template)]
+    )).filter((rel) => rel && !hasTemplateVariables(rel));
+    if (candidateRels.length === 0) continue;
     const dedupeKey = JSON.stringify({
-      rel,
+      rels: candidateRels,
       validatorKind: normalizeScalar(ex?.validator_kind),
       evidenceContains: ensureArray(ex?.evidence_contains),
       validatorConfig: ex?.validator_config || null,
@@ -158,15 +169,37 @@ async function validateResolvedExpectations(repoRoot, companionRoot, expectation
     if (seen.has(dedupeKey)) continue;
     seen.add(dedupeKey);
     concreteCount += 1;
-    const abs = path.join(companionRoot, rel);
-    if (!existsSync(abs)) {
-      findings.push(`${label} contract is missing resolved role-binding output ${rel} (${normalizeScalar(ex?.role_binding_key) || normalizeScalar(ex?.obligation_id) || normalizeScalar(ex?.tbp_id)}).`);
+
+    const existingRels = candidateRels.filter((rel) => existsSync(path.join(companionRoot, rel)));
+    if (existingRels.length === 0) {
+      const rendered = candidateRels.length === 1 ? candidateRels[0] : `[${candidateRels.join(', ')}]`;
+      findings.push(`${label} contract is missing any resolved role-binding output ${rendered} (${normalizeScalar(ex?.role_binding_key) || normalizeScalar(ex?.obligation_id) || normalizeScalar(ex?.tbp_id)}).`);
       continue;
     }
-    const text = await readUtf8(abs);
-    findings.push(...validateRoleBindingTextExpectation(ex, text, label));
-    if (shouldExecuteRoleBindingValidator(ex, { executionSurface: 'build_technology_choice_gate' })) {
-      findings.push(...await executeRoleBindingValidator(ex, { repoRoot, companionRoot, label, executionSurface: 'build_technology_choice_gate' }));
+
+    let passingCandidateFound = false;
+    let bestCandidateFindings = null;
+    for (const rel of existingRels) {
+      const abs = path.join(companionRoot, rel);
+      const text = await readUtf8(abs);
+      const exForCandidate = { ...ex, path_template: rel };
+      const candidateFindings = [
+        ...validateRoleBindingTextExpectation(exForCandidate, text, label),
+      ];
+      if (shouldExecuteRoleBindingValidator(exForCandidate, { executionSurface: 'build_technology_choice_gate' })) {
+        candidateFindings.push(...await executeRoleBindingValidator(exForCandidate, { repoRoot, companionRoot, label, executionSurface: 'build_technology_choice_gate', readUtf8 }));
+      }
+      if (candidateFindings.length === 0) {
+        passingCandidateFound = true;
+        break;
+      }
+      if (!bestCandidateFindings || candidateFindings.length < bestCandidateFindings.length) {
+        bestCandidateFindings = candidateFindings;
+      }
+    }
+
+    if (!passingCandidateFound && bestCandidateFindings) {
+      findings.push(...bestCandidateFindings);
     }
   }
   return concreteCount;
@@ -308,6 +341,18 @@ export async function internal_main(argv = process.argv.slice(2)) {
     const concreteChecks = await validateResolvedExpectations(repoRoot, companionRoot, expectations, findings, label);
     if (concreteChecks === 0) {
       findings.push(`${label} resolved no concrete role-binding expectations for capability \`${capabilityId}\`.`);
+    }
+  }
+
+
+  if (runtimeLanguage === 'python' && runtimeFramework === 'fastapi' && persistenceOrm === 'sqlalchemy_orm' && schemaStrategy === 'code_bootstrap') {
+    for (const relPath of ['code/ap/persistence/repository_factory.py', 'code/cp/persistence/repository_factory.py']) {
+      const absPath = path.join(companionRoot, relPath);
+      if (!existsSync(absPath)) continue;
+      const repoText = await readUtf8(absPath);
+      if (detectRepositoryFactoryLazySchemaBootstrap(repoText)) {
+        findings.push(`${safeRel(repoRoot, absPath)} retains lazy repository-factory schema bootstrap state. For SQLAlchemy code_bootstrap, composition-root startup must own schema materialization; request-path bootstrap can only be a secondary synchronized fallback.`);
+      }
     }
   }
 

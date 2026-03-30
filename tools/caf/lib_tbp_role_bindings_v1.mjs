@@ -16,6 +16,21 @@ import path from 'node:path';
 import { parseYamlFile } from './lib_yaml_v2.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 
+function ensureArray(v) {
+  return Array.isArray(v) ? v : [];
+}
+
+function collectRoleBindingPathTemplates(rb) {
+  const templates = [];
+  for (const candidate of ensureArray(rb?.path_templates_any_of)) {
+    const normalized = String(candidate || '').trim();
+    if (normalized) templates.push(normalized);
+  }
+  const single = String(rb?.path_template || '').trim();
+  if (single) templates.unshift(single);
+  return Array.from(new Set(templates));
+}
+
 export async function loadResolvedTbpIds(repoRoot, instanceName) {
   const layout = getInstanceLayout(repoRoot, instanceName);
   const tbpResolutionPath = path.join(layout.specGuardrailsDir, 'tbp_resolution_v1.yaml');
@@ -56,6 +71,7 @@ export function collectRoleBindingExpectationsForCapability(tbpId, tbpManifest, 
 
     const roleBindingKey = o.role_binding_key;
     const rb = roleBindings?.[roleBindingKey] || null;
+    const pathTemplates = collectRoleBindingPathTemplates(rb);
 
     expectations.push({
       tbp_id: tbpId,
@@ -63,7 +79,8 @@ export function collectRoleBindingExpectationsForCapability(tbpId, tbpManifest, 
       obligation_title: o.title || null,
       required_capability: o.required_capability || null,
       role_binding_key: roleBindingKey || null,
-      path_template: rb?.path_template || null,
+      path_template: pathTemplates[0] || null,
+      path_templates_any_of: pathTemplates,
       artifact_class: rb?.artifact_class || null,
       evidence_contains: rb?.evidence_contains || [],
       validator_kind: rb?.validator_kind || null,
@@ -80,15 +97,54 @@ export function collectRoleBindingMatchesForKey(tbpId, tbpManifest, roleBindingK
   const roleBindings = tbpManifest?.layout?.role_bindings || {};
   const rb = roleBindings?.[key] || null;
   if (!rb || typeof rb !== 'object') return [];
+  const pathTemplates = collectRoleBindingPathTemplates(rb);
   return [{
     tbp_id: tbpId,
     role_binding_key: key,
-    path_template: rb?.path_template || null,
+    path_template: pathTemplates[0] || null,
+    path_templates_any_of: pathTemplates,
     artifact_class: rb?.artifact_class || null,
     evidence_contains: rb?.evidence_contains || [],
     validator_kind: rb?.validator_kind || null,
     validator_config: rb?.validator_config || null,
   }];
+}
+
+export function instantiateRoleBindingPathTemplate(pathTemplate, variables = {}) {
+  const template = String(pathTemplate || '').trim();
+  if (!template) return null;
+  const missing = [];
+  const concrete = template.replace(/\{([^}]+)\}/g, (_, rawKey) => {
+    const key = String(rawKey || '').trim();
+    if (!Object.prototype.hasOwnProperty.call(variables, key)) {
+      missing.push(key);
+      return `{${key}}`;
+    }
+    return String(variables[key]);
+  });
+  if (missing.length > 0) return null;
+  return concrete;
+}
+
+export async function resolveConcreteRoleBindingPathsForInstance(repoRoot, instanceName, roleBindingKey, variables = {}) {
+  const resolvedTbps = await loadResolvedTbpIds(repoRoot, instanceName);
+  const matches = [];
+  for (const tbpId of resolvedTbps) {
+    const { manifestPath, manifest } = await loadTbpManifest(repoRoot, tbpId);
+    const roleMatches = collectRoleBindingMatchesForKey(tbpId, manifest, roleBindingKey);
+    for (const match of roleMatches) {
+      const concretePaths = ensureArray(match?.path_templates_any_of)
+        .map((template) => instantiateRoleBindingPathTemplate(template, variables))
+        .filter(Boolean);
+      matches.push({
+        ...match,
+        manifest_path: manifestPath,
+        concrete_path: concretePaths[0] || null,
+        concrete_paths_any_of: concretePaths,
+      });
+    }
+  }
+  return matches;
 }
 
 
@@ -98,10 +154,6 @@ function normalizeScalar(v) {
 
 function normalizeLower(v) {
   return normalizeScalar(v).toLowerCase();
-}
-
-function ensureArray(v) {
-  return Array.isArray(v) ? v : [];
 }
 
 export function manifestBindsAtom(tbpManifest, atomPath, atomValue) {

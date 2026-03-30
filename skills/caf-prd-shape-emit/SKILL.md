@@ -46,6 +46,15 @@ This skill is **instruction-only**:
 
 ## Canonical inputs
 
+Additional contextual source (bounded use):
+
+- `reference_architectures/<instance>/product/UX_VISION.md`
+
+Use rule:
+- only architecture-shape-relevant signals from `tools/caf/contracts/ux_vision_source_and_prd_consumption_contract_v1.md` may influence the proposal/rationale;
+- do not let logo/palette/component-system choices become architecture pins.
+
+
 PRD-like input (canonical defaults):
 
 - Product PRD (PM-owned): `reference_architectures/<instance>/product/PRD.md`

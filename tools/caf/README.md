@@ -14,8 +14,17 @@ This folder is intentionally separate from `tools/caf/` (which contains instance
 - `tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md`
 - `tools/caf/contracts/decision_candidates_block_parsing_contract_v1.md`
 - `tools/caf/contracts/retrieval_context_blob_contract_v1.md`
+- `tools/caf/contracts/ux_lane_producer_contract_v1.md`
+- `tools/caf/contracts/ux_plan_output_contract_v1.md`
+- `tools/caf/contracts/ux_materialization_contract_v1.md`
+- `tools/caf/contracts/ux_retrieval_context_blob_contract_v1.md`
+- `tools/caf/contracts/ux_lane_gate_posture_v1.md`
+- `tools/caf/contracts/ux_retrieval_execution_contract_v1.md`
+- `tools/caf/contracts/ux_semantic_derivation_packet_contract_v1.md`
+- `tools/caf/contracts/ux_demo_overlay_posture_v1.md`
 - `tools/caf/contracts/deployment_identity_contract_v1.md`
 - `tools/caf/contracts/enrichment_ownership_map_v1.md`
+- `tools/caf/contracts/design_handoff_preflight_boundary_v1.md`
 
 ## What scripts MAY do (mechanical only)
 
@@ -45,6 +54,8 @@ the file system work to reduce token cost.
   - Usage: `node tools/caf/extract_adopted_decision_options_v1.mjs <instance_name> [--source=system|application|both] [--format=jsonl|json|tsv]`
   - Intended for maintainer/agent diagnostics when verifying option_set_id adoption.
 
+- `lib_plane_integration_contract_choices_v1.mjs`: shared parser/validator for the canonical `plane_integration_contract_choices_v1` architect-edit block in `control_plane_design_v1.md`.
+  - Used by post-gates and planning/build preflight consumers that need deterministic CP/AP runtime-shape and contract-surface facts without reparsing ad hoc.
 
 - `guardrails_v1.mjs`: derive Guardrails (profile_parameters_resolved + TBP resolution) deterministically from pinned inputs and data files, including the canonical derived deployment identity (`deployment.stack_name`).
   - Usage: `node tools/caf/guardrails_v1.mjs <instance_name> [--overwrite]`
@@ -82,10 +93,24 @@ the file system work to reduce token cost.
   - If a legacy/non-canonical file is detected, it is backed up under `design/playbook/` and reseeded with the canonical template.
   - Intended to run as a design pre-gate before `caf-solution-architect` to prevent schema drift from silently dropping contract tasks.
 
+- `design_postgate_plane_domain_model_views_coherence_v1.mjs`: deterministic post-gate for normalized application/system plane-domain-model YAML views.
+  - Usage: `node tools/caf/design_postgate_plane_domain_model_views_coherence_v1.mjs <instance_name>`
+  - Fails closed when either normalized view is missing, unparsable, mis-scoped, or violates the canonical planning-facing contract.
+  - Intended to run immediately after `worker-domain-modeler` inside the later `/caf arch` lane.
+
+- `design_postgate_plane_integration_contract_choices_coherence_v1.mjs`: deterministic post-gate for the canonical architect-edit `plane_integration_contract_choices_v1` block inside `control_plane_design_v1.md`.
+  - Usage: `node tools/caf/design_postgate_plane_integration_contract_choices_coherence_v1.mjs <instance_name>`
+  - Fails closed when the block is missing, unparsable, or violates the planning-facing contract for CP/AP runtime shapes and the primary CP↔AP contract surface.
+  - Intended to run after `caf-solution-architect` and before `/caf plan` relies on this narrow control-plane design handoff seam.
+
+- `design_open_questions_advisory_gate_v1.mjs`: advisory-only checker for carried-forward application design open questions, enriched from the referenced library-owned pattern definitions so deferred-pattern warnings do not require a seam-local mapping file.
+  - Usage: `node tools/caf/design_open_questions_advisory_gate_v1.mjs <instance_name>`
+  - Writes a single advisory feedback packet when `design/playbook/application_design_v1.md` still contains non-empty `open_questions_v1`; lists each `question_id`, current state, and source anchors.
+  - Intended to run warning-only after the later `/caf arch` lane and again before `/caf plan`, without promoting unresolved questions to a global blocker.
 
 - `validate_instance_v1.mjs`: deterministic instance preflight validator (mechanical).
 - Planning/runtime-scaffold compatibility: `plane_runtime_scaffolding` is the canonical capability id. Legacy `runtime_scaffolding_cp` and `runtime_scaffolding_ap` are accepted as compatibility aliases for existing throwaway instances.
-  - Usage: `node tools/caf/validate_instance_v1.mjs <instance_name> [--mode=arch|build]`
+  - Usage: `node tools/caf/validate_instance_v1.mjs <instance_name> [--mode=arch|plan|build]`
   - Intended to be invoked as a **preflight** inside `caf-arch` and `caf-build-candidate` when available.
 
 - `build_gate_v1.mjs`: deterministic caf-build-candidate gate (required artifacts + rail sanity).
@@ -118,6 +143,64 @@ the file system work to reduce token cost.
 
 - `build_retrieval_context_blob_v1.mjs`: script-owned retrieval context blob builder.
   - Contract: `tools/caf/contracts/retrieval_context_blob_contract_v1.md`
+- `materialize_ux_design_v1.mjs`: rerun-safe materializer for `design/playbook/ux_design_v1.md`.
+  - Usage: `node tools/caf/materialize_ux_design_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_materialization_contract_v1.md`
+
+- `derive_ux_seed_content_v1.mjs`: deterministic PRD/spec-to-UX seed projection for the canonical UX artifact.
+  - Usage: `node tools/caf/derive_ux_seed_content_v1.mjs <instance_name>`
+  - Purpose: refresh CAF-managed `caf_ux_*_seed_v1` blocks before retrieval.
+
+- `build_ux_retrieval_context_blob_v1.mjs`: script-owned retrieval blob builder for the UX lane.
+  - Usage: `node tools/caf/build_ux_retrieval_context_blob_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_retrieval_context_blob_contract_v1.md`
+
+- `ux_preflight_v1.mjs`: UX lane deterministic pre-stage wrapper (materialize artifact -> derive UX seed content).
+  - Usage: `node tools/caf/ux_preflight_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_lane_gate_posture_v1.md`
+
+- `derive_ux_semantic_projection_v1.mjs`: deterministic applier for the instruction-owned UX semantic packet.
+  - Usage: `node tools/caf/derive_ux_semantic_projection_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_semantic_projection_contract_v1.md`
+
+- `hydrate_ux_architect_blocks_v1.mjs`: compact pointer hydration for architect-edit UX sections when no manual override exists yet.
+  - Usage: `node tools/caf/hydrate_ux_architect_blocks_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_architect_hydration_contract_v1.md`
+
+- `ux_gate_v1.mjs`: UX lane structural post-gate for artifact/blob readiness.
+  - Usage: `node tools/caf/ux_gate_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_lane_gate_posture_v1.md`
+- `ux_retrieval_preflight_v1.mjs`: UX retrieval pre-stage wrapper (materialize -> seed refresh -> semantic packet apply -> architect pointer hydration -> blob build -> semantic subset prefilter for `ux_design`; graph expansion remains seed-driven by the UX retrieval worker).
+  - Usage: `node tools/caf/ux_retrieval_preflight_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_retrieval_execution_contract_v1.md`
+
+- `ux_retrieval_postprocess_v1.mjs`: UX retrieval post-stage wrapper (grounded writeback into `ux_design_v1.md` + UX retrieval gate).
+  - Usage: `node tools/caf/ux_retrieval_postprocess_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_retrieval_execution_contract_v1.md`
+
+- `ux_retrieval_gate_v1.mjs`: UX retrieval post-gate for candidate/writeback correctness and shortlist/open-list discipline.
+  - Usage: `node tools/caf/ux_retrieval_gate_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_retrieval_execution_contract_v1.md`
+
+- `ux_plan_v1.mjs`: deterministic UX post-plan projection wrapper (`ux_task_graph_v1.yaml` -> `ux_task_plan_v1.md` -> `ux_task_backlog_v1.md` -> gate).
+  - Usage: `node tools/caf/ux_plan_v1.mjs <instance_name>`
+  - Intended to be invoked by `skills/caf-ux-plan` after `skills/worker-ux-planner/SKILL.md` writes the semantic task graph.
+
+- `gen_ux_task_graph_v1.mjs`: deprecated fail-closed stub that points callers to the instruction-owned UX planner.
+  - Usage: `node tools/caf/gen_ux_task_graph_v1.mjs <instance_name>`
+  - Behavior: writes a blocker feedback packet rather than regenerating `ux_task_graph_v1.yaml` mechanically.
+
+- `gen_ux_task_plan_v1.mjs`: mechanical plan projection from `ux_task_graph_v1.yaml`.
+  - Usage: `node tools/caf/gen_ux_task_plan_v1.mjs <instance_name>`
+  - Produces: `reference_architectures/<instance>/design/playbook/ux_task_plan_v1.md`
+
+- `project_ux_task_backlog_v1.mjs`: mechanical backlog projection from `ux_task_graph_v1.yaml`.
+  - Usage: `node tools/caf/project_ux_task_backlog_v1.mjs <instance_name>`
+  - Produces: `reference_architectures/<instance>/design/playbook/ux_task_backlog_v1.md`
+
+- `ux_task_graph_gate_v1.mjs`: bounded UX planning output gate.
+  - Usage: `node tools/caf/ux_task_graph_gate_v1.mjs <instance_name>`
+  - Contract: `tools/caf/contracts/ux_plan_output_contract_v1.md`
 - Candidate block parsing (shared):
   - `tools/caf/lib_caf_decision_candidates_v1.mjs` (resilient parser for `caf_decision_pattern_candidates_v1` blocks)
   - Contract: `tools/caf/contracts/decision_candidates_block_parsing_contract_v1.md`

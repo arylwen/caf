@@ -46,7 +46,7 @@ async function main() {
 
   const repoRoot = resolveRepoRoot(process.cwd());
   const layout = getInstanceLayout(repoRoot, instance);
-  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding') ? layout.designPlaybookDir : layout.specPlaybookDir;
+  const playbookDir = (profile === 'solution_architecture' || profile === 'implementation_scaffolding' || profile === 'ux_design') ? layout.designPlaybookDir : layout.specPlaybookDir;
 
   const openListPath = path.join(playbookDir, `graph_expansion_open_list_${profile}_v1.yaml`);
   const tracePath = path.join(playbookDir, `graph_expansion_trace_${profile}_v1.md`);

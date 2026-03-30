@@ -104,7 +104,7 @@ Some packets are emitted for visibility but are NOT intended to be "fixed" by an
 
    If an instance output is wrong, fix the producer (skills/templates/validators/library) and re-run the workflow.
 
-2. **No new user-facing commands:** CAF’s router command surface is fixed to:
+2. **No ad-hoc user-facing commands:** CAF’s router command surface is fixed to the canonical routed entries below:
    - `caf help`
    - `caf ask <question...>`
    - `caf saas <name>`
@@ -113,8 +113,10 @@ Some packets are emitted for visibility but are NOT intended to be "fixed" by an
    - `caf next <name> [apply]`
    - `caf plan <name>`
    - `caf build <name>`
+   - `caf ux <name>`
+   - `caf ux plan <name>`
 
-   Internals may be refactored, but MUST NOT add new user-facing entrypoints.
+   Internals may be refactored, but MUST NOT add user-facing entrypoints beyond this routed surface.
 
 ## 5. Artifact hygiene (read/write discipline)
 
@@ -148,6 +150,8 @@ Normative constraints:
 - Helpers MUST NOT introduce architecture choices, pattern selection, or vendor/provider selection.
 - Helpers MUST enforce write fences: they may write only to the active instance under `reference_architectures/<name>/**` (typically `spec/playbook/**`, `spec/guardrails/**`, `design/playbook/**`, and `feedback_packets/**`) and MUST NOT write to producer surfaces (`skills/**`, `architecture_library/**`, `tools/**`).
 - Helpers MUST fail-closed by writing a feedback packet when inputs are missing/invalid or constraints are violated.
+- Routed command post-chains are ordered fences, not schedulable sibling tasks. When a command owns a `pre-gate -> instruction-owned write -> post-gate/projection` sequence, execute those phases serially in one lane and wait for each required output to exist and be readable before starting the next phase.
+- For the current release track, do not use sub-agents or parallel helper branches inside a routed CAF command to overlap semantic writes with downstream deterministic reads or gates.
 
 ## 5B. CAF trace headers in generated artifacts
 

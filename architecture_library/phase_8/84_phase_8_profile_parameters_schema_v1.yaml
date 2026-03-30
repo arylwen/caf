@@ -138,6 +138,10 @@ properties:
         type: string
         enum: [separate_ui_service, served_by_application_plane]
         description: How the UI should be deployed for local candidate runs.
+      component_system:
+        type: string
+        enum: [shadcn]
+        description: Optional web component-system preference for current UI realization.
   planes:
     type: object
     additionalProperties: false

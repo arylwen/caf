@@ -10,7 +10,7 @@
 # - platform.packaging
 # - platform.runtime_language
 # - platform.database_engine
-# - ui.present / ui.kind / ui.framework / ui.deployment_preference (when a browser UI is in scope)
+# - ui.present / ui.kind / ui.framework / ui.deployment_preference / ui.component_system (when a browser UI is in scope)
 #
 # Canonical source of supported pinned values for this file:
 # - architecture_library/phase_8/84_phase_8_profile_parameters_template_v1.yaml
@@ -103,6 +103,10 @@ ui:
   # - separate_ui_service
   # - served_by_application_plane
   deployment_preference: "separate_ui_service"
+
+  # component_system (allowed values):
+  # - shadcn
+  component_system: "shadcn"
 
 meta:
   # Optional metadata. If present, values MUST be non-empty (CAF rejects empty strings as placeholders).

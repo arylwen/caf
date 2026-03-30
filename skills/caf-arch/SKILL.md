@@ -56,6 +56,9 @@ After the scripted gate succeeds:
   - Invoke: `skills/caf-arch-implementation-scaffolding/SKILL.md` *(design-only)*
   - Run (warning-only; do not print invocation): `node tools/caf/derived_views_advisory_gate_v1.mjs <name>`
     - If it prints a feedback packet path, surface it as an advisory warning and continue.
+  - Run (warning-only; do not print invocation): `node tools/caf/design_open_questions_advisory_gate_v1.mjs <name>`
+    - If it prints a feedback packet path, surface it as an advisory warning and continue.
+    - This gate is visibility-only: unresolved `open_questions_v1` in application design are not yet a standalone blocker.
   - STOP (planning is performed by `/caf plan <name>`)
 
 Stop.

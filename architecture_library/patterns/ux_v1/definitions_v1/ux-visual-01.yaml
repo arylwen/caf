@@ -1,0 +1,42 @@
+pattern_id: UX-VISUAL-01
+name: Calm Operational Shell and Visual Hierarchy
+summary: Use a calm operational shell with clear hierarchy, restrained accents, and consistent spacing so dense SaaS flows feel polished rather than scaffolded.
+intent: Provide a presentation-ready visual foundation for dashboards, worklists, and review tools without sacrificing readability or trust.
+context: B2B SaaS dashboards, review workspaces, admin tools, multi-pane browser apps, hero-demo interfaces.
+problem: Functional demos often look unfinished because navigation, title/actions, spacing, and surface hierarchy are inconsistent or visually noisy.
+forces_tradeoffs: Brand personality vs operational calm; density vs breathing room; status emphasis vs visual clutter; polish vs implementation speed.
+solution_structure_behavior: Use a stable app shell, strong page-title/action hierarchy, restrained accent color, consistent spacing scale, and layered panels/cards with clear surface roles.
+consequences: Increases perceived quality and scanability; requires design-token discipline and more careful component composition than a smoke-test UI.
+implementation_notes: Prefer subtle shadows, visible but not heavy borders, calm backgrounds, and one or two accent colors. Avoid novelty effects that compete with task-critical signals.
+examples_known_uses: Dashboard shells, review tools, internal SaaS suites, admin consoles, presentation-ready product demos.
+related_patterns: |
+  complements: UX-WORKLIST-01
+  complements: UX-DENSITY-01
+  complements: UX-REPORT-01
+  complements: UX-SESSION-01
+extended_definition: |
+  Use a stable app shell, strong page-title/action hierarchy, restrained accent color, consistent spacing scale, and layered panels/cards with clear surface roles.
+
+caf:
+  layer: ux
+  verifiability: plan_ready
+  plane: application
+  default_anchor_policy: requires_explicit_design_decision
+  allowed_anchor_types:
+  - checklist_item
+  - caf_pattern
+  - core_pattern
+  - tbp
+  - rail
+  default_anchor:
+    anchor_type: checklist_item
+    anchor_id: DECISION-UX-VISUAL-01
+  minimum_evidence:
+  - Use a calm operational shell with clear hierarchy, restrained accents, and consistent spacing so dense SaaS flows feel polished rather than scaffolded.
+  - Functional demos often look unfinished because navigation, title/actions, spacing, and surface hierarchy are inconsistent or visually noisy.
+  definition_of_done:
+  - UX design names the shell, hierarchy, and surface-treatment posture for the richer lane.
+  - Planning/build artifacts preserve a clear distinction between smoke-test UI and presentation-ready UX quality.
+  capabilities_needed: []
+  forbidden_assumptions:
+  - No frontend framework, component library, or vendor choice is implied by this pattern.

@@ -55,7 +55,7 @@ export function parseFeedbackPacketStatusFromText(packetText) {
   if (v.includes('stale')) return 'stale';
   if (v.includes('pending')) return 'pending';
   // Unknown values are treated as pending by updaters.
-  return v;
+  return 'pending';
 }
 
 export function readFeedbackPacketSeveritySync(packetFileAbs) {
@@ -208,10 +208,14 @@ export function ensureFeedbackPacketHeaderV1(packetText, opts = {}) {
   const statusLine = `- Status: ${statusDefault || 'pending'}`;
   if (statusIdx >= 0) {
     const existing = lines[statusIdx];
+    const existingValue = String(existing ?? '').replace(/^\s*-\s*Status\s*:\s*/i, '').trim().toLowerCase();
+    const normalizedExisting = (existingValue.includes('resolved') || existingValue.includes('stale') || existingValue.includes('pending'))
+      ? existing.trim()
+      : statusLine;
     lines.splice(statusIdx, 1);
     // Re-find gen index after splice.
     const genIdx3 = lines.findIndex((l) => genRe.test(String(l ?? '')));
-    lines.splice(genIdx3 + 1, 0, existing.trim() || statusLine);
+    lines.splice(genIdx3 + 1, 0, normalizedExisting || statusLine);
   } else {
     lines.splice(genIdx2 + 1, 0, statusLine);
   }
@@ -247,8 +251,9 @@ export function markPendingFeedbackPacketsStaleSync(packetsDirAbs) {
     const st = parseFeedbackPacketStatusFromText(txt);
     if (st && st.toLowerCase().includes('resolved')) continue;
 
-    if (!st || st.toLowerCase().includes('pending')) {
-      const next = setFeedbackPacketStatusInText(txt, 'stale');
+    if (!st || !st.toLowerCase().includes('stale')) {
+      const normalized = ensureFeedbackPacketHeaderV1(txt, { status: 'stale' });
+      const next = setFeedbackPacketStatusInText(normalized, 'stale');
       if (next !== txt) {
         try {
           fs.writeFileSync(abs, next, 'utf8');

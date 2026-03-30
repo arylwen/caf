@@ -83,6 +83,17 @@ Rules:
 - If it exits non-zero, it will print a CAF-owned feedback packet path. STOP and surface only that path.
 - This is the canonical proof that the script-owned `planning_pattern_payload_v1` handoff exists and has the required `promotions.*` list keys before the instruction-owned planner runs.
 
+3c) Application open-questions advisory (warning-only)
+
+Run:
+
+- `node tools/caf/design_open_questions_advisory_gate_v1.mjs <name>`
+
+Rules:
+- Do **not** print the invocation.
+- If it prints a feedback packet path, surface it as an advisory warning and continue.
+- This does **not** block planning by itself. Unresolved application-design `open_questions_v1` become fail-closed only after a bounded downstream consumer exists for a specific `question_id`.
+
 4) Deterministic obligation compilation (fail-closed)
 
 Run:

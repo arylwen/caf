@@ -20,6 +20,7 @@
  * Usage:
  *   node tools/caf/apply_grounded_candidates_v1.mjs <instance_name> --profile=arch_scaffolding
  *   node tools/caf/apply_grounded_candidates_v1.mjs <instance_name> --profile=solution_architecture
+ *   node tools/caf/apply_grounded_candidates_v1.mjs <instance_name> --profile=ux_design
  *   Optional:
  *     --dump=<abs_or_repo_rel_path>
  */
@@ -266,22 +267,28 @@ export async function internal_main(argv = process.argv.slice(2)) {
   argv = Array.isArray(argv) ? argv : [];
 
   if (argv.length < 1) {
-    die('Usage: node tools/caf/apply_grounded_candidates_v1.mjs <instance_name> --profile=<arch_scaffolding|solution_architecture> [--dump=...]', 2);
+    die('Usage: node tools/caf/apply_grounded_candidates_v1.mjs <instance_name> --profile=<arch_scaffolding|solution_architecture|ux_design> [--dump=...]', 2);
   }
   const instanceName = String(argv[0] ?? '').trim();
   if (!NAME_RE.test(instanceName)) die(`Invalid instance_name: ${instanceName}`, 2);
 
   const args = parseArgs(argv.slice(1));
   const profile = normalizeScalar(args.profile);
-  if (!profile) die('Missing required arg: --profile=<arch_scaffolding|solution_architecture>', 2);
+  if (!profile) die('Missing required arg: --profile=<arch_scaffolding|solution_architecture|ux_design>', 2);
 
   const repoRoot = resolveRepoRoot();
   const layout = getInstanceLayout(repoRoot, instanceName);
 
+  const isUxProfile = profile === 'ux_design';
   const systemSpecPath = path.join(layout.specPlaybookDir, 'system_spec_v1.md');
   const appSpecPath = path.join(layout.specPlaybookDir, 'application_spec_v1.md');
+  const uxDesignPath = path.join(layout.designPlaybookDir, 'ux_design_v1.md');
 
-  if (!existsSync(systemSpecPath) || !existsSync(appSpecPath)) {
+  if (isUxProfile) {
+    if (!existsSync(uxDesignPath)) {
+      die('Missing required UX artifact (expected design/playbook/ux_design_v1.md).', 3);
+    }
+  } else if (!existsSync(systemSpecPath) || !existsSync(appSpecPath)) {
     die('Missing required spec docs (expected both system_spec_v1.md and application_spec_v1.md under spec/playbook/).', 3);
   }
 
@@ -291,8 +298,10 @@ export async function internal_main(argv = process.argv.slice(2)) {
       dumpPath = path.join(layout.specPlaybookDir, 'grounded_candidate_records_arch_scaffolding_v1.md');
     } else if (profile === 'solution_architecture') {
       dumpPath = path.join(layout.designPlaybookDir, 'grounded_candidate_records_solution_architecture_v1.md');
+    } else if (profile === 'ux_design') {
+      dumpPath = path.join(layout.designPlaybookDir, 'grounded_candidate_records_ux_design_v1.md');
     } else {
-      die(`Unsupported profile: ${profile} (expected arch_scaffolding | solution_architecture)`, 2);
+      die(`Unsupported profile: ${profile} (expected arch_scaffolding | solution_architecture | ux_design)`, 2);
     }
   }
 
@@ -306,19 +315,33 @@ export async function internal_main(argv = process.argv.slice(2)) {
     die('Dump file does not contain any parseable candidate records (expected one or more `### ...: <PATTERN_ID>` headings).', 5);
   }
 
-  const sysText = await readUtf8(systemSpecPath);
-  const appText = await readUtf8(appSpecPath);
+  const blockName = isUxProfile ? 'caf_ux_pattern_candidates_v1' : 'caf_decision_pattern_candidates_v1';
+  let existingAllRaw = [];
+  let sysText = '';
+  let appText = '';
+  let uxText = '';
 
-  const blockName = 'caf_decision_pattern_candidates_v1';
-  const sysBlock = extractManagedBlock(sysText, blockName);
-  const appBlock = extractManagedBlock(appText, blockName);
-  if (sysBlock === null || appBlock === null) {
-    die('Missing CAF managed candidate block markers in one or both spec docs.', 6);
+  if (isUxProfile) {
+    uxText = await readUtf8(uxDesignPath);
+    const uxBlock = extractManagedBlock(uxText, blockName);
+    if (uxBlock === null) {
+      die('Missing CAF managed UX candidate block markers in ux_design_v1.md.', 6);
+    }
+    existingAllRaw = parseCandidateRecordsFromBlockText(uxBlock) || [];
+  } else {
+    sysText = await readUtf8(systemSpecPath);
+    appText = await readUtf8(appSpecPath);
+
+    const sysBlock = extractManagedBlock(sysText, blockName);
+    const appBlock = extractManagedBlock(appText, blockName);
+    if (sysBlock === null || appBlock === null) {
+      die('Missing CAF managed candidate block markers in one or both spec docs.', 6);
+    }
+
+    const existingSys = parseCandidateRecordsFromBlockText(sysBlock);
+    const existingApp = parseCandidateRecordsFromBlockText(appBlock);
+    existingAllRaw = ([]).concat(existingSys || [], existingApp || []);
   }
-
-  const existingSys = parseCandidateRecordsFromBlockText(sysBlock);
-  const existingApp = parseCandidateRecordsFromBlockText(appBlock);
-  const existingAllRaw = ([]).concat(existingSys || [], existingApp || []);
 
   // Deterministic hygiene: drop candidates whose pattern_id is not in the retrieval surface index.
   const { surfacePath, ids: validIds } = await loadRetrievalSurfaceIds(repoRoot);
@@ -348,15 +371,23 @@ export async function internal_main(argv = process.argv.slice(2)) {
   const mergedRaw = buildUnion(existingAll, dumpRecordsValid);
   const merged = renumberCandidateHookHeadingsSequential(mergedRaw);
 
-  // Apply to BOTH.
-  const sysNext = replaceManagedBlock(sysText, blockName, merged);
-  const appNext = replaceManagedBlock(appText, blockName, merged);
-  if (sysNext === null || appNext === null) {
-    die('Internal error: managed block replacement failed.', 7);
-  }
+  if (isUxProfile) {
+    const uxNext = replaceManagedBlock(uxText, blockName, merged);
+    if (uxNext === null) {
+      die('Internal error: managed block replacement failed for ux_design_v1.md.', 7);
+    }
+    await writeUtf8(uxDesignPath, uxNext);
+  } else {
+    // Apply to BOTH.
+    const sysNext = replaceManagedBlock(sysText, blockName, merged);
+    const appNext = replaceManagedBlock(appText, blockName, merged);
+    if (sysNext === null || appNext === null) {
+      die('Internal error: managed block replacement failed.', 7);
+    }
 
-  await writeUtf8(systemSpecPath, sysNext);
-  await writeUtf8(appSpecPath, appNext);
+    await writeUtf8(systemSpecPath, sysNext);
+    await writeUtf8(appSpecPath, appNext);
+  }
 
   process.stdout.write('ok\n');
 }

@@ -61,6 +61,7 @@ If a new surface does not fit an existing enricher, maintainers must either:
   - final `task_graph_v1.yaml`
 - **Deterministic enricher**
   - `tools/caf/task_graph_required_input_enrichment_v1.mjs`
+  - `tools/caf/task_graph_resolved_rails_visibility_enrichment_v1.mjs`
 - **Verifying gate(s)**
   - `tools/caf/planning_technology_choice_realization_gate_v1.mjs`
 - **Coverage status**
@@ -142,6 +143,21 @@ If a new surface does not fit an existing enricher, maintainers must either:
   - declarative terminal contract + realization expectations + gates/enrichment where needed before making `raw_sql` a default starter posture
 - **Coverage status**
   - missing
+
+### D. UX lane producer + task-graph reuse
+
+- **Source surfaces**
+  - `design/playbook/ux_design_v1.md`
+  - UX retrieval blob / UX pattern candidates
+  - second-pass design constraints and PRD-derived UX inputs
+- **Observed gap**
+  - `/caf ux plan` and `/caf ux build` now exist as routed lanes, but UX realization dispatch is newly split away from the smoke-test UI lane and still needs execution proof plus follow-on reuse audit across shared enrichers/gates
+- **Needed ownership path**
+  - keep `tools/caf/materialize_ux_design_v1.mjs`, `tools/caf/build_ux_retrieval_context_blob_v1.mjs`, `tools/caf/ux_preflight_v1.mjs`, and `tools/caf/ux_gate_v1.mjs` as the first deterministic lane-mechanics chain;
+  - keep `/caf ux build` on parameterized shared helpers where they already fit (`gen_build_dispatch_manifest_v1.mjs`, `build_wave_state_v1.mjs`) rather than cloning the main builder stack;
+  - only add more UX-specific enrichers if path parameterization proves insufficient after real `/caf ux build` execution
+- **Coverage status**
+  - routed_execution_defined_initial_realization_split
 
 ## Maintainer procedure for new terminals
 
