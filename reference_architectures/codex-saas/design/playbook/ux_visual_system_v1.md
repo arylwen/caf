@@ -1,0 +1,113 @@
+# UX Visual System (v1)
+
+<!-- CAF_MANAGED_BLOCK: ux_visual_system_meta_v1 START -->
+## UX visual system metadata (CAF-managed)
+- instance: codex-saas
+- generation_phase: ux_design
+- upstream_semantic_owner: design/playbook/ux_design_v1.md
+- supporting_contract: tools/caf/contracts/ux_visual_system_artifact_contract_v1.md
+- realization_posture_contract: tools/caf/contracts/ux_demo_overlay_posture_v1.md
+- canonical_artifact_role: bounded visual-system/design-system plan for /caf ux build and later portability discussions
+<!-- CAF_MANAGED_BLOCK: ux_visual_system_meta_v1 END -->
+
+> `/caf ux` may refresh the CAF-managed sections below from the canonical UX artifact. Keep stack-neutral semantic roles here; do not turn CSS utility names, DOM structure, or framework-specific component filenames into the canonical design-system language.
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_visual_foundation_projection_v1 START -->
+## Visual foundation (CAF-managed)
+- selected_source: semantic_projection
+- product_name: Product workspace
+- visual_tone: Calm, operational, and trustworthy with restrained accent use.
+- navigation_shell: Persistent left navigation with top context bar showing tenant and primary action context.
+- density_posture: Medium-dense desktop-first layout that keeps lists and metadata scannable.
+- logo_asset_preference: default framework mark
+- color_scheme: calm product-default palette
+- surface_treatment_cues:
+  - Use calm operational hierarchy before decorative flair.
+- brand_and_identity_cues:
+  - logo usage follows: use the default framework mark until a product mark is supplied
+  - accent posture: keep accents restrained and functional
+  - imagery/iconography posture: prefer simple product glyphs over decorative illustration
+- current_realization_posture:
+  - keep the richer UX realization lane separate from the smoke-test UI lane
+  - keep the existing REST/OpenAPI integration boundary
+  - treat this artifact as the reusable visual-system/design-system plan for current web realization and later native portability
+<!-- CAF_MANAGED_BLOCK: caf_ux_visual_foundation_projection_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_semantic_token_roles_v1 START -->
+## Semantic token roles (CAF-managed)
+- token_role_families:
+  - color_roles: surface, elevated_surface, border, text_primary, text_muted, accent, success, warning, danger, info
+  - spacing_roles: xs, sm, md, lg, xl, section_gap, panel_gap
+  - typography_roles: workspace_title, section_title, body, metadata, code_or_data, caption
+  - shape_roles: control_radius, panel_radius, focus_ring, divider_weight
+  - elevation_roles: base, raised, overlay
+  - motion_roles: none_for_critical_change, subtle_transition, loading_feedback
+- portability_rule: semantic roles come first; CSS variables, utility classes, and native style objects are downstream realizations.
+- current_component_system_preference: shadcn
+- current_web_mapping_posture: keep React/Vite as the current web realization, but do not make framework-specific naming the canonical design-system language.
+<!-- CAF_MANAGED_BLOCK: caf_ux_semantic_token_roles_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_primitive_families_v1 START -->
+## Primitive and composite families (CAF-managed)
+- starter_primitive_families:
+  - app_shell_frame
+  - page_header
+  - button_and_icon_button
+  - text_input_and_search_input
+  - select_and_filter_control
+  - data_table_or_list_shell
+  - card_or_panel
+  - badge_or_status_chip
+  - alert_notice_and_inline_feedback
+  - dialog_drawer_or_confirmation_sheet
+  - empty_loading_error_blocks
+- composite_surface_targets:
+  - Widget catalog and detail editor
+  - Collections and tagging workspace
+  - Publish and permissions controls
+  - Tenant administration and activity timeline
+- preferred_component_system_mapping: shadcn for current web realization when compatible with resolved UI rails
+- realization_note: prefer reusable primitives first; add custom composites only when repeated product pressure is visible across multiple surfaces.
+<!-- CAF_MANAGED_BLOCK: caf_ux_primitive_families_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_portability_posture_v1 START -->
+## State, accessibility, and portability posture (CAF-managed)
+- current_ui_kind: web_spa
+- current_ui_framework: react
+- current_deployment_preference: separate_ui_service
+- state_and_recovery_cues:
+  - semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+  - key_states:
+  - empty
+  - loading
+  - ready
+  - validation_error
+- touchpoints_and_constraints_cues:
+  - semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+  - touchpoints:
+  - Tenant-scoped REST list/detail/mutation endpoints for widgets and collections.
+  - Role and permission APIs backing publish/access controls.
+  - Activity-history endpoint(s) exposing actor, action, target, and timestamp.
+  - Tenant admin endpoints for user-role and settings management.
+- native_portability_notes:
+  - reusable across web and native: semantic token roles, primitive families, state/recovery posture, accessibility/readability expectations, and REST/session consequences
+  - not canonical for native reuse: DOM structure, browser routing, Tailwind utility names, and Vite-specific build assumptions
+  - current 0.4.x expectation: web realization ships first; native remains a roadmap follow-on consuming the same semantic roles where possible
+<!-- CAF_MANAGED_BLOCK: caf_ux_portability_posture_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_visual_system_refinements_v1 START -->
+## Visual-system refinements (architect-edit)
+
+Use this block only when you want to refine the bounded visual-system/design-system plan beyond the CAF-managed projection.
+
+Good uses:
+- rename or tighten semantic token roles;
+- declare a smaller or larger primitive set for the current product;
+- add accessibility/readability constraints specific to the product;
+- record portability notes for later native work.
+
+Avoid:
+- turning this into a stack-specific file list;
+- re-stating PM intent already owned by `ux_design_v1.md`;
+- hardcoding DOM/Tailwind utility names as the semantic source of truth.
+<!-- ARCHITECT_EDIT_BLOCK: ux_visual_system_refinements_v1 END -->

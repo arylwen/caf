@@ -1,11 +1,10 @@
-# Review Note: TG-40-persistence-cp-policy
+# TG-40-persistence-cp-policy Review
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-CORR-01 | PASS | Policy repository methods persist policy-version and approval-decision aggregates through SQLAlchemy. |
-| RR-PY-SEC-01 | PASS | `code/cp/persistence/repository_factory.py` enforces fail-closed `DATABASE_URL` posture. |
-| RR-FA-SCHEMA-BOOTSTRAP-01 | PASS | CP runtime bootstrap uses shared ORM bootstrap hook (`metadata.create_all`). |
-| RR-TBP-RB-01 | PASS | SQLAlchemy runtime/metadata/schema surfaces are materialized on canonical TBP paths. |
-| RR-TR-STRUCT-01 | PASS | Task report includes required inputs and policy persistence evidence anchors. |
+| RR-TASK-REPORT-01 | PASS | Report includes required claims and anchored evidence. |
+| RR-TBP-ROLE-BINDINGS-01 | PASS | SQLAlchemy metadata/runtime/boundary paths exist and contain expected symbols. |
+| RR-PY-GENERAL-01 | PASS | Imports resolve within canonical `code` roots; no plane-local pseudo-package imports found. |
+| RR-PY-CORR-01 | PASS | Repository methods perform concrete SQLAlchemy queries/updates and avoid placeholder stubs. |
 
-No blocker/high issues found.
+Summary: No blocker/high findings for CP policy persistence task.

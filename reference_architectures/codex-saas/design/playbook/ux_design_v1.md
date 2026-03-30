@@ -1,0 +1,853 @@
+# UX Design (v1)
+
+<!-- CAF_MANAGED_BLOCK: ux_design_meta_v1 START -->
+## UX design metadata (CAF-managed)
+- instance: codex-saas
+- generation_phase: ux_design
+- required_upstream_inputs:
+  - product/PRD.resolved.md
+  - product/PLATFORM_PRD.resolved.md (when present)
+  - spec/playbook/application_product_surface_v1.md
+  - spec/playbook/application_spec_v1.md#ui_product_surface_v1 (legacy fallback only)
+  - spec/guardrails/profile_parameters_resolved.yaml#ui
+- optional_contextual_inputs:
+  - design/playbook/contract_declarations_v1.yaml
+  - design/playbook/application_design_v1.md
+  - design/playbook/control_plane_design_v1.md
+  - design/playbook/application_domain_model_v1.yaml
+  - design/playbook/system_domain_model_v1.yaml
+- retrieval_profile: ux_design
+- current_api_contract_style: rest_openapi (0.4.0 default)
+- pattern_seed_surface: architecture_library/patterns/ux_v1/ux_pattern_pack_input_surface_v1.md
+- canonical_artifact_role: inspectable UX design surface; primary input to /caf ux plan and /caf ux build
+- managed_refresh_owner: tools/caf/materialize_ux_design_v1.mjs
+- managed_seed_refresh_owner: tools/caf/derive_ux_seed_content_v1.mjs
+- semantic_packet_owner: skills/worker-ux-semantic-deriver/SKILL.md
+- semantic_apply_owner: tools/caf/derive_ux_semantic_projection_v1.mjs
+- managed_blocks_refreshed:
+  - ux_design_meta_v1
+  - caf_ux_scope_seed_v1
+  - caf_ux_core_journeys_seed_v1
+  - caf_ux_interaction_surfaces_seed_v1
+  - caf_ux_visual_direction_seed_v1
+  - caf_ux_pattern_pressures_seed_v1
+  - caf_ux_state_recovery_seed_v1
+  - caf_ux_touchpoints_constraints_seed_v1
+  - caf_ux_interface_contract_pressures_seed_v1
+  - caf_ux_pattern_candidates_v1
+<!-- CAF_MANAGED_BLOCK: ux_design_meta_v1 END -->
+
+<!-- CAF_TEMPLATE_NOTE: ux_architect_block_posture_v1 START -->
+> `/caf ux` may auto-hydrate the architect-edit blocks below with compact derivation pointers rather than full copied payload. Architect edits are optional; replace the pointer or auto-hydration comment block inside a section only when you want that section to become a true manual override.
+<!-- CAF_TEMPLATE_NOTE: ux_architect_block_posture_v1 END -->
+
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_scope_seed_v1 START -->
+## CAF UX scope seed (CAF-managed)
+- derivation_sources:
+  - product/PRD.resolved.md#Target users / customers
+  - product/PRD.resolved.md#In scope
+  - product/PRD.resolved.md#Out of scope
+  - spec/playbook/application_product_surface_v1.md (accepted when meaningfully edited beyond template)
+  - spec/playbook/application_spec_v1.md#ui_product_surface_v1 (legacy fallback only)
+- product_surface_status: accepted architect signal available
+- explicit_primary_actors:
+  - Team members who create and curate widgets
+  - Team leads who organize and publish widget collections
+  - Tenant admins who manage users, roles, and tenant settings
+- explicit_scope_items:
+  - Create, edit, view, list, and delete widgets
+  - Organize widgets into collections and apply tags
+  - Share widgets within a tenant via role-based access
+  - Tenant admin for users, roles, and basic tenant settings
+  - Activity history for widget changes
+- explicit_non_goals:
+  - Cross-tenant marketplace or public sharing
+  - Real-time collaboration editing
+  - Complex workflow automation
+- framework_posture:
+  - richer UX realization lane remains separate from the current smoke-test UI lane
+  - semantic derivation should compress these explicit signals into one bounded UX scope statement
+<!-- CAF_MANAGED_BLOCK: caf_ux_scope_seed_v1 END -->
+
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_scope_semantic_projection_v1 START -->
+## CAF UX scope semantic projection (CAF-managed)
+- semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+- product_scope_summary: Tenant-scoped widget workspace focused on create/edit, organization, role-aware sharing, and admin-safe operations with visible activity history.
+- primary_experience_emphasis: Keep daily widget and collection operations in one clear workspace, with explicit visibility for tenant context, role consequences, and publish state.
+- primary_actors:
+  - Team Member
+  - Team Lead
+- supporting_actors:
+  - Tenant Admin
+- non_goals:
+  - Cross-tenant marketplace or public sharing
+  - Real-time collaboration editing
+  - Complex workflow automation
+- notes:
+  - Keep richer UX realization lane separate from smoke-test UI lane.
+  - Preserve web-first medium-dense workspace posture.
+<!-- CAF_MANAGED_BLOCK: caf_ux_scope_semantic_projection_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_scope_and_actors_v1 START -->
+## UX scope and actors (architect-edit)
+
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_scope_and_actors_v1 source=semantic_projection START -->
+> No manual architect override yet. Downstream consumers should use `caf_ux_scope_semantic_projection_v1` until this block is manually replaced.
+> Edit this architect block only when you want to override the derived UX content; do not copy the managed section back into this slot.
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_scope_and_actors_v1 END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_scope_and_actors_v1 END -->
+
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_pm_intent_semantic_projection_v1 START -->
+## CAF UX PM intent semantic projection (CAF-managed)
+- semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+```yaml
+schema_version: 'ux_pm_intent_v1'
+primary_product_intent:
+  summary: 'Help teams maintain a trustworthy tenant-scoped widget catalog and publishable collections without fragmented tooling.'
+  cues:
+    - 'single place for widget create/edit/list/view'
+    - 'consistent organization via tags and collections'
+    - 'role-aware publish model inside tenant boundary'
+primary_experience_intent:
+  summary: 'Prioritize a coherent catalog-to-detail-to-publish flow so primary operators can complete work with minimal context switching.'
+  cues:
+    - 'list and detail are first-class and tightly connected'
+    - 'creation and update actions remain one click away'
+    - 'activity evidence stays visible near operational surfaces'
+trust_clarity_intent:
+  summary: 'Make critical state and access consequences explicit, especially around publish, permissions, and destructive changes.'
+  cues:
+    - 'tenant context always visible'
+    - 'confirmable destructive and permission-changing actions'
+    - 'readable activity history for accountability'
+visual_tone_intent:
+  summary: 'Calm operational workspace with restrained accents, medium density, and high readability for data-heavy views.'
+  cues:
+    - 'stable shell hierarchy over decorative visuals'
+    - 'readable tables, chips, and status metadata'
+    - 'subtle feedback and motion only'
+```
+<!-- CAF_MANAGED_BLOCK: caf_ux_pm_intent_semantic_projection_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_pm_intent_v1 START -->
+## Product-manager intent signals (architect-edit)
+
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_pm_intent_v1 source=semantic_projection START -->
+> No manual architect override yet. Downstream consumers should use `caf_ux_pm_intent_semantic_projection_v1` until this block is manually replaced.
+> Edit this architect block only when you want to override the derived UX content; do not copy the managed section back into this slot.
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_pm_intent_v1 END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_pm_intent_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_core_journeys_seed_v1 START -->
+## CAF UX core journeys seed (CAF-managed)
+- derivation_sources:
+  - product/PRD.resolved.md capability blocks
+- derivation_rule: one deterministic seed journey per explicit capability block
+
+### Seed journey: Create and manage widgets
+- source_capability: CAP-001
+- actor: Team Member
+- trigger: User creates a new widget or updates an existing widget.
+- explicit_steps:
+  - User opens the widget editor.
+  - User enters widget fields and saves.
+  - The system validates required fields.
+  - The system stores the widget and returns the updated widget view.
+- explicit_entities:
+  - Widget
+  - Widget Version
+  - Widget Change Event
+- explicit_postconditions:
+  - A widget record exists for the tenant.
+  - The widget has a stable identifier and timestamps.
+  - An activity event is recorded for create or update.
+
+### Seed journey: Organize widgets
+- source_capability: CAP-002
+- actor: Team Lead
+- trigger: User adds tags to a widget or adds widgets to a collection.
+- explicit_steps:
+  - User opens a widget or collection.
+  - User adds or removes tags on a widget.
+  - User creates or updates a collection and adds widgets to it.
+  - The system stores the updated organization metadata.
+- explicit_entities:
+  - Widget
+  - Tag
+  - Collection
+  - Collection Membership
+  - Widget Change Event
+- explicit_postconditions:
+  - A widget has zero or more tags.
+  - A collection exists and references widgets.
+  - An activity event is recorded for the organization change.
+
+### Seed journey: Share widgets within a tenant
+- source_capability: CAP-003
+- actor: Team Lead
+- trigger: User publishes a collection for other tenant members to view.
+- explicit_steps:
+  - User selects a collection to publish.
+  - User selects which roles can view or edit the collection.
+  - The system stores the published access rules.
+  - Other users list and view published collections according to their roles.
+- explicit_entities:
+  - Collection
+  - Role
+  - Collection Permission
+  - Widget Change Event
+- explicit_postconditions:
+  - A published collection is visible to permitted roles.
+  - Access attempts are checked against role membership.
+  - An activity event is recorded for publish or permission changes.
+
+### Seed journey: Tenant administration
+- source_capability: CAP-004
+- actor: Tenant Admin
+- trigger: Tenant Admin manages tenant users, roles, or tenant settings.
+- explicit_steps:
+  - Tenant Admin lists users for the tenant.
+  - Tenant Admin adds or removes roles for a user.
+  - Tenant Admin updates tenant settings.
+  - The system stores the changes and records an activity event.
+- explicit_entities:
+  - Tenant
+  - User
+  - Role
+  - Tenant Setting
+  - Admin Activity Event
+- explicit_postconditions:
+  - Tenant settings are updated.
+  - User role assignments are updated.
+  - An admin activity event is recorded.
+<!-- CAF_MANAGED_BLOCK: caf_ux_core_journeys_seed_v1 END -->
+
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_core_journeys_semantic_projection_v1 START -->
+## CAF UX core journeys semantic projection (CAF-managed)
+- semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+### Journey: Create and maintain widget records
+- journey_id: widget-lifecycle-management
+- source_capabilities: CAP-001
+- actor: Team Member
+- goal: Create or update a widget and confirm durable tenant-scoped state.
+- trigger: User starts a new widget or edits an existing widget from the catalog or detail view.
+- entry_surface: widget-catalog-and-editor
+- major_steps:
+  - Open widget list or existing detail.
+  - Enter or modify widget fields and submit save.
+  - Resolve inline validation feedback if present.
+  - Confirm saved state with updated metadata and activity trace.
+- success_outcome: Widget updates are persisted with stable identity and visible recency context.
+- failure_recovery_branches:
+  - Validation failure keeps input in place with actionable field guidance.
+  - Save failure exposes retry-safe action with unchanged prior committed state.
+- notable_variants:
+  - Create-first flow from primary action.
+  - Edit-in-context flow from list selection.
+### Journey: Organize widgets into collections and tags
+- journey_id: collection-curation
+- source_capabilities: CAP-002
+- actor: Team Lead
+- goal: Maintain meaningful grouping for reuse and downstream sharing.
+- trigger: Lead needs to curate widgets for a team context.
+- entry_surface: collections-workspace
+- major_steps:
+  - Filter widgets to locate candidates.
+  - Apply or adjust tags.
+  - Create or update collection membership.
+  - Review resulting organization metadata.
+- success_outcome: Collections and tags reflect intended grouping and are ready for sharing decisions.
+- failure_recovery_branches:
+  - Conflicting edits surface deterministic refresh and retry posture.
+  - Partial save error shows which updates committed and what remains pending.
+- notable_variants:
+  - Batch curation from filtered worklist.
+  - Single-widget curation from detail context.
+### Journey: Publish collections to tenant roles
+- journey_id: tenant-sharing-and-access
+- source_capabilities: CAP-003
+- actor: Team Lead
+- goal: Share curated collections with explicit role-based visibility and edit rights.
+- trigger: Lead publishes or updates access for a collection.
+- entry_surface: sharing-and-permissions
+- major_steps:
+  - Select target collection and open sharing controls.
+  - Assign role-level access posture.
+  - Confirm publish change and role impact summary.
+  - Verify visibility behavior for intended audience.
+- success_outcome: Published collections are visible only to permitted tenant roles with audit-friendly change evidence.
+- failure_recovery_branches:
+  - Permission conflict returns explicit denial reason without silent partial updates.
+  - Risky access changes require confirm/review before final commit.
+- notable_variants:
+  - Initial publish from unpublished collection.
+  - Incremental role adjustment for already published collection.
+### Journey: Administer tenant users and settings with traceability
+- journey_id: tenant-admin-and-audit-oversight
+- source_capabilities: CAP-004
+- actor: Tenant Admin
+- goal: Maintain tenant user-role posture and settings while preserving clear audit history.
+- trigger: Admin updates user roles or tenant settings.
+- entry_surface: admin-and-activity
+- major_steps:
+  - Locate target user or setting.
+  - Apply controlled change.
+  - Review confirmation and resulting state.
+  - Inspect activity timeline for recorded action.
+- success_outcome: Tenant configuration changes are applied and visibly recorded.
+- failure_recovery_branches:
+  - Invalid admin mutation returns clear correction path.
+  - Restricted action surfaces role/authorization reason.
+- notable_variants:
+  - User-role assignment update.
+  - Tenant-setting update with confirmation.
+<!-- CAF_MANAGED_BLOCK: caf_ux_core_journeys_semantic_projection_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_core_journeys_v1 START -->
+## Core journeys (architect-edit)
+
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_core_journeys_v1 source=semantic_projection START -->
+> No manual architect override yet. Downstream consumers should use `caf_ux_core_journeys_semantic_projection_v1` until this block is manually replaced.
+> Edit this architect block only when you want to override the derived UX content; do not copy the managed section back into this slot.
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_core_journeys_v1 END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_core_journeys_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_interaction_surfaces_seed_v1 START -->
+## CAF UX interaction surfaces seed (CAF-managed)
+- derivation_sources:
+  - product/PRD.resolved.md capability blocks
+- derivation_rule: one deterministic seed surface per explicit capability block; semantic derivation later groups or compresses these into coherent workspaces
+
+### Surface: Create and manage widgets surface
+- source_capability: CAP-001
+- purpose: support the explicit PRD capability and its stated main flow
+- primary_actor: Team Member
+- explicit_entities:
+  - Widget
+  - Widget Version
+  - Widget Change Event
+- explicit_flow_transitions:
+  - User opens the widget editor.
+  - User enters widget fields and saves.
+  - The system validates required fields.
+  - The system stores the widget and returns the updated widget view.
+
+### Surface: Organize widgets surface
+- source_capability: CAP-002
+- purpose: support the explicit PRD capability and its stated main flow
+- primary_actor: Team Lead
+- explicit_entities:
+  - Widget
+  - Tag
+  - Collection
+  - Collection Membership
+  - Widget Change Event
+- explicit_flow_transitions:
+  - User opens a widget or collection.
+  - User adds or removes tags on a widget.
+  - User creates or updates a collection and adds widgets to it.
+  - The system stores the updated organization metadata.
+
+### Surface: Share widgets within a tenant surface
+- source_capability: CAP-003
+- purpose: support the explicit PRD capability and its stated main flow
+- primary_actor: Team Lead
+- explicit_entities:
+  - Collection
+  - Role
+  - Collection Permission
+  - Widget Change Event
+- explicit_flow_transitions:
+  - User selects a collection to publish.
+  - User selects which roles can view or edit the collection.
+  - The system stores the published access rules.
+  - Other users list and view published collections according to their roles.
+
+### Surface: Tenant administration surface
+- source_capability: CAP-004
+- purpose: support the explicit PRD capability and its stated main flow
+- primary_actor: Tenant Admin
+- explicit_entities:
+  - Tenant
+  - User
+  - Role
+  - Tenant Setting
+  - Admin Activity Event
+- explicit_flow_transitions:
+  - Tenant Admin lists users for the tenant.
+  - Tenant Admin adds or removes roles for a user.
+  - Tenant Admin updates tenant settings.
+  - The system stores the changes and records an activity event.
+<!-- CAF_MANAGED_BLOCK: caf_ux_interaction_surfaces_seed_v1 END -->
+
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_interaction_surfaces_semantic_projection_v1 START -->
+## CAF UX interaction surfaces semantic projection (CAF-managed)
+- semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+### Surface: Widget catalog and detail editor
+- surface_id: widget-catalog-and-editor
+- purpose: Support fast discovery, creation, and maintenance of widgets in one connected workspace.
+- related_journeys: widget-lifecycle-management, collection-curation
+- dominant_interaction_mode: worklist-plus-detail-edit
+- key_states:
+  - empty catalog
+  - filtered results
+  - detail editing
+  - save success
+  - validation error
+- notable_transitions:
+  - Catalog to detail editor
+  - Detail editor back to filtered catalog
+  - Detail save to activity context
+### Surface: Collections and tagging workspace
+- surface_id: collections-workspace
+- purpose: Manage grouping, membership, and semantic organization of widgets.
+- related_journeys: collection-curation, tenant-sharing-and-access
+- dominant_interaction_mode: curation-and-organization
+- key_states:
+  - empty collections
+  - populated collection list
+  - membership editing
+  - tag update feedback
+- notable_transitions:
+  - Collection list to collection detail
+  - Collection detail to sharing controls
+  - Tag update to refreshed filter state
+### Surface: Publish and permissions controls
+- surface_id: sharing-and-permissions
+- purpose: Configure role-based access and publish posture with explicit consequence visibility.
+- related_journeys: tenant-sharing-and-access
+- dominant_interaction_mode: review-and-confirm
+- key_states:
+  - unpublished
+  - published
+  - permission edit pending
+  - permission update confirmed
+  - permission update denied
+- notable_transitions:
+  - Collection context to publish dialog
+  - Permission draft to confirmation checkpoint
+  - Confirmation to published summary view
+### Surface: Tenant administration and activity timeline
+- surface_id: admin-and-activity
+- purpose: Centralize tenant role/settings operations and audit-friendly activity inspection.
+- related_journeys: tenant-admin-and-audit-oversight, widget-lifecycle-management, tenant-sharing-and-access
+- dominant_interaction_mode: settings-and-audit-review
+- key_states:
+  - user list loaded
+  - settings form editing
+  - update success
+  - authorization denied
+  - activity timeline filtered
+- notable_transitions:
+  - Admin settings to activity trace
+  - Activity filter to entity-specific detail
+  - Role change action to confirmation state
+<!-- CAF_MANAGED_BLOCK: caf_ux_interaction_surfaces_semantic_projection_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_interaction_surfaces_v1 START -->
+## Interaction surfaces (architect-edit)
+
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_interaction_surfaces_v1 source=semantic_projection START -->
+> No manual architect override yet. Downstream consumers should use `caf_ux_interaction_surfaces_semantic_projection_v1` until this block is manually replaced.
+> Edit this architect block only when you want to override the derived UX content; do not copy the managed section back into this slot.
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_interaction_surfaces_v1 END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_interaction_surfaces_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_visual_direction_seed_v1 START -->
+## CAF UX visual direction seed (CAF-managed)
+- derivation_sources:
+  - product/PRD.resolved.md#Product framing and quality attributes
+  - spec/playbook/application_product_surface_v1.md (accepted only when meaningfully edited beyond template)
+  - spec/playbook/application_spec_v1.md#ui_product_surface_v1 (legacy fallback only)
+  - spec/guardrails/profile_parameters_resolved.yaml#ui
+- status: pending instruction-owned semantic derivation
+- deterministic_posture: scripts preserve only the source surface list here; visual tone, shell rhythm, and pretty-UI pressure belong in the semantic packet.
+<!-- CAF_MANAGED_BLOCK: caf_ux_visual_direction_seed_v1 END -->
+
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_visual_direction_semantic_projection_v1 START -->
+## CAF UX visual direction semantic projection (CAF-managed)
+- semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+- visual_tone: Calm, operational, and trustworthy with restrained accent use.
+- navigation_shell: Persistent left navigation with top context bar showing tenant and primary action context.
+- density_posture: Medium-dense desktop-first layout that keeps lists and metadata scannable.
+- surface_treatment:
+  - Layered panels and cards with clear but not heavy boundaries.
+  - Status chips and metadata rows prioritize legibility over decoration.
+  - Accent color reserved for focus actions and key state signals.
+- typography_and_readability:
+  - Strong heading hierarchy for workspace orientation.
+  - Table and list typography tuned for quick scan under operational load.
+  - Activity timelines favor concise event phrasing and timestamp clarity.
+- motion_posture:
+  - Subtle loading and transition feedback.
+  - No novelty animation in critical flows.
+  - Keep feedback responsive around save, publish, and permission actions.
+- ux_realization_posture:
+  - Richer UX lane should appear intentionally more polished than smoke-test UI.
+  - Keep shell and state behavior consistent with existing REST/OpenAPI boundaries.
+<!-- CAF_MANAGED_BLOCK: caf_ux_visual_direction_semantic_projection_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_visual_direction_v1 START -->
+## Visual direction and UX-realization posture (architect-edit)
+
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_visual_direction_v1 source=semantic_projection START -->
+> No manual architect override yet. Downstream consumers should use `caf_ux_visual_direction_semantic_projection_v1` until this block is manually replaced.
+> Edit this architect block only when you want to override the derived UX content; do not copy the managed section back into this slot.
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_visual_direction_v1 END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_visual_direction_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_pattern_pressures_seed_v1 START -->
+## CAF UX pattern pressures seed (CAF-managed)
+- derivation_sources:
+  - product/PRD.resolved.md capability blocks
+  - design/playbook/ux_semantic_derivation_packet_v1.yaml (when present)
+- status: pending instruction-owned semantic derivation
+- deterministic_posture: scripts do not infer UX pattern pressure categories from keywords; the semantic packet must provide bounded pressures tied to compact journeys and surfaces.
+<!-- CAF_MANAGED_BLOCK: caf_ux_pattern_pressures_seed_v1 END -->
+
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_pattern_pressures_semantic_projection_v1 START -->
+## CAF UX pattern pressures semantic projection (CAF-managed)
+- semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+```yaml
+schema_version: 'ux_pattern_pressures_semantic_projection_v1'
+pressures:
+  - pressure_id: 'ux-pressure-001'
+    journey_ref: 'widget-lifecycle-management'
+    surface_ref: 'widget-catalog-and-editor'
+    category: 'search_filter_sort'
+    priority: 'high'
+    cues:
+      - 'Operators need fast catalog filtering by tag, collection, and recency.'
+      - 'List and detail context must stay coherent across edits.'
+    rationale: 'Catalog usability and edit confidence depend on strong list/detail continuity.'
+  - pressure_id: 'ux-pressure-002'
+    journey_ref: 'widget-lifecycle-management'
+    surface_ref: 'widget-catalog-and-editor'
+    category: 'crud_detail_edit'
+    priority: 'high'
+    cues:
+      - 'Create and update flows need validation clarity without losing user input.'
+      - 'Save outcomes should be explicit and audit-aware.'
+    rationale: 'Core product value is daily widget creation and maintenance.'
+  - pressure_id: 'ux-pressure-003'
+    journey_ref: 'tenant-sharing-and-access'
+    surface_ref: 'sharing-and-permissions'
+    category: 'review_approval'
+    priority: 'high'
+    cues:
+      - 'Publish and role changes carry tenant-wide consequences.'
+      - 'Users need confirmation and denial rationale visibility.'
+    rationale: 'Sharing flows require explicit decision posture and accountability.'
+  - pressure_id: 'ux-pressure-004'
+    journey_ref: 'tenant-admin-and-audit-oversight'
+    surface_ref: 'admin-and-activity'
+    category: 'settings_admin'
+    priority: 'medium'
+    cues:
+      - 'Tenant role and settings updates must feel controlled and reversible.'
+      - 'Admin tasks should stay distinct from day-to-day catalog tasks.'
+    rationale: 'Admin operations are lower frequency but high impact.'
+  - pressure_id: 'ux-pressure-005'
+    journey_ref: 'tenant-admin-and-audit-oversight'
+    surface_ref: 'admin-and-activity'
+    category: 'audit_explainability'
+    priority: 'high'
+    cues:
+      - 'Activity history is an explicit product value proposition.'
+      - 'Operators need readable change traces across widget and admin actions.'
+    rationale: 'Evidence readability underpins trust and operational clarity.'
+  - pressure_id: 'ux-pressure-006'
+    journey_ref: 'collection-curation'
+    surface_ref: 'collections-workspace'
+    category: 'visual_shell_hierarchy'
+    priority: 'medium'
+    cues:
+      - 'Multi-surface curation needs stable shell orientation.'
+      - 'Workspace hierarchy should reduce context switching fatigue.'
+    rationale: 'Clear shell hierarchy supports medium-dense operational use.'
+```
+<!-- CAF_MANAGED_BLOCK: caf_ux_pattern_pressures_semantic_projection_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_pattern_pressures_v1 START -->
+## UX pattern pressures (architect-edit; retrieval-facing)
+
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_pattern_pressures_v1 source=semantic_projection START -->
+> No manual architect override yet. Downstream consumers should use `caf_ux_pattern_pressures_semantic_projection_v1` until this block is manually replaced.
+> Edit this architect block only when you want to override the derived UX content; do not copy the managed section back into this slot.
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_pattern_pressures_v1 END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_pattern_pressures_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_state_recovery_seed_v1 START -->
+## CAF UX state and recovery seed (CAF-managed)
+- derivation_sources:
+  - product/PRD.resolved.md#Quality Attributes
+  - product/PRD.resolved.md capability postconditions
+- status: pending instruction-owned semantic derivation
+- deterministic_posture: scripts do not synthesize user-facing state/recovery meaning here; the semantic packet should define the states and recovery principles that matter to the operator flow.
+<!-- CAF_MANAGED_BLOCK: caf_ux_state_recovery_seed_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_state_recovery_semantic_projection_v1 START -->
+## CAF UX state and recovery semantic projection (CAF-managed)
+- semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+- key_states:
+  - empty
+  - loading
+  - ready
+  - validation_error
+  - permission_denied
+  - save_success
+  - publish_pending
+  - publish_complete
+  - update_failed
+- recovery_principles:
+  - Preserve user-entered content on recoverable validation errors.
+  - Use explicit retry-safe actions for transient save or fetch failures.
+  - Keep prior committed state visible when updates fail.
+  - Show authorization or policy denial reasons in user-facing language.
+<!-- CAF_MANAGED_BLOCK: caf_ux_state_recovery_semantic_projection_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_state_and_recovery_v1 START -->
+## State and recovery model (architect-edit)
+
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_state_and_recovery_v1 source=semantic_projection START -->
+> No manual architect override yet. Downstream consumers should use `caf_ux_state_recovery_semantic_projection_v1` until this block is manually replaced.
+> Edit this architect block only when you want to override the derived UX content; do not copy the managed section back into this slot.
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_state_and_recovery_v1 END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_state_and_recovery_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_touchpoints_constraints_seed_v1 START -->
+## CAF UX touchpoints and constraints seed (CAF-managed)
+- derivation_sources:
+  - spec/guardrails/profile_parameters_resolved.yaml#ui
+  - tools/caf/contracts/ux_demo_overlay_posture_v1.md
+- framework_posture:
+  - keep the richer UX realization lane separate from the smoke-test UI lane
+  - keep the current REST integration posture for the UX realization lane
+- semantic_posture: the semantic packet should translate the relevant runtime and contract touchpoints into compact UX-facing constraints.
+<!-- CAF_MANAGED_BLOCK: caf_ux_touchpoints_constraints_seed_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_touchpoints_constraints_semantic_projection_v1 START -->
+## CAF UX touchpoints and constraints semantic projection (CAF-managed)
+- semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+- touchpoints:
+  - Tenant-scoped REST list/detail/mutation endpoints for widgets and collections.
+  - Role and permission APIs backing publish/access controls.
+  - Activity-history endpoint(s) exposing actor, action, target, and timestamp.
+  - Tenant admin endpoints for user-role and settings management.
+- constraints:
+  - Tenant context must stay visible and authoritative through primary flows.
+  - Richer UX lane remains separate from smoke-test UI lane.
+  - First release is web-first; offline and real-time behaviors are not required.
+  - Accessibility posture stays keyboard-friendly and readability-first.
+<!-- CAF_MANAGED_BLOCK: caf_ux_touchpoints_constraints_semantic_projection_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_touchpoints_and_constraints_v1 START -->
+## AP/CP touchpoints and UX constraints (architect-edit)
+
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_touchpoints_and_constraints_v1 source=semantic_projection START -->
+> No manual architect override yet. Downstream consumers should use `caf_ux_touchpoints_constraints_semantic_projection_v1` until this block is manually replaced.
+> Edit this architect block only when you want to override the derived UX content; do not copy the managed section back into this slot.
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_touchpoints_and_constraints_v1 END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_touchpoints_and_constraints_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_interface_contract_pressures_seed_v1 START -->
+## CAF UX interface contract pressures seed (CAF-managed)
+- derivation_sources:
+  - spec/guardrails/profile_parameters_resolved.yaml#ui
+  - design/playbook/contract_declarations_v1.yaml (when present)
+  - design/playbook/control_plane_design_v1.md (when present)
+- framework_posture: keep the current UX realization lane on the existing REST/OpenAPI integration boundary unless a later architecture lane changes that contract style.
+- semantic_posture: list/detail/query/status/history contract pressure belongs in the instruction-owned semantic packet, not in script-authored heuristics.
+<!-- CAF_MANAGED_BLOCK: caf_ux_interface_contract_pressures_seed_v1 END -->
+
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_interface_contract_pressures_semantic_projection_v1 START -->
+## CAF UX interface contract pressures semantic projection (CAF-managed)
+- semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
+```yaml
+schema_version: 'ux_interface_contract_pressures_semantic_projection_v1'
+contract_style_assumption: 'rest_openapi'
+pressures:
+  - pressure_id: 'ux-contract-001'
+    category: 'list_detail_query_posture'
+    priority: 'high'
+    cues:
+      - 'Worklists require filtering, sorting, and stable pagination.'
+      - 'Detail views should hydrate enough data to avoid chatty follow-up calls.'
+    rationale: 'Catalog and collection workflows depend on predictable list/detail contracts.'
+  - pressure_id: 'ux-contract-002'
+    category: 'mutation_validation_feedback'
+    priority: 'high'
+    cues:
+      - 'Create and update mutations must return field-level validation clarity.'
+      - 'Publish/permission mutations need explicit result semantics.'
+    rationale: 'UX recovery and trust rely on precise mutation feedback.'
+  - pressure_id: 'ux-contract-003'
+    category: 'status_history_visibility'
+    priority: 'medium'
+    cues:
+      - 'Activity endpoints should support recency and actor-centric filtering.'
+      - 'Publish/admin effects should appear quickly in history reads.'
+    rationale: 'Audit-friendly UX needs timely and queryable evidence surfaces.'
+```
+<!-- CAF_MANAGED_BLOCK: caf_ux_interface_contract_pressures_semantic_projection_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_interface_contract_pressures_v1 START -->
+## UX interface contract pressures (architect-edit)
+
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_interface_contract_pressures_v1 source=semantic_projection START -->
+> No manual architect override yet. Downstream consumers should use `caf_ux_interface_contract_pressures_semantic_projection_v1` until this block is manually replaced.
+> Edit this architect block only when you want to override the derived UX content; do not copy the managed section back into this slot.
+<!-- CAF_DERIVATION_POINTER_BLOCK: ux_interface_contract_pressures_v1 END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_interface_contract_pressures_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_review_pressures_v1 START -->
+## UX implementation and review pressures (architect-edit)
+
+<!-- CAF_AUTOHYDRATED_BLOCK: ux_review_pressures_v1 source=derived_review_posture START -->
+- Keep the richer UX realization lane visually stronger than the smoke-test UI while preserving the same REST-backed truth and tenant/session behavior.
+- Prefer one coherent operational workspace over a page-per-capability tour; review should favor shell continuity, list/detail flow, and readable activity/history presentation.
+- Use design-system primitives first; add custom components only where repeated composite UX pressure clearly exists.
+- Preserve stable empty/loading/error/retry posture and avoid novelty polish that makes the UX realization less trustworthy.
+- Do not let out-of-scope items bleed into the richer UX realization: Cross-tenant marketplace or public sharing; Real-time collaboration editing; Complex workflow automation.
+<!-- CAF_AUTOHYDRATED_BLOCK: ux_review_pressures_v1 source=derived_review_posture END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_review_pressures_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: ux_open_questions_v1 START -->
+## UX open questions (architect-edit)
+
+<!-- CAF_AUTOHYDRATED_BLOCK: ux_open_questions_v1 source=prd_assumptions_dependencies START -->
+- Dependency to confirm in the first pretty-UI pass: Organization identity provider for authentication (OIDC or SAML)
+- Assumption to preserve or explicitly challenge in the richer UX lane: The first release is web-first and keeps features intentionally limited
+- Assumption to preserve or explicitly challenge in the richer UX lane: Tenant isolation is required for all data access
+<!-- CAF_AUTOHYDRATED_BLOCK: ux_open_questions_v1 source=prd_assumptions_dependencies END -->
+<!-- ARCHITECT_EDIT_BLOCK: ux_open_questions_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_pattern_candidates_v1 START -->
+
+### H-1: UX-CRUD-01 - List-Detail-Edit Flow (confidence: HIGH)
+- **Plane:** application
+- **Rationale:** Core widget create/edit maintenance is the highest-frequency user job and needs resilient list-detail-edit continuity with validation-safe recovery.
+**Evidence:**
+- E1 [instance_signal] Core journeys emphasize create/edit widgets with validation and save confirmation. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- E2 [pattern_definition] UX-CRUD-01 encodes list-detail-edit and dirty-state handling for resource maintenance. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-crud-01.yaml
+
+### H-2: UX-SEARCH-01 - Search, Filter, and Sort Workspace (confidence: HIGH)
+- **Plane:** application
+- **Rationale:** Widget catalog and collection operations depend on strong filtering, sorting, and query clarity.
+**Evidence:**
+- E1 [instance_signal] Product surface requires searchable widget catalog with tenant-safe filters and tags. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- E2 [pattern_definition] UX-SEARCH-01 provides search/filter/sort and query persistence posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-search-01.yaml
+
+### H-3: UX-WORKLIST-01 - Operational Worklist and Triage Surface (confidence: HIGH)
+- **Plane:** application
+- **Rationale:** The primary operator flow is worklist-driven and needs triage-ready status and row actions.
+**Evidence:**
+- E1 [instance_signal] Main surfaces include dashboard, catalog, activity, and one-click primary actions. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- E2 [pattern_definition] UX-WORKLIST-01 defines operational worklist and triage behaviors. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-worklist-01.yaml
+
+### H-4: UX-REVIEW-01 - Review and Approval Workspace (confidence: HIGH)
+- **Plane:** application
+- **Rationale:** Publish and permission changes are consequential and require explicit review/confirmation posture.
+**Evidence:**
+- E1 [instance_signal] Sharing flows require explicit and confirmable role-based publish/access changes. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- E2 [pattern_definition] UX-REVIEW-01 captures decision rationale and approval/reject workspace behavior. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-review-01.yaml
+
+### H-5: UX-SESSION-01 - Session, Role, and Tenant-Aware Browser Posture (confidence: HIGH)
+- **Plane:** application
+- **Rationale:** Tenant context and role consequences must remain visible in primary navigation and action flows.
+**Evidence:**
+- E1 [instance_signal] UX constraints require visible tenant context and role visibility near publish/share actions. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- E2 [pattern_definition] UX-SESSION-01 defines role-aware navigation and tenant/session-visible browser posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-session-01.yaml
+
+### H-6: UX-RECOVERY-01 - Empty, Error, and Recovery Guidance (confidence: HIGH)
+- **Plane:** application
+- **Rationale:** Reliable recovery is required across validation failures, permission denials, and transient save issues.
+**Evidence:**
+- E1 [instance_signal] State model requires explicit empty/loading/error/retry and keep-input-on-failure behavior. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- E2 [pattern_definition] UX-RECOVERY-01 provides recovery/partial-failure guidance patterns. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-recovery-01.yaml
+
+### H-7: UX-EXPLAIN-01 - Auditability and Explainability Surface (confidence: HIGH)
+- **Plane:** application
+- **Rationale:** Activity and evidence readability are explicit product value signals for trust.
+**Evidence:**
+- E1 [instance_signal] Product value proposition includes audit-friendly activity history and quick traceability. cite: reference_architectures/codex-saas/product/PRD.resolved.md
+- E2 [pattern_definition] UX-EXPLAIN-01 formalizes explainability and evidence-surface posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-explain-01.yaml
+
+### H-8: UX-VISUAL-01 - Calm Operational Shell and Visual Hierarchy (confidence: HIGH)
+- **Plane:** application
+- **Rationale:** UX lane explicitly targets a calm operational shell with restrained accents and clear hierarchy.
+**Evidence:**
+- E1 [instance_signal] UX vision and semantic projection require calm operational shell and readable hierarchy. cite: reference_architectures/codex-saas/product/UX_VISION.md
+- E2 [pattern_definition] UX-VISUAL-01 captures shell hierarchy and polished but calm visual posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-visual-01.yaml
+
+### H-9: UX-DENSITY-01 - Dense Panel, Card, and Toolbar Rhythm (confidence: HIGH)
+- **Plane:** application
+- **Rationale:** Medium-dense desktop workspace and data-heavy views require deliberate density rhythm.
+**Evidence:**
+- E1 [instance_signal] UX cues call for medium-density workspace with readable list/table posture. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- E2 [pattern_definition] UX-DENSITY-01 defines dense panel/card/toolbar rhythm. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-density-01.yaml
+
+### H-10: EXT-AUDITABILITY - Auditability (confidence: HIGH)
+- **Plane:** control
+- **Rationale:** Cross-surface activity and exportability expectations require auditable event trace posture visible to users.
+**Evidence:**
+- E1 [instance_signal] PRD and platform brief require immediate evidence and audit trail per action and outcome. cite: reference_architectures/codex-saas/product/PLATFORM_PRD.resolved.md
+- E2 [pattern_definition] EXT-AUDITABILITY provides tenant-scoped audit trail and traceability expectations. cite: architecture_library/patterns/external_v1/definitions_v1/ext-auditability.yaml
+
+### H-11: EXT-SECURITY_TRIMMING - Security Trimming (confidence: HIGH)
+- **Plane:** both
+- **Rationale:** Role-aware publish and admin surfaces need visibility trimming driven by permissions.
+**Evidence:**
+- E1 [instance_signal] Sharing and admin flows rely on role-based access and visibility constraints. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- E2 [pattern_definition] EXT-SECURITY_TRIMMING aligns result visibility with permission posture. cite: architecture_library/patterns/external_v1/definitions_v1/ext-security_trimming.yaml
+
+### M-12: EXT-GRACEFUL_DEGRADATION - Graceful Degradation (confidence: MEDIUM)
+- **Plane:** both
+- **Rationale:** The UX state model needs clear behavior under partial failures without hard-stop breakage.
+**Evidence:**
+- E1 [instance_signal] Recovery principles call for retry-safe actions and stable committed-state visibility on failures. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- E2 [pattern_definition] EXT-GRACEFUL_DEGRADATION provides reduced-fidelity fallback posture under dependency issues. cite: architecture_library/patterns/external_v1/definitions_v1/ext-graceful_degradation.yaml
+
+### M-13: VAL-01 - Validation and Error Handling Boundary (confidence: MEDIUM)
+- **Plane:** both
+- **Rationale:** CAP-001/CAP-004 flows require deterministic validation feedback and stable rejection handling.
+**Evidence:**
+- E1 [instance_signal] Core journeys include inline validation, explicit denials, and correction paths. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- E2 [graph_expansion] VAL-01 was pulled as a direct dependency of UX-CRUD-01. cite: reference_architectures/codex-saas/design/playbook/graph_expansion_open_list_ux_design_v1.yaml
+- E3 [pattern_definition] VAL-01 encodes boundary-level validation and error-shape handling. cite: architecture_library/patterns/core_v1/definitions_v1/VAL-01.yaml
+
+### M-14: UX-ASYNC-01 - Async Job Progress and Result Surface (confidence: MEDIUM)
+- **Plane:** application
+- **Rationale:** Activity exports, policy-driven operations, and potential delayed updates benefit from explicit pending/running/completed/failed posture.
+**Evidence:**
+- E1 [instance_signal] UX state model includes publish_pending and publish_complete states with retry-safe recovery. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- E2 [graph_expansion] UX-ASYNC-01 was opened as a complement to UX-RECOVERY-01. cite: reference_architectures/codex-saas/design/playbook/graph_expansion_open_list_ux_design_v1.yaml
+- E3 [pattern_definition] UX-ASYNC-01 provides explicit long-running progress/result UX posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-async-01.yaml
+
+### M-15: UX-REPORT-01 - Editorial Findings and Report Composition (confidence: MEDIUM)
+- **Plane:** application
+- **Rationale:** Activity and evidence views should remain editorially readable for operator and admin review.
+**Evidence:**
+- E1 [instance_signal] UX direction asks for readable timeline/report posture and scan-friendly summaries. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- E2 [graph_expansion] UX-REPORT-01 was opened as a complement to UX-VISUAL-01. cite: reference_architectures/codex-saas/design/playbook/graph_expansion_open_list_ux_design_v1.yaml
+- E3 [pattern_definition] UX-REPORT-01 captures summary-first editorial report composition. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-report-01.yaml
+
+### M-16: EXT-MATERIALIZED_VIEW - Materialized View (confidence: MEDIUM)
+- **Plane:** both
+- **Rationale:** Fast and stable filtered catalogs often need pre-shaped read models to avoid chatty or expensive UI-driven query composition.
+**Evidence:**
+- E1 [instance_signal] Search/filter/sort pressure and detail hydration expectations are explicit in interface contract pressures. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- E2 [graph_expansion] EXT-MATERIALIZED_VIEW was opened as a dependency of UX-SEARCH-01. cite: reference_architectures/codex-saas/design/playbook/graph_expansion_open_list_ux_design_v1.yaml
+- E3 [pattern_definition] EXT-MATERIALIZED_VIEW defines pre-composed read model posture for query-heavy surfaces. cite: architecture_library/patterns/external_v1/definitions_v1/ext-materialized_view.yaml
+
+<!-- CAF_MANAGED_BLOCK: caf_ux_pattern_candidates_v1 END -->
+
+

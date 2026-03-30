@@ -7,21 +7,33 @@ OBL-CP-POLICY-SURFACE	auth	policy_enforcement	cross_plane	Expose the CP policy a
 OBL-AP-POLICY-ENFORCEMENT	auth	policy_enforcement	cross_plane	Enforce CP-governed policy decisions on AP runtime surfaces.
 OBL-TENANT-CONTEXT-PROPAGATION	tenant_context	policy_enforcement	cross_plane	Propagate tenant context through the adopted carrier and reject conflicting carriers.
 OBL-AP-AUTH-MODE	auth	policy_enforcement	cross_plane	Realize the selected mock auth runtime contract for AP ingress and CP to AP decisions.
-OBL-AP-RESOURCE-WORKSPACES-API	api_boundary	api_boundary_implementation	AP	Expose the workspaces API boundary with tenant-scoped handlers and composition endpoints.
-OBL-AP-RESOURCE-WORKSPACES-SERVICE	other	service_facade_implementation	AP	Provide the workspaces application service facade between boundary handling and persistence.
-OBL-AP-RESOURCE-WORKSPACES-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the workspaces resource aligned to the resolved persistence rails.
-OBL-AP-RESOURCE-SUBMISSIONS-API	api_boundary	api_boundary_implementation	AP	Expose the submissions API boundary with tenant-scoped handlers and composition endpoints.
-OBL-AP-RESOURCE-SUBMISSIONS-SERVICE	other	service_facade_implementation	AP	Provide the submissions application service facade between boundary handling and persistence.
-OBL-AP-RESOURCE-SUBMISSIONS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the submissions resource aligned to the resolved persistence rails.
-OBL-AP-RESOURCE-REVIEWS-API	api_boundary	api_boundary_implementation	AP	Expose the reviews API boundary with tenant-scoped handlers and composition endpoints.
-OBL-AP-RESOURCE-REVIEWS-SERVICE	other	service_facade_implementation	AP	Provide the reviews application service facade between boundary handling and persistence.
-OBL-AP-RESOURCE-REVIEWS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the reviews resource aligned to the resolved persistence rails.
-OBL-AP-RESOURCE-REPORTS-API	api_boundary	api_boundary_implementation	AP	Expose the reports API boundary with tenant-scoped handlers and composition endpoints.
-OBL-AP-RESOURCE-REPORTS-SERVICE	other	service_facade_implementation	AP	Provide the reports application service facade between boundary handling and persistence.
-OBL-AP-RESOURCE-REPORTS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the reports resource aligned to the resolved persistence rails.
+OBL-AP-RESOURCE-WIDGETS-API	api_boundary	api_boundary_implementation	AP	Expose the widgets API boundary with tenant-scoped handlers and composition endpoints.
+OBL-AP-RESOURCE-WIDGETS-SERVICE	other	service_facade_implementation	AP	Provide the widgets application service facade between boundary handling and persistence.
+OBL-AP-RESOURCE-WIDGETS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the widgets resource aligned to the resolved persistence rails.
+OBL-AP-RESOURCE-WIDGET-VERSIONS-API	api_boundary	api_boundary_implementation	AP	Expose the widget_versions API boundary with tenant-scoped handlers and composition endpoints.
+OBL-AP-RESOURCE-WIDGET-VERSIONS-SERVICE	other	service_facade_implementation	AP	Provide the widget_versions application service facade between boundary handling and persistence.
+OBL-AP-RESOURCE-WIDGET-VERSIONS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the widget_versions resource aligned to the resolved persistence rails.
+OBL-AP-RESOURCE-COLLECTIONS-API	api_boundary	api_boundary_implementation	AP	Expose the collections API boundary with tenant-scoped handlers and composition endpoints.
+OBL-AP-RESOURCE-COLLECTIONS-SERVICE	other	service_facade_implementation	AP	Provide the collections application service facade between boundary handling and persistence.
+OBL-AP-RESOURCE-COLLECTIONS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the collections resource aligned to the resolved persistence rails.
+OBL-AP-RESOURCE-TAGS-API	api_boundary	api_boundary_implementation	AP	Expose the tags API boundary with tenant-scoped handlers and composition endpoints.
+OBL-AP-RESOURCE-TAGS-SERVICE	other	service_facade_implementation	AP	Provide the tags application service facade between boundary handling and persistence.
+OBL-AP-RESOURCE-TAGS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the tags resource aligned to the resolved persistence rails.
+OBL-AP-RESOURCE-COLLECTION-PERMISSIONS-API	api_boundary	api_boundary_implementation	AP	Expose the collection_permissions API boundary with tenant-scoped handlers and composition endpoints.
+OBL-AP-RESOURCE-COLLECTION-PERMISSIONS-SERVICE	other	service_facade_implementation	AP	Provide the collection_permissions application service facade between boundary handling and persistence.
+OBL-AP-RESOURCE-COLLECTION-PERMISSIONS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the collection_permissions resource aligned to the resolved persistence rails.
+OBL-AP-RESOURCE-TENANT-USERS-ROLES-API	api_boundary	api_boundary_implementation	AP	Expose the tenant_users_roles API boundary with tenant-scoped handlers and composition endpoints.
+OBL-AP-RESOURCE-TENANT-USERS-ROLES-SERVICE	other	service_facade_implementation	AP	Provide the tenant_users_roles application service facade between boundary handling and persistence.
+OBL-AP-RESOURCE-TENANT-USERS-ROLES-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the tenant_users_roles resource aligned to the resolved persistence rails.
+OBL-AP-RESOURCE-TENANT-SETTINGS-API	api_boundary	api_boundary_implementation	AP	Expose the tenant_settings API boundary with tenant-scoped handlers and composition endpoints.
+OBL-AP-RESOURCE-TENANT-SETTINGS-SERVICE	other	service_facade_implementation	AP	Provide the tenant_settings application service facade between boundary handling and persistence.
+OBL-AP-RESOURCE-TENANT-SETTINGS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the tenant_settings resource aligned to the resolved persistence rails.
+OBL-AP-RESOURCE-ACTIVITY-EVENTS-API	api_boundary	api_boundary_implementation	AP	Expose the activity_events API boundary with tenant-scoped handlers and composition endpoints.
+OBL-AP-RESOURCE-ACTIVITY-EVENTS-SERVICE	other	service_facade_implementation	AP	Provide the activity_events application service facade between boundary handling and persistence.
+OBL-AP-RESOURCE-ACTIVITY-EVENTS-PERSISTENCE	persistence_boundary	persistence_implementation	AP	Provide a tenant-scoped persistence boundary for the activity_events resource aligned to the resolved persistence rails.
 OBL-CP-ENTITY-POLICY-PERSISTENCE	other	persistence_implementation	CP	Provide control-plane persistence surfaces for the Policy aggregate.
 OBL-CP-ENTITY-EXECUTION-RECORD-PERSISTENCE	other	persistence_implementation	CP	Provide control-plane persistence surfaces for the Execution Record aggregate.
-OBL-CP-ENTITY-DATA-LIFECYCLE-PERSISTENCE	other	persistence_implementation	CP	Provide control-plane persistence surfaces for the Data Lifecycle aggregate.
+OBL-CP-ENTITY-RETENTION-LIFECYCLE-PERSISTENCE	other	persistence_implementation	CP	Provide control-plane persistence surfaces for the Retention Lifecycle aggregate.
 OBL-RUNTIME-WIRING	other	runtime_wiring	cross_plane	Wire the generated candidate runtime surfaces into one coherent local run flow.
 OBL-UNIT-TESTS	other	unit_test_scaffolding	cross_plane	Provide unit-test coverage for the candidate runtime surfaces.
 OBL-REPO-README	other	repo_documentation	cross_plane	Document how to run the candidate stack and diagnose the generated output locally.
@@ -29,21 +41,21 @@ OBL-OPT-CAF-TCTX-01-Q-AP-TENANT-CARRIER-01-auth_claim	other	runtime_wiring	cross
 OBL-OPT-CAF-TCTX-01-Q-CPAP-TENANT-CARRIER-01-auth_claim	other	runtime_wiring	cross_plane	Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.
 OBL-OPT-CAF-TCTX-01-Q-CPAP-TCTX-CONFLICT-01-claim_over_header	other	runtime_wiring	cross_plane	Verified claim wins; reject if any other carrier conflicts.
 OBL-OPT-CAF-MTEN-01-Q-MTEN-ISO-MODE-01-hybrid_tiered	other	policy_enforcement	cross_plane	Hybrid isolation (selective and tiered by tenant).
-OBL-OPT-CAF-PLANE-01-Q-CP-AP-SURFACE-01-mixed	other	runtime_wiring	cross_plane	Mix: sync for enforcement, async for lifecycle and audit.
 OBL-OPT-CAF-AI-01-Q-AI-PART-01-cp_governs_ap_enforces	other	policy_enforcement	cross_plane	Control Plane governs policy; Application Plane enforces at runtime.
 OBL-OPT-CAF-COMP-01-Q-CAF-COMP-01-01-stream_plus_immutable_store	other	policy_enforcement	cross_plane	Use an event stream plus an immutable store (preferred for audit readiness).
-OBL-OPT-CAF-IAM-02-Q-CAF-IAM-02-01-verified_token_claims	other	policy_enforcement	cross_plane	Propagate identity and tenant context via verified token claims at ingress.
+OBL-OPT-CAF-POL-02-Q-POL-DIST-01-cp_central_decision_ap_enforces	other	policy_enforcement	cross_plane	Control Plane centralizes policy decision; Application Plane enforces.
+OBL-OPT-CAF-PLANE-01-Q-CP-AP-SURFACE-01-mixed	other	runtime_wiring	cross_plane	Mix: sync for enforcement, async for lifecycle and audit.
 OBL-OPT-CAF-XPLANE-01-Q-XPLANE-MODE-01-synchronous_api	other	runtime_wiring	cross_plane	Synchronous request/response API call across the plane boundary.
-OBL-OPT-EXT-API_COMPOSITION_AGGREGATOR-Q-EXT-AGG-01-dedicated_composition_endpoint	other	policy_enforcement	cross_plane	Application plane exposes dedicated composition endpoints that orchestrate downstream calls.
-OBL-OPT-CAF-IAM-01-Q-CAF-IAM-01-AUTO-01-standard_platform_tenant_service	other	runtime_wiring	cross_plane	Standard taxonomy: platform user + tenant user + service principals.
 OBL-OPT-CAF-POL-01-Q-AP-POLICY-POINTS-01-gate_all_ops	other	policy_enforcement	cross_plane	Gate all CRUD operations.
-OBL-OPT-EXT-API_GATEWAY-Q-EXT-API-GW-01-shared_gateway_and_services	other	runtime_wiring	cross_plane	Default: implement the gateway inside the Control Plane ingress boundary (no standalone gateway product). CP enforces baseline policies; services enforce additional policies with explicit boundaries.
-OBL-OPT-EXT-AUDITABILITY-Q-EXT-AUDIT-01-security_plus_admin_actions	other	policy_enforcement	cross_plane	Audit security events plus privileged admin/operator actions.
+OBL-OPT-CAF-AID-01-Q-AID-KIND-01-service_identity_only	other	runtime_wiring	cross_plane	Agent uses a service identity (no per-agent individuality).
+OBL-OPT-CAF-IAM-01-Q-CAF-IAM-01-AUTO-01-standard_platform_tenant_service	other	runtime_wiring	cross_plane	Standard taxonomy: platform user + tenant user + service principals.
 O-TBP-ASGI-01-server-dependency	other	observability_and_config	cross_plane	Materialize the ASGI server dependency in the canonical Python dependency manifest. (TBP: TBP-ASGI-01)
 O-TBP-AUTH-MOCK-01-claim-contract	other	policy_enforcement	cross_plane	Materialize the mock auth claim-bearing contract helper used by policy and boundary surfaces. (TBP: TBP-AUTH-MOCK-01)
 O-TBP-AUTH-MOCK-01-boundary-adapter	other	api_boundary_implementation	cross_plane	Materialize the AP auth-context adapter that resolves the mock Authorization/Bearer contract for HTTP boundaries. (TBP: TBP-AUTH-MOCK-01)
 O-TBP-AUTH-MOCK-01-ui-claim-builder	other	ui_frontend_scaffolding	AP	Materialize the UI claim-builder that encodes the selected mock Authorization/Bearer payload and any explicit demo persona presets required by the declared UI flows. (TBP: TBP-AUTH-MOCK-01)
 O-TBP-AUTH-MOCK-01-ui-api-helper	other	ui_frontend_scaffolding	AP	Materialize the UI API helper that emits the selected mock Authorization/Bearer contract, preserves claim-over-header conflict behavior, and keeps any demo persona posture explicit. (TBP: TBP-AUTH-MOCK-01)
+O-TBP-AUTH-MOCK-01-ux-claim-builder	other	ux_frontend_realization	cross_plane	Materialize the UX claim-builder that encodes the selected mock Authorization/Bearer payload for the separate UX lane. (TBP: TBP-AUTH-MOCK-01)
+O-TBP-AUTH-MOCK-01-ux-api-helper	other	ux_frontend_realization	cross_plane	Materialize the UX API helper that emits the selected mock Authorization/Bearer contract for the separate UX lane. (TBP: TBP-AUTH-MOCK-01)
 O-TBP-COMPOSE-01-compose-candidate	other	runtime_wiring	cross_plane	Materialize compose candidate wiring (CP/AP and adopted support services) (TBP: TBP-COMPOSE-01)
 O-TBP-COMPOSE-01-dockerfile-cp	other	runtime_wiring	cross_plane	Materialize Control Plane Dockerfile for compose builds (TBP: TBP-COMPOSE-01)
 O-TBP-COMPOSE-01-dockerfile-ap	other	runtime_wiring	cross_plane	Materialize Application Plane Dockerfile for compose builds (TBP: TBP-COMPOSE-01)
@@ -64,7 +76,13 @@ O-TBP-SQLALCHEMY-01-schema-bootstrap	other	persistence_implementation	cross_plan
 O-TBP-SQLALCHEMY-01-runtime-env-contract	other	runtime_wiring	cross_plane	Keep emitted runtime `.env` DATABASE_URL wiring compatible with the selected SQLAlchemy-backed rails. (TBP: TBP-SQLALCHEMY-01)
 O-TBP-SQLALCHEMY-01-postgres-env-example-contract	other	postgres_persistence_wiring	cross_plane	Keep PostgreSQL env examples compatible with the selected SQLAlchemy-backed rails. (TBP: TBP-SQLALCHEMY-01)
 O-TBP-SQLALCHEMY-01-orm-dependency	other	observability_and_config	cross_plane	Materialize the SQLAlchemy ORM dependency in the canonical Python dependency manifest. (TBP: TBP-SQLALCHEMY-01)
-O-TBP-UI-REACT-VITE-01-ui-source	other	ui_frontend_scaffolding	AP	Materialize React (Vite) SPA source scaffold for local candidate runs (TBP: TBP-UI-REACT-VITE-01)
+O-TBP-UI-REACT-VITE-01-ui-source-package	other	ui_frontend_scaffolding	AP	Materialize React (Vite) SPA package metadata for local candidate runs (TBP: TBP-UI-REACT-VITE-01)
+O-TBP-UI-REACT-VITE-01-ui-source-config	other	ui_frontend_scaffolding	AP	Materialize React (Vite) SPA bundler configuration for local candidate runs (TBP: TBP-UI-REACT-VITE-01)
+O-TBP-UI-REACT-VITE-01-ui-source-entrypoint	other	ui_frontend_scaffolding	AP	Materialize React (Vite) SPA source entrypoint for local candidate runs (TBP: TBP-UI-REACT-VITE-01)
+O-TBP-UI-REACT-VITE-01-ux-source-package	other	ux_frontend_realization	cross_plane	Materialize React (Vite) UX-lane package metadata for the separate UX build lane (TBP: TBP-UI-REACT-VITE-01)
+O-TBP-UI-REACT-VITE-01-ux-source-config	other	ux_frontend_realization	cross_plane	Materialize React (Vite) UX-lane bundler configuration for the separate UX build lane (TBP: TBP-UI-REACT-VITE-01)
+O-TBP-UI-REACT-VITE-01-ux-source-entrypoint	other	ux_frontend_realization	cross_plane	Materialize React (Vite) UX-lane source entrypoint for the separate UX build lane (TBP: TBP-UI-REACT-VITE-01)
 O-TBP-UI-REACT-VITE-01-ui-build-container	other	runtime_wiring	cross_plane	Materialize UI build container (multi-stage) that compiles the SPA and serves it via nginx (TBP: TBP-UI-REACT-VITE-01)
 O-TBP-UI-REACT-VITE-01-ui-nginx-proxy	other	runtime_wiring	cross_plane	Materialize nginx proxy configuration so the UI can call the AP without CORS issues (TBP: TBP-UI-REACT-VITE-01)
 O-TBP-UI-REACT-VITE-01-ui-compose-service	other	runtime_wiring	cross_plane	Materialize UI service wiring in compose using the declared Dockerfile and nginx proxy config (TBP: TBP-UI-REACT-VITE-01)
+O-TBP-UI-REACT-VITE-SHADCN-01-ux-components-registry	other	ux_frontend_realization	cross_plane	Materialize shadcn-oriented component-system configuration for the richer UX web lane (TBP: TBP-UI-REACT-VITE-SHADCN-01)

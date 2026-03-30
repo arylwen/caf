@@ -4,76 +4,152 @@ generated_from:
   task_graph: "reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml"
   abp_pbp_resolution: "reference_architectures/codex-saas/spec/guardrails/abp_pbp_resolution_v1.yaml"
 bindings:
-  - binding_id: BIND-AP-reports
+  - binding_id: BIND-AP-activity_events
     binding_kind: required_provided_interface_binding
     plane_scope: AP
-    resource_key: reports
-    description: "Bind the AP reports consumer to a provider implementation in the assembler boundary."
+    resource_key: activity_events
+    description: "Bind the AP activity_events consumer to a provider implementation in the assembler boundary."
     required_interface:
-      name: ReportsAccessInterface
-      description: "Required interface for reports operations in the selected architecture style."
+      name: ActivityEventsAccessInterface
+      description: "Required interface for activity_events operations in the selected architecture style."
       consumer:
-        task_id: TG-30-service-facade-reports
+        task_id: TG-30-service-facade-activity_events
         role_id: application_use_cases
     provider:
-      task_id: TG-40-persistence-reports
+      task_id: TG-40-persistence-activity_events
       role_id: outbound_adapters
       binding_kind: provides_implementation
     assembler:
       task_id: TG-90-runtime-wiring
       role_id: composition_root
       binding_action: bind_consumer_to_provider
-  - binding_id: BIND-AP-reviews
+  - binding_id: BIND-AP-collection_permissions
     binding_kind: required_provided_interface_binding
     plane_scope: AP
-    resource_key: reviews
-    description: "Bind the AP reviews consumer to a provider implementation in the assembler boundary."
+    resource_key: collection_permissions
+    description: "Bind the AP collection_permissions consumer to a provider implementation in the assembler boundary."
     required_interface:
-      name: ReviewsAccessInterface
-      description: "Required interface for reviews operations in the selected architecture style."
+      name: CollectionPermissionsAccessInterface
+      description: "Required interface for collection_permissions operations in the selected architecture style."
       consumer:
-        task_id: TG-30-service-facade-reviews
+        task_id: TG-30-service-facade-collection_permissions
         role_id: application_use_cases
     provider:
-      task_id: TG-40-persistence-reviews
+      task_id: TG-40-persistence-collection_permissions
       role_id: outbound_adapters
       binding_kind: provides_implementation
     assembler:
       task_id: TG-90-runtime-wiring
       role_id: composition_root
       binding_action: bind_consumer_to_provider
-  - binding_id: BIND-AP-submissions
+  - binding_id: BIND-AP-collections
     binding_kind: required_provided_interface_binding
     plane_scope: AP
-    resource_key: submissions
-    description: "Bind the AP submissions consumer to a provider implementation in the assembler boundary."
+    resource_key: collections
+    description: "Bind the AP collections consumer to a provider implementation in the assembler boundary."
     required_interface:
-      name: SubmissionsAccessInterface
-      description: "Required interface for submissions operations in the selected architecture style."
+      name: CollectionsAccessInterface
+      description: "Required interface for collections operations in the selected architecture style."
       consumer:
-        task_id: TG-30-service-facade-submissions
+        task_id: TG-30-service-facade-collections
         role_id: application_use_cases
     provider:
-      task_id: TG-40-persistence-submissions
+      task_id: TG-40-persistence-collections
       role_id: outbound_adapters
       binding_kind: provides_implementation
     assembler:
       task_id: TG-90-runtime-wiring
       role_id: composition_root
       binding_action: bind_consumer_to_provider
-  - binding_id: BIND-AP-workspaces
+  - binding_id: BIND-AP-tags
     binding_kind: required_provided_interface_binding
     plane_scope: AP
-    resource_key: workspaces
-    description: "Bind the AP workspaces consumer to a provider implementation in the assembler boundary."
+    resource_key: tags
+    description: "Bind the AP tags consumer to a provider implementation in the assembler boundary."
     required_interface:
-      name: WorkspacesAccessInterface
-      description: "Required interface for workspaces operations in the selected architecture style."
+      name: TagsAccessInterface
+      description: "Required interface for tags operations in the selected architecture style."
       consumer:
-        task_id: TG-30-service-facade-workspaces
+        task_id: TG-30-service-facade-tags
         role_id: application_use_cases
     provider:
-      task_id: TG-40-persistence-workspaces
+      task_id: TG-40-persistence-tags
+      role_id: outbound_adapters
+      binding_kind: provides_implementation
+    assembler:
+      task_id: TG-90-runtime-wiring
+      role_id: composition_root
+      binding_action: bind_consumer_to_provider
+  - binding_id: BIND-AP-tenant_settings
+    binding_kind: required_provided_interface_binding
+    plane_scope: AP
+    resource_key: tenant_settings
+    description: "Bind the AP tenant_settings consumer to a provider implementation in the assembler boundary."
+    required_interface:
+      name: TenantSettingsAccessInterface
+      description: "Required interface for tenant_settings operations in the selected architecture style."
+      consumer:
+        task_id: TG-30-service-facade-tenant_settings
+        role_id: application_use_cases
+    provider:
+      task_id: TG-40-persistence-tenant_settings
+      role_id: outbound_adapters
+      binding_kind: provides_implementation
+    assembler:
+      task_id: TG-90-runtime-wiring
+      role_id: composition_root
+      binding_action: bind_consumer_to_provider
+  - binding_id: BIND-AP-tenant_users_roles
+    binding_kind: required_provided_interface_binding
+    plane_scope: AP
+    resource_key: tenant_users_roles
+    description: "Bind the AP tenant_users_roles consumer to a provider implementation in the assembler boundary."
+    required_interface:
+      name: TenantUsersRolesAccessInterface
+      description: "Required interface for tenant_users_roles operations in the selected architecture style."
+      consumer:
+        task_id: TG-30-service-facade-tenant_users_roles
+        role_id: application_use_cases
+    provider:
+      task_id: TG-40-persistence-tenant_users_roles
+      role_id: outbound_adapters
+      binding_kind: provides_implementation
+    assembler:
+      task_id: TG-90-runtime-wiring
+      role_id: composition_root
+      binding_action: bind_consumer_to_provider
+  - binding_id: BIND-AP-widget_versions
+    binding_kind: required_provided_interface_binding
+    plane_scope: AP
+    resource_key: widget_versions
+    description: "Bind the AP widget_versions consumer to a provider implementation in the assembler boundary."
+    required_interface:
+      name: WidgetVersionsAccessInterface
+      description: "Required interface for widget_versions operations in the selected architecture style."
+      consumer:
+        task_id: TG-30-service-facade-widget_versions
+        role_id: application_use_cases
+    provider:
+      task_id: TG-40-persistence-widget_versions
+      role_id: outbound_adapters
+      binding_kind: provides_implementation
+    assembler:
+      task_id: TG-90-runtime-wiring
+      role_id: composition_root
+      binding_action: bind_consumer_to_provider
+  - binding_id: BIND-AP-widgets
+    binding_kind: required_provided_interface_binding
+    plane_scope: AP
+    resource_key: widgets
+    description: "Bind the AP widgets consumer to a provider implementation in the assembler boundary."
+    required_interface:
+      name: WidgetsAccessInterface
+      description: "Required interface for widgets operations in the selected architecture style."
+      consumer:
+        task_id: TG-30-service-facade-widgets
+        role_id: application_use_cases
+    provider:
+      task_id: TG-40-persistence-widgets
       role_id: outbound_adapters
       binding_kind: provides_implementation
     assembler:

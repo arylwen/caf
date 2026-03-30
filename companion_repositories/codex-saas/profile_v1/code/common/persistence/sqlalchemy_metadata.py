@@ -1,21 +1,11 @@
-# CAF_TRACE: task_id=TG-40-persistence-cp-policy capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-metadata-module
-# CAF_TRACE: task_id=TG-40-persistence-cp-execution-record capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-metadata-module
-# CAF_TRACE: task_id=TG-40-persistence-cp-data-lifecycle capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-metadata-module
-from sqlalchemy import MetaData
-from sqlalchemy.orm import DeclarativeBase
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-40-persistence-cp-policy
+# CAF_TRACE: capability=persistence_implementation
+# CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-metadata-module
 
+"""Shared SQLAlchemy metadata surface for ORM-backed repositories."""
 
-NAMING_CONVENTION = {
-    "ix": "ix_%(column_0_label)s",
-    "uq": "uq_%(table_name)s_%(column_0_name)s",
-    "ck": "ck_%(table_name)s_%(constraint_name)s",
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    "pk": "pk_%(table_name)s",
-}
+from sqlalchemy.orm import declarative_base
 
-
-metadata = MetaData(naming_convention=NAMING_CONVENTION)
-
-
-class Base(DeclarativeBase):
-    metadata = metadata
+Base = declarative_base()

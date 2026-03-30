@@ -1,161 +1,291 @@
-schema_version: "phase8_plane_domain_model_v1"
-plane_scope: "application"
+schema_version: phase8_plane_domain_model_v1
+plane_scope: application
 generated_from:
   inputs:
-    - "reference_architectures/codex-saas/spec/playbook/application_spec_v1.md"
-    - "reference_architectures/codex-saas/spec/playbook/system_spec_v1.md"
-    - "reference_architectures/codex-saas/spec/playbook/application_domain_model_v1.md"
-    - "reference_architectures/codex-saas/spec/playbook/system_domain_model_v1.md"
+    - reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+    - reference_architectures/codex-saas/spec/playbook/application_domain_model_v1.md
 domain:
-  summary: "Tenant-facing review workspace domain for submissions, review decisions, and report publication."
+  summary: Tenant-scoped widget management with collaboration, sharing, tenant administration, and activity audit.
   bounded_contexts:
-    - context_id: "REVIEW_WORKSPACE"
-      name: "Review Workspace"
-      description: "Manages tenant workspaces, submissions, review outcomes, and report publication."
+    - context_id: WIDGET_CATALOG
+      name: Widget Catalog
       aggregates:
-        - aggregate_id: "WORKSPACE"
-          name: "Workspace"
-          description: "Tenant-scoped container for review activity."
-          canonical:
-            term_id: "workspace"
-            status: "exact"
-            matched_by: "architect_selected"
+        - aggregate_id: WIDGET
+          name: Widget
           persistence:
             required: true
-            storage_intent: "transactional_record"
-            notes: "Primary tenant-keyed application aggregate."
+            storage_intent: transactional_record
           entities:
-            - entity_id: "WORKSPACE_RECORD"
-              name: "Workspace"
-              description: "Workspace metadata and lifecycle state."
+            - entity_id: WIDGET
+              name: Widget
               fields:
-                - name: "workspace_id"
-                  type: "identifier"
+                - name: tenant_id
+                  type: string
                   required: true
-                - name: "tenant_id"
-                  type: "identifier"
+                - name: widget_id
+                  type: string
                   required: true
-                - name: "name"
-                  type: "text"
+                - name: title
+                  type: string
                   required: true
-                - name: "description"
-                  type: "text"
-                  required: false
-                - name: "status"
-                  type: "enum(active|archived)"
+                - name: description
+                  type: string
                   required: true
-                - name: "created_at"
-                  type: "timestamp"
+                - name: status
+                  type: enum(draft|published|archived)
                   required: true
-        - aggregate_id: "SUBMISSION"
-          name: "Submission"
-          description: "Business item submitted by a user for review."
+                - name: current_version_id
+                  type: string
+                  required: true
+                - name: created_at
+                  type: datetime
+                  required: true
+                - name: updated_at
+                  type: datetime
+                  required: true
+                - name: created_by_user_id
+                  type: string
+                  required: true
+            - entity_id: WIDGET_VERSION
+              name: Widget Version
+              fields:
+                - name: tenant_id
+                  type: string
+                  required: true
+                - name: widget_id
+                  type: string
+                  required: true
+                - name: version_id
+                  type: string
+                  required: true
+                - name: payload
+                  type: json
+                  required: true
+                - name: created_at
+                  type: datetime
+                  required: true
+                - name: created_by_user_id
+                  type: string
+                  required: true
+    - context_id: ORG_AND_SHARING
+      name: Organization and Sharing
+      aggregates:
+        - aggregate_id: COLLECTION
+          name: Collection
           persistence:
             required: true
-            storage_intent: "transactional_record"
-            notes: "Queried by tenant, workspace, status, and submitter."
+            storage_intent: transactional_record
           entities:
-            - entity_id: "SUBMISSION_RECORD"
-              name: "Submission"
-              description: "Submission payload and workflow status."
+            - entity_id: COLLECTION
+              name: Collection
               fields:
-                - name: "submission_id"
-                  type: "identifier"
+                - name: tenant_id
+                  type: string
                   required: true
-                - name: "tenant_id"
-                  type: "identifier"
+                - name: collection_id
+                  type: string
                   required: true
-                - name: "workspace_id"
-                  type: "identifier"
+                - name: name
+                  type: string
                   required: true
-                - name: "title"
-                  type: "text"
+                - name: description
+                  type: string
                   required: true
-                - name: "source_uri"
-                  type: "text"
-                  required: false
-                - name: "submitted_by"
-                  type: "identifier"
+                - name: published
+                  type: boolean
                   required: true
-                - name: "status"
-                  type: "enum(draft|submitted|in_review|approved|rejected)"
+                - name: created_at
+                  type: datetime
                   required: true
-                - name: "submitted_at"
-                  type: "timestamp"
-                  required: false
-            - entity_id: "REVIEW"
-              name: "Review"
-              description: "Evaluation state and findings for a submission."
+                - name: updated_at
+                  type: datetime
+                  required: true
+            - entity_id: COLLECTION_MEMBERSHIP
+              name: Collection Membership
               fields:
-                - name: "review_id"
-                  type: "identifier"
+                - name: tenant_id
+                  type: string
                   required: true
-                - name: "submission_id"
-                  type: "identifier"
+                - name: collection_id
+                  type: string
                   required: true
-                - name: "decision"
-                  type: "enum(pending|approved|rejected)"
+                - name: widget_id
+                  type: string
                   required: true
-                - name: "findings_summary"
-                  type: "text"
+                - name: added_at
+                  type: datetime
                   required: true
-                - name: "reviewed_by"
-                  type: "identifier"
-                  required: false
-                - name: "reviewed_at"
-                  type: "timestamp"
-                  required: false
-            - entity_id: "REPORT"
-              name: "Report"
-              description: "Final review output metadata."
+            - entity_id: COLLECTION_PERMISSION
+              name: Collection Permission
               fields:
-                - name: "report_id"
-                  type: "identifier"
+                - name: tenant_id
+                  type: string
                   required: true
-                - name: "submission_id"
-                  type: "identifier"
+                - name: collection_id
+                  type: string
                   required: true
-                - name: "tenant_id"
-                  type: "identifier"
+                - name: role_id
+                  type: string
                   required: true
-                - name: "format"
-                  type: "enum(html|pdf|json)"
+                - name: permission
+                  type: enum(view|edit)
                   required: true
-                - name: "generated_at"
-                  type: "timestamp"
+                - name: granted_at
+                  type: datetime
                   required: true
-                - name: "published_by"
-                  type: "identifier"
-                  required: false
+            - entity_id: TAG
+              name: Tag
+              fields:
+                - name: tenant_id
+                  type: string
+                  required: true
+                - name: tag_id
+                  type: string
+                  required: true
+                - name: label
+                  type: string
+                  required: true
+                - name: created_at
+                  type: datetime
+                  required: true
+    - context_id: TENANT_ADMIN
+      name: Tenant Administration
+      aggregates:
+        - aggregate_id: USER_ROLE_ASSIGNMENT
+          name: User Role Assignment
+          persistence:
+            required: true
+            storage_intent: transactional_record
+          entities:
+            - entity_id: USER_ROLE_ASSIGNMENT
+              name: User Role Assignment
+              fields:
+                - name: tenant_id
+                  type: string
+                  required: true
+                - name: user_id
+                  type: string
+                  required: true
+                - name: role_id
+                  type: string
+                  required: true
+                - name: assigned_at
+                  type: datetime
+                  required: true
+                - name: assigned_by_user_id
+                  type: string
+                  required: true
+        - aggregate_id: TENANT_SETTING
+          name: Tenant Setting
+          persistence:
+            required: true
+            storage_intent: transactional_record
+          entities:
+            - entity_id: TENANT_SETTING
+              name: Tenant Setting
+              fields:
+                - name: tenant_id
+                  type: string
+                  required: true
+                - name: setting_key
+                  type: string
+                  required: true
+                - name: setting_value
+                  type: string|json
+                  required: true
+                - name: updated_at
+                  type: datetime
+                  required: true
+                - name: updated_by_user_id
+                  type: string
+                  required: true
+    - context_id: ACTIVITY_AUDIT
+      name: Activity and Audit
+      aggregates:
+        - aggregate_id: ACTIVITY_EVENT
+          name: Activity Event
+          persistence:
+            required: true
+            storage_intent: audit_log
+          entities:
+            - entity_id: ACTIVITY_EVENT
+              name: Activity Event
+              fields:
+                - name: tenant_id
+                  type: string
+                  required: true
+                - name: event_id
+                  type: string
+                  required: true
+                - name: event_type
+                  type: string
+                  required: true
+                - name: actor_user_id
+                  type: string
+                  required: true
+                - name: target_type
+                  type: string
+                  required: true
+                - name: target_id
+                  type: string
+                  required: true
+                - name: occurred_at
+                  type: datetime
+                  required: true
+                - name: metadata
+                  type: json
+                  required: true
   use_cases:
-    - use_case_id: "UC-SUBMITITEM"
-      title: "Submit item for review"
-      intent: "A tenant user submits an item into the review workflow."
-      primary_context_id: "REVIEW_WORKSPACE"
+    - use_case_id: UC-CREATE-UPDATE-WIDGET
+      title: Create or update widget
+      intent: Allow team members to author and revise widgets within tenant scope.
+      primary_context_id: WIDGET_CATALOG
       touches_entities:
-        - "Workspace"
-        - "Submission"
-    - use_case_id: "UC-REVIEWDECISION"
-      title: "Complete review decision"
-      intent: "A reviewer inspects findings and marks the submission approved or rejected."
-      primary_context_id: "REVIEW_WORKSPACE"
+        - Widget
+        - Widget Version
+        - Activity Event
+    - use_case_id: UC-ORGANIZE-WIDGETS
+      title: Organize widgets with tags and collections
+      intent: Allow team leads to structure widget catalog for discoverability.
+      primary_context_id: ORG_AND_SHARING
       touches_entities:
-        - "Submission"
-        - "Review"
-    - use_case_id: "UC-PUBLISHREPORT"
-      title: "Publish report"
-      intent: "A user exports or publishes the final review outcome."
-      primary_context_id: "REVIEW_WORKSPACE"
+        - Widget
+        - Tag
+        - Collection
+        - Collection Membership
+        - Activity Event
+    - use_case_id: UC-PUBLISH-COLLECTION
+      title: Publish collection to tenant roles
+      intent: Allow controlled sharing of curated widget sets within tenant.
+      primary_context_id: ORG_AND_SHARING
       touches_entities:
-        - "Review"
-        - "Report"
+        - Collection
+        - Collection Permission
+        - User Role Assignment
+        - Activity Event
+    - use_case_id: UC-MANAGE-TENANT
+      title: Manage tenant roles and settings
+      intent: Allow tenant admins to manage access model and core tenant configuration.
+      primary_context_id: TENANT_ADMIN
+      touches_entities:
+        - User Role Assignment
+        - Tenant Setting
+        - Activity Event
 api_candidates:
   resources:
-    - name: "workspaces"
-      operations: ["list", "get", "create", "update"]
-    - name: "submissions"
-      operations: ["list", "get", "create", "update"]
-    - name: "reviews"
-      operations: ["get", "update"]
-    - name: "reports"
-      operations: ["list", "get", "create"]
+    - name: widgets
+      operations: [list, get, create, update, delete]
+    - name: widget_versions
+      operations: [list]
+    - name: collections
+      operations: [list, get, create, update]
+    - name: tags
+      operations: [list, create]
+    - name: collection_permissions
+      operations: [list, create, update]
+    - name: tenant_users_roles
+      operations: [list, create, delete]
+    - name: tenant_settings
+      operations: [get, update]
+    - name: activity_events
+      operations: [list]

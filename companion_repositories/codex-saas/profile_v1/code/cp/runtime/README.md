@@ -4,18 +4,19 @@
 <!-- CAF_TRACE: instance=codex-saas -->
 <!-- CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-PLANE-CP-RUNTIME-SCAFFOLD -->
 
-# Control Plane Runtime Scaffold
+# Control-Plane Runtime Scaffold
 
-- Plane identifier: `cp`
-- Runtime shape: `api_service_http` (selected by planner and guardrails)
-- Intended ingress class: HTTP API
+- Plane: `cp`
+- Runtime shape: `api_service_http`
+- Ingress class: HTTP API
 
-This scaffold provides package boundaries and composition-root seams only:
+## Provided by this scaffold
+- FastAPI composition root at `code/cp/main.py`
+- CP ASGI export at `code/cp/asgi.py`
+- Explicit CP runtime consumer seam at `code/cp/application/services.py` (`cp_runtime_repository_health_owner`)
+- Shared claim and startup bootstrap seams consumed through package-root coherent imports
 
-- `code/cp/boundary` for ingress and policy boundary models
-- `code/cp/service` for policy orchestration seams
-- `code/cp/persistence` for evidence/audit repository seams
-- `code/cp/composition` for deterministic dependency wiring
-- `code/cp/integration` for CP to AP contract client stubs
-
-This scaffold intentionally does not provide production deployment wiring or provider-specific infrastructure decisions.
+## Intentionally out of scope
+- Policy authoring/versioning implementation and governance workflow logic
+- Contract/persistence/runtime-wiring details owned by downstream tasks
+- Any framework/vendor choices not already fixed by resolved guardrails

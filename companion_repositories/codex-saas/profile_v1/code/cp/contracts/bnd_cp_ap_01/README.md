@@ -1,47 +1,33 @@
----
-boundary_id: BND-CP-AP-01
-plane: CP
-contract_surface: synchronous_http
-tenant_context_carrier: auth_claim
-tenant_context_conflict_rule: claim_over_header
-trace_anchors:
-  - contract_boundary_id:BND-CP-AP-01
-  - contract_ref_path:reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
-  - contract_ref_section:Plane Integration Contract (CP â†” AP)
-  - contract_surface:cp_ap_contract_surface
----
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-00-CONTRACT-BND-CP-AP-01-CP
+# CAF_TRACE: capability=contract_scaffolding
+# CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=contract_boundary_id:BND-CP-AP-01
 
-# CP contract scaffold for BND-CP-AP-01
+# CP Contract Scaffold: BND-CP-AP-01
 
-This scaffold makes the CP provider-side policy decision contract explicit for AP consumption.
-The surface stays on the declared synchronous HTTP boundary and keeps response mapping seams deterministic.
+This scaffold exposes the CP provider side of the CP<->AP contract boundary.
+It preserves tenant/principal/correlation context and supports synchronous and event-ready extension seams.
 
-## Contract surface summary
+## Inputs consumed
 
-- Provider module: `code/cp/contracts/bnd_cp_ap_01/http_server.py`
-- Envelope module: `code/cp/contracts/bnd_cp_ap_01/envelope.py`
-- Carrier expectations:
-  - canonical carrier: Authorization Bearer claim with `tenant_id`, `principal_id`, `policy_version`
-  - conflict rule: `claim_over_header` semantics are preserved by keeping tenant/principal fields explicit in envelopes.
+- `reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml`: boundary declaration and contract reference metadata.
+- `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`: CP<->AP mixed surface decisions and governance interaction posture.
 
 ## Extension guidance
 
-This scaffold intentionally contains only the envelope fields required by the declared boundary.
-Extend provider payload semantics in backward-compatible form while preserving tenant, principal, and correlation identifiers.
+- Extend envelope payloads and handler logic without changing context field names.
+- Keep CP policy/runtime decisions outside transport adapter stubs.
 
 ## Task completion evidence
 
 ### Claims
-
-- The CP-side boundary package and namespace for `BND-CP-AP-01` were created for deterministic provider imports.
-- Contract request/response/event envelopes carry `tenant_id`, `principal_id`, `correlation_id`, and `payload` exactly.
-- CP provider HTTP handler scaffold returns a context-preserving contract response envelope for AP consumers.
-- The scaffold documents extension seams without introducing unapproved runtime or transport decisions.
+- CP provider envelope types were scaffolded with explicit tenant/principal/correlation context.
+- CP HTTP and event contract stubs were materialized for deterministic cross-plane integration extension.
+- Contract scaffolding is anchored to boundary `BND-CP-AP-01` and consumable by AP/runtime wiring tasks.
 
 ### Evidence anchors
-
-- companion_repositories/codex-saas/profile_v1/code/cp/contracts/bnd_cp_ap_01/__init__.py:L1-L1 â€” supports Claim 1
-- companion_repositories/codex-saas/profile_v1/code/cp/contracts/bnd_cp_ap_01/envelope.py:L1-L24 â€” supports Claim 2
-- companion_repositories/codex-saas/profile_v1/code/cp/contracts/bnd_cp_ap_01/http_server.py:L1-L10 â€” supports Claim 3
-- companion_repositories/codex-saas/profile_v1/code/cp/contracts/bnd_cp_ap_01/README.md:L1-L42 â€” supports Claim 4
-
+- companion_repositories/codex-saas/profile_v1/code/cp/contracts/BND-CP-AP-01/envelope.py:L1-L30 — supports Claim 1
+- companion_repositories/codex-saas/profile_v1/code/cp/contracts/BND-CP-AP-01/http_server.py:L1-L19 — supports Claim 2
+- companion_repositories/codex-saas/profile_v1/code/cp/contracts/BND-CP-AP-01/events.py:L1-L34 — supports Claim 2
+- companion_repositories/codex-saas/profile_v1/code/cp/contracts/BND-CP-AP-01/README.md:L1-L32 — supports Claim 3

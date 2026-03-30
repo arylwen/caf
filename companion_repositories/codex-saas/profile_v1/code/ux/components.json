@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "CAF_TRACE": {
+    "generated_by": "Contura Architecture Framework (CAF)",
+    "task_id": "TG-TBP-TBP-UI-REACT-VITE-01-ux_frontend_realization",
+    "capability": "ux_frontend_realization",
+    "instance": "codex-saas",
+    "trace_anchor": "pattern_obligation_id:O-TBP-UI-REACT-VITE-SHADCN-01-ux-components-registry"
+  },
+  "style": "default",
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils"
+  },
+  "components": []
+}

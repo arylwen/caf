@@ -1,47 +1,32 @@
----
-boundary_id: BND-CP-AP-01
-plane: AP
-contract_surface: synchronous_http
-tenant_context_carrier: auth_claim
-tenant_context_conflict_rule: claim_over_header
-trace_anchors:
-  - contract_boundary_id:BND-CP-AP-01
-  - contract_ref_path:reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
-  - contract_ref_section:Plane Integration Contract (CP â†” AP)
-  - contract_surface:cp_ap_contract_surface
----
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-00-CONTRACT-BND-CP-AP-01-AP
+# CAF_TRACE: capability=contract_scaffolding
+# CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=contract_boundary_id:BND-CP-AP-01
 
-# AP contract scaffold for BND-CP-AP-01
+# AP Contract Scaffold: BND-CP-AP-01
 
-This scaffold makes the AP consumer contract explicit for the CP policy decision boundary.
-The surface is intentionally thin and keeps transport choices aligned to the declared synchronous HTTP contract.
+This scaffold exposes the AP consumer side of the CP<->AP contract boundary.
+It keeps tenant and principal context explicit via envelope fields and avoids domain coupling.
 
-## Contract surface summary
+## Inputs consumed
 
-- Consumer module: `code/ap/contracts/bnd_cp_ap_01/http_client.py`
-- Envelope module: `code/ap/contracts/bnd_cp_ap_01/envelope.py`
-- Carrier expectations:
-  - canonical: `Authorization: Bearer tenant_id=...;principal_id=...;policy_version=v1`
-  - conflict detection: `X-Tenant-Id` is passed so claim-over-header validation can reject mismatch.
+- `reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml`: boundary id, contract form, and reference section.
+- `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`: integrated CP<->AP surface posture and runtime-shape assumptions.
 
 ## Extension guidance
 
-This scaffold intentionally contains only contract envelope fields required by the declared boundary.
-Extend by adding backward-compatible payload attributes while preserving tenant and principal context fields.
+- Extend `payload` in a backward-compatible way without changing context fields.
+- Keep transport wiring in boundary files and avoid embedding persistence logic.
 
 ## Task completion evidence
 
 ### Claims
-
-- The AP-side boundary package and namespace for `BND-CP-AP-01` were created for deterministic contract imports.
-- Contract request/response/event envelopes carry `tenant_id`, `principal_id`, `correlation_id`, and `payload` exactly.
-- AP consumer HTTP call scaffolding targets the CP policy-evaluation path and preserves auth-claim plus conflict-detection headers.
-- The scaffold documents extension seams without introducing additional transport or architecture decisions.
+- AP consumer envelope types were scaffolded with explicit tenant/principal/correlation context.
+- AP HTTP contract caller scaffold was materialized with deterministic JSON request/response handling.
+- Contract scaffolding is anchored to boundary `BND-CP-AP-01` and ready for runtime wiring tasks.
 
 ### Evidence anchors
-
-- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/__init__.py:L1-L1 â€” supports Claim 1
-- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/envelope.py:L1-L24 â€” supports Claim 2
-- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/http_client.py:L1-L34 â€” supports Claim 3
-- companion_repositories/codex-saas/profile_v1/code/ap/contracts/bnd_cp_ap_01/README.md:L1-L42 â€” supports Claim 4
-
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/BND-CP-AP-01/envelope.py:L1-L30 — supports Claim 1
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/BND-CP-AP-01/http_client.py:L1-L38 — supports Claim 2
+- companion_repositories/codex-saas/profile_v1/code/ap/contracts/BND-CP-AP-01/README.md:L1-L31 — supports Claim 3

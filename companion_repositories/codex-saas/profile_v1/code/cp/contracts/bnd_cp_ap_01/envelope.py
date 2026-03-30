@@ -1,5 +1,12 @@
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-00-CONTRACT-BND-CP-AP-01-CP
+# CAF_TRACE: capability=contract_scaffolding
+# CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=contract_boundary_id:BND-CP-AP-01
+
+"""CP-side envelope types for the CP<->AP integration contract scaffold."""
+
 from dataclasses import dataclass
-from typing import Any, Dict
 
 
 @dataclass(frozen=True)
@@ -7,7 +14,7 @@ class ContractRequestEnvelope:
     tenant_id: str
     principal_id: str
     correlation_id: str
-    payload: Dict[str, Any]
+    payload: dict
 
 
 @dataclass(frozen=True)
@@ -15,7 +22,7 @@ class ContractResponseEnvelope:
     tenant_id: str
     principal_id: str
     correlation_id: str
-    payload: Dict[str, Any]
+    payload: dict
 
 
 @dataclass(frozen=True)
@@ -23,5 +30,4 @@ class ContractEventEnvelope:
     tenant_id: str
     principal_id: str
     correlation_id: str
-    payload: Dict[str, Any]
-
+    payload: dict

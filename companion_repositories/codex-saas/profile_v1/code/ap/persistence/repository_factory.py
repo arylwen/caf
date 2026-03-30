@@ -1,69 +1,48 @@
-# CAF_TRACE: task_id=TG-40-persistence-reviews capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-schema-bootstrap
-from os import getenv
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-40-persistence-activity_events
+# CAF_TRACE: capability=persistence_implementation
+# CAF_TRACE: instance=codex-saas
 
-from ...common.persistence.sqlalchemy_schema_bootstrap import bootstrap_sqlalchemy_schema
-from ..service.resource_services import (
-    ReportsAccessInterface,
-    ReviewsAccessInterface,
-    SubmissionsAccessInterface,
-    WorkspacesAccessInterface,
-)
-from .models import register_ap_models
-from .postgres_adapter import get_database_url, get_session_factory
-from .postgres_reports_repository import PostgresReportsRepository
-from .postgres_reviews_repository import PostgresReviewsRepository
-from .postgres_submissions_repository import PostgresSubmissionsRepository
-from .postgres_workspaces_repository import PostgresWorkspacesRepository
+"""AP repository factory for SQLAlchemy-backed postgres persistence."""
 
-
-def _require_database_url() -> None:
-    raw_url = (getenv("DATABASE_URL") or "").strip()
-    if not raw_url:
-        raise RuntimeError(
-            "DATABASE_URL is required for application-plane postgres persistence; no in-memory fallback is allowed."
-        )
-    get_database_url()
+from ...common.persistence.sqlalchemy_runtime import get_session_factory
+from .postgres_activity_events_repository import PostgresActivityEventsRepository
+from .postgres_collection_permissions_repository import PostgresCollectionPermissionsRepository
+from .postgres_collections_repository import PostgresCollectionsRepository
+from .postgres_tags_repository import PostgresTagsRepository
+from .postgres_tenant_settings_repository import PostgresTenantSettingsRepository
+from .postgres_tenant_users_roles_repository import PostgresTenantUsersRolesRepository
+from .postgres_widget_versions_repository import PostgresWidgetVersionsRepository
+from .postgres_widgets_repository import PostgresWidgetsRepository
 
 
-def build_reports_access() -> ReportsAccessInterface:
-    _require_database_url()
-    return PostgresReportsRepository(get_session_factory())
+def get_widgets_repository() -> PostgresWidgetsRepository:
+    return PostgresWidgetsRepository(get_session_factory())
 
 
-def build_reviews_access() -> ReviewsAccessInterface:
-    _require_database_url()
-    return PostgresReviewsRepository(get_session_factory())
+def get_widget_versions_repository() -> PostgresWidgetVersionsRepository:
+    return PostgresWidgetVersionsRepository(get_session_factory())
 
 
-def build_submissions_access() -> SubmissionsAccessInterface:
-    _require_database_url()
-    return PostgresSubmissionsRepository(get_session_factory())
+def get_collections_repository() -> PostgresCollectionsRepository:
+    return PostgresCollectionsRepository(get_session_factory())
 
 
-def build_workspaces_access() -> WorkspacesAccessInterface:
-    _require_database_url()
-    return PostgresWorkspacesRepository(get_session_factory())
+def get_tags_repository() -> PostgresTagsRepository:
+    return PostgresTagsRepository(get_session_factory())
 
 
-def bootstrap_reports_schema() -> str:
-    _require_database_url()
-    bootstrap_sqlalchemy_schema([register_ap_models])
-    return "ap reports persistence schema bootstrap complete"
+def get_collection_permissions_repository() -> PostgresCollectionPermissionsRepository:
+    return PostgresCollectionPermissionsRepository(get_session_factory())
 
 
-def bootstrap_reviews_schema() -> str:
-    _require_database_url()
-    bootstrap_sqlalchemy_schema([register_ap_models])
-    return "ap reviews persistence schema bootstrap complete"
+def get_tenant_users_roles_repository() -> PostgresTenantUsersRolesRepository:
+    return PostgresTenantUsersRolesRepository(get_session_factory())
 
 
-def bootstrap_submissions_schema() -> str:
-    _require_database_url()
-    bootstrap_sqlalchemy_schema([register_ap_models])
-    return "ap submissions persistence schema bootstrap complete"
+def get_tenant_settings_repository() -> PostgresTenantSettingsRepository:
+    return PostgresTenantSettingsRepository(get_session_factory())
 
 
-def bootstrap_workspaces_schema() -> str:
-    _require_database_url()
-    bootstrap_sqlalchemy_schema([register_ap_models])
-    return "ap workspaces persistence schema bootstrap complete"
+def get_activity_events_repository() -> PostgresActivityEventsRepository:
+    return PostgresActivityEventsRepository(get_session_factory())

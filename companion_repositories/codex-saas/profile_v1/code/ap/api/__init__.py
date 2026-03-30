@@ -1,3 +1,6 @@
-# CAF_TRACE: task_id=TG-20-api-boundary-workspaces capability=api_boundary_implementation trace_anchor=pattern_obligation_id:O-TBP-FASTAPI-01-composition-root
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-10-OPTIONS-api_boundary_implementation
+# CAF_TRACE: capability=api_boundary_implementation
+# CAF_TRACE: instance=codex-saas
 
-"""Application API boundary package."""
+"""AP API boundary package."""

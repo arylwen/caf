@@ -1,59 +1,112 @@
-# CAF_TRACE: task_id=TG-40-persistence-reports capability=persistence_implementation trace_anchor=pattern_obligation_id:OBL-AP-RESOURCE-REPORTS-PERSISTENCE
-# CAF_TRACE: task_id=TG-40-persistence-workspaces capability=persistence_implementation trace_anchor=pattern_obligation_id:OBL-AP-RESOURCE-WORKSPACES-PERSISTENCE
-# CAF_TRACE: task_id=TG-40-persistence-workspaces capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-metadata-module
-# CAF_TRACE: task_id=TG-40-persistence-submissions capability=persistence_implementation trace_anchor=pattern_obligation_id:OBL-AP-RESOURCE-SUBMISSIONS-PERSISTENCE
-# CAF_TRACE: task_id=TG-40-persistence-submissions capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-metadata-module
-# CAF_TRACE: task_id=TG-40-persistence-reviews capability=persistence_implementation trace_anchor=pattern_obligation_id:OBL-AP-RESOURCE-REVIEWS-PERSISTENCE
-# CAF_TRACE: task_id=TG-40-persistence-reviews capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-metadata-module
-from sqlalchemy import DateTime, String
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-40-persistence-widgets
+# CAF_TRACE: capability=persistence_implementation
+# CAF_TRACE: instance=codex-saas
+
+"""AP ORM models for tenant-scoped resource persistence."""
+
+from sqlalchemy import JSON, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ...common.persistence.sqlalchemy_metadata import Base
 
 
-class WorkspaceModel(Base):
-    __tablename__ = "ap_workspaces"
-    workspace_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    name: Mapped[str] = mapped_column(String(160), nullable=False)
-    description: Mapped[str] = mapped_column(String(2048), nullable=False, default="")
-    status: Mapped[str] = mapped_column(String(32), nullable=False)
-    created_at: Mapped[str] = mapped_column(DateTime(timezone=True), nullable=False)
+class WidgetsModel(Base):
+    __tablename__ = "ap_widgets"
+
+    widget_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), index=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_by_user_id: Mapped[str] = mapped_column(String(128))
+    updated_by_user_id: Mapped[str] = mapped_column(String(128))
+    created_at: Mapped[str] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[str] = mapped_column(DateTime(timezone=True))
 
 
-class ReportModel(Base):
-    __tablename__ = "ap_reports"
-    report_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    submission_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    format: Mapped[str] = mapped_column(String(16), nullable=False)
-    generated_at: Mapped[str] = mapped_column(DateTime(timezone=True), nullable=False)
-    published_by: Mapped[str] = mapped_column(String(64), nullable=False)
+class WidgetVersionsModel(Base):
+    __tablename__ = "ap_widget_versions"
+
+    version_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), index=True)
+    widget_id: Mapped[str | None] = mapped_column(String(128), index=True, nullable=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[str] = mapped_column(DateTime(timezone=True))
 
 
-class SubmissionModel(Base):
-    __tablename__ = "ap_submissions"
-    submission_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    workspace_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    title: Mapped[str] = mapped_column(String(256), nullable=False)
-    source_uri: Mapped[str] = mapped_column(String(2048), nullable=False, default="")
-    submitted_by: Mapped[str] = mapped_column(String(64), nullable=False)
-    status: Mapped[str] = mapped_column(String(32), nullable=False)
-    submitted_at: Mapped[str] = mapped_column(DateTime(timezone=True), nullable=False)
+class CollectionsModel(Base):
+    __tablename__ = "ap_collections"
+
+    collection_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), index=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_by_user_id: Mapped[str] = mapped_column(String(128))
+    updated_by_user_id: Mapped[str] = mapped_column(String(128))
+    created_at: Mapped[str] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[str] = mapped_column(DateTime(timezone=True))
 
 
-class ReviewModel(Base):
-    __tablename__ = "ap_reviews"
-    review_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    submission_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    decision: Mapped[str] = mapped_column(String(16), nullable=False)
-    findings_summary: Mapped[str] = mapped_column(String(4096), nullable=False)
-    reviewed_by: Mapped[str] = mapped_column(String(64), nullable=False)
-    reviewed_at: Mapped[str] = mapped_column(DateTime(timezone=True), nullable=False)
+class TagsModel(Base):
+    __tablename__ = "ap_tags"
+
+    tag_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), index=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_by_user_id: Mapped[str] = mapped_column(String(128))
+    updated_by_user_id: Mapped[str] = mapped_column(String(128))
+    created_at: Mapped[str] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[str] = mapped_column(DateTime(timezone=True))
 
 
-def register_ap_models() -> None:
-    # Module import performs SQLAlchemy model registration with Base metadata.
-    return None
+class CollectionPermissionsModel(Base):
+    __tablename__ = "ap_collection_permissions"
+
+    collection_permission_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), index=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_by_user_id: Mapped[str] = mapped_column(String(128))
+    updated_by_user_id: Mapped[str] = mapped_column(String(128))
+    created_at: Mapped[str] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[str] = mapped_column(DateTime(timezone=True))
+
+
+class TenantUsersRolesModel(Base):
+    __tablename__ = "ap_tenant_users_roles"
+
+    tenant_user_role_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), index=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_by_user_id: Mapped[str] = mapped_column(String(128))
+    updated_by_user_id: Mapped[str] = mapped_column(String(128))
+    created_at: Mapped[str] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[str] = mapped_column(DateTime(timezone=True))
+
+
+class TenantSettingsModel(Base):
+    __tablename__ = "ap_tenant_settings"
+
+    tenant_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    settings: Mapped[dict] = mapped_column(JSON)
+    updated_by_user_id: Mapped[str] = mapped_column(String(128))
+    updated_at: Mapped[str] = mapped_column(DateTime(timezone=True))
+
+
+class ActivityEventsModel(Base):
+    __tablename__ = "ap_activity_events"
+
+    event_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), index=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[str] = mapped_column(DateTime(timezone=True))
+
+
+def load_models() -> tuple[type, ...]:
+    return (
+        WidgetsModel,
+        WidgetVersionsModel,
+        CollectionsModel,
+        TagsModel,
+        CollectionPermissionsModel,
+        TenantUsersRolesModel,
+        TenantSettingsModel,
+        ActivityEventsModel,
+    )

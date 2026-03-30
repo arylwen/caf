@@ -1,12 +1,10 @@
-# Review Note: TG-40-persistence-cp-execution-record
+# TG-40-persistence-cp-execution-record Review
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-CORR-01 | PASS | Execution/evidence repository surfaces are implemented with SQLAlchemy sessions. |
-| RR-PY-SEC-01 | PASS | Runtime selection remains fail-closed on missing/invalid `DATABASE_URL`. |
-| RR-FA-SCHEMA-BOOTSTRAP-01 | PASS | CP bootstrap imports SQLAlchemy schema bootstrap hook before serving traffic. |
-| RR-TBP-RB-01 | PASS | Shared runtime and metadata seams match TBP-SQLALCHEMY role-binding paths. |
-| RR-TR-STRUCT-01 | PASS | Task report maps execution-record claims to concrete repository code anchors. |
+| RR-TASK-REPORT-01 | PASS | Task report contains claims with anchored evidence lines. |
+| RR-TBP-ROLE-BINDINGS-01 | PASS | Required SQLAlchemy runtime path includes `create_engine` and `sessionmaker`. |
+| RR-PY-GENERAL-01 | PASS | CP execution repository imports and typing are coherent under resolved module roots. |
+| RR-PY-CORR-01 | PASS | Repository implements concrete tenant-scoped query methods without placeholder behavior. |
 
-No blocker/high issues found.
-
+Summary: No blocker/high findings for CP execution-record persistence task.

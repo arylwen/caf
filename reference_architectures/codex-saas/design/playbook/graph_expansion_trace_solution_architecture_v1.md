@@ -27,18 +27,20 @@ exclude_candidate_ids:
 ```
 
 ## Seeds
-- CAF-AI-01
-- CAF-COMP-01
+- CAF-AID-01
+- CAF-IAM-01
 - CAF-MTEN-01
 - CAF-PLANE-01
+- CAF-POL-01
+- CAF-POL-02
 - CAF-TCTX-01
+- CAF-XPLANE-01
 - CTX-01
+- OBS-01
 - POL-01
 - PST-01
-- SVC-01
-- VAL-01
 
-## Selected candidates (open list: top 16 of 171 reachable; desired_new_grounded=4)
+## Selected candidates (open list: top 16 of 174 reachable; desired_new_grounded=4)
 
 - external_v1:EXT-ANTI_CORRUPTION_LAYER (hop=1, via=complements, from_seed=CTX-01)
   - CTX-01 -[complements]-> EXT-ANTI_CORRUPTION_LAYER
@@ -99,4 +101,4 @@ exclude_candidate_ids:
 - external_v1:EXT-ORCHESTRATION (hop=1, via=complements, from_seed=CTX-01)
 - external_v1:EXT-OUTBOX_PATTERN (hop=1, via=complements, from_seed=CTX-01)
 - external_v1:EXT-POLICY_AS_CODE_GUARDRAILS (hop=1, via=complements, from_seed=CTX-01)
-- ... (130 more)
+- ... (133 more)

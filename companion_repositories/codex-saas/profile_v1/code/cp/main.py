@@ -1,72 +1,94 @@
 # CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
 # CAF_TRACE: task_id=TG-00-CP-runtime-scaffold
-# CAF_TRACE: task_id=TG-35-policy-enforcement-core
 # CAF_TRACE: capability=plane_runtime_scaffolding
 # CAF_TRACE: instance=codex-saas
 # CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-PLANE-CP-RUNTIME-SCAFFOLD
 
-from contextlib import asynccontextmanager
+"""Control-plane FastAPI composition root scaffold."""
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi import APIRouter, FastAPI, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
-from .boundary.auth_context import parse_mock_auth_claim
-from .boundary.models import PolicyDecisionRequestModel, PolicyDecisionResponseModel
-from .composition.root import build_runtime_context
-from .runtime.bootstrap import bootstrap_schema
-from .service.policy_service import PolicyService
+from ..common.auth.mock_claims import parse_mock_claims_from_headers
+from ..common.persistence.bootstrap import bootstrap_schema_if_needed
+from .application.services import PolicyDecisionService, RepositoryHealthOwner
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    app.state.runtime_context = build_runtime_context()
-    bootstrap_schema()
-    yield
+router = APIRouter(prefix="/cp")
+health_owner = RepositoryHealthOwner()
+policy_service = PolicyDecisionService()
 
 
-app = FastAPI(title="codex-saas control plane", lifespan=lifespan)
-
-
-@app.exception_handler(PermissionError)
-async def permission_error_handler(_request, exc: PermissionError):
-    raise HTTPException(status_code=403, detail=str(exc)) from exc
-
-
-router = APIRouter(prefix="/cp", tags=["control-plane"])
+class PolicyDecisionRequest(BaseModel):
+    action: str
+    tenant_id: str | None = None
+    principal_id: str | None = None
+    policy_version: str | None = None
+    resource_id: str | None = None
 
 
 @router.get("/health")
-def health():
+def cp_health() -> dict[str, str]:
+    return {"status": "ok", "plane": "control"}
+
+
+@router.get("/runtime-health")
+def cp_runtime_health(request: Request) -> dict[str, str]:
+    claims = parse_mock_claims_from_headers(request.headers)
+    snapshot = health_owner.read_runtime_health()
     return {
-        "plane": "cp",
-        "runtime_shape": "api_service_http",
-        "principal_taxonomy": [
-            "platform_user",
-            "tenant_user",
-            "service_principal",
-        ],
+        "status": snapshot.status,
+        "plane": snapshot.plane,
+        "detail": snapshot.detail,
+        "tenant_id": claims.tenant_id,
+        "principal_id": claims.principal_id,
+        "policy_version": claims.policy_version,
     }
 
 
-@router.post("/policy/evaluate", response_model=PolicyDecisionResponseModel)
-def evaluate_policy(payload: PolicyDecisionRequestModel, request: Request):
-    claim = parse_mock_auth_claim(request.headers)
-    if (
-        payload.principal.tenant_id != claim.tenant_id
-        or payload.principal.principal_id != claim.principal_id
-        or payload.principal.policy_version != claim.policy_version
-    ):
-        raise PermissionError(
-            "policy payload principal does not match Authorization claim contract"
-        )
+@router.post("/contract/BND-CP-AP-01/policy-decision")
+def cp_policy_decision(request: Request, body: PolicyDecisionRequest) -> dict[str, str | bool | None]:
+    claims = parse_mock_claims_from_headers(request.headers)
 
-    normalized_payload = PolicyDecisionRequestModel(
-        action=payload.action,
-        resource=payload.resource,
-        principal=claim.to_principal_context(),
-        tenant_header=claim.tenant_header,
+    if body.tenant_id and body.tenant_id != claims.tenant_id:
+        raise PermissionError("tenant_id conflict between body and Authorization claims")
+    if body.principal_id and body.principal_id != claims.principal_id:
+        raise PermissionError("principal_id conflict between body and Authorization claims")
+    if body.policy_version and body.policy_version != claims.policy_version:
+        raise PermissionError("policy_version conflict between body and Authorization claims")
+
+    decision = policy_service.evaluate(
+        action=body.action,
+        tenant_id=claims.tenant_id,
+        principal_id=claims.principal_id,
+        policy_version=claims.policy_version,
+        resource_id=body.resource_id,
     )
-    service = PolicyService()
-    return service.evaluate(normalized_payload)
+    return {
+        "allowed": decision.allowed,
+        "reason": decision.reason,
+        "tenant_id": claims.tenant_id,
+        "principal_id": claims.principal_id,
+        "policy_version": claims.policy_version,
+        "action": body.action,
+        "resource_id": body.resource_id,
+    }
 
 
-app.include_router(router)
+def create_app() -> FastAPI:
+    app = FastAPI(title="codex-saas-cp-runtime-scaffold")
+    bootstrap_schema_if_needed()
+
+    @app.exception_handler(PermissionError)
+    async def permission_error_handler(_: Request, exc: PermissionError) -> JSONResponse:
+        return JSONResponse(status_code=403, content={"detail": str(exc)})
+
+    @app.exception_handler(ValueError)
+    async def value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    app.include_router(router)
+    return app
+
+
+app = create_app()

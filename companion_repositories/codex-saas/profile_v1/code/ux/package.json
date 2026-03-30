@@ -1,0 +1,26 @@
+{
+  "CAF_TRACE": {
+    "generated_by": "Contura Architecture Framework (CAF)",
+    "task_id": "TG-TBP-TBP-UI-REACT-VITE-01-ux_frontend_realization",
+    "capability": "ux_frontend_realization",
+    "instance": "codex-saas",
+    "trace_anchor": "pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ux-source-package"
+  },
+  "name": "codex-saas-ux",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.10"
+  }
+}

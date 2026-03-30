@@ -1,17 +1,17 @@
-# Task Report: TG-40-persistence-cp-policy
+# TG-40-persistence-cp-policy Task Report
 
 ## Inputs consumed
-- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml: consumed postgres/sqlalchemy/code_bootstrap rails.
-- reference_architectures/codex-saas/design/playbook/system_domain_model_v1.yaml: consumed policy aggregate entities (`PolicyVersion`, `ApprovalDecision`).
-- reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml: consumed TBP role-binding context for SQLAlchemy and postgres seams.
+- `reference_architectures/codex-saas/design/playbook/system_domain_model_v1.yaml`: consumed Policy aggregate fields and control-plane persistence scope.
+- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`: consumed `database_engine=postgres`, `persistence.orm=sqlalchemy_orm`, and `schema_management_strategy=code_bootstrap`.
 
 ## Claims
-- Control-plane policy persistence repositories are implemented with SQLAlchemy session-backed operations.
-- Repository factory enforces `DATABASE_URL` fail-closed behavior and disallows in-memory fallback.
-- CP runtime schema bootstrap is wired through shared SQLAlchemy bootstrap hook before serving traffic.
+- Materialized shared SQLAlchemy metadata/runtime surfaces for ORM-backed postgres persistence.
+- Materialized CP policy ORM model and SQLAlchemy repository with tenant-scoped CRUD operations.
+- Materialized CP repository factory/provider seam for runtime wiring.
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/code/cp/persistence/policy_repository.py:L1-L81
-- companion_repositories/codex-saas/profile_v1/code/cp/persistence/repository_factory.py:L1-L24
-- companion_repositories/codex-saas/profile_v1/code/cp/main.py:L1-L54
-- companion_repositories/codex-saas/profile_v1/code/common/persistence/sqlalchemy_metadata.py:L1-L15
+- companion_repositories/codex-saas/profile_v1/code/common/persistence/sqlalchemy_metadata.py:L1-L11 — supports Claim 1
+- companion_repositories/codex-saas/profile_v1/code/common/persistence/sqlalchemy_runtime.py:L1-L29 — supports Claim 1
+- companion_repositories/codex-saas/profile_v1/code/cp/persistence/models.py:L1-L50 — supports Claim 2
+- companion_repositories/codex-saas/profile_v1/code/cp/persistence/postgres_policy_repository.py:L1-L130 — supports Claim 2
+- companion_repositories/codex-saas/profile_v1/code/cp/persistence/repository_factory.py:L1-L23 — supports Claim 3

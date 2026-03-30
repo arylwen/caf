@@ -1,56 +1,42 @@
-# Task Report - TG-90-unit-tests
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-90-unit-tests -->
+<!-- CAF_TRACE: capability=unit_test_scaffolding -->
+<!-- CAF_TRACE: instance=codex-saas -->
+<!-- CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-UNIT-TESTS -->
 
 ## Task Spec Digest
 - task_id: `TG-90-unit-tests`
-- title: `Implement unit-test scaffolding for candidate surfaces`
+- title: Scaffold unit-test coverage for candidate runtime surfaces
 - primary capability: `unit_test_scaffolding`
-- task graph source: `companion_repositories/codex-saas/profile_v1/caf/task_graph_v1.yaml`
-
-## Inputs declared by task
-- required: `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
-- required: `reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml`
-- required: `reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml`
+- depends_on: `TG-90-runtime-wiring`
 
 ## Inputs consumed
-- `companion_repositories/codex-saas/profile_v1/caf/profile_parameters_resolved.yaml` - confirmed pinned runtime `python`, framework `fastapi`, packaging `docker_compose`, database `postgres`, and mock auth posture.
-- `companion_repositories/codex-saas/profile_v1/caf/task_graph_v1.yaml` - used the TG-90-unit-tests steps/DoD to target AP/CP boundary + service + persistence test seams and policy/tenant-context negative paths.
-- `companion_repositories/codex-saas/profile_v1/caf/interface_binding_contracts_v1.yaml` - verified AP resource bindings (`BIND-AP-*`) and kept test names/scopes aligned with AP/CP contract surfaces instead of ad hoc behavior.
+- `caf/profile_parameters_resolved.yaml`: used `runtime.language=python`, `framework=fastapi`, `auth_mode=mock`, and SQLAlchemy/Postgres runtime seams.
+- `caf/task_graph_v1.yaml`: used TG-90 unit-test scope (AP/CP policy seams + tenant/auth context behavior).
 
-## Step execution evidence
-- `Define unit-test suites for AP/CP boundary, service, and persistence seams.`  
-  Added suites for auth boundary parsing (`tests/unit/common/auth/test_mock_claims.py`, `tests/unit/cp/boundary/test_auth_context.py`), policy service bridge behavior (`tests/unit/ap/service/test_policy_bridge.py`, `tests/unit/cp/service/test_policy_service.py`), and persistence runtime env contracts (`tests/unit/common/persistence/test_sqlalchemy_runtime.py`).
-- `Add tests covering policy-enforcement and tenant-context claim-carrier behavior.`  
-  Added positive/negative checks for Bearer claim parsing, tenant-header conflict rejection, unsupported policy actions, and write-action deny semantics for non-operator principals.
-- `Add tests for runtime wiring contract surfaces and compose-oriented env handling.`  
-  Added tests for `DATABASE_URL` requirement and URL normalization to SQLAlchemy `postgresql+psycopg://` format, including compose DNS host style (`postgres`).
-- `Ensure test naming and structure map directly to task-graph contracts.`  
-  Organized tests under `tests/unit/{common,cp,ap}/...` and used function names tied to claim, policy, and runtime contract behavior from the task DoD.
-- `Record test execution guidance for operator documentation and CI candidates.`  
-  Manual run guidance: `pytest -q tests/unit` from `companion_repositories/codex-saas/profile_v1`.
+## Tests added/updated
+- `tests/test_mock_claims.py`: verifies mock bearer claim round-trip and explicit tenant-context conflict rejection.
+- `tests/test_policy_decision_service.py`: verifies CP policy decision behavior for non-admin deny and admin allow write actions.
+- `tests/test_policy_facade.py`: verifies AP policy facade rejects CP responses with mismatched tenant identity.
+- `requirements.txt`: added `pytest` to keep test harness aligned with runnable candidate toolchain.
 
-## Outputs produced
-- `companion_repositories/codex-saas/profile_v1/tests/unit/common/auth/test_mock_claims.py`
-- `companion_repositories/codex-saas/profile_v1/tests/unit/cp/boundary/test_auth_context.py`
-- `companion_repositories/codex-saas/profile_v1/tests/unit/cp/service/test_policy_service.py`
-- `companion_repositories/codex-saas/profile_v1/tests/unit/ap/service/test_policy_bridge.py`
-- `companion_repositories/codex-saas/profile_v1/tests/unit/common/persistence/test_sqlalchemy_runtime.py`
-- `companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-90-unit-tests.md`
+## What tests validate
+- Claim-based tenant/principal/policy parsing remains canonical and rejects conflicting headers.
+- CP policy semantics enforce admin posture for write actions.
+- AP policy facade preserves tenant integrity checks on CP responses.
 
-## Rails/TBP satisfaction
-- Rails respected: all writes are under `companion_repositories/codex-saas/profile_v1/`.
-- No placeholder tokens (`TBD`, `TODO`, `REPLACE_ME`, `FIXME`) introduced in test artifacts.
-- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability unit_test_scaffolding` returned no binding expectations; no additional TBP capability-owned artifact paths were required for this task.
+## How to run tests manually
+- `python -m pytest tests`
 
 ## Task completion evidence
 
 ### Claims
-- Unit-test scaffolding now covers AP/CP boundary auth claim handling, policy-service behavior, and policy-bridge enforcement seams.
-- Test suite includes explicit negative-path coverage for tenant-context conflicts, unsupported actions, missing claim fields, and denied policy outcomes.
-- Runtime wiring env contracts are validated through deterministic tests for `DATABASE_URL` presence and PostgreSQL URL normalization.
+- Added deterministic Python unit tests covering mock-auth parsing and CP/AP policy seams.
+- Added explicit negative-path tests for identity conflict and tenant mismatch handling.
+- Updated dependency manifest so unit tests are executable with the candidate toolchain.
 
 ### Evidence anchors
-- `companion_repositories/codex-saas/profile_v1/tests/unit/common/auth/test_mock_claims.py:L1-L42` - supports Claims 1 and 2
-- `companion_repositories/codex-saas/profile_v1/tests/unit/cp/boundary/test_auth_context.py:L1-L34` - supports Claim 1
-- `companion_repositories/codex-saas/profile_v1/tests/unit/cp/service/test_policy_service.py:L1-L55` - supports Claims 1 and 2
-- `companion_repositories/codex-saas/profile_v1/tests/unit/ap/service/test_policy_bridge.py:L1-L49` - supports Claim 1
-- `companion_repositories/codex-saas/profile_v1/tests/unit/common/persistence/test_sqlalchemy_runtime.py:L1-L36` - supports Claim 3
+- `tests/test_mock_claims.py:L1-L33` - supports Claims 1 and 2
+- `tests/test_policy_decision_service.py:L1-L40` - supports Claims 1 and 2
+- `tests/test_policy_facade.py:L1-L45` - supports Claims 1 and 2
+- `requirements.txt:L1-L11` - supports Claim 3

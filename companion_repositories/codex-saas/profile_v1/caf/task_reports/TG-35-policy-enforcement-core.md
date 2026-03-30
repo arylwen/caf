@@ -1,79 +1,36 @@
 # Task Report: TG-35-policy-enforcement-core
 
-## Task Spec Digest
+## Summary of work performed
 
-- task_id: TG-35-policy-enforcement-core
-- title: Implement core policy enforcement and tenant context controls
-- primary capability: policy_enforcement
-- source task graph: companion_repositories/codex-saas/profile_v1/caf/task_graph_v1.yaml
+Implemented a combined CP/AP policy-enforcement slice aligned to the adopted `cp_governs_ap_enforces` posture and `auth_claim` tenant-context carrier.
 
-## Inputs declared by task
+Completed work includes:
+- Materialized a CP policy decision surface exposed at `/cp/contract/BND-CP-AP-01/policy-decision`.
+- Added AP policy enforcement hook behavior to consult CP decisions before returning protected runtime-health output.
+- Upgraded shared mock auth handling to canonical bearer shape `Bearer mock.<base64-json>.token` while preserving fail-closed parsing and conflict rejection for alternate tenant/principal headers.
+- Added cross-plane policy contract helper on AP-side contract scaffold for deterministic CP decision calls.
 
-- required: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
-- required: reference_architectures/codex-saas/spec/playbook/system_spec_v1.md
-- required: reference_architectures/codex-saas/design/playbook/application_design_v1.md
-- required: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
-- required: reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml
+## Files created/modified
 
-## Inputs consumed
+- `code/common/auth/mock_claims.py`
+- `code/cp/application/services.py`
+- `code/cp/main.py`
+- `code/cp/contracts/BND-CP-AP-01/http_server.py`
+- `code/ap/application/services.py`
+- `code/ap/main.py`
+- `code/ap/contracts/BND-CP-AP-01/http_client.py`
 
-- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml: consumed `auth_mode=mock`, `runtime.framework=fastapi`, and fail-closed posture.
-- reference_architectures/codex-saas/spec/playbook/system_spec_v1.md: consumed CP-governed policy intent and explicit request-context propagation requirements.
-- reference_architectures/codex-saas/design/playbook/application_design_v1.md: consumed AP enforcement responsibility and tenant-context carrier decisions.
-- reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md: consumed CP policy decision authority and claim-over-header conflict semantics.
-- reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml: consumed TBP constraints including `TBP-AUTH-MOCK-01` claim-contract obligations.
+## How to validate
 
-## Step execution evidence
+1. Inspect `code/common/auth/mock_claims.py` to confirm canonical mock bearer support and explicit required claim fields (`tenant_id`, `principal_id`, `policy_version`).
+2. Inspect `code/cp/main.py` for `/cp/contract/BND-CP-AP-01/policy-decision` route and conflict checks between body context and Authorization claims.
+3. Inspect `code/cp/application/services.py` for CP-owned `PolicyDecisionService` and deterministic allow/deny reasons.
+4. Inspect `code/ap/application/services.py` to confirm AP calls CP policy-decision endpoint and fails closed when CP is unavailable or contract response mismatches request context.
+5. Inspect `code/ap/main.py` to confirm AP runtime-health path enforces CP decision and raises `PermissionError` on deny.
+6. Inspect `code/ap/contracts/BND-CP-AP-01/http_client.py` to confirm AP-side contract helper includes canonical Authorization/Bearer claim contract when calling CP policy decision route.
 
-- Implement CP policy decision surface and AP enforcement hooks for guarded operations.
-  - Evidence: `code/cp/service/policy_service.py` enforces guarded CRUD action semantics; `code/ap/main.py` adds AP policy-probe enforcement hook through `PolicyBridge`.
-- Enforce tenant context propagation and claim-over-header conflict behavior.
-  - Evidence: shared claim parser `code/common/auth/mock_claims.py` and AP/CP boundary adapters (`code/ap/boundary/auth_context.py`, `code/cp/boundary/auth_context.py`) fail closed on header/claim conflicts.
-- Realize mock auth claim contract behavior across CP and AP policy touchpoints.
-  - Evidence: `code/common/auth/mock_claims.py` requires Authorization Bearer payload fields (`tenant_id`, `principal_id`, `policy_version`); AP/CP route surfaces consume the parser.
-- Wire policy outcomes to composition and boundary guards with deterministic failure handling.
-  - Evidence: `code/ap/composition/root.py` routes AP policy decisions through CP `PolicyService`; AP/CP FastAPI boundaries map permission/value failures into explicit HTTP responses (`code/ap/main.py`, `code/cp/main.py`).
-- Capture policy semantics for UI policy-admin and runtime wiring follow-on tasks.
-  - Evidence: `code/ap/main.py` exposes deterministic `/ap/policy/probe` seam and CP evaluation path enforces claim contract consistency in `code/cp/main.py`.
+## Known limitations / follow-ups
 
-## Outputs produced
-
-- companion_repositories/codex-saas/profile_v1/code/common/__init__.py
-- companion_repositories/codex-saas/profile_v1/code/common/auth/__init__.py
-- companion_repositories/codex-saas/profile_v1/code/common/auth/mock_claims.py
-- companion_repositories/codex-saas/profile_v1/code/ap/boundary/contracts.py
-- companion_repositories/codex-saas/profile_v1/code/ap/boundary/auth_context.py
-- companion_repositories/codex-saas/profile_v1/code/ap/composition/root.py
-- companion_repositories/codex-saas/profile_v1/code/ap/main.py
-- companion_repositories/codex-saas/profile_v1/code/cp/boundary/models.py
-- companion_repositories/codex-saas/profile_v1/code/cp/boundary/auth_context.py
-- companion_repositories/codex-saas/profile_v1/code/cp/service/policy_service.py
-- companion_repositories/codex-saas/profile_v1/code/cp/main.py
-- companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-35-policy-enforcement-core.md
-
-## Rails and TBP satisfaction
-
-- Rails honored:
-  - Writes are confined to `companion_repositories/codex-saas/profile_v1/code/**` and `companion_repositories/codex-saas/profile_v1/caf/task_reports/**`.
-  - No planning inputs under `companion_repositories/codex-saas/profile_v1/caf/**` were edited.
-- TBP/Pins honored:
-  - `TBP-AUTH-MOCK-01` policy-enforcement role-binding materialized at `code/common/auth/mock_claims.py`.
-  - Authorization/Bearer claim contract is explicit and fail-closed; `X-Tenant-Id` is used only for conflict detection.
-  - FastAPI boundary behavior preserves explicit auth/policy failure mapping.
-
-## Claims
-
-- AP policy enforcement now consults CP policy decision logic through composition wiring, not local default-allow stubs.
-- Mock auth claim parsing is centralized in a shared helper and reused across AP/CP boundary surfaces.
-- Claim-over-header conflict handling is explicit and fail-closed with deterministic denial reasons.
-- Policy action gating is explicit for declared CRUD action verbs.
-
-## Evidence anchors
-
-- companion_repositories/codex-saas/profile_v1/code/common/auth/mock_claims.py:L1-L63
-- companion_repositories/codex-saas/profile_v1/code/ap/boundary/auth_context.py:L1-L48
-- companion_repositories/codex-saas/profile_v1/code/ap/composition/root.py:L1-L57
-- companion_repositories/codex-saas/profile_v1/code/ap/main.py:L1-L80
-- companion_repositories/codex-saas/profile_v1/code/cp/boundary/auth_context.py:L1-L40
-- companion_repositories/codex-saas/profile_v1/code/cp/service/policy_service.py:L1-L47
-- companion_repositories/codex-saas/profile_v1/code/cp/main.py:L1-L71
+- CP policy logic remains intentionally minimal scaffold logic (`policy_version` gate + simple write-action principal rule) and should be expanded by downstream resource-specific tasks.
+- Existing legacy bearer shape parsing is retained for compatibility during transition; canonical emission now uses `mock.<base64-json>.token`.
+- Policy enforcement is currently exercised on AP runtime-health path and reusable facade; resource endpoint-specific hooks will be added by subsequent API/service tasks.

@@ -1,138 +1,91 @@
-// CAF_TRACE: task_id=TG-15-ui-shell capability=ui_frontend_scaffolding trace_anchor=pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-source
-// CAF_TRACE: task_id=TG-25-ui-page-workspaces capability=ui_frontend_scaffolding trace_anchor=pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-source
-// CAF_TRACE: task_id=TG-18-ui-policy-admin capability=ui_frontend_scaffolding trace_anchor=pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-source
-// CAF_TRACE: task_id=TG-25-ui-page-submissions capability=ui_frontend_scaffolding trace_anchor=pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-source
-// CAF_TRACE: task_id=TG-25-ui-page-reviews capability=ui_frontend_scaffolding trace_anchor=pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-source
-// CAF_TRACE: task_id=TG-25-ui-page-reports capability=ui_frontend_scaffolding trace_anchor=pattern_obligation_id:O-TBP-UI-REACT-VITE-01-ui-source
-import { useEffect, useMemo, useState } from "react";
-import { getApiHealth } from "./api.js";
-import { getPersonaNames } from "./auth/mockAuth.js";
-import PolicyAdminPage from "./pages/policy_admin.jsx";
-import ReportsPage from "./pages/reports.jsx";
-import ReviewsPage from "./pages/reviews.jsx";
-import SubmissionsPage from "./pages/submissions.jsx";
-import WorkspacesPage from "./pages/workspaces.jsx";
+// CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+// CAF_TRACE: task_id=TG-18-ui-policy-admin
+// CAF_TRACE: task_id=TG-25-ui-page-activity_events
+// CAF_TRACE: task_id=TG-25-ui-page-collection_permissions
+// CAF_TRACE: task_id=TG-25-ui-page-collections
+// CAF_TRACE: task_id=TG-25-ui-page-tags
+// CAF_TRACE: task_id=TG-25-ui-page-tenant_settings
+// CAF_TRACE: task_id=TG-25-ui-page-tenant_users_roles
+// CAF_TRACE: task_id=TG-25-ui-page-widget_versions
+// CAF_TRACE: task_id=TG-25-ui-page-widgets
+// CAF_TRACE: capability=ui_frontend_scaffolding
+// CAF_TRACE: instance=codex-saas
+// CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-AUTH-MOCK-01-ui-api-helper
+
+import React from "react";
+import { ActivityEventsPage } from "./pages/ActivityEventsPage.jsx";
+import { CollectionPermissionsPage } from "./pages/CollectionPermissionsPage.jsx";
+import { CollectionsPage } from "./pages/CollectionsPage.jsx";
+import { DashboardPage } from "./pages/DashboardPage.jsx";
+import { PolicyAdminPage } from "./pages/PolicyAdminPage.jsx";
+import { TagsPage } from "./pages/TagsPage.jsx";
+import { TenantSettingsPage } from "./pages/TenantSettingsPage.jsx";
+import { TenantUsersRolesPage } from "./pages/TenantUsersRolesPage.jsx";
+import { WidgetVersionsPage } from "./pages/WidgetVersionsPage.jsx";
+import { WidgetsPage } from "./pages/WidgetsPage.jsx";
 
 const NAV_ITEMS = [
-  { key: "dashboard", label: "Dashboard" },
-  { key: "workspaces", label: "Workspaces" },
-  { key: "submissions", label: "Submissions" },
-  { key: "reviews", label: "Review Queue" },
-  { key: "reports", label: "Reports" },
-  { key: "settings", label: "Settings" }
+  { id: "dashboard", label: "Dashboard" },
+  { id: "widgets", label: "Widgets" },
+  { id: "widget_versions", label: "Widget Versions" },
+  { id: "collections", label: "Collections" },
+  { id: "collection_permissions", label: "Collection Permissions" },
+  { id: "tags", label: "Tags" },
+  { id: "tenant_users_roles", label: "Tenant Users & Roles" },
+  { id: "tenant_settings", label: "Tenant Settings" },
+  { id: "activity_events", label: "Activity" },
+  { id: "policy_admin", label: "Admin Policy" },
 ];
 
-function DashboardPage({ persona }) {
-  const [status, setStatus] = useState("loading");
-  const [health, setHealth] = useState(null);
-  const [error, setError] = useState("");
-
-  const loadHealth = async () => {
-    setStatus("loading");
-    setError("");
-    try {
-      const result = await getApiHealth(persona);
-      if (!result || Object.keys(result).length === 0) {
-        setStatus("empty");
-        setHealth(null);
-        return;
-      }
-      setHealth(result);
-      setStatus("success");
-    } catch (requestError) {
-      setHealth(null);
-      setError(requestError.message || "Health request failed");
-      setStatus("failure");
-    }
-  };
-
-  useEffect(() => {
-    void loadHealth();
-  }, [persona]);
-
-  return (
-    <section>
-      <h2>System health</h2>
-      <p>AP status is checked through the shared API helper using the selected mock persona.</p>
-      <button type="button" onClick={loadHealth}>Refresh status</button>
-      {status === "loading" && <p>Loading health status...</p>}
-      {status === "empty" && <p>No health payload was returned.</p>}
-      {status === "success" && (
-        <pre>{JSON.stringify(health, null, 2)}</pre>
-      )}
-      {status === "failure" && (
-        <p role="alert">Health check failed: {error}</p>
-      )}
-    </section>
-  );
+function renderPage(activePage) {
+  if (activePage === "widgets") return <WidgetsPage />;
+  if (activePage === "widget_versions") return <WidgetVersionsPage />;
+  if (activePage === "collections") return <CollectionsPage />;
+  if (activePage === "collection_permissions") return <CollectionPermissionsPage />;
+  if (activePage === "tags") return <TagsPage />;
+  if (activePage === "tenant_users_roles") return <TenantUsersRolesPage />;
+  if (activePage === "tenant_settings") return <TenantSettingsPage />;
+  if (activePage === "activity_events") return <ActivityEventsPage />;
+  if (activePage === "policy_admin") return <PolicyAdminPage />;
+  return <DashboardPage />;
 }
 
 export default function App() {
-  const [activeNav, setActiveNav] = useState("dashboard");
-  const [persona, setPersona] = useState("tenant_operator");
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
-  const personas = useMemo(() => getPersonaNames(), []);
-
-  const currentPage = useMemo(() => {
-    if (activeNav === "dashboard") {
-      return <DashboardPage persona={persona} />;
-    }
-    if (activeNav === "workspaces") {
-      return (
-        <WorkspacesPage
-          persona={persona}
-          selectedWorkspaceId={selectedWorkspaceId}
-          onWorkspaceSelected={setSelectedWorkspaceId}
-        />
-      );
-    }
-    if (activeNav === "submissions") {
-      return (
-        <SubmissionsPage
-          persona={persona}
-          selectedWorkspaceId={selectedWorkspaceId}
-        />
-      );
-    }
-    if (activeNav === "reviews") {
-      return <ReviewsPage persona={persona} />;
-    }
-    if (activeNav === "reports") {
-      return <ReportsPage persona={persona} />;
-    }
-    return <PolicyAdminPage persona={persona} />;
-  }, [activeNav, persona, selectedWorkspaceId]);
+  const [activePage, setActivePage] = React.useState("dashboard");
+  const page = renderPage(activePage);
 
   return (
-    <main style={{ fontFamily: "system-ui, sans-serif", margin: "0 auto", maxWidth: "960px", padding: "1rem" }}>
-      <header>
-        <h1>Codex SaaS</h1>
-        <p>Tenant-aware control interface scaffold</p>
-        {selectedWorkspaceId && (
-          <p><strong>Selected workspace:</strong> {selectedWorkspaceId} (available for downstream submission flows)</p>
-        )}
+    <main style={{ fontFamily: "ui-sans-serif, system-ui", margin: "0 auto", maxWidth: 1200, padding: "1.5rem" }}>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <h1 style={{ margin: 0 }}>codex-saas</h1>
+        <div aria-label="tenant context indicator">
+          <strong>Tenant:</strong> tenant-demo
+        </div>
       </header>
-      <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginBottom: "1rem" }}>
-        <label htmlFor="persona-select">Demo persona</label>
-        <select id="persona-select" value={persona} onChange={(event) => setPersona(event.target.value)}>
-          {personas.map((personaName) => (
-            <option key={personaName} value={personaName}>{personaName}</option>
+      <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "1rem" }}>
+        <nav aria-label="primary" style={{ border: "1px solid #d0d7de", borderRadius: "0.5rem", padding: "0.75rem" }}>
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setActivePage(item.id)}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                marginBottom: "0.5rem",
+                border: "1px solid #d0d7de",
+                borderRadius: "0.4rem",
+                padding: "0.5rem 0.65rem",
+                background: activePage === item.id ? "#eff6ff" : "white",
+                cursor: "pointer",
+              }}
+            >
+              {item.label}
+            </button>
           ))}
-        </select>
+        </nav>
+        <section style={{ border: "1px solid #d0d7de", borderRadius: "0.5rem", padding: "1rem" }}>{page}</section>
       </div>
-      <nav aria-label="Primary navigation" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1rem" }}>
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => setActiveNav(item.key)}
-            aria-current={activeNav === item.key ? "page" : undefined}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
-      {currentPage}
     </main>
   );
 }

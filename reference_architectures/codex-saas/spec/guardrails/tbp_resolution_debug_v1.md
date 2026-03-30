@@ -1,6 +1,6 @@
 # TBP resolution debug (v1)
 
-- Derived at: 2026-03-19T11:17:22.269Z
+- Derived at: 2026-03-29T13:22:32.507Z
 - Instance: codex-saas
 
 ## Resolution atoms
@@ -15,6 +15,7 @@
 - ui.kind: web_spa
 - ui.framework: react
 - ui.deployment_preference: separate_ui_service
+- ui.component_system: shadcn
 
 ## Resolved conventions
 - source: TBP-PY-01: layout.module_conventions
@@ -34,6 +35,7 @@
 - TBP-PY-PACKAGING-01 (runtime.language=python)
 - TBP-SQLALCHEMY-01 (persistence.orm=sqlalchemy_orm, runtime.language=python)
 - TBP-UI-REACT-VITE-01 (ui.present=true, ui.kind=web_spa, ui.framework=react, deployment.mode=docker_compose, deployment.mode=podman_compose)
+- TBP-UI-REACT-VITE-SHADCN-01 (ui.present=true, ui.kind=web_spa, ui.framework=react, ui.component_system=shadcn)
 
 ## Resolved TBPs (closure under requires)
 - TBP-ASGI-01 - requires: TBP-PY-01
@@ -45,6 +47,7 @@
 - TBP-PY-PACKAGING-01 - requires: TBP-PY-01
 - TBP-SQLALCHEMY-01 - requires: TBP-PY-01
 - TBP-UI-REACT-VITE-01 - requires: TBP-COMPOSE-01
+- TBP-UI-REACT-VITE-SHADCN-01 - requires: TBP-UI-REACT-VITE-01
 
 ## Non-applicable catalog TBPs
 - TBP-DJANGO-01 (requires runtime.framework=django, plane.runtime_shape=api_service_http)

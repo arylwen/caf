@@ -1,18 +1,18 @@
-# CAF_TRACE: task_id=TG-40-persistence-cp-policy capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-schema-bootstrap
-# CAF_TRACE: task_id=TG-40-persistence-cp-execution-record capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-schema-bootstrap
-# CAF_TRACE: task_id=TG-40-persistence-cp-data-lifecycle capability=persistence_implementation trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-schema-bootstrap
-from collections.abc import Callable
+# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
+# CAF_TRACE: task_id=TG-40-persistence-cp-retention-lifecycle
+# CAF_TRACE: capability=persistence_implementation
+# CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-schema-bootstrap
 
+"""Deterministic schema bootstrap hook for code_bootstrap schema strategy."""
+
+from ...ap.persistence import models as ap_models
+from ...cp.persistence import models as cp_models
 from .sqlalchemy_metadata import Base
 from .sqlalchemy_runtime import get_engine
 
 
-def bootstrap_sqlalchemy_schema(
-    model_registrars: list[Callable[[], None]] | None = None,
-) -> str:
-    registrars = model_registrars or []
-    for registrar in registrars:
-        registrar()
-    engine = get_engine()
-    Base.metadata.create_all(bind=engine)
-    return "sqlalchemy schema bootstrap complete"
+def bootstrap_schema() -> None:
+    cp_models.load_models()
+    ap_models.load_models()
+    Base.metadata.create_all(bind=get_engine())

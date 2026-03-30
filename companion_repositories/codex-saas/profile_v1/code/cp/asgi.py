@@ -4,5 +4,6 @@
 # CAF_TRACE: instance=codex-saas
 # CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-PLANE-CP-RUNTIME-SCAFFOLD
 
-from .main import app
+"""ASGI entrypoint for control-plane runtime scaffold."""
 
+from .main import app

@@ -1,0 +1,321 @@
+# UX Task Backlog (v1)
+Derived from `reference_architectures/codex-saas/design/playbook/ux_task_graph_v1.yaml`.
+
+## UX-TG-00-ux-shell-and-visual-system: Establish UX shell and visual-system foundations
+Capability: ux_frontend_realization
+Dependencies: NONE
+
+Definition of Done:
+- UX shell shows Dashboard, Widgets, Collections, Activity, and Admin navigation in a stable desktop-first layout.
+- Tenant and role context remain visible in the header and cannot silently disappear on primary flows.
+- Visual hierarchy, density, and primitive usage align to the calm operational posture from ux_visual_system_v1.md.
+
+Steps:
+- Build the richer UX lane shell with persistent left navigation and top tenant context bar.
+- Materialize semantic token roles and primitive component families from ux_visual_system_v1.md.
+- Keep primary actions visible in shell affordances without collapsing to smoke-test UI posture.
+
+Gates:
+- NONE
+
+Semantic review questions:
+- Does the shell preserve declared navigation and tenant-context visibility expectations from application_product_surface_v1.md?
+- Is the richer UX shell visibly stronger than smoke-test UI while preserving the same REST/session contract posture?
+- Are semantic token roles and primitive families used as reusable foundations rather than one-off page styling?
+
+Story/References:
+- NONE
+
+Trace anchors:
+- pattern_id: UX-VISUAL-01, anchor_kind: plan_step_archetype
+- pattern_id: UX-DENSITY-01, anchor_kind: plan_step_archetype
+- pattern_id: product_surface:navigation_shell_expectations, anchor_kind: structural_validation
+
+Inputs:
+- reference_architectures/codex-saas/design/playbook/ux_design_v1.md
+- reference_architectures/codex-saas/design/playbook/ux_visual_system_v1.md
+- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+
+## UX-TG-10-rest-client-and-session-wiring: Wire REST client, tenant session, and mutation feedback contract
+Capability: ux_frontend_realization
+Dependencies: UX-TG-00-ux-shell-and-visual-system
+
+Definition of Done:
+- UX-lane client wiring supports tenant-scoped list/detail/mutation interactions without bypassing current REST boundaries.
+- Session, tenant, and role context handling is explicit and consistent across requests and user-visible state.
+- Validation errors, permission denials, retries, and success confirmations use coherent, recovery-safe semantics.
+
+Steps:
+- Implement UX-lane API client posture for list/detail/mutation endpoints used by widgets, collections, sharing, and admin surfaces.
+- Ensure session, tenant, and role signals are visible and used consistently in request handling.
+- Normalize validation, denied, retry, and success feedback semantics for recovery-safe UX behavior.
+
+Gates:
+- NONE
+
+Semantic review questions:
+- Do client wiring choices preserve existing REST/OpenAPI touchpoints and avoid lane-local contract drift?
+- Are tenant and role consequences visible and coherent around publish/admin-sensitive actions?
+- Do mutation error/result surfaces support explicit recovery and trustworthy user feedback?
+
+Story/References:
+- NONE
+
+Trace anchors:
+- pattern_id: UX-SESSION-01, anchor_kind: plan_step_archetype
+- pattern_id: UX-RECOVERY-01, anchor_kind: plan_step_archetype
+- pattern_id: UX-CONTRACT:list_detail_mutation_visibility, anchor_kind: structural_validation
+
+Inputs:
+- reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+
+## UX-TG-20-primary-worklist-surface: Realize primary widget worklist and fast-create flow
+Capability: ux_frontend_realization
+Dependencies: UX-TG-10-rest-client-and-session-wiring
+
+Definition of Done:
+- Widget catalog supports tenant-safe search/filter/sort and keeps list/detail continuity under normal operations.
+- Primary Create widget action is visible and reachable without deep navigation or hidden affordances.
+- Empty/loading/error states preserve task continuity and clearly guide retry or next actions.
+
+Steps:
+- Implement the widget catalog worklist with search, filter, sort, and recency cues.
+- Keep Create widget action one click away from worklist and detail contexts.
+- Support quick transition from triage rows into detail editing and back to filtered context.
+
+Gates:
+- NONE
+
+Semantic review questions:
+- Does the worklist preserve the declared primary widget workflow and avoid over-compressing interactions?
+- Are search/filter/sort behaviors and state persistence sufficient for operational triage?
+- Is the create-entry posture visibly one click away from primary work surfaces?
+
+Story/References:
+- NONE
+
+Trace anchors:
+- pattern_id: UX-WORKLIST-01, anchor_kind: plan_step_archetype
+- pattern_id: UX-SEARCH-01, anchor_kind: plan_step_archetype
+- pattern_id: product_action:create_widget, anchor_kind: structural_validation
+
+Inputs:
+- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- reference_architectures/codex-saas/design/playbook/ux_design_v1.md
+- reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+
+## UX-TG-30-detail-review-report-surface: Realize widget detail editor and review/report readability
+Capability: ux_frontend_realization
+Dependencies: UX-TG-20-primary-worklist-surface
+
+Definition of Done:
+- Detail/edit interactions preserve entered values on recoverable validation failures and clearly communicate save outcomes.
+- Version history and activity cues are readable and support quick operator review.
+- Destructive or high-impact actions use explicit confirmation with visible consequences.
+
+Steps:
+- Implement widget detail/edit surface with validation-safe form behavior and durable save outcomes.
+- Expose version/activity evidence near detail context for review confidence.
+- Keep destructive and sensitive changes explicit with confirmable UX posture.
+
+Gates:
+- NONE
+
+Semantic review questions:
+- Does detail/edit behavior satisfy CRUD continuity and validation clarity expectations?
+- Is evidence/report readability strong enough to support trust and quick traceability?
+- Are destructive and permission-sensitive actions guarded with explicit confirmation and consequence cues?
+
+Story/References:
+- NONE
+
+Trace anchors:
+- pattern_id: UX-CRUD-01, anchor_kind: plan_step_archetype
+- pattern_id: UX-REVIEW-01, anchor_kind: plan_step_archetype
+- pattern_id: UX-REPORT-01, anchor_kind: plan_step_archetype
+
+Inputs:
+- reference_architectures/codex-saas/design/playbook/ux_design_v1.md
+- reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+
+## UX-TG-40-collections-workspace-and-publish-actions: Realize collections workspace plus publish permissions flow
+Capability: ux_frontend_realization
+Dependencies: UX-TG-10-rest-client-and-session-wiring, UX-TG-20-primary-worklist-surface
+
+Definition of Done:
+- Collections workspace supports create/update and membership curation with clear state visibility.
+- New collection and Publish actions are explicit, nearby, and not hidden behind secondary navigation.
+- Publish/permission changes require review posture and surface denial reasons or conflict outcomes clearly.
+
+Steps:
+- Implement collections workspace for create/update collection and membership management.
+- Keep New collection and Publish actions explicit and one click away from relevant list/detail contexts.
+- Implement publish/permission review flow with role-aware confirmation and denial feedback.
+
+Gates:
+- NONE
+
+Semantic review questions:
+- Are explicit collection and publish actions preserved as first-class interactions from the product surface?
+- Does sharing/permissions flow present role consequences and confirmation steps before committing high-impact changes?
+- Are curation, publish, and denial states coherent with the shared recovery model?
+
+Story/References:
+- NONE
+
+Trace anchors:
+- pattern_id: product_surface:collections_workspace, anchor_kind: structural_validation
+- pattern_id: product_action:new_collection, anchor_kind: structural_validation
+- pattern_id: product_action:publish, anchor_kind: structural_validation
+- pattern_id: UX-REVIEW-01, anchor_kind: plan_step_archetype
+
+Inputs:
+- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- reference_architectures/codex-saas/design/playbook/ux_design_v1.md
+- reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+
+## UX-TG-50-admin-and-activity-surfaces: Realize tenant admin and activity timeline surfaces
+Capability: ux_frontend_realization
+Dependencies: UX-TG-10-rest-client-and-session-wiring
+
+Definition of Done:
+- Tenant admin user-role and settings operations are usable, explicit, and aligned to role-based constraints.
+- Manage roles remains a visible, direct action from the admin surface.
+- Activity history is readable, filterable, and preserves audit-friendly traceability semantics.
+
+Steps:
+- Implement tenant admin surfaces for role assignment and tenant settings operations.
+- Keep Manage roles action explicit and visible within admin workflow.
+- Implement activity timeline/list with filters and readable actor-action-target-timestamp traces.
+
+Gates:
+- NONE
+
+Semantic review questions:
+- Are admin operations and role changes explicit, controlled, and policy-aware in UX behavior?
+- Is Manage roles preserved as a first-class action rather than hidden in secondary affordances?
+- Does activity/history presentation support scanability and trustworthy trace review?
+
+Story/References:
+- NONE
+
+Trace anchors:
+- pattern_id: product_surface:tenant_admin, anchor_kind: structural_validation
+- pattern_id: product_surface:activity_history, anchor_kind: structural_validation
+- pattern_id: product_action:manage_roles, anchor_kind: structural_validation
+- pattern_id: UX-EXPLAIN-01, anchor_kind: plan_step_archetype
+
+Inputs:
+- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+- reference_architectures/codex-saas/design/playbook/ux_design_v1.md
+
+## UX-TG-90-ux-polish: Apply UX polish and cross-surface state quality pass
+Capability: ux_frontend_realization
+Dependencies: UX-TG-30-detail-review-report-surface, UX-TG-40-collections-workspace-and-publish-actions, UX-TG-50-admin-and-activity-surfaces
+
+Definition of Done:
+- Visual and interaction polish is coherent across widget, collection, sharing, admin, and activity surfaces.
+- Recovery-state behavior is consistent and predictable across major flows.
+- Accessibility and readability posture remains keyboard-friendly and trustworthy under operational density.
+
+Steps:
+- Harmonize visual hierarchy, spacing rhythm, and motion restraint across all UX-lane surfaces.
+- Normalize empty/loading/error/retry and success-confirmation language for consistent recovery posture.
+- Resolve high-friction readability and accessibility issues discovered in cross-surface review.
+
+Gates:
+- NONE
+
+Semantic review questions:
+- Is polish improving clarity and trust without adding novelty motion or decorative drift?
+- Are state/recovery semantics consistent across all primary surfaces?
+- Does the final visual rhythm preserve medium-dense operational readability?
+
+Story/References:
+- NONE
+
+Trace anchors:
+- pattern_id: UX-VISUAL-01, anchor_kind: plan_step_archetype
+- pattern_id: UX-RECOVERY-01, anchor_kind: plan_step_archetype
+- pattern_id: UX-DENSITY-01, anchor_kind: plan_step_archetype
+
+Inputs:
+- reference_architectures/codex-saas/design/playbook/ux_visual_system_v1.md
+- reference_architectures/codex-saas/design/playbook/ux_design_v1.md
+- reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
+
+## UX-TG-92-ux-service-packaging: Package richer UX lane as separate service in stack
+Capability: ux_service_packaging_wiring
+Dependencies: UX-TG-90-ux-polish
+
+Definition of Done:
+- UX lane is packageable as a distinct service/container in the same stack.
+- Routing and environment wiring preserve existing AP/CP contract expectations.
+- Smoke-test UI lane remains intact and unmodified by UX packaging changes.
+
+Steps:
+- Wire UX-lane runtime packaging into a separate service/container path.
+- Keep AP/CP contract routing aligned with current same-stack deployment posture.
+- Ensure packaging separation does not overwrite smoke-test UI lane assets.
+
+Gates:
+- NONE
+
+Semantic review questions:
+- Is the separate UX packaging posture aligned with profile UI deployment preference and design constraints?
+- Do service wiring choices preserve same-stack contract behavior for AP/CP surfaces?
+- Is smoke-test UI separation preserved without namespace/path collision?
+
+Story/References:
+- NONE
+
+Trace anchors:
+- pattern_id: UX-LANE:separate_ui_service, anchor_kind: structural_validation
+- pattern_id: UX-SESSION-01, anchor_kind: plan_step_archetype
+- pattern_id: deployment:docker_compose, anchor_kind: structural_validation
+
+Inputs:
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/design/playbook/ux_visual_system_v1.md
+- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+
+## UX-TG-95-ux-operator-notes: Produce UX-lane operator notes and handoff guidance
+Capability: repo_documentation
+Dependencies: UX-TG-92-ux-service-packaging
+
+Definition of Done:
+- Operator notes clearly describe UX-lane setup, boundaries, and operational checks.
+- Documentation includes explicit verification points for Create widget, New collection, Publish, and Manage roles actions.
+- Handoff guidance captures expected recovery-state and traceability behavior for review.
+
+Steps:
+- Document UX-lane run/build expectations, service boundaries, and troubleshooting posture.
+- Capture surface coverage and preserved primary actions for operator verification.
+- Include review checklist for regressions in tenant visibility, publish/admin safety, and recovery behavior.
+
+Gates:
+- NONE
+
+Semantic review questions:
+- Are operator notes actionable for running and validating the UX lane without hidden assumptions?
+- Do notes explicitly preserve the declared primary actions and main surfaces from product-surface inputs?
+- Is the review checklist adequate to catch regressions in tenant/session visibility and safety-critical flows?
+
+Story/References:
+- NONE
+
+Trace anchors:
+- pattern_id: UX-EXPLAIN-01, anchor_kind: module_role
+- pattern_id: product_surface:primary_actions, anchor_kind: structural_validation
+- pattern_id: UX-LANE:operator_handoff, anchor_kind: module_role
+
+Inputs:
+- reference_architectures/codex-saas/design/playbook/ux_task_graph_v1.yaml
+- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+- reference_architectures/codex-saas/design/playbook/ux_visual_system_v1.md
