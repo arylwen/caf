@@ -1,87 +1,92 @@
 // CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-// CAF_TRACE: task_id=UX-TG-50-admin-and-activity-surfaces
+// CAF_TRACE: task_id=UX-TG-50-admin-and-activity-surface
 // CAF_TRACE: capability=ux_frontend_realization
 // CAF_TRACE: instance=codex-saas
-// CAF_TRACE: trace_anchor=pattern_id:UX-EXPLAIN-01
 
-import React from "react";
+import React, { useState } from "react";
 
-import { listActivityEvents } from "../api.js";
+import { getActivityEvent, listActivityEvents } from "../api";
+import { StatusBlock } from "../components/StatusBlock";
 
-export function ActivityPage({ authState }) {
-  const [targetFilter, setTargetFilter] = React.useState("");
-  const [events, setEvents] = React.useState([]);
-  const [status, setStatus] = React.useState({ state: "loading", message: "Loading activity history..." });
+function makeState() {
+  return { status: "idle", message: "" };
+}
 
-  const refresh = React.useCallback(async () => {
-    setStatus({ state: "loading", message: "Refreshing timeline..." });
+export function ActivityPage({ personaKey }) {
+  const [status, setStatus] = useState(makeState);
+  const [eventRows, setEventRows] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [eventDetail, setEventDetail] = useState(null);
+
+  async function refreshEvents() {
+    setStatus({ status: "loading", message: "" });
     try {
-      const items = await listActivityEvents(targetFilter.trim(), authState);
-      setEvents(items);
-      setStatus({ state: "ready", message: `${items.length} event(s) in timeline.` });
+      const payload = await listActivityEvents(personaKey);
+      const rows = payload.items || [];
+      setEventRows(rows);
+      setStatus({ status: rows.length ? "success" : "empty", message: "" });
     } catch (error) {
-      setStatus({ state: "error", message: error.message || String(error) });
+      setStatus({ status: "error", message: `Activity load failed: ${error.message}` });
     }
-  }, [authState, targetFilter]);
+  }
 
-  React.useEffect(() => {
-    refresh();
-  }, [refresh]);
+  async function loadEventDetail() {
+    if (!selectedEventId) {
+      setStatus({ status: "error", message: "Select an event before loading detail." });
+      return;
+    }
+    setStatus({ status: "loading", message: "" });
+    try {
+      const payload = await getActivityEvent(personaKey, selectedEventId);
+      setEventDetail(payload.item || payload);
+      setStatus({ status: "success", message: "" });
+    } catch (error) {
+      setStatus({ status: "error", message: `Event detail failed: ${error.message}` });
+    }
+  }
 
   return (
-    <section className="page-frame">
-      <header className="page-header">
-        <div>
-          <h2>Activity history</h2>
-          <p>Readable actor-action-target timeline for audit-friendly trace review.</p>
-        </div>
-      </header>
-
-      <section className="panel">
-        <h3>Timeline filters</h3>
-        <div className="inline-actions">
-          <label className="field-row" style={{ minWidth: "260px" }}>
-            Target ID
-            <input value={targetFilter} onChange={(event) => setTargetFilter(event.target.value)} placeholder="widget or collection id" />
-          </label>
-          <button className="button-quiet" type="button" onClick={refresh}>
-            Apply filter
+    <section className="ux-stack">
+      <article className="ux-panel">
+        <h3>Activity history</h3>
+        <div className="ux-toolbar">
+          <button type="button" onClick={refreshEvents}>
+            Refresh Timeline
+          </button>
+          <button type="button" onClick={loadEventDetail}>
+            Load Selected Event
           </button>
         </div>
-      </section>
+        <StatusBlock
+          state={status}
+          labels={{
+            loading: "Loading activity timeline...",
+            empty: "No activity events are currently present.",
+            success: "Activity timeline loaded.",
+          }}
+        />
+      </article>
 
-      <section className="status-rail">
-        <div className={`status-pill status-${status.state}`}>{status.state}</div>
-        <p>{status.message}</p>
-      </section>
-
-      <section className="list-card table-wrap">
+      <article className="ux-panel">
         <h3>Timeline</h3>
-        {events.length === 0 ? (
-          <p className="recovery-note">No activity events matched this filter.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Actor</th>
-                <th>Action</th>
-                <th>Target</th>
-                <th>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event) => (
-                <tr key={event.event_id}>
-                  <td>{event.actor_user_id || event.principal_id || "system"}</td>
-                  <td>{event.action || event.event_type || "update"}</td>
-                  <td>{event.target_id || "n/a"}</td>
-                  <td>{event.created_at || "n/a"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+        {!eventRows.length ? <p className="ux-muted">No events returned.</p> : null}
+        <ul className="ux-list">
+          {eventRows.map((item) => (
+            <li key={item.id}>
+              <button type="button" onClick={() => setSelectedEventId(item.id)}>
+                {item.event_type || "event"} - {item.id}
+              </button>
+              <span className="ux-chip">{item.occurred_at || "unknown time"}</span>
+            </li>
+          ))}
+        </ul>
+        <p>Selected event id: {selectedEventId || "none"}</p>
+      </article>
+
+      <article className="ux-panel">
+        <h3>Request / decision / outcome detail</h3>
+        {eventDetail ? <pre>{JSON.stringify(eventDetail, null, 2)}</pre> : <p className="ux-muted">Load an event to view evidence detail.</p>}
+      </article>
     </section>
   );
 }

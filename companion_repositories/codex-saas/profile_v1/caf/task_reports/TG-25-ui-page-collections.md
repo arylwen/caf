@@ -3,29 +3,24 @@
 <!-- CAF_TRACE: capability=ui_frontend_scaffolding -->
 <!-- CAF_TRACE: instance=codex-saas -->
 
-## Task Spec Digest
-- task_id: `TG-25-ui-page-collections`
-- title: Implement UI page for collections
-- primary capability: `ui_frontend_scaffolding`
-- depends_on: `TG-15-ui-shell`, `TG-20-api-boundary-collections`
+# Task Report: TG-25-ui-page-collections
 
-## Inputs consumed
-- `caf/application_domain_model_v1.yaml`: used collection fields (`name`, `description`, `published`).
-- `caf/application_product_surface_v1.md`: used collections workspace and publish posture.
-- `caf/profile_parameters_resolved.yaml`: confirmed React SPA posture.
-- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability ui_frontend_scaffolding`: validated role-binding evidence surfaces.
+## Inputs Consumed
+
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/design/playbook/application_design_v1.md
 
 ## Claims
-1. Added `CollectionsPage` and wired it into shell navigation.
-2. Bound list/create interactions to `GET /api/collections` and `POST /api/collections`.
-3. Rendered loading, empty, success, and failure states for collection workflows.
 
-## Interaction matrix
-| page/module | reachable from shell/router via | AP contract path or action surface used | shared API helper call(s) used | observable loading/success/empty/failure states rendered |
-| --- | --- | --- | --- | --- |
-| `src/pages/CollectionsPage.jsx` | `src/App.jsx` nav item `collections` | `GET /api/collections`, `POST /api/collections` | `apiGet("/api/collections")`, `apiPost("/api/collections", ...)` | `loading`, `success`, `empty`, `error` |
+- Implemented a concrete Collections page wired through the shared `ResourcePage` surface.
+- Bound the page to the declared `collections` resource with `list`, `get`, `create`, `update`, and `delete` operations.
+- Wired create/update fields (`name`, `description`, `published`) to explicit form state in the shared page surface.
 
 ## Evidence anchors
-- `code/ui/src/App.jsx:L1-L91`
-- `code/ui/src/api.js:L1-L104`
-- `code/ui/src/pages/CollectionsPage.jsx:L1-L81`
+
+- companion_repositories/codex-saas/profile_v1/code/ui/src/pages/CollectionsPage.jsx:L10-L19
+- companion_repositories/codex-saas/profile_v1/code/ui/src/pages/ResourcePage.jsx:L60-L305
+- companion_repositories/codex-saas/profile_v1/code/ui/src/App.jsx:L19-L28
+- companion_repositories/codex-saas/profile_v1/code/ui/src/api.js:L69-L103
+

@@ -1,40 +1,56 @@
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-35-policy-enforcement-core -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
 # Review Note: TG-35-policy-enforcement-core
 
-## Rubric evaluation
+Threshold: `blocker`
+
+Selected rubrics:
+- `RR-PY-GENERAL-01`
+- `RR-PY-TESTS-01`
+- `RR-COMPOSE-01`
+- `RR-FASTAPI-SVC-01`
+- `RR-AUTH-MOCK-CLAIM-CONTRACT-01`
+- `RR-TASK-REPORT-01`
+- `RR-TBP-ROLE-BINDINGS-01`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-SEC-01 | PASS | Auth and policy inputs fail closed on missing/malformed claims and CP response mismatch checks in `code/common/auth/mock_claims.py`, `code/ap/application/services.py`, and `code/cp/main.py`. |
-| RR-PY-CORR-01 | PASS | AP policy flow now enforces CP-governed decisions with explicit deny behavior before returning protected AP runtime output in `code/ap/main.py` and `code/ap/application/services.py`. |
-| RR-PY-CORR-01A | PASS | Shared helper imports target sibling package root correctly (`...common.auth.mock_claims`) with no plane-local pseudo-package usage in `code/ap/application/services.py`. |
-| RR-PY-CORR-02 | PASS | CP decision endpoint enforces tenant/principal/policy-version coherence against Authorization claims in `code/cp/main.py`. |
-| RR-PY-PERF-01 | PASS | Added logic is request-bounded and lightweight (simple JSON parsing + single CP call) with no unbounded loops or heavy in-memory operations. |
-| RR-TST-BLOCK-01 | PASS | No blocker-level test omission identified for this scaffold task; fail-closed runtime paths are present for malformed/absent auth and unavailable CP policy surface. |
-| RR-TST-HIGH-01 | FAIL | No unit tests were added for canonical mock bearer parsing, CP policy-decision endpoint conflict handling, or AP CP-response mismatch fail-closed paths. |
-| RR-TST-HIGH-02 | FAIL | No regression tests exist for write-action admin gating (`.create/.update/.delete`) in CP policy service and AP enforcement integration. |
-| RR-COMP-CORR-01 | PASS | No compose topology changes were introduced by this task; existing compose surfaces remain unaffected. |
-| RR-COMP-BUILD-01 | PASS | No Docker/compose build-context or packaging changes were introduced. |
-| RR-COMP-SEC-01 | PASS | No new compose-level security regressions introduced by this task. |
-| RR-FA-CORR-01 | PASS | New CP FastAPI route uses explicit request model and deterministic response contract in `code/cp/main.py`. |
-| RR-FA-SEC-01 | PASS | Policy endpoint enforces claim/body context conflict rejection and shared auth parsing in `code/cp/main.py`. |
-| RR-FA-BOUNDARY-ERR-01 | PASS | Permission and validation failures map through existing exception handlers in CP/AP composition roots (`code/cp/main.py`, `code/ap/main.py`). |
-| RR-FA-SCHEMA-BOOTSTRAP-01 | PASS | Schema bootstrap invocation remains intact in AP and CP app creation paths. |
-| RR-FA-ARCH-01 | PASS | CP owns policy decisioning; AP consumes/enforces decision outcomes, aligned with adopted split in task DoD. |
-| RR-AUTH-MOCK-01 | PASS | Canonical mock bearer contract (`Bearer mock.<base64-json>.token`) is emitted and parsed in `code/common/auth/mock_claims.py`; AP contract helper also emits canonical Authorization shape in `code/ap/contracts/BND-CP-AP-01/http_client.py`. |
-| RR-AUTH-MOCK-02 | PASS | Alternate tenant/principal headers are only used for conflict detection in `parse_mock_claims_from_headers`, preserving claim-over-header precedence. |
-| RR-TR-STRUCT-01 | PASS | Task report exists with required sections in `caf/task_reports/TG-35-policy-enforcement-core.md`. |
-| RR-TR-STEP-01 | PASS | Task report documents concrete changed files and validation inspection steps tied to implemented surfaces. |
-| RR-TR-UX-COVERAGE-01 | PASS | Not a UX-lane task; no missing UX coverage artifact requirements apply to this policy-enforcement scope. |
-| RR-TBP-RB-01 | PASS | `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability policy_enforcement` resolves `mock_auth_claims_module` to `code/common/auth/mock_claims.py`; file contains required evidence strings (`Authorization`, `Bearer`, `tenant_id`, `principal_id`, `policy_version`, `mock.`, `.token`). |
+| RR-PY-SEC-01 | PASS | No hardcoded secrets in policy/auth files (`code/common/auth/mock_claims.py`, `code/ap/api/auth_context.py`, `code/cp/api/routes.py`). |
+| RR-PY-CORR-01 | PASS | Shared auth helper imports resolve through canonical shared package path (`code/ap/api/auth_context.py` imports from `...common.auth.mock_claims`). |
+| RR-PY-CORR-01A | PASS | Required package markers exist (`code/__init__.py`, `code/ap/__init__.py`, `code/cp/__init__.py`, `code/common/__init__.py`, `code/common/auth/__init__.py`). |
+| RR-PY-CORR-02 | PASS | Permission errors are explicit and mapped to HTTP 401/403 paths in AP/CP boundaries. |
+| RR-PY-PERF-01 | PASS | Policy evaluation path is request-scoped and bounded; no obvious N+1 persistence loops added. |
+| RR-TST-BLOCK-01 | PASS | Existing tests contain no tautological placeholders (`tests/test_ap_auth_context.py`, `tests/test_mock_claims.py`). |
+| RR-TST-HIGH-01 | FAIL | No direct CP policy endpoint tests are present for `/cp/policy-decisions/evaluate`; current tests focus on shared auth/context units. |
+| RR-TST-HIGH-02 | PASS | Negative auth/tenant conflict tests exist (`tests/test_ap_auth_context.py`, `tests/test_mock_claims.py`). |
+| RR-COMP-CORR-01 | PASS | Compose includes CP/AP services and env wiring in `docker/compose.candidate.yaml`. |
+| RR-COMP-BUILD-01 | PASS | CP/AP runtime images are Dockerfile-built and env-file-driven (`docker/compose.candidate.yaml`, `docker/Dockerfile.ap`, `docker/Dockerfile.cp`). |
+| RR-COMP-RDY-01 | PASS | Postgres healthcheck and service-healthy dependencies are configured for CP/AP in compose. |
+| RR-COMP-SEC-01 | PASS | No privileged/unsafe compose posture detected. |
+| RR-FA-CORR-01 | PASS | Router wiring is complete in CP/AP entrypoints (`code/cp/main.py`, `code/ap/main.py`). |
+| RR-FA-SEC-01 | PASS | Policy routes use typed request models (`PolicyDecisionRequest`, `PolicyPreviewRequest`, `ResourcePayload`). |
+| RR-FA-BOUNDARY-ERR-01 | PASS | Permission and validation failures are translated to explicit FastAPI responses (AP/CP routes + exception handlers). |
+| RR-FA-SCHEMA-BOOTSTRAP-01 | PASS | AP/CP startup hooks invoke bootstrap schema in composition roots. |
+| RR-FA-ARCH-01 | PASS | AP handlers delegate policy decisions via service layer (`ApplicationPolicyEnforcementService`) and helper seams. |
+| RR-AUTH-MOCK-01 | PASS | Shared helper + AP boundary + UI helper all implement coherent mock bearer claim contract (`tenant_id`, `principal_id`, `policy_version`; `mock.<base64-json>.token`). |
+| RR-AUTH-MOCK-02 | PASS | Claim-over-header precedence and explicit conflict rejection are enforced (`enforce_claim_over_header_conflict`, AP header checks). |
+| RR-TR-STRUCT-01 | PASS | Task report has required sections in `caf/task_reports/TG-35-policy-enforcement-core.md`. |
+| RR-TR-STEP-01 | PASS | Report covers all steps and required inputs. |
+| RR-TR-UX-COVERAGE-01 | PASS | Non-UI capability; UX coverage matrix not required. |
+| RR-TBP-RB-01 | PASS | `resolve_tbp_role_bindings_v1` for `policy_enforcement` expects `code/common/auth/mock_claims.py`, which exists and contains required markers. |
 
-## Summary
+Summary:
+- Combined CP/AP policy core preserves CP decision authority, AP enforcement, and claim-over-header tenant context semantics.
+- No blocker findings were identified.
 
-No blocker findings detected for `TG-35-policy-enforcement-core`. CP policy decision surface, AP enforcement hook, and canonical mock claim contract are coherently implemented and traceable.
+Issues:
+- High:
+  - `RR-TST-HIGH-01`: CP policy decision endpoint lacks direct automated endpoint-level tests.
+- Medium: none.
+- Low: none.
 
-## Issues
+No issues at or above the configured threshold (`blocker`) were found.
 
-- High: Missing unit/regression tests for new auth-claim parsing and policy-decision integration paths.
-
-## Threshold statement
-
-No issues at or above the configured `blocker` threshold were found.

@@ -1,25 +1,33 @@
-# UX Review: UX-TG-95-ux-operator-notes
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=UX-TG-95-ux-operator-notes -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: UX-TG-95-ux-operator-notes
+
+Threshold: `high`
+
+Selected rubrics:
+- `RR-WEB-SPA-01`
+- `RR-TASK-REPORT-01`
+- `RR-TBP-ROLE-BINDINGS-01`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-GENERAL-01 | PASS | Documentation-only task; no Python import/runtime changes. |
-| RR-PY-TESTS-01 | PASS | README retains test invocation guidance aligned to existing `python -m pytest tests`. |
-| RR-COMPOSE-01 | PASS | README guidance matches actual compose topology including additive `ux` service. |
-| RR-WEB-SPA-01 | PASS | Documentation references concrete UX lane surfaces/modules and primary actions, not abstract placeholders. |
-| RR-TASK-REPORT-01 | PASS | Task report for UX-TG-95 includes concrete claims and evidence anchors. |
-| RR-TBP-ROLE-BINDINGS-01 | PASS | `resolve_tbp_role_bindings_v1` for `repo_documentation` returned no expected artifact obligations; no violations. |
+| RR-SPA-DOC-TRUTH-01 | PASS | `caf/ux_operator_notes.md` maps claims to currently implemented `code/ux` controls without aspirational runtime claims. |
+| RR-SPA-ACTION-01 | PASS | Validation checklist aligns with Create Widget, Publish Collection, Manage Roles, and Activity visibility in current UX pages. |
+| RR-SPA-CONTRACT-01 | PASS | Notes preserve current bounded REST/AP posture and do not claim unsupported interface modes. |
+| RR-TR-STRUCT-01 | PASS | Task report exists with claims and line-anchored evidence references. |
+| RR-TBP-RB-01 | PASS | Role-binding expectations for `repo_documentation` are empty and documentation placement is valid. |
 
-## Semantic review questions
-- Operator notes are actionable for running/validating UX lane and include explicit service boundaries and run commands.
-- Notes explicitly preserve primary actions and major surfaces from product-surface input.
-- Regression checklist covers tenant/session visibility, publish/admin safety, and recovery behavior.
+Summary:
+- Operator notes are runtime-truthful and aligned to richer UX lane as implemented.
+- No findings at or above `high`.
 
-## Summary
-- No high-severity or blocker issues found.
-
-## Issues
+Issues:
 - High: none.
 - Medium: none.
 - Low: none.
 
-No issues at/above severity threshold (`high`) were found.
+No issues at or above the configured threshold (`high`) were found.
+

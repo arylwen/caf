@@ -1,0 +1,20 @@
+schema_version: caf_interface_binding_report_v1
+binding_id: BIND-AP-tenant_role_assignments
+status: closed
+consumer:
+  task_id: TG-30-service-facade-tenant_role_assignments
+  role_id: application_use_cases
+provider:
+  task_id: TG-40-persistence-tenant_role_assignments
+  role_id: outbound_adapters
+assembler:
+  task_id: TG-90-runtime-wiring
+  role_id: composition_root
+  binding_action: bind_consumer_to_provider
+evidence:
+  consumer_artifact_paths:
+    - code/ap/application/services.py
+  provider_artifact_paths:
+    - code/ap/persistence/repository_factory.py
+  assembler_artifact_paths:
+    - code/ap/api/dependencies.py

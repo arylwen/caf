@@ -2,9 +2,11 @@
 # CAF_TRACE: task_id=TG-00-CONTRACT-BND-CP-AP-01-AP
 # CAF_TRACE: capability=contract_scaffolding
 # CAF_TRACE: instance=codex-saas
-# CAF_TRACE: trace_anchor=contract_boundary_id:BND-CP-AP-01
+# CAF_TRACE: trace_anchor=decision_option:CAF-PLANE-01/Q-CP-AP-SURFACE-01/mixed
 
-"""AP-side envelope types for the CP<->AP integration contract scaffold."""
+"""Cross-plane envelope scaffolds for CP<->AP contract boundary BND-CP-AP-01."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 

@@ -1,27 +1,34 @@
-# UX Task Report: UX-TG-92-ux-service-packaging
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=UX-TG-92-ux-service-packaging -->
+<!-- CAF_TRACE: capability=ux_service_packaging_wiring -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Task Report: UX-TG-92-ux-service-packaging
 
 ## Inputs consumed
-- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
-- reference_architectures/codex-saas/design/playbook/ux_visual_system_v1.md
-- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
+
+- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+- `reference_architectures/codex-saas/design/playbook/ux_task_graph_v1.yaml`
+- `reference_architectures/codex-saas/design/playbook/ux_visual_system_v1.md`
+- `tools/caf/contracts/ux_service_packaging_and_wiring_contract_v1.md`
+- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability ux_service_packaging_wiring` (expectations: empty)
 
 ## Claims
-- Added dedicated UX runtime packaging surface with `docker/Dockerfile.ux` and `docker/nginx.ux.conf`.
-- Updated compose assembly to add separate `ux` service while preserving existing `ui` service and AP/CP routing.
-- Kept richer UX lane isolated under `code/ux/` and avoided smoke-test lane rewrites.
 
-## Files touched
-- docker/Dockerfile.ux
-- docker/nginx.ux.conf
-- docker/compose.candidate.yaml
-
-## How to validate manually
-- Build and start stack: `docker compose --env-file ./.env -f docker/compose.candidate.yaml up --build`
-- Verify smoke-test lane remains present: `curl http://localhost:8080/api/health`
-- Verify richer UX lane is separate service: `curl http://localhost:8081/api/health`
-- Verify compose services include `ui` and `ux`: `docker compose -f docker/compose.candidate.yaml ps`
+- Richer UX lane is packaged as a separate `ux` service without mutating smoke-test `ui` lane ownership.
+- Compose wiring preserves AP/CP interface boundaries and same-stack runtime posture.
+- Dedicated UX Dockerfile and nginx config are materialized for reproducible runtime startup.
+- Operator startup path for the UX lane is explicit through compose wiring and operator notes.
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/docker/Dockerfile.ux
-- companion_repositories/codex-saas/profile_v1/docker/nginx.ux.conf
-- companion_repositories/codex-saas/profile_v1/docker/compose.candidate.yaml
+
+- `companion_repositories/codex-saas/profile_v1/docker/compose.candidate.yaml:L1-L106`
+- `companion_repositories/codex-saas/profile_v1/docker/Dockerfile.ux:L1-L24`
+- `companion_repositories/codex-saas/profile_v1/docker/nginx.ux.conf:L1-L31`
+- `companion_repositories/codex-saas/profile_v1/caf/ux_operator_notes.md:L1-L45`
+
+## Manual validation guidance
+
+- `docker compose -f docker/compose.candidate.yaml config`
+- `docker compose -f docker/compose.candidate.yaml up --build ux`
+

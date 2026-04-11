@@ -2,17 +2,22 @@
 # CAF_TRACE: task_id=UX-TG-92-ux-service-packaging
 # CAF_TRACE: capability=ux_service_packaging_wiring
 # CAF_TRACE: instance=codex-saas
-# CAF_TRACE: trace_anchor=pattern_id:UX-LANE:separate_ui_service
 
 FROM node:20-alpine AS build
-WORKDIR /workspace
+
+WORKDIR /app/code/ux
 
 COPY code/ux/package.json ./package.json
 RUN npm install --no-audit --no-fund
+
 COPY code/ux/ ./
 RUN npm run build
 
 FROM nginx:1.27-alpine
+
 COPY docker/nginx.ux.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /workspace/dist /usr/share/nginx/html
+COPY --from=build /app/code/ux/dist /usr/share/nginx/html
+
 EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

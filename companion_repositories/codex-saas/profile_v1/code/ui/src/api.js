@@ -1,104 +1,104 @@
 // CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-// CAF_TRACE: task_id=TG-18-ui-policy-admin
-// CAF_TRACE: task_id=TG-25-ui-page-activity_events
-// CAF_TRACE: task_id=TG-25-ui-page-collection_permissions
-// CAF_TRACE: task_id=TG-25-ui-page-collections
-// CAF_TRACE: task_id=TG-25-ui-page-tags
-// CAF_TRACE: task_id=TG-25-ui-page-tenant_settings
-// CAF_TRACE: task_id=TG-25-ui-page-tenant_users_roles
-// CAF_TRACE: task_id=TG-25-ui-page-widget_versions
 // CAF_TRACE: task_id=TG-25-ui-page-widgets
 // CAF_TRACE: capability=ui_frontend_scaffolding
 // CAF_TRACE: instance=codex-saas
 // CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-AUTH-MOCK-01-ui-api-helper
 
-import { buildMockAuthorizationHeader, buildMockAuthState, detectTenantContextConflict } from "./auth/mockAuth.js";
+import { buildAuthContext } from "./auth/mockAuth";
 
-function parseErrorDetail(bodyText) {
-  if (!bodyText) {
-    return "no error body";
-  }
-
+function readErrorDetail(bodyText) {
   try {
     const parsed = JSON.parse(bodyText);
-    if (typeof parsed.detail === "string" && parsed.detail.trim()) {
-      return parsed.detail;
-    }
-    if (Array.isArray(parsed.detail)) {
-      return JSON.stringify(parsed.detail);
-    }
-    return JSON.stringify(parsed);
+    return parsed.detail || bodyText;
   } catch {
     return bodyText;
   }
 }
 
-function buildQueryString(query) {
-  if (!query || typeof query !== "object") {
-    return "";
-  }
-
-  const pairs = Object.entries(query)
-    .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "")
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
-
-  return pairs.length ? `?${pairs.join("&")}` : "";
-}
-
-export function buildAuthHeaders(authState = buildMockAuthState()) {
+export function buildAuthHeaders(personaKey, options = {}) {
+  const context = buildAuthContext(personaKey);
   const headers = {
-    Authorization: buildMockAuthorizationHeader(authState),
+    Authorization: context.authorization,
     "Content-Type": "application/json",
   };
 
-  if (detectTenantContextConflict(headers)) {
-    throw new Error("tenant context conflict between Authorization claim and tenant header");
+  if (options.includeConflictCheckHeaders !== false) {
+    // tenant context conflict checks remain explicit and claim-over-header by policy.
+    headers["X-Tenant-Context-Check"] = context.tenant_id;
+    headers["X-Principal-Context-Check"] = context.principal_id;
   }
 
   return headers;
 }
 
-async function parseJsonSafely(response) {
-  const text = await response.text();
-  if (!text) {
+async function requestJson(path, options = {}) {
+  const response = await fetch(path, options);
+  if (!response.ok) {
+    const bodyText = await response.text();
+    throw new Error(`HTTP ${response.status}: ${readErrorDetail(bodyText)}`);
+  }
+
+  if (response.status === 204) {
     return {};
   }
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    return { detail: text };
-  }
+  return response.json();
 }
 
-async function apiRequest(method, path, { payload, query, authState } = {}) {
-  const finalPath = `${path}${buildQueryString(query)}`;
-  const response = await fetch(finalPath, {
-    method,
-    headers: buildAuthHeaders(authState),
-    body: payload !== undefined ? JSON.stringify(payload) : undefined,
+function resourcePath(resource, resourceId) {
+  if (!resourceId) {
+    return `/api/ap/resources/${resource}`;
+  }
+  return `/api/ap/resources/${resource}/${resourceId}`;
+}
+
+export async function fetchRuntimeAssumptions(personaKey) {
+  return requestJson("/api/ap/runtime/assumptions", {
+    method: "GET",
+    headers: buildAuthHeaders(personaKey),
   });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`request failed (${response.status}): ${parseErrorDetail(body)}`);
-  }
-
-  return parseJsonSafely(response);
 }
 
-export function apiGet(path, authState, query) {
-  return apiRequest("GET", path, { authState, query });
+export async function previewPolicyDecision(personaKey, action, resource) {
+  return requestJson("/api/ap/policy/preview", {
+    method: "POST",
+    headers: buildAuthHeaders(personaKey),
+    body: JSON.stringify({ action, resource }),
+  });
 }
 
-export function apiPost(path, payload, authState) {
-  return apiRequest("POST", path, { payload, authState });
+export async function listResource(personaKey, resource) {
+  return requestJson(resourcePath(resource), {
+    method: "GET",
+    headers: buildAuthHeaders(personaKey),
+  });
 }
 
-export function apiPut(path, payload, authState) {
-  return apiRequest("PUT", path, { payload, authState });
+export async function getResource(personaKey, resource, resourceId) {
+  return requestJson(resourcePath(resource, resourceId), {
+    method: "GET",
+    headers: buildAuthHeaders(personaKey),
+  });
 }
 
-export function apiDelete(path, authState) {
-  return apiRequest("DELETE", path, { authState });
+export async function createResource(personaKey, resource, attributes) {
+  return requestJson(resourcePath(resource), {
+    method: "POST",
+    headers: buildAuthHeaders(personaKey),
+    body: JSON.stringify({ attributes }),
+  });
+}
+
+export async function updateResource(personaKey, resource, resourceId, attributes) {
+  return requestJson(resourcePath(resource, resourceId), {
+    method: "PUT",
+    headers: buildAuthHeaders(personaKey),
+    body: JSON.stringify({ attributes }),
+  });
+}
+
+export async function deleteResource(personaKey, resource, resourceId) {
+  return requestJson(resourcePath(resource, resourceId), {
+    method: "DELETE",
+    headers: buildAuthHeaders(personaKey),
+  });
 }

@@ -23,6 +23,25 @@ bindings:
       task_id: TG-90-runtime-wiring
       role_id: composition_root
       binding_action: bind_consumer_to_provider
+  - binding_id: BIND-AP-collection_memberships
+    binding_kind: required_provided_interface_binding
+    plane_scope: AP
+    resource_key: collection_memberships
+    description: "Bind the AP collection_memberships consumer to a provider implementation in the assembler boundary."
+    required_interface:
+      name: CollectionMembershipsAccessInterface
+      description: "Required interface for collection_memberships operations in the selected architecture style."
+      consumer:
+        task_id: TG-30-service-facade-collection_memberships
+        role_id: application_use_cases
+    provider:
+      task_id: TG-40-persistence-collection_memberships
+      role_id: outbound_adapters
+      binding_kind: provides_implementation
+    assembler:
+      task_id: TG-90-runtime-wiring
+      role_id: composition_root
+      binding_action: bind_consumer_to_provider
   - binding_id: BIND-AP-collection_permissions
     binding_kind: required_provided_interface_binding
     plane_scope: AP
@@ -61,57 +80,19 @@ bindings:
       task_id: TG-90-runtime-wiring
       role_id: composition_root
       binding_action: bind_consumer_to_provider
-  - binding_id: BIND-AP-tags
+  - binding_id: BIND-AP-tenant_role_assignments
     binding_kind: required_provided_interface_binding
     plane_scope: AP
-    resource_key: tags
-    description: "Bind the AP tags consumer to a provider implementation in the assembler boundary."
+    resource_key: tenant_role_assignments
+    description: "Bind the AP tenant_role_assignments consumer to a provider implementation in the assembler boundary."
     required_interface:
-      name: TagsAccessInterface
-      description: "Required interface for tags operations in the selected architecture style."
+      name: TenantRoleAssignmentsAccessInterface
+      description: "Required interface for tenant_role_assignments operations in the selected architecture style."
       consumer:
-        task_id: TG-30-service-facade-tags
+        task_id: TG-30-service-facade-tenant_role_assignments
         role_id: application_use_cases
     provider:
-      task_id: TG-40-persistence-tags
-      role_id: outbound_adapters
-      binding_kind: provides_implementation
-    assembler:
-      task_id: TG-90-runtime-wiring
-      role_id: composition_root
-      binding_action: bind_consumer_to_provider
-  - binding_id: BIND-AP-tenant_settings
-    binding_kind: required_provided_interface_binding
-    plane_scope: AP
-    resource_key: tenant_settings
-    description: "Bind the AP tenant_settings consumer to a provider implementation in the assembler boundary."
-    required_interface:
-      name: TenantSettingsAccessInterface
-      description: "Required interface for tenant_settings operations in the selected architecture style."
-      consumer:
-        task_id: TG-30-service-facade-tenant_settings
-        role_id: application_use_cases
-    provider:
-      task_id: TG-40-persistence-tenant_settings
-      role_id: outbound_adapters
-      binding_kind: provides_implementation
-    assembler:
-      task_id: TG-90-runtime-wiring
-      role_id: composition_root
-      binding_action: bind_consumer_to_provider
-  - binding_id: BIND-AP-tenant_users_roles
-    binding_kind: required_provided_interface_binding
-    plane_scope: AP
-    resource_key: tenant_users_roles
-    description: "Bind the AP tenant_users_roles consumer to a provider implementation in the assembler boundary."
-    required_interface:
-      name: TenantUsersRolesAccessInterface
-      description: "Required interface for tenant_users_roles operations in the selected architecture style."
-      consumer:
-        task_id: TG-30-service-facade-tenant_users_roles
-        role_id: application_use_cases
-    provider:
-      task_id: TG-40-persistence-tenant_users_roles
+      task_id: TG-40-persistence-tenant_role_assignments
       role_id: outbound_adapters
       binding_kind: provides_implementation
     assembler:

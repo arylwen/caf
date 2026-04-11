@@ -1,7 +1,7 @@
 {
   "schema_version": "caf_routed_step_state_v1",
   "instance_name": "codex-saas",
-  "updated_at_utc": "2026-03-29T16:55:47.473Z",
+  "updated_at_utc": "2026-04-09T16:57:15.037Z",
   "steps": {
     "seeded": {
       "step_id": "seeded",
@@ -14,12 +14,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T11:54:15.650Z",
+      "last_transition_at_utc": "2026-04-08T12:51:04.341Z",
       "last_transition_reason": "checkpoint evidence complete",
-      "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T11:53:14.361Z",
-      "last_run_completed_at_utc": "2026-03-29T11:54:15.651Z",
-      "last_run_id": "20260329T115313Z-codex-pid29180"
+      "last_run_outcome": "",
+      "last_run_started_at_utc": "",
+      "last_run_completed_at_utc": "",
+      "last_run_id": ""
     },
     "prd": {
       "step_id": "prd",
@@ -34,12 +34,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T12:34:48.692Z",
+      "last_transition_at_utc": "2026-04-08T12:51:04.343Z",
       "last_transition_reason": "checkpoint evidence complete",
-      "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T12:29:42.500Z",
-      "last_run_completed_at_utc": "2026-03-29T12:34:48.693Z",
-      "last_run_id": "20260329T122942Z-codex-pid25804"
+      "last_run_outcome": "",
+      "last_run_started_at_utc": "",
+      "last_run_completed_at_utc": "",
+      "last_run_id": ""
     },
     "arch1": {
       "step_id": "arch1",
@@ -54,12 +54,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T12:46:47.765Z",
+      "last_transition_at_utc": "2026-04-08T12:51:04.344Z",
       "last_transition_reason": "checkpoint evidence complete",
-      "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T12:34:48.697Z",
-      "last_run_completed_at_utc": "2026-03-29T12:46:47.766Z",
-      "last_run_id": "20260329T122942Z-codex-pid25804"
+      "last_run_outcome": "",
+      "last_run_started_at_utc": "",
+      "last_run_completed_at_utc": "",
+      "last_run_id": ""
     },
     "nextApply": {
       "step_id": "nextApply",
@@ -74,12 +74,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T12:47:37.014Z",
+      "last_transition_at_utc": "2026-04-08T12:51:04.346Z",
       "last_transition_reason": "checkpoint evidence complete",
-      "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T12:46:47.771Z",
-      "last_run_completed_at_utc": "2026-03-29T12:47:37.015Z",
-      "last_run_id": "20260329T122942Z-codex-pid25804"
+      "last_run_outcome": "",
+      "last_run_started_at_utc": "",
+      "last_run_completed_at_utc": "",
+      "last_run_id": ""
     },
     "arch2": {
       "step_id": "arch2",
@@ -94,12 +94,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T13:21:54.397Z",
+      "last_transition_at_utc": "2026-04-08T12:51:04.348Z",
       "last_transition_reason": "checkpoint evidence complete",
-      "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T13:08:57.627Z",
-      "last_run_completed_at_utc": "2026-03-29T13:21:54.401Z",
-      "last_run_id": "20260329T130857Z-codex-pid7512"
+      "last_run_outcome": "",
+      "last_run_started_at_utc": "",
+      "last_run_completed_at_utc": "",
+      "last_run_id": ""
     },
     "plan": {
       "step_id": "plan",
@@ -114,12 +114,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T13:39:42.804Z",
+      "last_transition_at_utc": "2026-04-08T12:51:04.349Z",
       "last_transition_reason": "checkpoint evidence complete",
-      "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T13:21:54.411Z",
-      "last_run_completed_at_utc": "2026-03-29T13:39:42.806Z",
-      "last_run_id": "20260329T130857Z-codex-pid7512"
+      "last_run_outcome": "",
+      "last_run_started_at_utc": "",
+      "last_run_completed_at_utc": "",
+      "last_run_id": ""
     },
     "build": {
       "step_id": "build",
@@ -134,12 +134,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T16:21:16.218Z",
+      "last_transition_at_utc": "2026-04-09T16:50:45.283Z",
       "last_transition_reason": "checkpoint evidence complete",
       "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T15:44:36.278Z",
-      "last_run_completed_at_utc": "2026-03-29T16:21:16.221Z",
-      "last_run_id": "20260329T154435Z-codex-pid55856"
+      "last_run_started_at_utc": "2026-04-09T16:44:00.981Z",
+      "last_run_completed_at_utc": "2026-04-09T16:50:45.339Z",
+      "last_run_id": "20260409T164400Z-codex-pid42784"
     },
     "ux": {
       "step_id": "ux",
@@ -154,12 +154,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T16:28:12.709Z",
+      "last_transition_at_utc": "2026-04-08T12:51:04.351Z",
       "last_transition_reason": "checkpoint evidence complete",
-      "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T16:21:16.235Z",
-      "last_run_completed_at_utc": "2026-03-29T16:28:12.711Z",
-      "last_run_id": "20260329T154435Z-codex-pid55856"
+      "last_run_outcome": "",
+      "last_run_started_at_utc": "",
+      "last_run_completed_at_utc": "",
+      "last_run_id": ""
     },
     "uxPlan": {
       "step_id": "uxPlan",
@@ -174,12 +174,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T16:33:30.807Z",
+      "last_transition_at_utc": "2026-04-08T12:51:04.353Z",
       "last_transition_reason": "checkpoint evidence complete",
-      "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T16:28:12.725Z",
-      "last_run_completed_at_utc": "2026-03-29T16:33:30.809Z",
-      "last_run_id": "20260329T154435Z-codex-pid55856"
+      "last_run_outcome": "",
+      "last_run_started_at_utc": "",
+      "last_run_completed_at_utc": "",
+      "last_run_id": ""
     },
     "uxBuild": {
       "step_id": "uxBuild",
@@ -195,12 +195,12 @@
       "prerequisite_status": "ready",
       "blocking_packet_count": 0,
       "blocking_packets": [],
-      "last_transition_at_utc": "2026-03-29T16:55:47.472Z",
+      "last_transition_at_utc": "2026-04-09T16:57:15.036Z",
       "last_transition_reason": "checkpoint evidence complete",
       "last_run_outcome": "completed",
-      "last_run_started_at_utc": "2026-03-29T16:33:30.822Z",
-      "last_run_completed_at_utc": "2026-03-29T16:55:47.473Z",
-      "last_run_id": "20260329T154435Z-codex-pid55856"
+      "last_run_started_at_utc": "2026-04-09T16:50:45.447Z",
+      "last_run_completed_at_utc": "2026-04-09T16:57:15.037Z",
+      "last_run_id": "20260409T164400Z-codex-pid42784"
     }
   }
 }

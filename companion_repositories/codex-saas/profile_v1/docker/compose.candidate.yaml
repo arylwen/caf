@@ -2,28 +2,30 @@
 # CAF_TRACE: task_id=UX-TG-92-ux-service-packaging
 # CAF_TRACE: capability=ux_service_packaging_wiring
 # CAF_TRACE: instance=codex-saas
-# CAF_TRACE: trace_anchor=pattern_id:deployment:docker_compose
+# CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-RUNTIME-WIRING
 
 name: codex-saas
 
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     env_file:
       - ../.env
     environment:
-      POSTGRES_DB: codex_saas
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d codex_saas"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
 
   cp:
     build:
@@ -32,13 +34,22 @@ services:
     env_file:
       - ../.env
     environment:
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/codex_saas
-      CP_POLICY_BASE_URL: http://cp:8001
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AUTH_MODE: ${AUTH_MODE}
+      TENANT_CLAIM_KEY: ${TENANT_CLAIM_KEY}
+      CP_API_BASE_URL: http://cp:8001
+      AP_API_BASE_URL: http://ap:8000
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "8001:8001"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/cp/health').read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   ap:
     build:
@@ -47,27 +58,34 @@ services:
     env_file:
       - ../.env
     environment:
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/codex_saas
-      CP_POLICY_BASE_URL: http://cp:8001
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AUTH_MODE: ${AUTH_MODE}
+      TENANT_CLAIM_KEY: ${TENANT_CLAIM_KEY}
+      CP_API_BASE_URL: http://cp:8001
+      AP_API_BASE_URL: http://ap:8000
     depends_on:
       postgres:
         condition: service_healthy
       cp:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ap/health').read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   ui:
     build:
       context: ..
       dockerfile: docker/Dockerfile.ui
-    env_file:
-      - ../.env
     depends_on:
       ap:
-        condition: service_started
+        condition: service_healthy
       cp:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8080:80"
 
@@ -75,15 +93,13 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.ux
-    env_file:
-      - ../.env
     depends_on:
       ap:
-        condition: service_started
+        condition: service_healthy
       cp:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8081:80"
 
 volumes:
-  postgres_data: {}
+  postgres_data:

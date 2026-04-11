@@ -1,34 +1,47 @@
-# UX Task Report: UX-TG-10-rest-client-and-session-wiring
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=UX-TG-10-rest-client-and-session-wiring -->
+<!-- CAF_TRACE: capability=ux_frontend_realization -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Task Report: UX-TG-10-rest-client-and-session-wiring
 
 ## Inputs consumed
-- reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
-- reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
-- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
-- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+
+- `reference_architectures/codex-saas/design/playbook/ux_design_v1.md`
+- `reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md`
+- `reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md`
+- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability ux_frontend_realization`
 
 ## Claims
-- Implemented a shared UX API client in `code/ux/src/api.js` covering list/detail/mutation paths for widgets, collections, sharing, admin, and activity surfaces.
-- Kept REST/OpenAPI posture aligned with AP/CP boundary routes through `/api/*` and `/cp/*` calls.
-- Preserved explicit session/tenant contract using mock bearer claim builders and conflict detection in `code/ux/src/auth/mockAuth.js`.
-- Normalized loading/error/success feedback handling across page surfaces to support recovery-safe UX behavior.
+
+- Shared UX API helper centralizes tenant-aware list/detail/mutation calls for the richer UX lane.
+- Mock session carrier and bearer claim construction remain explicit and conflict-aware.
+- Deny/validation/failure outcomes are exposed as explicit UI states instead of hidden failures.
+- Request shaping remains within current REST/OpenAPI + thin-BFF posture.
 
 ## UX interaction matrix
-| implemented UX surface | module | key states | session/tenant visibility |
-| --- | --- | --- | --- |
-| Shared API layer | code/ux/src/api.js | request, success, denied, error | Authorization bearer claim and conflict guard |
-| Mock auth helpers | code/ux/src/auth/mockAuth.js | preset selection, token parse | tenant_id/principal_id/policy_version preserved |
-| Shell runtime status | code/ux/src/App.jsx | loading, ready, error | top context bar + role preset selector |
-| Primary pages | code/ux/src/pages/*.jsx | loading, ready, empty, success, error | inherited shell context and shared API headers |
+
+| surface | module | interaction posture |
+| --- | --- | --- |
+| Session contract | `code/ux/src/auth/mockAuth.js` | explicit tenant/principal/role claim carrier |
+| Shared REST helper | `code/ux/src/api.js` | normalized AP calls with preserved backend error detail |
+| Shell context | `code/ux/src/App.jsx` | persistent tenant and role visibility |
 
 ## Primary action coverage matrix
-| declared action | source surface | realized surface/module | visible entry control or path | shared API/helper call path | evidence anchor or explicit deferred note |
+
+| declared action | source surface | realized surface/module | visible entry control or path | shared API/helper call path | evidence anchor |
 | --- | --- | --- | --- | --- | --- |
-| Create widget | Widget catalog/detail | code/ux/src/pages/CatalogPage.jsx | catalog action and form submit | `createWidget` via `buildAuthHeaders` | companion_repositories/codex-saas/profile_v1/code/ux/src/api.js |
-| New collection | Collections workspace | code/ux/src/pages/CollectionsPage.jsx | collection form submit | `createCollection` via `buildAuthHeaders` | companion_repositories/codex-saas/profile_v1/code/ux/src/api.js |
-| Publish | Sharing and permissions | code/ux/src/pages/CollectionsPage.jsx, code/ux/src/pages/PublishedPage.jsx | publish submit + toggle update | `createCollectionPermission` / `updateCollectionPermission` | companion_repositories/codex-saas/profile_v1/code/ux/src/api.js |
-| Manage roles | Tenant admin | code/ux/src/pages/AdminPage.jsx | role assignment submit/revoke | `createTenantUserRole` / `deleteTenantUserRole` | companion_repositories/codex-saas/profile_v1/code/ux/src/api.js |
+| Create Widget | Catalog | `code/ux/src/pages/CatalogPage.jsx` | create form in catalog surface | `createWidget` in `code/ux/src/api.js` | `code/ux/src/pages/CatalogPage.jsx:L93-L132` |
+| Publish Collection | Collections | `code/ux/src/pages/CollectionsPage.jsx` | publish/update controls | `updateCollection` in `code/ux/src/api.js` | `code/ux/src/pages/CollectionsPage.jsx:L137-L173` |
+| Manage Roles | Admin | `code/ux/src/pages/AdminPage.jsx` | role assignment form | `createTenantRoleAssignment` in `code/ux/src/api.js` | `code/ux/src/pages/AdminPage.jsx:L68-L92` |
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/code/ux/src/api.js
-- companion_repositories/codex-saas/profile_v1/code/ux/src/auth/mockAuth.js
-- companion_repositories/codex-saas/profile_v1/code/ux/src/App.jsx
+
+- `companion_repositories/codex-saas/profile_v1/code/ux/src/auth/mockAuth.js:L1-L65`
+- `companion_repositories/codex-saas/profile_v1/code/ux/src/api.js:L1-L219`
+- `companion_repositories/codex-saas/profile_v1/code/ux/src/App.jsx:L1-L115`
+- `companion_repositories/codex-saas/profile_v1/code/ux/package.json:L1-L20`
+- `companion_repositories/codex-saas/profile_v1/code/ux/vite.config.js:L1-L17`
+- `companion_repositories/codex-saas/profile_v1/code/ux/components.json:L1-L9`
+

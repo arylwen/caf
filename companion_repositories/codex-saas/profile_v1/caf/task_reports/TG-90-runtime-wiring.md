@@ -2,70 +2,88 @@
 <!-- CAF_TRACE: task_id=TG-90-runtime-wiring -->
 <!-- CAF_TRACE: capability=runtime_wiring -->
 <!-- CAF_TRACE: instance=codex-saas -->
-<!-- CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-RUNTIME-WIRING -->
+
+# Task Report: TG-90-runtime-wiring
 
 ## Task Spec Digest
-- task_id: `TG-90-runtime-wiring`
-- title: Wire runtime surfaces into a runnable local stack
-- primary capability: `runtime_wiring`
-- task graph source: `caf/task_graph_v1.yaml`
 
-## Inputs declared by task
-- required: `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
-- required: `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`
-- required: `reference_architectures/codex-saas/design/playbook/application_design_v1.md`
-- required: `reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml`
+- Title: Wire cross-plane runtime assembly (python mock auth sqlalchemy_orm code_bootstrap)
+- Capability: `runtime_wiring`
+- Depends on: `TG-00-AP-runtime-scaffold`, `TG-00-CP-runtime-scaffold`, and all AP/CP persistence tasks in wave 4.
+- Scope: compose-first CP/AP/postgres runtime assembly with claim-carried tenant context coherence and canonical Python packaging wiring.
 
-## Inputs consumed
-- `caf/profile_parameters_resolved.yaml`: consumed `deployment.stack_name=codex-saas`, `platform.packaging=docker_compose`, `platform.dependency_wiring_mode=manual_composition_root`, and Python module-root conventions.
-- `caf/control_plane_design_v1.md`: consumed CP runtime posture and CP policy decision surface constraints.
-- `caf/application_design_v1.md`: consumed AP runtime wiring posture and CP->AP policy interaction assumptions.
-- `caf/interface_binding_contracts_v1.yaml`: consumed all `assembler.task_id=TG-90-runtime-wiring` bindings and closed each with explicit binding evidence.
-- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability runtime_wiring`: consumed runtime_wiring role-binding expectations for compose/docker/env/UI runtime artifacts.
+## Inputs Declared By Task
 
-## Step execution evidence
-- Assembled CP, AP, UI, and postgres runtime topology in `docker/compose.candidate.yaml` with deterministic service roles and stack identity (`name: codex-saas`).
-- Wired compose/container/env contracts via `docker/Dockerfile.ap`, `docker/Dockerfile.cp`, `docker/Dockerfile.ui`, `.env`, `.gitignore`, and `infrastructure/postgres.env.example`.
-- Preserved CP<->AP contract closure by correcting AP policy client default to `http://cp:8001` in `code/ap/application/services.py` and wiring nginx reverse proxy routes in `docker/nginx.ui.conf`.
-- Closed interface-binding contracts with explicit assembler evidence in `caf/binding_reports/*.yaml` for all AP resource bindings.
-- Materialized base UI runtime packaging surfaces required by resolved TBP obligations (`code/ui/package.json`, `code/ui/vite.config.js`, `code/ui/src/main.jsx`, `code/ui/src/auth/mockAuth.js`, `code/ui/src/api.js`).
+- Required: `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+- Required: `reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml`
+- Required: `reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml`
 
-## Outputs produced
-- `.env`
-- `.gitignore`
-- `infrastructure/postgres.env.example`
-- `docker/compose.candidate.yaml`
-- `docker/Dockerfile.ap`
-- `docker/Dockerfile.cp`
-- `docker/Dockerfile.ui`
-- `docker/nginx.ui.conf`
-- `code/ui/index.html`
-- `code/ui/package.json`
-- `code/ui/vite.config.js`
-- `code/ui/src/App.jsx`
-- `code/ui/src/main.jsx`
-- `code/ui/src/api.js`
-- `code/ui/src/auth/mockAuth.js`
-- `code/ap/application/services.py`
-- `caf/binding_reports/BIND-AP-activity_events.yaml`
-- `caf/binding_reports/BIND-AP-collection_permissions.yaml`
-- `caf/binding_reports/BIND-AP-collections.yaml`
-- `caf/binding_reports/BIND-AP-tags.yaml`
-- `caf/binding_reports/BIND-AP-tenant_settings.yaml`
-- `caf/binding_reports/BIND-AP-tenant_users_roles.yaml`
-- `caf/binding_reports/BIND-AP-widget_versions.yaml`
-- `caf/binding_reports/BIND-AP-widgets.yaml`
+## Inputs Consumed
 
-## Rails/TBP satisfaction
-- All writes are confined to `companion_repositories/codex-saas/profile_v1/`.
-- Runtime wiring role bindings are materialized at declared paths with expected evidence markers (`services`, `build`, `env_file`, `Dockerfile.ui`, `proxy_pass`, `ap:8000`, `cp:8001`, `CAF_CONTAINER_RUNTIME_CMD`, `DATABASE_URL`).
-- SQLAlchemy/Postgres env contract is explicit in both `.env` and `infrastructure/postgres.env.example` with supported `postgresql+psycopg://` prefixes.
-- Interface bindings are closed with `caf_interface_binding_report_v1` reports and manual composition-root assembler evidence (`code/ap/api/dependencies.py`).
+- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+  - Derived: `deployment.stack_name=codex-saas`, `packaging=docker_compose`, `runtime_language=python`, module roots `code.ap` / `code.cp`, `auth_mode=mock`, `persistence_orm=sqlalchemy_orm`, `schema_management_strategy=code_bootstrap`.
+- `reference_architectures/codex-saas/spec/guardrails/tbp_resolution_v1.yaml`
+  - Derived: runtime-wiring TBP posture for compose, SQLAlchemy env contract, and UI service packaging/wiring obligations.
+- `reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml`
+  - Derived: runtime assembler ownership for AP binding closures (`assembler.task_id: TG-90-runtime-wiring`) and evidence surfaces.
+- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability runtime_wiring`
+  - Derived: role-binding expectations for `docker/compose.candidate.yaml`, `docker/Dockerfile.ap`, `docker/Dockerfile.cp`, `.env`, `.gitignore`, `docker/Dockerfile.ui`, and `docker/nginx.ui.conf`.
 
-## How to validate (manual)
-- `docker compose -f companion_repositories/codex-saas/profile_v1/docker/compose.candidate.yaml config`
-- `docker compose -f companion_repositories/codex-saas/profile_v1/docker/compose.candidate.yaml up --build`
-- `curl http://localhost:8000/ap/health`
+## Step Execution Evidence
+
+1. Assemble CP and AP runtime wiring into a single compose-first execution topology.
+- `docker/compose.candidate.yaml` materializes `postgres`, `cp`, `ap`, `ui`, and `ux` services under stack name `codex-saas`.
+- CP/AP both depend on postgres `condition: service_healthy`; AP also gates on CP health.
+
+2. Apply mock auth wiring using auth_claim carrier and conflict precedence rules.
+- AP boundary resolves auth context from `Authorization` bearer claims via `code/ap/api/auth_context.py` and shared helper `code/common/auth/mock_claims.py`.
+- Conflict precedence is fail-closed (`enforce_claim_over_header_conflict`) when alternate carriers disagree with verified claims.
+
+3. Align runtime persistence wiring to sqlalchemy_orm and code_bootstrap expectations.
+- `.env` provides canonical `DATABASE_URL` with PostgreSQL+psycopg scheme and compose overrides CP/AP DSNs to internal `postgres` DNS.
+- AP/CP composition roots (`code/ap/main.py`, `code/cp/main.py`) invoke plane-owned bootstrap on startup.
+
+4. Integrate CP/AP contract boundary closure and service startup ordering.
+- Compose health readiness and CP->AP dependency ordering preserve deterministic local startup topology.
+- AP interface binding closure evidence for runtime assembly is present in `caf/binding_reports/BIND-AP-*.yaml` with assembler artifact path `code/ap/api/dependencies.py`.
+
+5. Emit runtime assembly conventions that unit tests and README can exercise directly.
+- Runtime surfaces expose canonical local run path via `CAF_CONTAINER_RUNTIME_CMD=docker compose -f docker/compose.candidate.yaml up --build` in `.env`.
+- AP/CP Dockerfiles consume repo-root `requirements.txt` and expose deterministic `uvicorn code.ap.main:app` / `uvicorn code.cp.main:app` entrypoints.
+
+## Outputs Produced
+
+- `companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-90-runtime-wiring.md`
+
+Runtime assembly artifacts validated as satisfying this task's role-binding expectations:
+- `companion_repositories/codex-saas/profile_v1/docker/compose.candidate.yaml`
+- `companion_repositories/codex-saas/profile_v1/docker/Dockerfile.ap`
+- `companion_repositories/codex-saas/profile_v1/docker/Dockerfile.cp`
+- `companion_repositories/codex-saas/profile_v1/.env`
+- `companion_repositories/codex-saas/profile_v1/.gitignore`
+- `companion_repositories/codex-saas/profile_v1/docker/Dockerfile.ui`
+- `companion_repositories/codex-saas/profile_v1/docker/nginx.ui.conf`
+- `companion_repositories/codex-saas/profile_v1/caf/binding_reports/BIND-AP-activity_events.yaml`
+- `companion_repositories/codex-saas/profile_v1/caf/binding_reports/BIND-AP-collection_memberships.yaml`
+- `companion_repositories/codex-saas/profile_v1/caf/binding_reports/BIND-AP-collection_permissions.yaml`
+- `companion_repositories/codex-saas/profile_v1/caf/binding_reports/BIND-AP-collections.yaml`
+- `companion_repositories/codex-saas/profile_v1/caf/binding_reports/BIND-AP-tenant_role_assignments.yaml`
+- `companion_repositories/codex-saas/profile_v1/caf/binding_reports/BIND-AP-widget_versions.yaml`
+- `companion_repositories/codex-saas/profile_v1/caf/binding_reports/BIND-AP-widgets.yaml`
+
+Manual validation guidance (not executed by this worker):
+- `docker compose -f docker/compose.candidate.yaml config`
+- `docker compose -f docker/compose.candidate.yaml up --build`
 - `curl http://localhost:8001/cp/health`
-- `curl http://localhost:8080/api/health`
-- `curl http://localhost:8080/cp/health`
+- `curl http://localhost:8000/ap/health`
+
+## Rails/TBP Satisfaction
+
+- Rails: writes limited to `companion_repositories/codex-saas/profile_v1/caf/task_reports/`.
+- TBP role-binding expectations for `runtime_wiring` are satisfied:
+  - compose candidate with `services`, `build`, and `env_file` wiring;
+  - CP/AP Dockerfiles present and buildable;
+  - `.env` / `.gitignore` contractual markers present;
+  - SQLAlchemy runtime env contract preserved;
+  - UI packaging/proxy/service wiring evidence present.
+- Runtime wiring DoD remains coherent with CP/AP boundary ownership, auth claim carrier, and code-bootstrap startup posture.

@@ -130,42 +130,39 @@ Central policy lifecycle with approval, deterministic evaluation before executio
 
 # Application Product Surface (v1)
 ## Product surface summary
-A tenant-scoped web product where teams create and curate widgets, organize them into collections, publish collections to tenant roles, and review change/activity history.
-Primary personas:
-- Team Member: create/edit widgets.
-- Team Lead: organize and publish collections.
-- Tenant Admin: manage users, roles, and tenant settings.
+The product is a tenant-scoped widget workspace for team members, team leads, and tenant admins. The UX should prioritize clarity and trustworthy status visibility over feature breadth in the first release.
+Core outcomes:
+- team members can create and maintain widgets
+- team leads can organize and publish collections within tenant boundaries
+- tenant admins can manage roles/settings with clear audit visibility
 ## Primary journeys
-- Create a new widget, save changes, and view updated widget state.
-- Browse widget catalog, apply tags, and move widgets into collections.
-- Publish a collection to tenant roles and verify role-based visibility.
-- Inspect activity history for widget/collection/admin changes.
-- Manage tenant users, role assignments, and tenant settings.
+- open the widget catalog, create/edit a widget, and confirm save outcome
+- organize widgets with tags and collections, then verify collection membership
+- publish a collection to tenant roles and validate who can view/edit
+- review activity history for widget, collection, and admin changes
+- manage tenant users/roles/settings from admin surfaces
 ## Main surfaces
-- Dashboard / recent activity: latest widget and admin activity.
-- Widget catalog: searchable list with tenant-safe filters and tags.
-- Widget detail/editor: create/edit/view widget and version history.
-- Collections workspace: create/update collections, manage membership.
-- Sharing and permissions: role-based publish/access configuration for collections.
-- Tenant admin: user-role assignments and tenant settings.
-- Activity history: audit-friendly timeline/list with actor, action, target, timestamp.
+- Dashboard: recent widget activity, quick actions, and pending publication/admin signals
+- Widget Catalog: searchable/sortable list with tenant-scoped filters and status
+- Widget Detail and Editor: metadata + content editing with version/history access
+- Collections Workspace: collection list, membership management, and publish controls
+- Sharing and Permissions: role-targeted access configuration for published collections
+- Activity History: timeline/list surface for auditable change events
+- Tenant Admin: user-role assignments and tenant settings
 ## Navigation and shell expectations
-- Persistent left navigation on desktop for: Dashboard, Widgets, Collections, Activity, Admin.
-- Global tenant context indicator always visible in header.
-- Role and permission visibility shown near publish/share actions.
-- Primary actions one click away from list/detail surfaces (`Create widget`, `New collection`, `Publish`, `Manage roles`).
+- Web-first application shell with persistent left navigation and top context bar.
+- Tenant identity, user role, and key consequences (save/publish/admin) remain visible at all times.
+- Primary actions (`Create Widget`, `Publish Collection`, `Manage Roles`) should be one click from relevant surfaces.
+- Navigation prioritizes: Dashboard -> Catalog -> Collections -> Activity -> Admin.
 ## Product-facing constraints
-- Tenant context must remain visible and immutable through primary flows.
-- Publish and permission changes must be explicit and confirmable.
-- Destructive actions (delete widget, remove collection membership, revoke role) require clear confirmation.
-- Activity/evidence visibility should prioritize readability and quick traceability.
-- First release favors clarity and predictable flows over advanced collaboration features.
-## UX cues from UX_VISION (product-surface relevant)
-- Web-first shell with readable, trustworthy posture.
-- Medium-density workspace orientation (catalog + detail workflows).
-- Component-system preference: shadcn.
-- Color/tone direction: calm cobalt base with restrained accents.
-- Accessibility posture: keyboard-friendly, readable defaults.
+- Tenant isolation must be explicit in every user-facing list, detail, and permission action.
+- Keep first release intentionally bounded:
+  - no cross-tenant marketplace/public sharing
+  - no real-time collaborative editing
+  - no complex automation workflows
+- Favor readable, keyboard-friendly operational layouts with medium density for desktop use.
+- Destructive actions require explicit confirmation and clear outcome messaging.
+- Activity/audit visibility is a first-class product concern, not a hidden admin-only feature.
 
 ## DESIGN_CONSTRAINTS_AND_TOUCHPOINTS
 ### profile_parameters_resolved.yaml :: ui / runtime posture
@@ -198,15 +195,21 @@ selected_patterns:
   caf:
     - 'CAF-TCTX-01'
     - 'CAF-MTEN-01'
+    - 'CAF-PLANE-01'
     - 'CAF-AI-01'
     - 'CAF-COMP-01'
+    - 'CAF-AIOBS-01'
     - 'CAF-POL-02'
-    - 'CAF-PLANE-01'
-    - 'CAF-XPLANE-01'
+    - 'CAF-IAM-02'
+    - 'CAF-COMP-02'
   core:
-    - 'PST-01'
     - 'CTX-01'
-  external: []
+    - 'VAL-01'
+    - 'PST-01'
+    - 'SVC-01'
+  external:
+    - 'EXT-BACKEND_FOR_FRONTEND_BFF'
+    - 'EXT-CIRCUIT_BREAKER'
 adopted_option_choices:
   - source: 'system'
     evidence_hook_id: 'H-1'
@@ -241,31 +244,26 @@ adopted_option_choices:
     summary: 'Hybrid isolation (selective and tiered by tenant).'
     payload: {}
   - source: 'system'
-    evidence_hook_id: 'H-13'
+    evidence_hook_id: 'H-3'
+    pattern_id: 'CAF-PLANE-01'
+    question_id: 'Q-CP-AP-SURFACE-01'
+    option_set_id: 'cp_ap.contract_surface'
+    option_id: 'mixed'
+    summary: 'Mix: sync for enforcement, async for lifecycle and audit.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-4'
     pattern_id: 'CAF-AI-01'
     question_id: 'Q-AI-PART-01'
     option_set_id: 'ai_safety.governance_partitioning'
     option_id: 'cp_governs_ap_enforces'
     summary: 'Control Plane governs policy; Application Plane enforces at runtime.'
     payload: {}
-  - source: 'system'
-    evidence_hook_id: 'H-14'
-    pattern_id: 'CAF-COMP-01'
-    question_id: 'Q-CAF-COMP-01-01'
-    option_set_id: 'compliance_evidence.persistence_strategy'
-    option_id: 'stream_plus_immutable_store'
-    summary: 'Use an event stream plus an immutable store (preferred for audit readiness).'
-    payload: {}
-  - source: 'system'
-    evidence_hook_id: 'H-6'
-    pattern_id: 'CAF-POL-02'
-    question_id: 'Q-POL-DIST-01'
-    option_set_id: 'policy.responsibility_distribution'
-    option_id: 'cp_central_decision_ap_enforces'
 ~~~
 
 ### control_plane_design_v1.md :: plane_integration_contract_choices_v1
 
+## Plane Integration Contract questions (architect-edit)
 schema_version: plane_integration_contract_choices_v1
 choices:
   cp_runtime_shape:
@@ -302,14 +300,14 @@ choices:
         summary: Custom runtime shape.
   cp_ap_contract_surface:
     question_id: Q-CP-AP-SURFACE-01
-    question: Primary CP and AP contract surface
+    question: Primary CP?AP contract surface
     options:
       - option_id: mixed
         status: adopt
-        summary: Sync for enforcement, async for lifecycle and audit.
+        summary: Sync for enforcement; async for lifecycle and audit.
       - option_id: synchronous_http
         status: defer
-        summary: Synchronous HTTP only.
+        summary: Synchronous HTTP APIs only.
       - option_id: async_events
         status: defer
         summary: Async events only.
@@ -327,25 +325,25 @@ contracts:
     materiality:
       is_material: true
       indicators:
-        - multi_tenancy
-        - governance_enforcement
-        - policy_runtime_contract
+        - tenant context propagation is mandatory across CP and AP
+        - policy and safety decisions are CP-authored and AP-enforced
+        - audit and lifecycle signals cross plane boundaries
     contract_form: FORM_B_EMBEDDED_SECTION
     contract_ref:
       path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
-      section_heading: Plane Integration Contract (CP <-> AP)
+      section_heading: Plane Integration Contract (CP ? AP)
     anchors:
       - anchor_type: design_decision
-        anchor_ref: H-5:CAF-PLANE-01
+        anchor_ref: H-3
       - anchor_type: caf_pattern
-        anchor_ref: CAF-XPLANE-01
-      - anchor_type: caf_pattern
-        anchor_ref: CAF-POL-02
+        anchor_ref: CAF-PLANE-01
+      - anchor_type: rail
+        anchor_ref: refusal_posture=fail_closed
     justification:
-      why_this_form: Embedded contract keeps CP and AP runtime-shape and surface choices adjacent to control-plane design decisions.
+      why_this_form: Embedded section keeps CP?AP runtime shape and contract surface decisions adjacent to control-plane governance rationale.
       why_not_alternatives:
-        - FORM_A would split tightly-coupled CP and AP contract choices from control-plane design context.
-        - FORM_C would add indirection without reducing ambiguity for this phase.
+        - FORM_A standalone contract doc adds indirection for this single material boundary in early implementation scaffolding.
+        - FORM_C registry referenced is premature while contract scope is still converging inside the CP design artifact.
 ~~~
 
 ## UX_SCOPE_AND_ACTORS
@@ -353,20 +351,22 @@ contracts:
 
 ## CAF UX scope semantic projection (CAF-managed)
 - semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
-- product_scope_summary: Tenant-scoped widget workspace focused on create/edit, organization, role-aware sharing, and admin-safe operations with visible activity history.
-- primary_experience_emphasis: Keep daily widget and collection operations in one clear workspace, with explicit visibility for tenant context, role consequences, and publish state.
+- product_scope_summary: Tenant-scoped widget workspace focused on creating, organizing, sharing, and governing widgets with clear outcome visibility and audit-friendly history.
+- primary_experience_emphasis: Keep the main operator flow coherent from catalog to detail to publish while preserving visible tenant, role, and consequence context.
 - primary_actors:
   - Team Member
   - Team Lead
-- supporting_actors:
   - Tenant Admin
+- supporting_actors:
+  - Auditor
+  - Policy Admin
 - non_goals:
   - Cross-tenant marketplace or public sharing
-  - Real-time collaboration editing
+  - Real-time collaborative editing
   - Complex workflow automation
 - notes:
   - Keep richer UX realization lane separate from smoke-test UI lane.
-  - Preserve web-first medium-dense workspace posture.
+  - Preserve current REST/OpenAPI integration posture for the UX lane.
 
 ## UX_PM_INTENT
 ### ux_pm_intent_v1 (selected_source=semantic_projection)
@@ -375,200 +375,192 @@ contracts:
 - semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
 schema_version: 'ux_pm_intent_v1'
 primary_product_intent:
-  summary: 'Help teams maintain a trustworthy tenant-scoped widget catalog and publishable collections without fragmented tooling.'
+  summary: 'Give tenant teams one reliable workspace for widget lifecycle, collection publishing, and role-aware access.'
   cues:
-    - 'single place for widget create/edit/list/view'
-    - 'consistent organization via tags and collections'
-    - 'role-aware publish model inside tenant boundary'
+    - 'Tenant-scoped catalog and organization are core outcomes.'
+    - 'Publishing and permissions must remain understandable for team leads.'
 primary_experience_intent:
-  summary: 'Prioritize a coherent catalog-to-detail-to-publish flow so primary operators can complete work with minimal context switching.'
+  summary: 'Make primary tasks fast and legible through a stable operational shell and straightforward journeys.'
   cues:
-    - 'list and detail are first-class and tightly connected'
-    - 'creation and update actions remain one click away'
-    - 'activity evidence stays visible near operational surfaces'
+    - 'Dashboard to catalog to detail to collections should feel continuous.'
+    - 'Primary actions should stay one click away from each surface.'
 trust_clarity_intent:
-  summary: 'Make critical state and access consequences explicit, especially around publish, permissions, and destructive changes.'
+  summary: 'Keep policy and data consequences visible with explicit confirmation and recovery behavior.'
   cues:
-    - 'tenant context always visible'
-    - 'confirmable destructive and permission-changing actions'
-    - 'readable activity history for accountability'
+    - 'Show role and tenant context on every consequential flow.'
+    - 'Keep activity evidence discoverable from editing and publish flows.'
 visual_tone_intent:
-  summary: 'Calm operational workspace with restrained accents, medium density, and high readability for data-heavy views.'
+  summary: 'Calm, operational, medium-dense desktop UX with restrained accents and strong readability.'
   cues:
-    - 'stable shell hierarchy over decorative visuals'
-    - 'readable tables, chips, and status metadata'
-    - 'subtle feedback and motion only'
+    - 'Prioritize hierarchy and scanability over decorative visuals.'
+    - 'Keep loading, progress, and state transitions subtle but explicit.'
 
 ## UX_CORE_JOURNEYS
 ### ux_core_journeys_v1 (selected_source=semantic_projection)
 
 ## CAF UX core journeys semantic projection (CAF-managed)
 - semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
-### Journey: Create and maintain widget records
-- journey_id: widget-lifecycle-management
+### Journey: Create and maintain widget content
+- journey_id: widget-lifecycle
 - source_capabilities: CAP-001
 - actor: Team Member
-- goal: Create or update a widget and confirm durable tenant-scoped state.
-- trigger: User starts a new widget or edits an existing widget from the catalog or detail view.
-- entry_surface: widget-catalog-and-editor
+- goal: Create or update a widget and confirm the result without losing context.
+- trigger: User opens catalog and starts create or edit.
+- entry_surface: catalog-workspace
 - major_steps:
-  - Open widget list or existing detail.
-  - Enter or modify widget fields and submit save.
-  - Resolve inline validation feedback if present.
-  - Confirm saved state with updated metadata and activity trace.
-- success_outcome: Widget updates are persisted with stable identity and visible recency context.
+  - Find or create target widget from catalog context.
+  - Edit widget fields in detail/editor mode.
+  - Validate and save changes.
+  - Confirm save outcome and latest version metadata.
+- success_outcome: Widget changes are persisted with stable identity, timestamps, and visible latest state.
 - failure_recovery_branches:
-  - Validation failure keeps input in place with actionable field guidance.
-  - Save failure exposes retry-safe action with unchanged prior committed state.
+  - Validation failure keeps input in place with corrective guidance.
+  - Save failure shows retry-safe error and preserves unsaved edits.
 - notable_variants:
-  - Create-first flow from primary action.
-  - Edit-in-context flow from list selection.
-### Journey: Organize widgets into collections and tags
+  - Create from empty-state CTA.
+  - Edit existing widget from filtered catalog list.
+### Journey: Organize widgets into collections
 - journey_id: collection-curation
 - source_capabilities: CAP-002
 - actor: Team Lead
-- goal: Maintain meaningful grouping for reuse and downstream sharing.
-- trigger: Lead needs to curate widgets for a team context.
-- entry_surface: collections-workspace
+- goal: Curate tags and collection membership so teams can find and publish coherent sets.
+- trigger: Lead starts organizing widgets for downstream sharing.
+- entry_surface: collections-sharing
 - major_steps:
-  - Filter widgets to locate candidates.
-  - Apply or adjust tags.
-  - Create or update collection membership.
-  - Review resulting organization metadata.
-- success_outcome: Collections and tags reflect intended grouping and are ready for sharing decisions.
+  - Select a collection or create one.
+  - Add and remove widget members.
+  - Apply or adjust tags for discoverability.
+  - Review membership before publish intent.
+- success_outcome: Collection structure and tags are updated with clear visibility into membership state.
 - failure_recovery_branches:
-  - Conflicting edits surface deterministic refresh and retry posture.
-  - Partial save error shows which updates committed and what remains pending.
+  - Conflicting updates surface refresh-and-merge guidance.
+  - Permission denial shows role-based restriction explanation.
 - notable_variants:
-  - Batch curation from filtered worklist.
-  - Single-widget curation from detail context.
-### Journey: Publish collections to tenant roles
-- journey_id: tenant-sharing-and-access
+  - Batch membership edits from collection view.
+  - Tag-first organization from widget detail context.
+### Journey: Publish collections with role-aware access
+- journey_id: role-aware-publish
 - source_capabilities: CAP-003
 - actor: Team Lead
-- goal: Share curated collections with explicit role-based visibility and edit rights.
-- trigger: Lead publishes or updates access for a collection.
-- entry_surface: sharing-and-permissions
+- goal: Publish collection access safely to intended tenant roles.
+- trigger: Lead initiates publish from a collection.
+- entry_surface: collections-sharing
 - major_steps:
-  - Select target collection and open sharing controls.
-  - Assign role-level access posture.
-  - Confirm publish change and role impact summary.
-  - Verify visibility behavior for intended audience.
-- success_outcome: Published collections are visible only to permitted tenant roles with audit-friendly change evidence.
+  - Open publish panel for selected collection.
+  - Choose role permissions and confirm impact.
+  - Submit publish/update action.
+  - Verify resulting visibility and access state.
+- success_outcome: Published collection is visible to authorized roles with auditable permission changes.
 - failure_recovery_branches:
-  - Permission conflict returns explicit denial reason without silent partial updates.
-  - Risky access changes require confirm/review before final commit.
+  - Policy denial returns explainable reason and adjustment path.
+  - Partial update failure retains prior permissions and exposes retry.
 - notable_variants:
-  - Initial publish from unpublished collection.
-  - Incremental role adjustment for already published collection.
-### Journey: Administer tenant users and settings with traceability
-- journey_id: tenant-admin-and-audit-oversight
-- source_capabilities: CAP-004
+  - Initial publish.
+  - Permission update on already published collection.
+### Journey: Manage tenant users, roles, settings, and activity
+- journey_id: tenant-governance-admin
+- source_capabilities: CAP-004, CAP-003
 - actor: Tenant Admin
-- goal: Maintain tenant user-role posture and settings while preserving clear audit history.
-- trigger: Admin updates user roles or tenant settings.
-- entry_surface: admin-and-activity
+- goal: Maintain tenant governance posture with visible role, settings, and activity outcomes.
+- trigger: Admin opens governance surfaces for role/settings changes or review.
+- entry_surface: admin-activity
 - major_steps:
-  - Locate target user or setting.
-  - Apply controlled change.
-  - Review confirmation and resulting state.
-  - Inspect activity timeline for recorded action.
-- success_outcome: Tenant configuration changes are applied and visibly recorded.
+  - Review users, roles, and key tenant settings.
+  - Apply role or settings changes.
+  - Confirm policy-constrained outcomes.
+  - Review activity timeline for audit traceability.
+- success_outcome: Admin changes persist with immediate evidence visibility and tenant-scoped traceability.
 - failure_recovery_branches:
-  - Invalid admin mutation returns clear correction path.
-  - Restricted action surfaces role/authorization reason.
+  - Unauthorized admin action is denied with explicit rationale.
+  - Save failure provides non-destructive retry with state preserved.
 - notable_variants:
-  - User-role assignment update.
-  - Tenant-setting update with confirmation.
+  - Role assignment updates.
+  - Settings change followed by activity verification.
 
 ## UX_INTERACTION_SURFACES
 ### ux_interaction_surfaces_v1 (selected_source=semantic_projection)
 
 ## CAF UX interaction surfaces semantic projection (CAF-managed)
 - semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
-### Surface: Widget catalog and detail editor
-- surface_id: widget-catalog-and-editor
-- purpose: Support fast discovery, creation, and maintenance of widgets in one connected workspace.
-- related_journeys: widget-lifecycle-management, collection-curation
-- dominant_interaction_mode: worklist-plus-detail-edit
+### Surface: Dashboard and navigation shell
+- surface_id: dashboard-shell
+- purpose: Keep tenant context, role context, key actions, and recent signals visible across all journeys.
+- related_journeys: widget-lifecycle, collection-curation, role-aware-publish, tenant-governance-admin
+- dominant_interaction_mode: shell_navigation_overview
 - key_states:
-  - empty catalog
-  - filtered results
-  - detail editing
-  - save success
-  - validation error
+  - ready
+  - loading
+  - tenant-context-missing
+  - role-limited
 - notable_transitions:
-  - Catalog to detail editor
-  - Detail editor back to filtered catalog
-  - Detail save to activity context
-### Surface: Collections and tagging workspace
-- surface_id: collections-workspace
-- purpose: Manage grouping, membership, and semantic organization of widgets.
-- related_journeys: collection-curation, tenant-sharing-and-access
-- dominant_interaction_mode: curation-and-organization
+  - Dashboard to catalog workspace.
+  - Dashboard to collections and admin surfaces.
+### Surface: Widget catalog and detail workspace
+- surface_id: catalog-workspace
+- purpose: Support list-to-detail editing with clear save, validation, and history awareness.
+- related_journeys: widget-lifecycle, collection-curation
+- dominant_interaction_mode: worklist_detail_edit
 - key_states:
-  - empty collections
-  - populated collection list
-  - membership editing
-  - tag update feedback
+  - empty
+  - filtered-results
+  - editing-draft
+  - save-success
+  - save-error
 - notable_transitions:
-  - Collection list to collection detail
-  - Collection detail to sharing controls
-  - Tag update to refreshed filter state
-### Surface: Publish and permissions controls
-- surface_id: sharing-and-permissions
-- purpose: Configure role-based access and publish posture with explicit consequence visibility.
-- related_journeys: tenant-sharing-and-access
-- dominant_interaction_mode: review-and-confirm
+  - Catalog list to detail editor.
+  - Detail editor to activity/history context.
+### Surface: Collections, tags, and sharing workspace
+- surface_id: collections-sharing
+- purpose: Support curation and role-targeted publish decisions in one bounded surface.
+- related_journeys: collection-curation, role-aware-publish
+- dominant_interaction_mode: curation_publish_review
 - key_states:
-  - unpublished
-  - published
-  - permission edit pending
-  - permission update confirmed
-  - permission update denied
+  - collection-empty
+  - membership-editing
+  - publish-pending
+  - publish-success
+  - publish-denied
 - notable_transitions:
-  - Collection context to publish dialog
-  - Permission draft to confirmation checkpoint
-  - Confirmation to published summary view
-### Surface: Tenant administration and activity timeline
-- surface_id: admin-and-activity
-- purpose: Centralize tenant role/settings operations and audit-friendly activity inspection.
-- related_journeys: tenant-admin-and-audit-oversight, widget-lifecycle-management, tenant-sharing-and-access
-- dominant_interaction_mode: settings-and-audit-review
+  - Collection detail to publish panel.
+  - Publish result back to collection visibility summary.
+### Surface: Tenant administration and activity surface
+- surface_id: admin-activity
+- purpose: Combine admin controls with timeline-style evidence visibility for governance confidence.
+- related_journeys: tenant-governance-admin, role-aware-publish
+- dominant_interaction_mode: settings_admin_audit
 - key_states:
-  - user list loaded
-  - settings form editing
-  - update success
-  - authorization denied
-  - activity timeline filtered
+  - admin-overview
+  - role-editing
+  - settings-editing
+  - activity-loaded
+  - action-denied
 - notable_transitions:
-  - Admin settings to activity trace
-  - Activity filter to entity-specific detail
-  - Role change action to confirmation state
+  - Admin forms to confirmation states.
+  - Admin action to activity timeline verification.
 
 ## UX_VISUAL_DIRECTION
 ### ux_visual_direction_v1 (selected_source=semantic_projection)
 
 ## CAF UX visual direction semantic projection (CAF-managed)
 - semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
-- visual_tone: Calm, operational, and trustworthy with restrained accent use.
-- navigation_shell: Persistent left navigation with top context bar showing tenant and primary action context.
-- density_posture: Medium-dense desktop-first layout that keeps lists and metadata scannable.
+- visual_tone: Calm, trustworthy operational workspace with restrained accent use and clear consequence visibility.
+- navigation_shell: Persistent left navigation with top context bar showing tenant, role, and primary action context.
+- density_posture: Medium-dense desktop-first layout that keeps data readable under operational load.
 - surface_treatment:
-  - Layered panels and cards with clear but not heavy boundaries.
-  - Status chips and metadata rows prioritize legibility over decoration.
-  - Accent color reserved for focus actions and key state signals.
+  - Layered panels/cards with light borders and low-noise contrast.
+  - Clear status chips and inline helper text for consequential actions.
+  - Minimal decorative flourishes; prioritize content hierarchy.
 - typography_and_readability:
-  - Strong heading hierarchy for workspace orientation.
-  - Table and list typography tuned for quick scan under operational load.
-  - Activity timelines favor concise event phrasing and timestamp clarity.
+  - Strong heading hierarchy for dashboard, catalog, and admin sections.
+  - Table/list text tuned for scanability and status comprehension.
+  - Timeline/history entries should read like concise editorial logs.
 - motion_posture:
-  - Subtle loading and transition feedback.
-  - No novelty animation in critical flows.
-  - Keep feedback responsive around save, publish, and permission actions.
+  - Subtle loading skeletons and progress affordances for async or save flows.
+  - Quiet transition animations that preserve spatial continuity.
+  - No novelty motion in governance-critical interactions.
 - ux_realization_posture:
-  - Richer UX lane should appear intentionally more polished than smoke-test UI.
-  - Keep shell and state behavior consistent with existing REST/OpenAPI boundaries.
+  - Keep richer UX lane visually stronger than smoke-test UI while sharing same contract boundaries.
+  - Preserve role-aware and tenant-aware visibility in all primary surfaces.
 
 ## UX_PATTERN_PRESSURES
 ### ux_pattern_pressures_v1 (selected_source=semantic_projection)
@@ -578,59 +570,50 @@ visual_tone_intent:
 schema_version: 'ux_pattern_pressures_semantic_projection_v1'
 pressures:
   - pressure_id: 'ux-pressure-001'
-    journey_ref: 'widget-lifecycle-management'
-    surface_ref: 'widget-catalog-and-editor'
-    category: 'search_filter_sort'
-    priority: 'high'
-    cues:
-      - 'Operators need fast catalog filtering by tag, collection, and recency.'
-      - 'List and detail context must stay coherent across edits.'
-    rationale: 'Catalog usability and edit confidence depend on strong list/detail continuity.'
-  - pressure_id: 'ux-pressure-002'
-    journey_ref: 'widget-lifecycle-management'
-    surface_ref: 'widget-catalog-and-editor'
+    journey_ref: 'widget-lifecycle'
+    surface_ref: 'catalog-workspace'
     category: 'crud_detail_edit'
     priority: 'high'
     cues:
-      - 'Create and update flows need validation clarity without losing user input.'
-      - 'Save outcomes should be explicit and audit-aware.'
-    rationale: 'Core product value is daily widget creation and maintenance.'
+      - 'Edit and save workflows need draft-safe validation and explicit outcomes.'
+      - 'Users move repeatedly between list and detail during curation.'
+    rationale: 'Core product value depends on reliable detail editing with low-friction recovery.'
+  - pressure_id: 'ux-pressure-002'
+    journey_ref: 'widget-lifecycle'
+    surface_ref: 'catalog-workspace'
+    category: 'search_filter_sort'
+    priority: 'high'
+    cues:
+      - 'Catalog must stay usable with tenant-scoped filters and sorts.'
+      - 'Operators need clear empty/loading/error states.'
+    rationale: 'Discoverability and quick targeting are prerequisites for every downstream action.'
   - pressure_id: 'ux-pressure-003'
-    journey_ref: 'tenant-sharing-and-access'
-    surface_ref: 'sharing-and-permissions'
+    journey_ref: 'role-aware-publish'
+    surface_ref: 'collections-sharing'
     category: 'review_approval'
     priority: 'high'
     cues:
-      - 'Publish and role changes carry tenant-wide consequences.'
-      - 'Users need confirmation and denial rationale visibility.'
-    rationale: 'Sharing flows require explicit decision posture and accountability.'
+      - 'Publish permissions are consequential and role-sensitive.'
+      - 'UX must expose confirmation and denial reasoning paths.'
+    rationale: 'Publishing mistakes are high-impact, so decision clarity and reversibility matter.'
   - pressure_id: 'ux-pressure-004'
-    journey_ref: 'tenant-admin-and-audit-oversight'
-    surface_ref: 'admin-and-activity'
+    journey_ref: 'tenant-governance-admin'
+    surface_ref: 'admin-activity'
     category: 'settings_admin'
     priority: 'medium'
     cues:
-      - 'Tenant role and settings updates must feel controlled and reversible.'
-      - 'Admin tasks should stay distinct from day-to-day catalog tasks.'
-    rationale: 'Admin operations are lower frequency but high impact.'
+      - 'Admin actions require transparent state and audit visibility.'
+      - 'Role and settings edits should stay recoverable and explicit.'
+    rationale: 'Governance confidence depends on understandable admin surfaces and outcomes.'
   - pressure_id: 'ux-pressure-005'
-    journey_ref: 'tenant-admin-and-audit-oversight'
-    surface_ref: 'admin-and-activity'
+    journey_ref: 'tenant-governance-admin'
+    surface_ref: 'admin-activity'
     category: 'audit_explainability'
-    priority: 'high'
-    cues:
-      - 'Activity history is an explicit product value proposition.'
-      - 'Operators need readable change traces across widget and admin actions.'
-    rationale: 'Evidence readability underpins trust and operational clarity.'
-  - pressure_id: 'ux-pressure-006'
-    journey_ref: 'collection-curation'
-    surface_ref: 'collections-workspace'
-    category: 'visual_shell_hierarchy'
     priority: 'medium'
     cues:
-      - 'Multi-surface curation needs stable shell orientation.'
-      - 'Workspace hierarchy should reduce context switching fatigue.'
-    rationale: 'Clear shell hierarchy supports medium-dense operational use.'
+      - 'Activity history must expose request, decision, and outcome continuity.'
+      - 'Users need explainable deny/failure messaging tied to actions.'
+    rationale: 'Audit-friendly UX is a first-class requirement in PRD and platform posture.'
 
 ## UX_STATE_AND_RECOVERY
 ### ux_state_and_recovery_v1 (selected_source=semantic_projection)
@@ -638,20 +621,16 @@ pressures:
 ## CAF UX state and recovery semantic projection (CAF-managed)
 - semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
 - key_states:
-  - empty
-  - loading
-  - ready
-  - validation_error
-  - permission_denied
-  - save_success
-  - publish_pending
-  - publish_complete
-  - update_failed
+  - Empty catalog or collection with next-action guidance.
+  - Loading and refresh states for list/detail/admin surfaces.
+  - Validation error states that preserve user-entered form data.
+  - Save or publish success states with clear resulting permissions/status.
+  - Denied or failed states with explainable reason and retry-safe action.
 - recovery_principles:
-  - Preserve user-entered content on recoverable validation errors.
-  - Use explicit retry-safe actions for transient save or fetch failures.
-  - Keep prior committed state visible when updates fail.
-  - Show authorization or policy denial reasons in user-facing language.
+  - Preserve user input whenever recovery is possible.
+  - Prefer inline, localized recovery guidance over global opaque errors.
+  - Keep tenant and role context visible during all failure and deny paths.
+  - Ensure consequential actions produce auditable, user-visible outcome confirmation.
 
 ## UX_TOUCHPOINTS_AND_CONSTRAINTS
 ### ux_touchpoints_and_constraints_v1 (selected_source=semantic_projection)
@@ -660,14 +639,14 @@ pressures:
 - semantic_source: design/playbook/ux_semantic_derivation_packet_v1.yaml
 - touchpoints:
   - Tenant-scoped REST list/detail/mutation endpoints for widgets and collections.
-  - Role and permission APIs backing publish/access controls.
-  - Activity-history endpoint(s) exposing actor, action, target, and timestamp.
-  - Tenant admin endpoints for user-role and settings management.
+  - CP policy and safety decision touchpoints surfaced as user-visible allow/deny outcomes.
+  - Activity/evidence feeds for timeline and audit views.
+  - Session and role context propagated from authenticated claims.
 - constraints:
-  - Tenant context must stay visible and authoritative through primary flows.
-  - Richer UX lane remains separate from smoke-test UI lane.
-  - First release is web-first; offline and real-time behaviors are not required.
-  - Accessibility posture stays keyboard-friendly and readability-first.
+  - Maintain separation between richer UX lane and smoke-test UI lane.
+  - Keep REST/OpenAPI contract style unless architecture lane explicitly changes it.
+  - Avoid UX assumptions that require realtime collaboration or cross-tenant sharing.
+  - [object Object]
 
 ## UX_INTERFACE_CONTRACT_PRESSURES
 ### ux_interface_contract_pressures_v1 (selected_source=semantic_projection)
@@ -677,27 +656,34 @@ pressures:
 schema_version: 'ux_interface_contract_pressures_semantic_projection_v1'
 contract_style_assumption: 'rest_openapi'
 pressures:
-  - pressure_id: 'ux-contract-001'
-    category: 'list_detail_query_posture'
+  - pressure_id: 'contract-pressure-001'
+    category: 'list_detail_query'
     priority: 'high'
     cues:
-      - 'Worklists require filtering, sorting, and stable pagination.'
-      - 'Detail views should hydrate enough data to avoid chatty follow-up calls.'
-    rationale: 'Catalog and collection workflows depend on predictable list/detail contracts.'
-  - pressure_id: 'ux-contract-002'
-    category: 'mutation_validation_feedback'
+      - 'Catalog and collections need tenant-scoped filtering, sorting, and stable pagination.'
+      - 'Detail surfaces need composed read models that reduce chatty round-trips.'
+    rationale: 'Primary journeys rely on fast, understandable list-to-detail interaction.'
+  - pressure_id: 'contract-pressure-002'
+    category: 'mutation_outcomes'
     priority: 'high'
     cues:
-      - 'Create and update mutations must return field-level validation clarity.'
-      - 'Publish/permission mutations need explicit result semantics.'
-    rationale: 'UX recovery and trust rely on precise mutation feedback.'
-  - pressure_id: 'ux-contract-003'
-    category: 'status_history_visibility'
+      - 'Save and publish mutations need explicit validation and outcome payloads.'
+      - 'Denials must include explainable policy/safety reason signals.'
+    rationale: 'Consequential workflows require clear success/failure semantics in the interface contract.'
+  - pressure_id: 'contract-pressure-003'
+    category: 'activity_history'
     priority: 'medium'
     cues:
-      - 'Activity endpoints should support recency and actor-centric filtering.'
-      - 'Publish/admin effects should appear quickly in history reads.'
-    rationale: 'Audit-friendly UX needs timely and queryable evidence surfaces.'
+      - 'UX activity timeline needs request/decision/outcome references.'
+      - 'Admin and publish actions should map to retrievable evidence records.'
+    rationale: 'Audit-friendly visibility depends on durable, queryable event contracts.'
+  - pressure_id: 'contract-pressure-004'
+    category: 'auth_session_role_aware'
+    priority: 'medium'
+    cues:
+      - 'Responses should preserve tenant and role awareness for UI gating.'
+      - 'Session expiry and role changes need predictable UX-visible consequences.'
+    rationale: 'Role-aware navigation and permissions are central to this product surface.'
 
 ## UX_REVIEW_PRESSURES
 ### ux_review_pressures_v1
@@ -727,38 +713,45 @@ generated_from:
   inputs:
     - reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
     - reference_architectures/codex-saas/spec/playbook/application_domain_model_v1.md
+    - reference_architectures/codex-saas/product/PRD.resolved.md
 domain:
-  summary: Tenant-scoped widget management with collaboration, sharing, tenant administration, and activity audit.
+  summary: Tenant-scoped widget SaaS domain covering widget lifecycle, curation, sharing authorization, and activity audit.
   bounded_contexts:
     - context_id: WIDGET_CATALOG
-      name: Widget Catalog
+      name: Widget Catalog Management
+      description: Owns widget CRUD and version history for tenant-scoped artifacts.
       aggregates:
         - aggregate_id: WIDGET
           name: Widget
+          description: Tenant-scoped reusable artifact created and maintained by team members.
           persistence:
             required: true
             storage_intent: transactional_record
+            notes: Tenant-keyed relational storage with indexes on tenant_id and update time.
           entities:
             - entity_id: WIDGET
               name: Widget
               fields:
-                - name: tenant_id
-                  type: string
-                  required: true
                 - name: widget_id
+                  type: uuid
+                  required: true
+                - name: tenant_id
+                  type: uuid
+                  required: true
+                - name: name
                   type: string
                   required: true
-                - name: title
+                - name: summary
                   type: string
-                  required: true
-                - name: description
-                  type: string
+                  required: false
+                - name: content
+                  type: text_json_payload
                   required: true
                 - name: status
                   type: enum(draft|published|archived)
                   required: true
-                - name: current_version_id
-                  type: string
+                - name: created_by_user_id
+                  type: uuid
                   required: true
                 - name: created_at
                   type: datetime
@@ -766,21 +759,14 @@ domain:
                 - name: updated_at
                   type: datetime
                   required: true
-                - name: created_by_user_id
-                  type: string
-                  required: true
             - entity_id: WIDGET_VERSION
-              name: Widget Version
+              name: WidgetVersion
               fields:
-                - name: tenant_id
-                  type: string
-                  required: true
-                - name: widget_id
-                  type: string
-                  required: true
                 - name: version_id
-                  type: string
+                  type: uuid
                   required: true
+                - name: tenant_id
+                  type: uuid
 ~~~
 
 ### system_domain_model_v1.yaml
@@ -792,17 +778,21 @@ generated_from:
   inputs:
     - reference_architectures/codex-saas/spec/playbook/system_spec_v1.md
     - reference_architectures/codex-saas/spec/playbook/system_domain_model_v1.md
+    - reference_architectures/codex-saas/product/PLATFORM_PRD.resolved.md
 domain:
-  summary: Platform-owned policy, execution, evidence, retention, and lifecycle records for governance and auditability.
+  summary: Control-plane domain for policy governance, governed execution evidence, and retention lifecycle administration.
   bounded_contexts:
     - context_id: POLICY_GOVERNANCE
       name: Policy and Governance
+      description: Owns policy definitions, policy versions, and approval outcomes.
       aggregates:
         - aggregate_id: POLICY
           name: Policy
+          description: Logical governance artifact that represents a named rule set or evaluation policy.
           persistence:
             required: true
             storage_intent: catalog_registry
+            notes: Control-plane policy lifecycle owner.
           entities:
             - entity_id: POLICY
               name: Policy
@@ -842,10 +832,6 @@ domain:
                   required: true
                 - name: created_by
                   type: identifier
-                  required: true
-                - name: created_at
-                  type: timestamp
-                  required: true
 ~~~
 
 ### BRIDGE_ECHO (canonical phrases)

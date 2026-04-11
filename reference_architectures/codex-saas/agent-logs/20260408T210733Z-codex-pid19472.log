@@ -1,0 +1,3601 @@
+INFO: CAF agent log capture enabled at reference_architectures/codex-saas/agent-logs/20260408T210733Z-codex-pid19472.log.
+INFO: CAF runner log transport: pipe.
+# CAF agent run log
+run_id: 20260408T210733Z-codex-pid19472
+runner: Codex
+instance: codex-saas
+repo_root: C:\data\contura\caf-dev
+started_at_utc: 2026-04-08T21:07:33.781Z
+log_transport: pipe
+
+INFO: Using Codex CLI at C:\devtools\nodejs\codex.cmd (via shell shim).
+INFO: Routed step state path: C:\data\contura\caf-dev\reference_architectures\codex-saas\.caf-state\routed_step_state_v1.json.
+INFO: Runner session state path: C:\data\contura\caf-dev\reference_architectures\codex-saas\.caf-state\runner_session_state_v1.json.
+INFO: Routed step state write completed at C:\data\contura\caf-dev\reference_architectures\codex-saas\.caf-state\routed_step_state_v1.json.
+SKIP: Seed bootstrap workspace already satisfied.
+SKIP: Promote PRD already satisfied.
+SKIP: First architecture pass already satisfied.
+SKIP: Advance lifecycle checkpoint already satisfied.
+SKIP: Second architecture pass already satisfied.
+SKIP: Planning bundle already satisfied.
+RESUME: Main build lane invalidated; rerunning /caf build codex-saas.
+RUN: /caf build codex-saas
+Reading additional input from stdin...
+OpenAI Codex v0.118.0 (research preview)
+--------
+workdir: C:\data\contura\caf-dev
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, C:\Users\gabri\.codex\memories]
+reasoning effort: medium
+reasoning summaries: none
+session id: 019d6eec-09cf-7322-a9b4-9b81d20cc0a7
+--------
+user
+/caf build codex-saas
+codex
+I’ll run the CAF router command for `build` on `codex-saas` in this repo and then report the result or the exact blocker it returns.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '/caf build codex-saas' in C:\data\contura\caf-dev
+2026-04-08T21:07:44.104519Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 1 seconds
+Output:
+. : File C:\Users\gabri\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 cannot be loaded. The file 
+C:\Users\gabri\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 is not digitally signed. You cannot run 
+this script on the current system. For more information about running scripts and setting execution policy, see 
+about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
+At line:1 char:3
++ . 'C:\Users\gabri\Documents\WindowsPowerShell\Microsoft.PowerShell_pr ...
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+/caf : The term '/caf' is not recognized as the name of a cmdlet, function, script file, or operable program. Check 
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ /caf build codex-saas
++ ~~~~
+    + CategoryInfo          : ObjectNotFound: (/caf:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+
+ exited 1 in 1010ms:
+. : File C:\Users\gabri\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 cannot be loaded. The file 
+C:\Users\gabri\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 is not digitally signed. You cannot run 
+this script on the current system. For more information about running scripts and setting execution policy, see 
+about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
+At line:1 char:3
++ . 'C:\Users\gabri\Documents\WindowsPowerShell\Microsoft.PowerShell_pr ...
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+/caf : The term '/caf' is not recognized as the name of a cmdlet, function, script file, or operable program. Check 
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ /caf build codex-saas
++ ~~~~
+    + CategoryInfo          : ObjectNotFound: (/caf:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+
+codex
+The command failed before CAF ran: PowerShell profile policy blocked startup, and `/caf` is not defined in this shell. I’m checking the CAF skill shim in this repo to run the canonical entrypoint correctly.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw .codex/skills/caf/SKILL.md' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-ChildItem -Force' in C:\data\contura\caf-dev
+ succeeded in 568ms:
+---
+name: caf
+description: Runner shim that resolves the active CAF skillpack and delegates to the canonical /caf router.
+status: active
+---
+
+> **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
+> If this SKILL conflicts with the contract, the contract wins.
+
+# /caf (runner shim)
+
+This file exists only to select the correct skillpack (default vs portable) at runtime.
+
+## Resolution (deterministic)
+
+- Default: `skills/caf/SKILL.md`
+- If `tools/caf-state/active_skillpack.json` contains `"active_pack": "portable"`: `skills_portable/caf/SKILL.md`
+
+When invoked, execute the resolved router skill **verbatim** (no extra steps, no alternate flows).
+
+## Codex runner hard stop
+
+If this session already carries `CAF_ACTIVE_RUNNER_SESSION=1` and `CAF_ACTIVE_RUNNER_NAME=codex`, stay in the CURRENT Codex session.
+
+- Do NOT shell out to `codex`, `codex exec`, another `/caf ...` command, or any other nested runner just to continue CAF.
+- For `/caf build ...` and `/caf ux build ...`, current-session worker/reviewer dispatch is mandatory when `CAF_CURRENT_SESSION_DISPATCH_REQUIRED=1`.
+- If you think nested runner execution is required, treat that as a fail-closed blocker and follow the canonical build/ux-build skill guidance. Do not try nested `codex exec` first.
+
+
+ succeeded in 620ms:
+
+
+    Directory: C:\data\contura\caf-dev
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/6/2026   9:11 AM                .agent                                                               
+d-----          4/6/2026   9:11 AM                .claude                                                              
+d-----          4/6/2026   9:11 AM                .codex                                                               
+d-----          4/6/2026   9:11 AM                .copilot                                                             
+d--h--          4/8/2026   2:00 PM                .git                                                                 
+d-----          3/7/2026   6:16 AM                .githooks                                                            
+d-----          4/6/2026   9:11 AM                .github                                                              
+d-----          4/6/2026   9:11 AM                .kiro                                                                
+d-----          3/7/2026   6:16 AM                .vscode                                                              
+d-----          4/6/2026   9:11 AM                architecture_library                                                 
+d-----          4/8/2026   6:16 AM                companion_repositories                                               
+d-----         3/10/2026  11:50 AM                docs                                                                 
+d-----          4/8/2026  12:35 PM                reference_architectures                                              
+d-----          4/6/2026   9:11 AM                skills                                                               
+d-----          4/6/2026   9:11 AM                skills_portable                                                      
+d-----         3/11/2026   7:31 AM                tools                                                                
+-a----         3/19/2026  11:54 AM            255 .gitignore                                                           
+-a----          4/6/2026   9:11 AM           7564 AGENTS.md                                                            
+-a----          3/7/2026   6:16 AM             10 CLAUDE.md                                                            
+-a----          3/7/2026   6:16 AM           1065 LICENSE                                                              
+-a----          4/5/2026   7:51 AM           9546 README.md                                                            
+-a----         3/30/2026   3:37 AM              6 VERSION                                                              
+-a----          3/7/2026   6:16 AM           1927 VERSIONING.md                                                        
+
+
+
+codex
+I confirmed the shim; next I’m resolving which underlying CAF router skillpack is active and then I’ll invoke the exact supported command path from that skill.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw tools/caf-state/active_skillpack.json' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw skills/caf/SKILL.md' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw skills_portable/caf/SKILL.md' in C:\data\contura\caf-dev
+ succeeded in 507ms:
+---
+name: caf
+version: 1
+summary: Single-entry CAF router command. Dispatches to core CAF workflows (help/ask/saas/prd/arch/plan/backlog/next/build/ux and ux plan).
+---
+
+> **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
+> If this SKILL conflicts with the contract, the contract wins.
+
+
+# CAF Router (single command surface)
+
+## Invocation
+
+Use **one** command:
+
+- `/caf help [optional question...]`
+- `/caf ask <question...>`
+- `/caf saas <instance_name>`
+- `/caf arch <instance_name>`
+- `/caf plan <instance_name>`
+- `/caf backlog <instance_name>`
+- `/caf next <instance_name> [apply]`
+- `/caf build <instance_name> [wave_index]`
+- `/caf ux <instance_name>`
+- `/caf ux plan <instance_name>`
+- `/caf prd <instance_name> [promote=true|false]`
+
+Examples:
+
+- /caf ask Summarize the main features of the codex-saas reference architecture.
+
+- `/caf saas hello-saas`
+- `/caf arch hello-saas`
+- `/caf plan hello-saas`
+- `/caf backlog hello-saas`
+- `/caf next hello-saas`
+- `/caf next hello-saas apply`
+- `/caf build hello-saas`
+- `/caf build hello-saas 0`
+- `/caf ux hello-saas`
+- `/caf ux plan hello-saas`
+- `/caf ux build hello-saas`
+- `/caf prd hello-saas`
+
+## Routing rules (deterministic)
+
+1) Parse the first token after `/caf` as `subcommand`.
+2) Fail closed if `subcommand` is missing or not one of: `help | saas | arch | plan | backlog | next | build | prd | ask | ux`.
+3) Special case: if the first token is `ux` and the second token is the literal `plan`, dispatch to the canonical `/caf ux plan` skill.
+4) Special case: if the first token is `ux` and the second token is the literal `build`, dispatch to the canonical `/caf ux build` skill.
+5) Dispatch by **executing the canonical skill** listed below. Do not invent alternate steps.
+
+Canonical skills (authoritative):
+
+- `ux plan` â†’ `skills/caf-ux-plan/SKILL.md`
+- `ux build` â†’ `skills/caf-ux-build/SKILL.md`
+
+- `help` â†’ `skills/caf-help/SKILL.md`
+- `ask` â†’ `skills/caf-ask/SKILL.md`
+- `saas` â†’ `skills/caf-saas/SKILL.md`
+- `arch` â†’ `skills/caf-arch/SKILL.md`
+- `plan` â†’ `skills/caf-plan/SKILL.md`
+- `backlog` â†’ `skills/caf-backlog/SKILL.md`
+- `next` â†’ `skills/caf-next/SKILL.md`
+- `build` â†’ `skills/caf-build-candidate/SKILL.md`  *(current canonical build skill; invoked via router)*
+- `ux` â†’ `skills/caf-ux/SKILL.md`
+- `prd` â†’ `skills/caf-prd/SKILL.md`
+
+## Global invariants (router-enforced)
+
+- **No git commands.** Do not run any `git ...` commands for any reason.
+- Fail-closed: if required inputs are missing/ambiguous, emit a feedback packet rather than guessing.
+
+## No ad-hoc scripts (router-enforced)
+
+CAF workflows MUST avoid ad-hoc scripting. This default skillpack may invoke explicitly named Node helpers under `tools/caf/` when a sub-skill requires them.
+
+**Forbidden:** ad-hoc inline PowerShell/bash scripts, multi-line command blocks, pipelines that construct arrays/objects, function definitions, or loops.
+
+**Allowed (maintainer-only token savers; mechanical only):** a small, explicitly named set of Node helpers under `tools/caf/` may be invoked *only when referenced by the target sub-skill* (e.g., `seed_saas_v1.mjs`, `companion_init_v1.mjs`, `next_v1.mjs`, `validate_instance_v1.mjs`).
+
+During routed workflows:
+- Treat `tools/**` as **read-only**.
+- Do NOT modify `tools/**`, `skills/**`, or `architecture_library/**`. If a change seems required, fail-closed with a feedback packet describing the needed producer-side fix.
+- If a temporary runner-local helper is absolutely necessary, keep it under the active shim `scripts/` folder, not under `tools/caf/`.
+
+**Allowed (portable, single-line):**
+- list (`ls`, `find`, `Get-ChildItem`)
+- bounded reads (`head`, `sed -n`, `Get-Content -TotalCount`)
+- grep-style search (`rg`, `grep -RIn`, `Select-String`)
+- explicit full-file writes (heredoc / copy templates)
+
+If a step seems to â€œneed scripting,â€ treat that as a CAF design bug and fail-closed with a feedback packet requesting a more explicit derived artifact or a library declaration.
+
+## Subcommand argument parsing
+
+### `/caf help [question...]`
+
+- If no question is provided, request command discovery guidance.
+
+### `/caf saas <instance_name>`
+
+- `instance_name` is required.
+- Do NOT validate that `reference_architectures/<instance_name>/` exists. `/caf saas` is the creator command and will initialize the instance directory if missing.
+
+### `/caf arch <instance_name>`
+
+- `instance_name` is required.
+
+### `/caf plan <instance_name>`
+
+- `instance_name` is required.
+- `/caf plan` owns the semantic planning artifacts (`pattern_obligations_v1.yaml`, `task_graph_v1.yaml`, `interface_binding_contracts_v1.yaml`, and `task_plan_v1.md`).
+- `/caf plan` does **not** need to emit the human backlog view inline when the task graph is large.
+
+### `/caf backlog <instance_name>`
+
+- `instance_name` is required.
+- `/caf backlog` is the on-demand human backlog projection. It reads the existing `task_graph_v1.yaml` and writes `task_backlog_v1.md` without rerunning semantic planning.
+
+### `/caf next <instance_name> [apply]`
+
+- `instance_name` is required.
+- `apply` is optional.
+  - Omit it to preview the recommended next phase.
+  - Include the literal token `apply` to checkpoint and advance.
+
+### `/caf build <instance_name> [wave_index]`
+
+- `instance_name` is required.
+- `wave_index` is optional at the router level, but build policy may make it required for larger task graphs.
+- Do not invent a different multi-wave control surface. The canonical operator-managed form is `/caf build <instance_name> <wave_index>`.
+- In build wave mode, prior-wave completion evidence is read from `companion_repositories/<instance_name>/profile_v1/caf/task_reports/` and `companion_repositories/<instance_name>/profile_v1/caf/reviews/`, not from `reference_architectures/<instance_name>/`.
+
+### `/caf ux <instance_name>`
+
+- `instance_name` is required.
+- `/caf ux` is the bounded UX derivation lane. It materializes and refreshes `ux_design_v1.md`, runs the same retrieval discipline as the other lanes, writes grounded UX candidates back into the canonical UX artifact, and stops before `/caf ux plan`.
+- `/caf ux` is expected after the second `/caf arch <instance_name>`. It may be run after `/caf plan` or `/caf build` when the goal is a richer governed UX surface over the existing REST APIs.
+
+### `/caf ux plan <instance_name>`
+
+- Parse this as a special routed form: first token `ux`, second token `plan`, third token `instance_name`.
+- `instance_name` is required.
+- `/caf ux plan` is the first bounded UX planning proof. It reads `ux_design_v1.md`, `ux_visual_system_v1.md`, and the UX retrieval blob, invokes an instruction-owned UX planner that emits `ux_task_graph_v1.yaml`, then projects `ux_task_plan_v1.md` and `ux_task_backlog_v1.md`, and stops before `/caf ux build`.
+- `/caf ux plan` keeps the current smoke-test UI lane separate and assumes the richer UX lane remains on top of the current REST/OpenAPI AP/CP surfaces.
+
+### `/caf ux build <instance_name>`
+
+- Parse this as a special routed form: first token `ux`, second token `build`, third token `instance_name`.
+- `instance_name` is required.
+- `/caf ux build` realizes the separate UX build lane from `ux_task_graph_v1.yaml`.
+- `/caf ux build` requires the main `/caf build <instance_name>` lane to have completed first; it does not replace the smoke-test UI build path.
+- `/caf ux build` writes the richer UX surface into a separate companion-repo namespace/root so it does not conflict with the smoke-test UI lane.
+
+### `/caf prd <instance_name> [promote=true|false]`
+
+- `instance_name` is required.
+- `promote` is optional.
+  - Default: `promote=true`
+  - Accept values: `promote=true` or `promote=false`.
+
+
+2026-04-08T21:07:55.495985Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.6 seconds
+Output:
+Get-Content : Cannot find path 'C:\data\contura\caf-dev\tools\caf-state\active_skillpack.json' because it does not 
+exist.
+At line:2 char:1
++ Get-Content -Raw tools/caf-state/active_skillpack.json
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\data\contura..._skillpack.json:String) [Get-Content], ItemNotFoundEx 
+   ception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+
+ exited 1 in 598ms:
+Get-Content : Cannot find path 'C:\data\contura\caf-dev\tools\caf-state\active_skillpack.json' because it does not 
+exist.
+At line:2 char:1
++ Get-Content -Raw tools/caf-state/active_skillpack.json
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\data\contura..._skillpack.json:String) [Get-Content], ItemNotFoundEx 
+   ception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+
+ succeeded in 544ms:
+---
+name: caf
+version: 1
+summary: Single-entry CAF router command. Dispatches to core CAF workflows (help/ask/saas/arch/plan/backlog/next/build/prd).
+---
+
+> **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
+> If this SKILL conflicts with the contract, the contract wins.
+
+
+# CAF Router (single command surface)
+
+## Invocation
+
+Use **one** command:
+
+- `/caf help [optional question...]`
+- `/caf ask <question...>`
+- `/caf saas <instance_name>`
+- `/caf arch <instance_name>`
+- `/caf plan <instance_name>`
+- `/caf backlog <instance_name>`
+- `/caf next <instance_name> [apply]`
+- `/caf build <instance_name> [wave_index]`
+- `/caf prd <instance_name> [promote=true|false]`
+
+Examples:
+
+- /caf ask Summarize the main features of the codex-saas reference architecture.
+
+- `/caf saas hello-saas`
+- `/caf arch hello-saas`
+- `/caf plan hello-saas`
+- `/caf backlog hello-saas`
+- `/caf next hello-saas`
+- `/caf next hello-saas apply`
+- `/caf build hello-saas`
+- `/caf build hello-saas 0`
+- `/caf prd hello-saas`
+
+## Routing rules (deterministic)
+
+1) Parse the first token after `/caf` as `subcommand`.
+2) Fail closed if `subcommand` is missing or not one of: `help | saas | arch | plan | backlog | next | build | prd | ask`.
+3) Dispatch by **executing the canonical skill** listed below. Do not invent alternate steps.
+
+Canonical skills (authoritative):
+
+- `help` â†’ `skills/caf-help/SKILL.md`
+- `ask` â†’ `skills/caf-ask/SKILL.md`
+- `saas` â†’ `skills/caf-saas/SKILL.md`
+- `arch` â†’ `skills/caf-arch/SKILL.md`
+- `plan` â†’ `skills/caf-plan/SKILL.md`
+- `backlog` â†’ `skills/caf-backlog/SKILL.md`
+- `next` â†’ `skills/caf-next/SKILL.md`
+- `build` â†’ `skills/caf-build-candidate/SKILL.md`  *(current canonical build skill; invoked via router)*
+- `prd` â†’ `skills/caf-prd/SKILL.md`
+
+## Global invariants (router-enforced)
+
+- **No git commands.** Do not run any `git ...` commands for any reason.
+- Fail-closed: if required inputs are missing/ambiguous, emit a feedback packet rather than guessing.
+
+## No ad-hoc scripts (router-enforced)
+
+CAF workflows MUST avoid ad-hoc scripting. This default skillpack may invoke explicitly named Node helpers under `tools/caf/` when a sub-skill requires them.
+
+**Forbidden:** ad-hoc inline PowerShell/bash scripts, multi-line command blocks, pipelines that construct arrays/objects, function definitions, or loops.
+
+**Allowed (maintainer-only token savers; mechanical only):** a small, explicitly named set of Node helpers under `tools/caf/` may be invoked *only when referenced by the target sub-skill* (e.g., `seed_saas_v1.mjs`, `companion_init_v1.mjs`, `next_v1.mjs`, `validate_instance_v1.mjs`).
+
+During routed workflows:
+- Treat `tools/**` as **read-only**.
+- Do NOT modify `tools/**`, `skills/**`, or `architecture_library/**`. If a change seems required, fail-closed with a feedback packet describing the needed producer-side fix.
+- If a temporary runner-local helper is absolutely necessary, keep it under the active shim `scripts/` folder, not under `tools/caf/`.
+
+**Allowed (portable, single-line):**
+- list (`ls`, `find`, `Get-ChildItem`)
+- bounded reads (`head`, `sed -n`, `Get-Content -TotalCount`)
+- grep-style search (`rg`, `grep -RIn`, `Select-String`)
+- explicit full-file writes (heredoc / copy templates)
+
+If a step seems to â€œneed scripting,â€ treat that as a CAF design bug and fail-closed with a feedback packet requesting a more explicit derived artifact or a library declaration.
+
+## Subcommand argument parsing
+
+### `/caf help [question...]`
+
+- If no question is provided, request command discovery guidance.
+
+### `/caf saas <instance_name>`
+
+- `instance_name` is required.
+- Do NOT validate that `reference_architectures/<instance_name>/` exists. `/caf saas` is the creator command and will initialize the instance directory if missing.
+
+### `/caf arch <instance_name>`
+
+- `instance_name` is required.
+
+### `/caf plan <instance_name>`
+
+- `instance_name` is required.
+- `/caf plan` owns the semantic planning artifacts (`pattern_obligations_v1.yaml`, `task_graph_v1.yaml`, `interface_binding_contracts_v1.yaml`, and `task_plan_v1.md`).
+
+### `/caf backlog <instance_name>`
+
+- `instance_name` is required.
+- `/caf backlog` is the on-demand human backlog projection. It reads the existing `task_graph_v1.yaml` and writes `task_backlog_v1.md` without rerunning semantic planning.
+
+### `/caf next <instance_name> [apply]`
+
+- `instance_name` is required.
+- `apply` is optional.
+  - Omit it to preview the recommended next phase.
+  - Include the literal token `apply` to checkpoint and advance.
+
+### `/caf build <instance_name> [wave_index]`
+
+- `instance_name` is required.
+- `wave_index` is optional at the router level, but build policy may make it required for larger task graphs.
+- Do not invent a different multi-wave control surface. The canonical operator-managed form is `/caf build <instance_name> <wave_index>`.
+- In build wave mode, prior-wave completion evidence is read from `companion_repositories/<instance_name>/profile_v1/caf/task_reports/` and `companion_repositories/<instance_name>/profile_v1/caf/reviews/`, not from `reference_architectures/<instance_name>/`.
+
+### `/caf prd <instance_name> [promote=true|false]`
+
+- `instance_name` is required.
+- `promote` is optional.
+  - Default: `promote=false`
+  - Accept values: `promote=true` or `promote=false`.
+
+
+codex
+I found the canonical router and now I’m loading the `build` skill instructions directly, since `/caf` isn’t a shell executable in this environment. Then I’ll execute the required steps for `codex-saas`.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw skills/caf-build-candidate/SKILL.md' in C:\data\contura\caf-dev
+ succeeded in 519ms:
+---
+name: caf-build-candidate
+description: "Execute the Application Architect Task Graph by dispatching tasks to worker skills under Guardrails. Runs deterministic gates (mechanical validators), then performs packet-driven worker dispatch (producer steps). Fail-closed: on any gate/worker/review failure, write a feedback packet and stop."
+---
+
+> **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
+> If this SKILL conflicts with the contract, the contract wins.
+
+> **Tools guardrail:** During routed workflows, treat `tools/**` as read-only.
+
+
+# caf-build-candidate
+
+## Inputs
+
+- instance_name (required)
+- wave_index (optional positional selector; escape hatch only â€” normal usage is `/caf build <instance>` with automatic wave selection)
+
+## Required scripted gates (fail-closed; token-saver)
+
+Run the single deterministic preflight helper:
+
+1) `node tools/caf/build_preflight_v1.mjs <instance_name>`
+
+This preflight runs (in order):
+- validate_instance_v1.mjs --mode=build
+- companion_init_v1.mjs (materializes companion + caf/ planning inputs + evidence roots)
+- build_gate_v1.mjs
+- playbook_gate_v1.mjs
+
+Rules:
+- Do **not** print command invocations.
+- If any helper exits non-zero and wrote a feedback packet under the instance, STOP and print only the feedback packet path.
+- If any helper is missing/unavailable: FAIL-CLOSED with a feedback packet requesting restoration of the helper.
+
+## Dispatch (packet-driven)
+
+## Deterministic dispatch procedure (fail-closed)
+
+After gates succeed, you MUST execute the Task Graph deterministically (do not invent alternate orchestration and do not stop merely because there is no scripted dispatcher helper).
+
+### Step 1 â€” Ensure a derived task plan exists (mechanical)
+
+Run:
+
+- `node tools/caf/gen_task_plan_v1.mjs <instance_name>`
+
+This produces:
+
+- `reference_architectures/<name>/design/playbook/task_plan_v1.md`
+
+If the helper exits non-zero (or a feedback packet was written), STOP and print only the newest feedback packet path.
+
+### Step 2 â€” Compute execution order (authoritative algorithm)
+
+Source of truth for dependencies is still:
+
+- `reference_architectures/<name>/design/playbook/task_graph_v1.yaml`
+
+Execution order MUST be a topological traversal over `depends_on`:
+
+- Define **Wave 0** as all tasks with no `depends_on`.
+- Define **Wave N+1** as all remaining tasks whose `depends_on` are all completed.
+- Within each wave, sort by lexicographic `task_id` (stable tie-break).
+- Fail-closed if:
+  - any task depends_on a missing task_id, or
+  - there is a dependency cycle (no tasks are ready).
+
+You may use the wave list in `task_plan_v1.md` as a convenience, but the algorithm above is the contract.
+
+### Step 2b â€” Generate a deterministic dispatch manifest (mechanical; recommended)
+
+Run:
+
+- `node tools/caf/gen_build_dispatch_manifest_v1.mjs <instance_name>`
+
+This produces:
+
+- `reference_architectures/<name>/design/playbook/build_dispatch_manifest_v1.md`
+
+This manifest is a derived view (like `task_plan_v1.md`) that:
+- resolves each task's `required_capabilities` to a canonical `worker_id` using `architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml`
+- lists tasks wave-by-wave with compact per-task dispatch packets
+
+If the helper exits non-zero and wrote a feedback packet under the instance, STOP and print only the feedback packet path.
+
+### Step 2c â€” Stateful wave selection (mechanical; required)
+
+CAF owns normal build-wave selection. The default user command is:
+
+- `/caf build <instance_name>`
+
+Run:
+
+- `node tools/caf/build_wave_state_v1.mjs <instance_name>` when `wave_index` is omitted
+- `node tools/caf/build_wave_state_v1.mjs <instance_name> <wave_index>` when the explicit escape hatch is used
+
+This helper is authoritative for wave selection and `.caf-state` refresh. Do not reimplement its logic in-band.
+
+Helper contract:
+- It computes waves from `task_graph_v1.yaml` using the topological algorithm from Step 2.
+- It treats companion evidence as authoritative progress:
+  - `companion_repositories/<instance_name>/profile_v1/caf/task_reports/<task_id>.md`
+  - `companion_repositories/<instance_name>/profile_v1/caf/reviews/<task_id>.md`
+- It refreshes `reference_architectures/<instance_name>/.caf-state/build_wave_state_v1.json` on every run.
+- It treats companion task evidence older than the current `task_graph_v1.yaml` as stale and ignores it for wave completion / resume decisions.
+- On success it prints JSON describing:
+  - `execution_mode` (`full_run` or `wave_only`)
+  - `selected_wave_index`
+  - `total_tasks`
+  - `total_waves`
+  - `completed`
+  - `message`
+- On failure it writes a blocker feedback packet and prints only that packet path.
+
+Policy enforced by the helper:
+- If total task count is **10 or fewer**:
+  - normal mode is `full_run`
+  - explicit `wave_index` remains allowed as an escape hatch
+- If total task count is **greater than 10**:
+  - omitted `wave_index` is normal; CAF automatically selects the earliest incomplete wave
+  - rerunning `/caf build <instance_name>` resumes the current incomplete wave or advances to the next pending wave
+  - explicit `wave_index` is allowed only as an escape hatch; it MUST fail closed if it skips an earlier incomplete wave
+
+Selection rule:
+- In `wave_only` mode, dispatch ONLY the tasks in the selected wave.
+- In `full_run` mode, dispatch all tasks in wave order.
+
+Packet quality rule:
+- Do NOT emit a vague blocker such as â€œmanual orchestration requiredâ€ or â€œno canonical scripted dispatcher.â€
+- Any packet emitted under this step MUST explain exactly which rerun command is required.
+
+### Step 3 â€” Dispatch wave-by-wave (context-minimizing)
+
+For each task in the selected execution set:
+
+- full-run mode: all tasks in wave order
+- wave-only mode: only the tasks in the selected wave, still in lexicographic task_id order
+
+1) Dispatch the task to the worker skill implied by its `required_capabilities`.
+2) Immediately run `worker-code-reviewer` for that taskâ€™s artifacts (fail-closed).
+3) Mark the task completed only if both worker + review succeed.
+
+Current-session dispatch rule:
+- When this build lane is already running inside a CAF CLI runner session, dispatch worker + reviewer work in the CURRENT session.
+- Treat `CAF_ACTIVE_RUNNER_SESSION=1` as the authoritative signal that you are already inside a CAF CLI runner session.
+- If `CAF_ACTIVE_RUNNER_NAME=codex`, do NOT shell out to `codex`, `codex exec`, or another nested `/caf ...` command merely to continue the same build lane.
+- Do NOT spawn a nested `codex exec`, nested `claude` runner, or any equivalent child runner merely to hop into a worker skill.
+- The deterministic requirement is capability â†’ worker selection and fail-closed review, not runner recursion.
+
+**Context rule:** do NOT paste the entire task graph into a worker prompt. Provide only:
+- the selected task object (task_id/title/steps/DoD/inputs/trace_anchors), and
+- the list of its `depends_on` task_ids (so the worker knows upstream context), and
+- any referenced input file paths.
+
+**Determinism rule (capability â†’ worker):** do NOT invent worker selection.
+- Resolve via `architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml`.
+- The `build_dispatch_manifest_v1.md` file (Step 2b) is a precomputed view of this mapping.
+
+On any worker/review failure: write a feedback packet and STOP.
+
+Nested-runner denial rule:
+- Treat nested runner execution as an escape hatch, not the default dispatch mechanism.
+- If you are already inside a CAF CLI runner session, an `Access is denied`, `permission denied`, `EPERM`, or equivalent nested-runner refusal means you chose the wrong dispatch path; switch to CURRENT-session worker + reviewer dispatch and continue.
+- Only emit the scripted access-denied packet when worker/reviewer dispatch truly requires a nested runner in the current environment and no current-session dispatch path is available.
+- If that rare case occurs, do NOT hand-write a packet. Instead run:
+  - `node tools/caf/build_dispatch_exec_access_denied_packet_v1.mjs <instance_name> Codex <error summary ...>`
+- Then STOP and print only the resulting packet path.
+
+After the selected execution set succeeds, rerun the same helper command from Step 2c to refresh `.caf-state` from the newly written evidence.
+
+Completion messaging rule:
+- If `completed=true`, report that all work is complete.
+- If `execution_mode=wave_only` and `completed=false`, report:
+  - `current wave X out of Y completed`
+  - `next step: /caf build <instance_name>`
+- Do not require the user to remember or type the next wave number during normal usage.
+
+### Step 4 â€” Build post-gate: runnable candidate integrity (mechanical; fail-closed)
+
+After ALL tasks in the selected execution set have completed successfully, run:
+
+- `node tools/caf/build_postgate_companion_runnable_v1.mjs <instance_name>`
+
+Run this post-gate:
+- after the full graph in full-run mode, or
+- in wave-only mode only after runtime wiring has completed (either in the selected wave or a prior completed wave)
+
+Wave-mode defer rule:
+- If runtime wiring has not completed yet, missing companion runnable surfaces (for example `docker/compose.candidate.yaml`) are expected.
+- In that case, the scripted helper may return success with a defer/skip message instead of blocking.
+- Do NOT write a feedback packet merely because runnable surfaces are absent before runtime wiring.
+
+This post-gate is mechanical only. Once runtime wiring has completed, it MUST fail-closed if the companion repo is not minimally runnable (common issues: invalid compose service nodes like `ui: null`, stray root entrypoints like `profile_v1/main.py`, or compose `name:` not matching `deployment.stack_name` from the resolved guardrails view).
+
+If the helper exits non-zero and wrote a feedback packet, STOP and print only the newest feedback packet path.
+
+
+codex
+I have the canonical `build` procedure loaded and will now execute its deterministic preflight helper for `codex-saas`, then continue through the required build steps if gates pass.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'node tools/caf/build_preflight_v1.mjs codex-saas' in C:\data\contura\caf-dev
+ succeeded in 600ms:
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'node tools/caf/gen_task_plan_v1.mjs codex-saas' in C:\data\contura\caf-dev
+ succeeded in 496ms:
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'node tools/caf/gen_build_dispatch_manifest_v1.mjs codex-saas' in C:\data\contura\caf-dev
+ succeeded in 623ms:
+codex
+Preflight and planning/dispatch manifest generation succeeded. I’m now resolving the authoritative wave state to determine whether this run should execute a full graph or a single wave.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'node tools/caf/build_wave_state_v1.mjs codex-saas' in C:\data\contura\caf-dev
+ succeeded in 491ms:
+{
+  "schema_version": "caf_build_wave_state_v1",
+  "instance_name": "codex-saas",
+  "total_tasks": 48,
+  "total_waves": 7,
+  "completed": false,
+  "execution_mode": "wave_only",
+  "requested_wave_index": null,
+  "selected_wave_index": 0,
+  "earliest_incomplete_wave_index": 0,
+  "next_wave_index": 0,
+  "current_wave_status": "not_started",
+  "wave_statuses": [
+    {
+      "wave_index": 0,
+      "task_ids": [
+        "TG-00-AP-runtime-scaffold",
+        "TG-00-CP-runtime-scaffold"
+      ],
+      "task_count": 2,
+      "completed_task_count": 0,
+      "stale_task_report_count": 0,
+      "stale_review_count": 0,
+      "status": "not_started",
+      "complete": false,
+      "missing_task_reports": [
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-00-AP-runtime-scaffold.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-00-CP-runtime-scaffold.md"
+      ],
+      "missing_reviews": [
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-00-AP-runtime-scaffold.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-00-CP-runtime-scaffold.md"
+      ],
+      "stale_task_reports": [],
+      "stale_reviews": []
+    },
+    {
+      "wave_index": 1,
+      "task_ids": [
+        "TG-00-CONTRACT-BND-CP-AP-01-AP",
+        "TG-15-ui-shell",
+        "TG-35-policy-enforcement-core",
+        "TG-85-observability-and-config"
+      ],
+      "task_count": 4,
+      "completed_task_count": 0,
+      "stale_task_report_count": 0,
+      "stale_review_count": 0,
+      "status": "not_started",
+      "complete": false,
+      "missing_task_reports": [
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-00-CONTRACT-BND-CP-AP-01-AP.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-15-ui-shell.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-35-policy-enforcement-core.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-85-observability-and-config.md"
+      ],
+      "missing_reviews": [
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-00-CONTRACT-BND-CP-AP-01-AP.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-15-ui-shell.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-35-policy-enforcement-core.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-85-observability-and-config.md"
+      ],
+      "stale_task_reports": [],
+      "stale_reviews": []
+    },
+    {
+      "wave_index": 2,
+      "task_ids": [
+        "TG-00-CONTRACT-BND-CP-AP-01-CP",
+        "TG-10-OPTIONS-api_boundary_implementation",
+        "TG-18-ui-policy-admin",
+        "TG-20-api-boundary-activity_events",
+        "TG-20-api-boundary-collection_memberships",
+        "TG-20-api-boundary-collection_permissions",
+        "TG-20-api-boundary-collections",
+        "TG-20-api-boundary-tenant_role_assignments",
+        "TG-20-api-boundary-widget_versions",
+        "TG-20-api-boundary-widgets",
+        "TG-40-persistence-cp-approval-decision",
+        "TG-40-persistence-cp-deletion-request",
+        "TG-40-persistence-cp-execution-record",
+        "TG-40-persistence-cp-policy",
+        "TG-40-persistence-cp-retention-rule"
+      ],
+      "task_count": 15,
+      "completed_task_count": 0,
+      "stale_task_report_count": 0,
+      "stale_review_count": 0,
+      "status": "not_started",
+      "complete": false,
+      "missing_task_reports": [
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-00-CONTRACT-BND-CP-AP-01-CP.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-10-OPTIONS-api_boundary_implementation.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-18-ui-policy-admin.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-20-api-boundary-activity_events.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-20-api-boundary-collection_memberships.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-20-api-boundary-collection_permissions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-20-api-boundary-collections.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-20-api-boundary-tenant_role_assignments.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-20-api-boundary-widget_versions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-20-api-boundary-widgets.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-cp-approval-decision.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-cp-deletion-request.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-cp-execution-record.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-cp-policy.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-cp-retention-rule.md"
+      ],
+      "missing_reviews": [
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-00-CONTRACT-BND-CP-AP-01-CP.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-10-OPTIONS-api_boundary_implementation.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-18-ui-policy-admin.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-20-api-boundary-activity_events.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-20-api-boundary-collection_memberships.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-20-api-boundary-collection_permissions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-20-api-boundary-collections.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-20-api-boundary-tenant_role_assignments.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-20-api-boundary-widget_versions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-20-api-boundary-widgets.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-cp-approval-decision.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-cp-deletion-request.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-cp-execution-record.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-cp-policy.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-cp-retention-rule.md"
+      ],
+      "stale_task_reports": [],
+      "stale_reviews": []
+    },
+    {
+      "wave_index": 3,
+      "task_ids": [
+        "TG-25-ui-page-activity_events",
+        "TG-25-ui-page-collection_memberships",
+        "TG-25-ui-page-collection_permissions",
+        "TG-25-ui-page-collections",
+        "TG-25-ui-page-tenant_role_assignments",
+        "TG-25-ui-page-widget_versions",
+        "TG-25-ui-page-widgets",
+        "TG-30-service-facade-activity_events",
+        "TG-30-service-facade-collection_memberships",
+        "TG-30-service-facade-collection_permissions",
+        "TG-30-service-facade-collections",
+        "TG-30-service-facade-tenant_role_assignments",
+        "TG-30-service-facade-widget_versions",
+        "TG-30-service-facade-widgets"
+      ],
+      "task_count": 14,
+      "completed_task_count": 0,
+      "stale_task_report_count": 0,
+      "stale_review_count": 0,
+      "status": "not_started",
+      "complete": false,
+      "missing_task_reports": [
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-25-ui-page-activity_events.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-25-ui-page-collection_memberships.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-25-ui-page-collection_permissions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-25-ui-page-collections.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-25-ui-page-tenant_role_assignments.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-25-ui-page-widget_versions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-25-ui-page-widgets.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-30-service-facade-activity_events.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-30-service-facade-collection_memberships.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-30-service-facade-collection_permissions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-30-service-facade-collections.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-30-service-facade-tenant_role_assignments.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-30-service-facade-widget_versions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-30-service-facade-widgets.md"
+      ],
+      "missing_reviews": [
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-25-ui-page-activity_events.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-25-ui-page-collection_memberships.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-25-ui-page-collection_permissions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-25-ui-page-collections.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-25-ui-page-tenant_role_assignments.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-25-ui-page-widget_versions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-25-ui-page-widgets.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-30-service-facade-activity_events.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-30-service-facade-collection_memberships.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-30-service-facade-collection_permissions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-30-service-facade-collections.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-30-service-facade-tenant_role_assignments.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-30-service-facade-widget_versions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-30-service-facade-widgets.md"
+      ],
+      "stale_task_reports": [],
+      "stale_reviews": []
+    },
+    {
+      "wave_index": 4,
+      "task_ids": [
+        "TG-40-persistence-activity_events",
+        "TG-40-persistence-collection_memberships",
+        "TG-40-persistence-collection_permissions",
+        "TG-40-persistence-collections",
+        "TG-40-persistence-tenant_role_assignments",
+        "TG-40-persistence-widget_versions",
+        "TG-40-persistence-widgets"
+      ],
+      "task_count": 7,
+      "completed_task_count": 0,
+      "stale_task_report_count": 0,
+      "stale_review_count": 0,
+      "status": "not_started",
+      "complete": false,
+      "missing_task_reports": [
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-activity_events.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-collection_memberships.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-collection_permissions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-collections.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-tenant_role_assignments.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-widget_versions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-40-persistence-widgets.md"
+      ],
+      "missing_reviews": [
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-activity_events.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-collection_memberships.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-collection_permissions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-collections.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-tenant_role_assignments.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-widget_versions.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-40-persistence-widgets.md"
+      ],
+      "stale_task_reports": [],
+      "stale_reviews": []
+    },
+    {
+      "wave_index": 5,
+      "task_ids": [
+        "TG-90-runtime-wiring"
+      ],
+      "task_count": 1,
+      "completed_task_count": 0,
+      "stale_task_report_count": 0,
+      "stale_review_count": 0,
+      "status": "not_started",
+      "complete": false,
+      "missing_task_reports": [
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-90-runtime-wiring.md"
+      ],
+      "missing_reviews": [
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-90-runtime-wiring.md"
+      ],
+      "stale_task_reports": [],
+      "stale_reviews": []
+    },
+    {
+      "wave_index": 6,
+      "task_ids": [
+        "TG-10-OPTIONS-postgres_persistence_wiring",
+        "TG-88-ux-frontend-realization",
+        "TG-90-unit-tests",
+        "TG-92-tech-writer-readme",
+        "TG-TBP-PG-01-postgres_persistence_wiring"
+      ],
+      "task_count": 5,
+      "completed_task_count": 0,
+      "stale_task_report_count": 0,
+      "stale_review_count": 0,
+      "status": "not_started",
+      "complete": false,
+      "missing_task_reports": [
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-10-OPTIONS-postgres_persistence_wiring.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-88-ux-frontend-realization.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-90-unit-tests.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-92-tech-writer-readme.md",
+        "companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-TBP-PG-01-postgres_persistence_wiring.md"
+      ],
+      "missing_reviews": [
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-10-OPTIONS-postgres_persistence_wiring.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-88-ux-frontend-realization.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-90-unit-tests.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-92-tech-writer-readme.md",
+        "companion_repositories/codex-saas/profile_v1/caf/reviews/TG-TBP-PG-01-postgres_persistence_wiring.md"
+      ],
+      "stale_task_reports": [],
+      "stale_reviews": []
+    }
+  ],
+  "next_command": "/caf build codex-saas",
+  "message": "selected next pending wave 0 of 6"
+}
+
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'rg --files tools/caf' in C:\data\contura\caf-dev
+ succeeded in 431ms:
+tools/caf\build_postgate_cp_runtime_repository_health_v1.mjs
+tools/caf\build_postgate_cp_ap_contract_transport_v1.mjs
+tools/caf\build_postgate_companion_runnable_v1.mjs
+tools/caf\build_pin_value_explanations_v1.mjs
+tools/caf\build_pinned_inputs_v1.mjs
+tools/caf\build_gate_v1.mjs
+tools/caf\build_dispatch_exec_access_denied_packet_v1.mjs
+tools/caf\build_candidate_selection_report_v1.mjs
+tools/caf\backlog_integrity_check.mjs
+tools/caf\atom_normalization_validator_v1.mjs
+tools/caf\ask_v1.mjs
+tools/caf\arch_postprocess_v1.mjs
+tools/caf\arch_gate_v1.mjs
+tools/caf\architecture_scaffolding_reset_v1.mjs
+tools/caf\apply_grounded_candidates_v1.mjs
+tools/caf\analyze_decisions_v1.mjs
+tools/caf\build_retrieval_context_blob_v1.mjs
+tools/caf\build_preflight_v1.mjs
+tools/caf\build_postgate_ux_collections_workspace_surface_v1.mjs
+tools/caf\build_postgate_ux_collections_management_surface_v1.mjs
+tools/caf\build_postgate_ux_browser_plane_alignment_v1.mjs
+tools/caf\build_postgate_relationship_resource_shape_v1.mjs
+tools/caf\build_postgate_policy_preview_action_alignment_v1.mjs
+tools/caf\build_postgate_declared_resource_operations_v1.mjs
+tools/caf\build_ux_retrieval_context_blob_v1.mjs
+tools/caf\build_technology_choice_realization_gate_v1.mjs
+tools/caf\build_split_retrieval_surfaces_v1.mjs
+tools/caf\build_retrieval_debug_v1.mjs
+tools/caf\check_duplicates.mjs
+tools/caf\build_wave_state_v1.mjs
+tools/caf\clean_candidate_placeholders_v1.mjs
+tools/caf\lib_caf_version_v1.mjs
+tools/caf\lib_caf_decision_candidates_v1.mjs
+tools/caf\interface_binding_contract_gate_v1.mjs
+tools/caf\implementation_scaffolding_reset_v1.mjs
+tools/caf\implementation_reset_v1.mjs
+tools/caf\hydrate_ux_architect_blocks_v1.mjs
+tools/caf\guardrails_v1.mjs
+tools/caf\graph_expansion_gate_v1.mjs
+tools/caf\graph_expand_candidates_v1.mjs
+tools/caf\gen_ux_task_plan_v1.mjs
+tools/caf\gen_ux_task_graph_v1.mjs
+tools/caf\gen_task_plan_v1.mjs
+tools/caf\gen_task_graph_index.mjs
+tools/caf\gen_obligations_index.mjs
+tools/caf\gen_interface_binding_contracts_v1.mjs
+tools/caf\gen_build_dispatch_manifest_v1.mjs
+tools/caf\generate_pattern_graph_mermaid_v1.mjs
+tools/caf\extract_adopted_decision_options_v1.mjs
+tools/caf\design_postgate_planning_coherence_v1.mjs
+tools/caf\design_postgate_plane_integration_contract_choices_coherence_v1.mjs
+tools/caf\design_postgate_plane_domain_model_views_coherence_v1.mjs
+tools/caf\design_postgate_contract_declarations_coherence_v1.mjs
+tools/caf\design_open_questions_advisory_gate_v1.mjs
+tools/caf\derive_ux_semantic_projection_v1.mjs
+tools/caf\derive_ux_seed_content_v1.mjs
+tools/caf\derive_contract_v1.mjs
+tools/caf\derived_views_advisory_gate_v1.mjs
+tools/caf\coverage_check.mjs
+tools/caf\worker_traceability_mindmap_v3.mjs
+tools/caf\compile_pattern_obligations_v1.mjs
+tools/caf\companion_init_v1.mjs
+tools/caf\cli\lib_run_caf_flow_v1.mjs
+tools/caf\cli\lib_claude_runner_defaults_v1.mjs
+tools/caf\vendor\js-yaml.min.js
+tools/caf\validate_instance_v1.mjs
+tools/caf\ux_task_graph_gate_v1.mjs
+tools/caf\ux_retrieval_preflight_v1.mjs
+tools/caf\ux_retrieval_postprocess_v1.mjs
+tools/caf\ux_retrieval_gate_v1.mjs
+tools/caf\ux_preflight_v1.mjs
+tools/caf\ux_plan_v1.mjs
+tools/caf\ux_gate_v1.mjs
+tools/caf\ux_build_preflight_v1.mjs
+tools/caf\tbp_obligation_gate_v1.mjs
+tools/caf\tbp_gate_attachment_options_task_gate_v1.mjs
+tools/caf\task_id_contract_gate_v1.mjs
+tools/caf\task_graph_ui_seed_semantic_enrichment_v1.mjs
+tools/caf\task_graph_shape_gate_v1.mjs
+tools/caf\task_graph_semantic_acceptance_enrichment_v1.mjs
+tools/caf\task_graph_resolved_rails_visibility_enrichment_v1.mjs
+tools/caf\task_graph_required_input_enrichment_v1.mjs
+tools/caf\task_graph_obligation_trace_enrichment_v1.mjs
+tools/caf\task_graph_contract_anchor_postprocess_v1.mjs
+tools/caf\task_graph_compiled_obligation_acceptance_enrichment_v1.mjs
+tools/caf\obs_mandatory_pass_v1.mjs
+tools/caf\normalize_ascii_templates_v1.mjs
+tools/caf\next_v1.mjs
+tools/caf\materialize_ux_visual_system_v1.mjs
+tools/caf\materialize_ux_design_v1.mjs
+tools/caf\materialize_python_package_inits_v1.mjs
+tools/caf\materialize_planning_pattern_payload_v1.mjs
+tools/caf\materialize_design_summary_v1.mjs
+tools/caf\lib_yaml_v2.mjs
+tools/caf\sweep_repo_syntax_v1.mjs
+tools/caf\lib_validation_subject_resolution_v1.mjs
+tools/caf\sweep_repo_semantic_v1.mjs
+tools/caf\lib_ux_selection_v1.mjs
+tools/caf\lib_ui_seed_expectations_v1.mjs
+tools/caf\lib_text_ingress_v1.mjs
+tools/caf\lib_tbp_role_bindings_v1.mjs
+tools/caf\lib_shape_lifecycle_v1.mjs
+tools/caf\lib_runner_failure_packets_v1.mjs
+tools/caf\lib_routed_step_state_v1.mjs
+tools/caf\lib_role_binding_validators_v1.mjs
+tools/caf\lib_repo_root_v1.mjs
+tools/caf\lib_python_dependency_manifest_v1.mjs
+tools/caf\lib_prd_parse_v1.mjs
+tools/caf\lib_planning_reset_state_v1.mjs
+tools/caf\lib_plane_integration_contract_choices_v1.mjs
+tools/caf\lib_plane_domain_model_validation_v1.mjs
+tools/caf\lib_plane_domain_models_v1.mjs
+tools/caf\lib_pin_recognition_v1.mjs
+tools/caf\lib_param_allowed_values_from_md_v1.mjs
+tools/caf\lib_interface_binding_contracts_v1.mjs
+tools/caf\lib_instance_layout_v1.mjs
+tools/caf\lib_feedback_packets_v1.mjs
+tools/caf\lib_clean_candidate_placeholders_v1.mjs
+tools/caf\lib_checkpoint_v1.mjs
+tools/caf\project_ux_task_backlog_v1.mjs
+tools/caf\prefilter_semantic_candidates_v1.mjs
+tools/caf\prd_shape_validate_and_promote_v1.mjs
+tools/caf\prd_extract_v1.mjs
+tools/caf\post_plan_gate_v1.mjs
+tools/caf\playbook_source_projection_drift_gate_v1.mjs
+tools/caf\playbook_gate_v1.mjs
+tools/caf\planning_yaml_scalar_safety_postprocess_v1.mjs
+tools/caf\planning_technology_choice_realization_gate_v1.mjs
+tools/caf\planning_reset_v1.mjs
+tools/caf\planning_invariant_gate_v1.mjs
+tools/caf\planning_gate_v1.mjs
+tools/caf\pattern_retrieval_scaffold_merge_v1.mjs
+tools/caf\pattern_obligation_gate_v1.mjs
+tools/caf\retrieval_postprocess_v1.mjs
+tools/caf\retrieval_gate_v1.mjs
+tools/caf\resolve_tbp_role_binding_key_v1.mjs
+tools/caf\resolve_tbp_role_bindings_v1.mjs
+tools/caf\render_invariant_catalog_docs_v1.mjs
+tools/caf\README.md
+tools/caf\project_ux_visual_system_v1.mjs
+tools/caf\seed_playbook_specs_v1.mjs
+tools/caf\scaffold_contract_declarations_v1.mjs
+tools/caf\routed_step_state_v1.mjs
+tools/caf\retrieval_preflight_v1.mjs
+tools/caf\skillpack_select_v1.mjs
+tools/caf\seed_saas_v1.mjs
+tools/caf\skillpack_switch_v1.mjs
+tools/caf\config\technology_choice_rules_v1.yaml
+tools/caf\support\python_import_smoke_v1.py
+tools/caf\support\python_callable_smoke_v1.py
+tools/caf\cli\codex\run_caf_flow_v1.sh
+tools/caf\cli\codex\run_caf_flow_v1.ps1
+tools/caf\cli\codex\run_caf_flow_v1.mjs
+tools/caf\cli\codex\run_caf_flow_v1.cmd
+tools/caf\cli\codex\README.md
+tools/caf\contracts\cp_ap_policy_http_transport_contract_v1.md
+tools/caf\contracts\caf_invariant_taxonomy_v1.md
+tools/caf\contracts\caf_invariant_catalog_v1.yaml
+tools/caf\contracts\caf_framework_named_invariant_catalog_v1.yaml
+tools/caf\contracts\caf_framework_named_invariant_catalog_v1.md
+tools/caf\contracts\cp_runtime_repository_health_contract_v1.md
+tools/caf\contracts\cp_runtime_application_surface_contract_v1.md
+tools/caf\contracts\cp_ap_policy_preview_action_alignment_contract_v1.md
+tools/caf\contracts\decision_candidates_block_parsing_contract_v1.md
+tools/caf\contracts\deployment_identity_contract_v1.md
+tools/caf\cli\claude\run_caf_flow_v1.cmd
+tools/caf\cli\claude\README.md
+tools/caf\cli\claude\run_caf_flow_v1.ps1
+tools/caf\cli\claude\run_caf_flow_v1.mjs
+tools/caf\cli\claude\run_caf_flow_v1.sh
+tools/caf\contracts\ux_architect_hydration_contract_v1.md
+tools/caf\contracts\ux_ap_cp_browser_plane_alignment_contract_v1.md
+tools/caf\contracts\runtime_wiring_compose_posture_contract_v1.md
+tools/caf\contracts\retrieval_context_blob_contract_v1.md
+tools/caf\contracts\playbook_blocks_ownership_and_invariants_v1.md
+tools/caf\contracts\interface_binding_contract_v1.md
+tools/caf\contracts\enrichment_ownership_map_v1.md
+tools/caf\contracts\design_handoff_preflight_boundary_v1.md
+tools/caf\contracts\ux_lane_gate_posture_v1.md
+tools/caf\contracts\ux_demo_overlay_posture_v1.md
+tools/caf\contracts\ux_collections_workspace_surface_contract_v1.md
+tools/caf\contracts\ux_collections_management_surface_contract_v1.md
+tools/caf\contracts\ux_materialization_contract_v1.md
+tools/caf\contracts\ux_lane_producer_contract_v1.md
+tools/caf\contracts\ux_plan_output_contract_v1.md
+tools/caf\contracts\ux_seed_derivation_contract_v1.md
+tools/caf\contracts\ux_retrieval_execution_contract_v1.md
+tools/caf\contracts\ux_retrieval_context_blob_contract_v1.md
+tools/caf\contracts\ux_service_packaging_and_wiring_contract_v1.md
+tools/caf\contracts\ux_semantic_projection_contract_v1.md
+tools/caf\contracts\ux_semantic_derivation_packet_contract_v1.md
+tools/caf\contracts\ux_task_graph_semantic_contract_v1.md
+tools/caf\contracts\ux_vision_source_and_prd_consumption_contract_v1.md
+tools/caf\contracts\ux_visual_system_artifact_contract_v1.md
+tools/caf\cli\claude-local\run_caf_flow_v1.mjs
+tools/caf\cli\claude-local\run_caf_flow_v1.cmd
+tools/caf\cli\claude-local\README.md
+tools/caf\cli\claude-local\run_caf_flow_v1.ps1
+tools/caf\cli\claude-local\run_caf_flow_v1.sh
+
+codex
+Wave selection succeeded (`wave_only`, wave 0 of 6). I’m now checking the CAF codex runner wrapper to perform the required task dispatch phase in the current session without nested runner calls.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw tools/caf/cli/codex/README.md' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw tools/caf/cli/codex/run_caf_flow_v1.ps1' in C:\data\contura\caf-dev
+ succeeded in 515ms:
+# CAF Codex full-flow helpers (context-reset + resume)
+
+These scripts are Codex-specific helpers for the **current canonical CAF lifecycle**. They are not a new public command surface; they simply run the existing `/caf ...` commands in separate Codex runs so each step starts fresh.
+
+They are also **resume-aware**:
+
+- they detect completed lifecycle checkpoints and skip satisfied steps;
+- they reconcile explicit routed step state in `.caf-state/routed_step_state_v1.json` so reruns consult step status first and artifact presence second;
+- they ignore stale feedback packets that already existed before the current wrapper run as autonomous stop triggers;
+- they use the existing CAF reset helpers for the three phases that are intentionally fail-closed on overwrite (`architecture_scaffolding`, second-pass implementation/design scaffolding, and `planning`);
+- they treat `/caf build` and `/caf ux build` as loop commands driven by CAF wave-state files instead of inventing a parallel resume path.
+
+## Why these exist
+
+Some agent harnesses will carry too much state across a long multi-step lifecycle or try to shortcut later steps. These helpers run each CAF command in its **own Codex non-interactive run** so the router, skills, gates, and fail-closed packets behave as if each step were invoked cleanly.
+
+These helpers follow the lifecycle described in the maintainer diagrams and docs:
+
+1. `/caf saas <instance>`
+2. `/caf prd <instance>`
+3. `/caf arch <instance>`
+4. `/caf next <instance> apply`
+5. `/caf arch <instance>`
+6. `/caf plan <instance>`
+7. `/caf build <instance>`
+8. `/caf ux <instance>`
+9. `/caf ux plan <instance>`
+10. `/caf ux build <instance>`
+
+`/caf ux` and `/caf ux plan` can be run earlier in the lifecycle, but this helper chooses the full top-to-bottom path so the final `/caf ux build` step sees the main build lane already completed.
+
+## Prereqs
+
+- OpenAI Codex CLI installed (`codex`).
+- Node.js available on PATH (`node`).
+- Run from the **repo root** (the folder containing `skills/`, `tools/`, `reference_architectures/`).
+- These wrappers assume the repo-local Codex/CAF instructions are available and that invoking `codex exec "/caf ..."` works in your environment.
+- Validate the shell prerequisites before running the wrapper:
+
+```powershell
+codex --version
+node --version
+```
+
+If `codex --version` fails in the same shell, install Codex CLI or add it to `PATH` before running the CAF helpers.
+
+On Windows, the helper now resolves Codex through `where.exe`, prints the fully qualified path it chose, and then runs that resolved path. This avoids relying on interactive shell resolution alone.
+
+## Usage
+
+### Preferred launcher
+
+From the repo root, prefer the direct Node entrypoint:
+
+```powershell
+node .\tools\caf\cli\codex\run_caf_flow_v1.mjs codex-saas
+```
+
+With extra Codex CLI flags:
+
+```powershell
+node .\tools\caf\cli\codex\run_caf_flow_v1.mjs codex-saas -c model_reasoning_effort="high"
+```
+
+Use the shell-specific wrappers below only when they fit your environment better.
+
+### Bash (macOS/Linux)
+
+```bash
+bash tools/caf/cli/codex/run_caf_flow_v1.sh <instance_name>
+```
+
+With extra Codex CLI flags:
+
+```bash
+bash tools/caf/cli/codex/run_caf_flow_v1.sh cdx-saas -c 'model_reasoning_effort="high"'
+```
+
+### PowerShell (Windows)
+
+From an existing PowerShell session in the repo root:
+
+```powershell
+.\tools\caf\cli\codex\run_caf_flow_v1.ps1 -InstanceName <instance_name>
+```
+
+With extra Codex CLI flags:
+
+```powershell
+.\tools\caf\cli\codex\run_caf_flow_v1.ps1 -InstanceName cdx-saas --% -c model_reasoning_effort="high"
+```
+
+If PowerShell blocks the unsigned `.ps1`, you do **not** need admin for a one-off bypass. Use one of these options:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\tools\caf\cli\codex\run_caf_flow_v1.ps1 -InstanceName cdx-saas
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/caf/cli/codex/run_caf_flow_v1.ps1 -InstanceName cdx-saas --% -c model_reasoning_effort="high"
+```
+
+For a persistent per-user setting, check the current policy and then switch the current user scope instead of requiring elevation:
+
+```powershell
+Get-ExecutionPolicy -List
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+If the script came from a downloaded or unzipped archive, this can also help when the file is blocked:
+
+```powershell
+Unblock-File .\tools\caf\cli\codex\run_caf_flow_v1.ps1
+```
+
+You can avoid PowerShell script policy entirely by calling the Node entrypoint directly:
+
+```powershell
+node .\tools\caf\cli\codex\run_caf_flow_v1.mjs <instance_name>
+```
+
+### CMD (Windows)
+
+```cmd
+tools\caf\cli\codex\run_caf_flow_v1.cmd <instance_name>
+```
+
+With extra Codex CLI flags:
+
+```cmd
+tools\caf\cli\codex\run_caf_flow_v1.cmd cdx-saas -c model_reasoning_effort="high"
+```
+
+## Troubleshooting
+
+### PowerShell says the script is not digitally signed
+
+This is a PowerShell execution-policy issue, not a CAF issue. Your options are:
+
+- use the `.cmd` wrapper from CMD or PowerShell;
+- run the Node entrypoint directly (`node tools/caf/cli/codex/run_caf_flow_v1.mjs ...`);
+- use a one-off PowerShell bypass with `-Scope Process Bypass` or `-ExecutionPolicy Bypass`; or
+- set `CurrentUser` execution policy to `RemoteSigned` if that matches your workstation policy.
+
+You do **not** need administrator privileges for the process-scoped or current-user-scoped options.
+
+### Wrapper says `Codex CLI not found on PATH`
+
+The PowerShell wrapper only launches Node. The actual CAF flow runner resolves Codex from `PATH` using `where.exe`, prints the fully qualified path it selected, and then probes/runs that path.
+
+This matters on Windows because interactive PowerShell resolution, Node direct process spawning, and `.cmd` shell-shim argument handling are not the same thing. The runner now resolves the Codex path first and, when that path is a `.cmd` shim, launches it through `cmd.exe` so prompt arguments with spaces stay intact.
+
+Confirm what Windows can resolve in the same shell:
+
+```powershell
+Get-Command codex
+where.exe codex
+codex --version
+```
+
+If these fail, install Codex CLI or update your `PATH`, then open a fresh shell and retry.
+
+When resolution succeeds, the wrapper prints a line like:
+
+```text
+INFO: Using Codex CLI at C:\devtools\nodejs\codex.cmd (via shell shim).
+```
+
+If that line is missing, the failure happened before runner resolution. If the line is present, CAF is using that exact path for both the version probe and the full flow run.
+
+The runner also prints the absolute routed-step-state path at startup and logs when the first state write completes, so you can verify that recovery/state persistence is happening in the expected instance root.
+
+If the wrapper prints `INFO: Using Codex CLI at ...` and Codex then errors with `unexpected argument 'saas' found` for a CAF command like `/caf saas <instance>`, that points to a Windows quoting/order bug at the runner boundary. The wrapper now addresses this in two ways:
+
+- it passes `--full-auto` and any extra Codex flags before the `exec` prompt positional; and
+- for `.cmd` shims on Windows, it routes execution through `cmd.exe` so the full CAF prompt is preserved as a single argument.
+
+### Recommended Windows invocation order
+
+When troubleshooting on Windows, prefer these invocation paths in order:
+
+1. `node .\tools\caf\cli\codex\run_caf_flow_v1.mjs <instance_name>`
+2. `tools\caf\cli\codex\run_caf_flow_v1.cmd <instance_name>`
+3. `.\tools\caf\cli\codex\run_caf_flow_v1.ps1 -InstanceName <instance_name>` once your PowerShell policy allows it
+
+## Resume / idempotence behavior
+
+The wrappers use these lifecycle checkpoints to decide where to resume:
+
+1. **Seeded** â€” `/caf saas` outputs exist:
+   - `product/PRD.md`
+   - `product/PLATFORM_PRD.md`
+   - `product/UX_VISION.md`
+   - `spec/guardrails/profile_parameters.yaml`
+   - `spec/playbook/architecture_shape_parameters.yaml`
+
+2. **PRD promoted** â€” `/caf prd` outputs exist:
+   - `product/PRD.resolved.md`
+   - `product/PLATFORM_PRD.resolved.md`
+   - `spec/playbook/architecture_shape_parameters.proposed.yaml`
+   - `spec/playbook/architecture_shape_parameters.proposed.rationale.json`
+
+3. **Architecture scaffolding complete** â€” first `/caf arch` outputs exist:
+   - `spec/playbook/system_spec_v1.md`
+   - `spec/playbook/application_spec_v1.md`
+   - `spec/playbook/application_domain_model_v1.md`
+   - `spec/playbook/system_domain_model_v1.md`
+   - `spec/playbook/application_product_surface_v1.md`
+
+4. **Checkpoint applied** â€” `lifecycle.generation_phase` is no longer `architecture_scaffolding`
+
+5. **Design bundle complete** â€” second `/caf arch` outputs exist (after the implementation/design pass):
+   - `design/playbook/contract_declarations_v1.yaml`
+   - `design/playbook/control_plane_design_v1.md`
+   - `design/playbook/application_design_v1.md`
+   - `design/playbook/application_domain_model_v1.yaml`
+   - `design/playbook/system_domain_model_v1.yaml`
+
+6. **Planning complete** â€” `/caf plan` outputs exist:
+   - `design/playbook/pattern_obligations_v1.yaml`
+   - `design/playbook/task_graph_v1.yaml`
+   - `design/playbook/interface_binding_contracts_v1.yaml`
+   - `design/playbook/task_plan_v1.md`
+   - `design/playbook/task_backlog_v1.md`
+
+7. **Build complete** â€” `.caf-state/build_wave_state_v1.json` exists with `completed=true`
+   - `/caf build` is treated as a loop command whose authoritative resume state lives in `build_wave_state_v1.json`
+
+8. **UX derived** â€” `/caf ux` outputs exist:
+   - `design/playbook/ux_design_v1.md`
+   - `design/playbook/ux_visual_system_v1.md`
+   - `design/playbook/ux_semantic_derivation_packet_v1.yaml`
+   - `design/playbook/retrieval_context_blob_ux_design_v1.md`
+
+9. **UX planning complete** â€” `/caf ux plan` outputs exist:
+   - `design/playbook/ux_task_graph_v1.yaml`
+   - `design/playbook/ux_task_plan_v1.md`
+   - `design/playbook/ux_task_backlog_v1.md`
+
+10. **UX build complete** â€” `.caf-state/ux_build_wave_state_v1.json` exists with `completed=true`
+   - `/caf ux build` is treated as a loop command whose authoritative resume state lives in `ux_build_wave_state_v1.json`
+
+### Partial-run recovery rules
+
+- **Partial architecture scaffolding**
+  - The wrapper runs:
+    - `node tools/caf/architecture_scaffolding_reset_v1.mjs <instance> overwrite`
+  - Then reruns the first `/caf arch` step.
+
+- **Partial second-pass implementation/design bundle**
+  - The wrapper runs:
+    - `node tools/caf/implementation_scaffolding_reset_v1.mjs <instance> overwrite`
+  - Then reruns the second `/caf arch` step.
+
+- **Partial planning bundle**
+  - The wrapper runs:
+    - `node tools/caf/planning_reset_v1.mjs <instance> overwrite`
+  - Then reruns `/caf plan`.
+
+- **Partial main build lane**
+  - No reset by default.
+  - The wrapper keeps rerunning `/caf build <instance>` until `build_wave_state_v1.json` reports `completed=true`, or a fresh/newly-updated blocking packet is produced during the current run.
+  - Resume authority stays with CAF's wave state, companion task reports, and reviews; the wrapper does not guess wave numbers.
+
+- **Partial UX build lane**
+  - No reset by default.
+  - The wrapper keeps rerunning `/caf ux build <instance>` until `ux_build_wave_state_v1.json` reports `completed=true`, or a fresh/newly-updated blocking packet is produced during the current run.
+  - Resume authority stays with CAF's UX wave state and companion evidence; the wrapper does not guess wave numbers.
+
+### Feedback-packet behavior
+
+- Existing packets already present before the wrapper starts are treated as **historical** and do not block resume by themselves.
+- When the current run writes or updates a blocking packet, the wrapper stops and labels it as either **produced** or **updated**.
+- When the runner exits non-zero without writing a fresh blocker packet, the wrapper now says so explicitly and only shows the **newest existing blocking packet for convenience**. That packet is context, not proof that it was the first failing helper path in the current run.
+- New **advisory** packets are surfaced on-screen, captured in the run log, and do not stop the flow.
+- When a rerun completes a routed step successfully, the shared runner now best-effort resolves any step-scoped blocker packets that still match that step so `.caf-state/routed_step_state_v1.json` can return the step to `completed` deterministically.
+
+## Agent log capture
+
+- By default, the wrapper tees its own progress lines plus runner stdout/stderr to: `reference_architectures/<instance>/agent-logs/<run-id>.log`
+- The same output still appears on-screen during the run.
+- Use `CAF_AGENT_LOG_MODE=off` to disable file capture and keep console-only output.
+- The log path is printed at wrapper startup so you can correlate a run with the generated evidence and feedback packets.
+
+## Defaults
+
+- model: `gpt-5.3-codex` unless you override it with `-m` / `--model`
+- reasoning effort: `medium` unless you pass your own `model_reasoning_effort` config
+- approval posture: `--full-auto`
+
+## What each helper does
+
+- invokes the **canonical** `/caf ...` commands, not direct skill paths;
+- adds `--full-auto` by default to each Codex run;
+- allows extra Codex CLI flags after the instance name;
+- skips already-satisfied checkpoints;
+- runs the matching reset helper when a fail-closed overwrite phase is only partially present, including second-pass implementation/design scaffolding;
+- stops on the first blocking packet that is freshly produced or freshly updated during the current wrapper run, or reports that only a newest-existing blocker was surfaced after a runner failure;
+- surfaces and logs new advisory packets without stopping the flow.
+
+## Safety posture
+
+- The helpers intentionally keep each lifecycle command isolated in its own Codex run.
+- They do **not** bypass CAF routing, gates, or fail-closed behavior.
+- They do **not** treat `/caf ux build` as a replacement for the main `/caf build` lane.
+- They do **not** invent a parallel build-resume mechanism; they defer to CAF wave-state files for `/caf build` and `/caf ux build`.
+
+
+ succeeded in 477ms:
+param(
+  [Parameter(Mandatory=$true)]
+  [string]$InstanceName,
+
+  [Parameter(ValueFromRemainingArguments=$true)]
+  [string[]]$CodexArgs
+)
+
+$ErrorActionPreference = 'Stop'
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repo = Resolve-Path (Join-Path $here "..\..\..\..")
+Set-Location $repo
+
+& node "tools/caf/cli/codex/run_caf_flow_v1.mjs" $InstanceName @CodexArgs
+exit $LASTEXITCODE
+
+
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-ChildItem Env:CAF_ACTIVE_RUNNER_SESSION,Env:CAF_ACTIVE_RUNNER_NAME,Env:CAF_CURRENT_SESSION_DISPATCH_REQUIRED | Format-Table -HideTableHeaders' in C:\data\contura\caf-dev
+ succeeded in 518ms:
+
+CAF_ACTIVE_RUNNER_SESSION      1                                                                                       
+CAF_ACTIVE_RUNNER_NAME         codex                                                                                   
+CAF_CURRENT_SESSION_DISPATC... 1                                                                                       
+
+
+
+codex
+I confirmed this is an active CAF runner session (`CAF_ACTIVE_RUNNER_SESSION=1`), so nested Codex calls are forbidden. I’m extracting wave 0 task packets and worker mappings so I can execute those tasks directly in-session with reviewer checks, as required.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'rg -n "TG-00-AP-runtime-scaffold|TG-00-CP-runtime-scaffold|Wave 0|wave 0|worker_id|required_capabilities" reference_architectures/codex-saas/design/playbook/build_dispatch_manifest_v1.md' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'rg -n "task_id: TG-00-AP-runtime-scaffold|task_id: TG-00-CP-runtime-scaffold|required_capabilities|depends_on|title:|steps:|definition_of_done" reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml' in C:\data\contura\caf-dev
+ succeeded in 513ms:
+10:## Wave 0
+12:### TG-00-AP-runtime-scaffold — Scaffold AP runtime (python api_service_http)
+15:- worker_id: `worker-plane-runtime`
+55:task_id: TG-00-AP-runtime-scaffold
+58:worker_id: worker-plane-runtime
+102:### TG-00-CP-runtime-scaffold — Scaffold CP runtime (python api_service_http)
+105:- worker_id: `worker-plane-runtime`
+145:task_id: TG-00-CP-runtime-scaffold
+148:worker_id: worker-plane-runtime
+197:- worker_id: `worker-contract-scaffolder`
+198:- depends_on: `TG-00-AP-runtime-scaffold`
+260:worker_id: worker-contract-scaffolder
+262:  - TG-00-AP-runtime-scaffold
+350:- worker_id: `worker-ui-frontend`
+351:- depends_on: `TG-00-AP-runtime-scaffold`
+428:worker_id: worker-ui-frontend
+430:  - TG-00-AP-runtime-scaffold
+518:- worker_id: `worker-policy`
+519:- depends_on: `TG-00-CP-runtime-scaffold`, `TG-00-AP-runtime-scaffold`
+583:worker_id: worker-policy
+585:  - TG-00-CP-runtime-scaffold
+586:  - TG-00-AP-runtime-scaffold
+664:- worker_id: `worker-observability-config`
+665:- depends_on: `TG-00-AP-runtime-scaffold`, `TG-00-CP-runtime-scaffold`
+714:worker_id: worker-observability-config
+716:  - TG-00-AP-runtime-scaffold
+717:  - TG-00-CP-runtime-scaffold
+777:- worker_id: `worker-contract-scaffolder`
+778:- depends_on: `TG-00-CP-runtime-scaffold`, `TG-00-CONTRACT-BND-CP-AP-01-AP`
+838:worker_id: worker-contract-scaffolder
+840:  - TG-00-CP-runtime-scaffold
+920:- worker_id: `worker-api-boundary`
+1001:worker_id: worker-api-boundary
+1172:- worker_id: `worker-ui-frontend`
+1250:worker_id: worker-ui-frontend
+1341:- worker_id: `worker-api-boundary`
+1342:- depends_on: `TG-00-AP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+1440:worker_id: worker-api-boundary
+1442:  - TG-00-AP-runtime-scaffold
+1560:- worker_id: `worker-api-boundary`
+1561:- depends_on: `TG-00-AP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+1659:worker_id: worker-api-boundary
+1661:  - TG-00-AP-runtime-scaffold
+1779:- worker_id: `worker-api-boundary`
+1780:- depends_on: `TG-00-AP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+1878:worker_id: worker-api-boundary
+1880:  - TG-00-AP-runtime-scaffold
+1998:- worker_id: `worker-api-boundary`
+1999:- depends_on: `TG-00-AP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+2097:worker_id: worker-api-boundary
+2099:  - TG-00-AP-runtime-scaffold
+2217:- worker_id: `worker-api-boundary`
+2218:- depends_on: `TG-00-AP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+2316:worker_id: worker-api-boundary
+2318:  - TG-00-AP-runtime-scaffold
+2436:- worker_id: `worker-api-boundary`
+2437:- depends_on: `TG-00-AP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+2535:worker_id: worker-api-boundary
+2537:  - TG-00-AP-runtime-scaffold
+2655:- worker_id: `worker-api-boundary`
+2656:- depends_on: `TG-00-AP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+2754:worker_id: worker-api-boundary
+2756:  - TG-00-AP-runtime-scaffold
+2874:- worker_id: `worker-persistence`
+2875:- depends_on: `TG-00-CP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+2940:worker_id: worker-persistence
+2942:  - TG-00-CP-runtime-scaffold
+3017:- worker_id: `worker-persistence`
+3018:- depends_on: `TG-00-CP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+3083:worker_id: worker-persistence
+3085:  - TG-00-CP-runtime-scaffold
+3160:- worker_id: `worker-persistence`
+3161:- depends_on: `TG-00-CP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+3226:worker_id: worker-persistence
+3228:  - TG-00-CP-runtime-scaffold
+3303:- worker_id: `worker-persistence`
+3304:- depends_on: `TG-00-CP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+3369:worker_id: worker-persistence
+3371:  - TG-00-CP-runtime-scaffold
+3446:- worker_id: `worker-persistence`
+3447:- depends_on: `TG-00-CP-runtime-scaffold`, `TG-35-policy-enforcement-core`
+3512:worker_id: worker-persistence
+3514:  - TG-00-CP-runtime-scaffold
+3591:- worker_id: `worker-ui-frontend`
+3669:worker_id: worker-ui-frontend
+3758:- worker_id: `worker-ui-frontend`
+3836:worker_id: worker-ui-frontend
+3925:- worker_id: `worker-ui-frontend`
+4003:worker_id: worker-ui-frontend
+4092:- worker_id: `worker-ui-frontend`
+4170:worker_id: worker-ui-frontend
+4259:- worker_id: `worker-ui-frontend`
+4337:worker_id: worker-ui-frontend
+4426:- worker_id: `worker-ui-frontend`
+4504:worker_id: worker-ui-frontend
+4593:- worker_id: `worker-ui-frontend`
+4671:worker_id: worker-ui-frontend
+4760:- worker_id: `worker-service-facade`
+4795:worker_id: worker-service-facade
+4833:- worker_id: `worker-service-facade`
+4868:worker_id: worker-service-facade
+4906:- worker_id: `worker-service-facade`
+4941:worker_id: worker-service-facade
+4979:- worker_id: `worker-service-facade`
+5014:worker_id: worker-service-facade
+5052:- worker_id: `worker-service-facade`
+5087:worker_id: worker-service-facade
+5125:- worker_id: `worker-service-facade`
+5160:worker_id: worker-service-facade
+5198:- worker_id: `worker-service-facade`
+5233:worker_id: worker-service-facade
+5273:- worker_id: `worker-persistence`
+5274:- depends_on: `TG-30-service-facade-activity_events`, `TG-00-AP-runtime-scaffold`
+5340:worker_id: worker-persistence
+5343:  - TG-00-AP-runtime-scaffold
+5419:- worker_id: `worker-persistence`
+5420:- depends_on: `TG-30-service-facade-collection_memberships`, `TG-00-AP-runtime-scaffold`
+5486:worker_id: worker-persistence
+5489:  - TG-00-AP-runtime-scaffold
+5565:- worker_id: `worker-persistence`
+5566:- depends_on: `TG-30-service-facade-collection_permissions`, `TG-00-AP-runtime-scaffold`
+5632:worker_id: worker-persistence
+5635:  - TG-00-AP-runtime-scaffold
+5711:- worker_id: `worker-persistence`
+5712:- depends_on: `TG-30-service-facade-collections`, `TG-00-AP-runtime-scaffold`
+5778:worker_id: worker-persistence
+5781:  - TG-00-AP-runtime-scaffold
+5857:- worker_id: `worker-persistence`
+5858:- depends_on: `TG-30-service-facade-tenant_role_assignments`, `TG-00-AP-runtime-scaffold`
+5924:worker_id: worker-persistence
+5927:  - TG-00-AP-runtime-scaffold
+6003:- worker_id: `worker-persistence`
+6004:- depends_on: `TG-30-service-facade-widget_versions`, `TG-00-AP-runtime-scaffold`
+6070:worker_id: worker-persistence
+6073:  - TG-00-AP-runtime-scaffold
+6149:- worker_id: `worker-persistence`
+6150:- depends_on: `TG-30-service-facade-widgets`, `TG-00-AP-runtime-scaffold`
+6216:worker_id: worker-persistence
+6219:  - TG-00-AP-runtime-scaffold
+6297:- worker_id: `worker-runtime-wiring`
+6298:- depends_on: `TG-00-AP-runtime-scaffold`, `TG-00-CP-runtime-scaffold`, `TG-40-persistence-activity_events`, `TG-40-persistence-collection_memberships`, `TG-40-persistence-collection_permissions`, `TG-40-persistence-collections`, `TG-40-persistence-tenant_role_assignments`, `TG-40-persistence-widget_versions`, `TG-40-persistence-widgets`, `TG-40-persistence-cp-policy`, `TG-40-persistence-cp-approval-decision`, `TG-40-persistence-cp-execution-record`, `TG-40-persistence-cp-retention-rule`, `TG-40-persistence-cp-deletion-request`
+6411:worker_id: worker-runtime-wiring
+6413:  - TG-00-AP-runtime-scaffold
+6414:  - TG-00-CP-runtime-scaffold
+6589:- worker_id: `worker-postgres`
+6632:worker_id: worker-postgres
+6683:- worker_id: `worker-ux-frontend`
+6752:worker_id: worker-ux-frontend
+6834:- worker_id: `worker-unit-tests`
+6868:worker_id: worker-unit-tests
+6904:- worker_id: `worker-tech-writer`
+6939:worker_id: worker-tech-writer
+6976:- worker_id: `worker-postgres`
+7029:worker_id: worker-postgres
+
+ succeeded in 473ms:
+3:  - task_id: TG-00-CP-runtime-scaffold
+4:    title: Scaffold CP runtime (python api_service_http)
+5:    required_capabilities:
+12:    steps:
+18:    definition_of_done:
+72:  - task_id: TG-00-AP-runtime-scaffold
+73:    title: Scaffold AP runtime (python api_service_http)
+74:    required_capabilities:
+81:    steps:
+87:    definition_of_done:
+143:    title: Scaffold AP contract endpoint for BND-CP-AP-01
+144:    required_capabilities:
+146:    depends_on:
+153:    steps:
+159:    definition_of_done:
+280:    title: Scaffold CP contract endpoint for BND-CP-AP-01
+281:    required_capabilities:
+283:    depends_on:
+291:    steps:
+297:    definition_of_done:
+412:    title: Implement policy enforcement core for mock auth and tenant context
+413:    required_capabilities:
+415:    depends_on:
+425:    steps:
+431:    definition_of_done:
+552:    title: Implement API boundary for activity_events
+553:    required_capabilities:
+555:    depends_on:
+563:    steps:
+569:    definition_of_done:
+826:    title: Implement API boundary for collection_memberships
+827:    required_capabilities:
+829:    depends_on:
+837:    steps:
+843:    definition_of_done:
+1100:    title: Implement API boundary for collection_permissions
+1101:    required_capabilities:
+1103:    depends_on:
+1111:    steps:
+1117:    definition_of_done:
+1374:    title: Implement API boundary for collections
+1375:    required_capabilities:
+1377:    depends_on:
+1385:    steps:
+1391:    definition_of_done:
+1648:    title: Implement API boundary for tenant_role_assignments
+1649:    required_capabilities:
+1651:    depends_on:
+1659:    steps:
+1665:    definition_of_done:
+1922:    title: Implement API boundary for widget_versions
+1923:    required_capabilities:
+1925:    depends_on:
+1933:    steps:
+1939:    definition_of_done:
+2196:    title: Implement API boundary for widgets
+2197:    required_capabilities:
+2199:    depends_on:
+2207:    steps:
+2213:    definition_of_done:
+2470:    title: Implement service facade for activity_events
+2471:    required_capabilities:
+2473:    depends_on:
+2482:    steps:
+2488:    definition_of_done:
+2512:    title: Implement service facade for collection_memberships
+2513:    required_capabilities:
+2515:    depends_on:
+2524:    steps:
+2530:    definition_of_done:
+2554:    title: Implement service facade for collection_permissions
+2555:    required_capabilities:
+2557:    depends_on:
+2566:    steps:
+2572:    definition_of_done:
+2596:    title: Implement service facade for collections
+2597:    required_capabilities:
+2599:    depends_on:
+2608:    steps:
+2614:    definition_of_done:
+2638:    title: Implement service facade for tenant_role_assignments
+2639:    required_capabilities:
+2641:    depends_on:
+2650:    steps:
+2656:    definition_of_done:
+2680:    title: Implement service facade for widget_versions
+2681:    required_capabilities:
+2683:    depends_on:
+2692:    steps:
+2698:    definition_of_done:
+2722:    title: Implement service facade for widgets
+2723:    required_capabilities:
+2725:    depends_on:
+2734:    steps:
+2740:    definition_of_done:
+2764:    title: Implement persistence for activity_events (sqlalchemy_orm code_bootstrap)
+2765:    required_capabilities:
+2767:    depends_on:
+2777:    steps:
+2783:    definition_of_done:
+2918:    title: Implement persistence for collection_memberships (sqlalchemy_orm code_bootstrap)
+2919:    required_capabilities:
+2921:    depends_on:
+2931:    steps:
+2937:    definition_of_done:
+3072:    title: Implement persistence for collection_permissions (sqlalchemy_orm code_bootstrap)
+3073:    required_capabilities:
+3075:    depends_on:
+3085:    steps:
+3091:    definition_of_done:
+3226:    title: Implement persistence for collections (sqlalchemy_orm code_bootstrap)
+3227:    required_capabilities:
+3229:    depends_on:
+3239:    steps:
+3245:    definition_of_done:
+3380:    title: Implement persistence for tenant_role_assignments (sqlalchemy_orm code_bootstrap)
+3381:    required_capabilities:
+3383:    depends_on:
+3393:    steps:
+3399:    definition_of_done:
+3534:    title: Implement persistence for widget_versions (sqlalchemy_orm code_bootstrap)
+3535:    required_capabilities:
+3537:    depends_on:
+3547:    steps:
+3553:    definition_of_done:
+3688:    title: Implement persistence for widgets (sqlalchemy_orm code_bootstrap)
+3689:    required_capabilities:
+3691:    depends_on:
+3701:    steps:
+3707:    definition_of_done:
+3842:    title: Implement CP persistence for policy (sqlalchemy_orm code_bootstrap)
+3843:    required_capabilities:
+3845:    depends_on:
+3853:    steps:
+3859:    definition_of_done:
+3993:    title: Implement CP persistence for approval-decision (sqlalchemy_orm code_bootstrap)
+3994:    required_capabilities:
+3996:    depends_on:
+4004:    steps:
+4010:    definition_of_done:
+4145:    title: Implement CP persistence for execution-record (sqlalchemy_orm code_bootstrap)
+4146:    required_capabilities:
+4148:    depends_on:
+4156:    steps:
+4162:    definition_of_done:
+4297:    title: Implement CP persistence for retention-rule (sqlalchemy_orm code_bootstrap)
+4298:    required_capabilities:
+4300:    depends_on:
+4308:    steps:
+4314:    definition_of_done:
+4449:    title: Implement CP persistence for deletion-request (sqlalchemy_orm code_bootstrap)
+4450:    required_capabilities:
+4452:    depends_on:
+4460:    steps:
+4466:    definition_of_done:
+4601:    title: Wire cross-plane runtime assembly (python mock auth sqlalchemy_orm code_bootstrap)
+4602:    required_capabilities:
+4604:    depends_on:
+4626:    steps:
+4632:    definition_of_done:
+4949:    title: Implement unit test scaffolding for generated runtime surfaces
+4950:    required_capabilities:
+4952:    depends_on:
+4959:    steps:
+4965:    definition_of_done:
+4986:    title: Author operator README for compose-based candidate stack
+4987:    required_capabilities:
+4989:    depends_on:
+5000:    steps:
+5006:    definition_of_done:
+5027:    title: Scaffold UI shell (web SPA)
+5028:    required_capabilities:
+5030:    depends_on:
+5041:    steps:
+5047:    definition_of_done:
+5219:    title: Implement UI page for policy administration
+5220:    required_capabilities:
+5222:    depends_on:
+5234:    steps:
+5240:    definition_of_done:
+5415:    title: Implement UI page for activity_events resource
+5416:    required_capabilities:
+5418:    depends_on:
+5426:    steps:
+5432:    definition_of_done:
+5611:    title: Implement UI page for collection_memberships resource
+5612:    required_capabilities:
+5614:    depends_on:
+5622:    steps:
+5628:    definition_of_done:
+5807:    title: Implement UI page for collection_permissions resource
+5808:    required_capabilities:
+5810:    depends_on:
+5818:    steps:
+5824:    definition_of_done:
+6003:    title: Implement UI page for collections resource
+6004:    required_capabilities:
+6006:    depends_on:
+6014:    steps:
+6020:    definition_of_done:
+6199:    title: Implement UI page for tenant_role_assignments resource
+6200:    required_capabilities:
+6202:    depends_on:
+6210:    steps:
+6216:    definition_of_done:
+6395:    title: Implement UI page for widget_versions resource
+6396:    required_capabilities:
+6398:    depends_on:
+6406:    steps:
+6412:    definition_of_done:
+6591:    title: Implement UI page for widgets resource
+6592:    required_capabilities:
+6594:    depends_on:
+6602:    steps:
+6608:    definition_of_done:
+6787:    title: Decision option implementation aggregator
+6788:    required_capabilities:
+6790:    depends_on:
+6797:    steps:
+6803:    definition_of_done:
+7020:    title: Postgres persistence wiring execution anchor
+7021:    required_capabilities:
+7023:    depends_on:
+7030:    steps:
+7036:    definition_of_done:
+7089:    title: TBP PG obligations for postgres persistence wiring
+7090:    required_capabilities:
+7092:    depends_on:
+7101:    steps:
+7107:    definition_of_done:
+7120:        depends_on.postgres.condition: service_healthy.
+7195:    title: Materialize observability and config contracts for python runtime
+7196:    required_capabilities:
+7198:    depends_on:
+7206:    steps:
+7212:    definition_of_done:
+7288:    title: Materialize separate UX lane scaffolding contracts
+7289:    required_capabilities:
+7291:    depends_on:
+7299:    steps:
+7305:    definition_of_done:
+
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Select-String -Path reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml -Pattern "task_id: TG-00-CP-runtime-scaffold" -Context 0,40 | ForEach-Object { $_.Context.PreContext + $_.Line + $_.Context.PostContext }' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Select-String -Path reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml -Pattern "task_id: TG-00-AP-runtime-scaffold" -Context 0,40 | ForEach-Object { $_.Context.PreContext + $_.Line + $_.Context.PostContext }' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -TotalCount 180 reference_architectures/codex-saas/design/playbook/build_dispatch_manifest_v1.md' in C:\data\contura\caf-dev
+ succeeded in 603ms:
+  - task_id: TG-00-CP-runtime-scaffold
+    title: Scaffold CP runtime (python api_service_http)
+    required_capabilities:
+      - plane_runtime_scaffolding
+    inputs:
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        required: true
+      - path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+        required: true
+    steps:
+      - Confirm CP runtime pins and selected api_service_http shape for python services.
+      - Create CP runtime scaffold modules and composition root boundaries.
+      - Wire configuration loading for mock auth and policy surface dependencies.
+      - Establish bootstrap entrypoints aligned to compose-first local execution.
+      - Record runtime assumptions for downstream persistence and wiring tasks.
+    definition_of_done:
+      - CP runtime scaffold aligns with resolved rails for python, mock auth, and api_service_http.
+      - Composition root boundaries are explicit for policy and persistence integration points.
+      - >-
+        TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Runtime package structure, imports, and entrypoints align to
+        the resolved Python module-root conventions across generated plane surfaces.
+      - >-
+        TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Canonical plane module roots are realized consistently across
+        runtime scaffolds, operator entrypoints, and tests.
+      - >-
+        TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Cross-package imports into TBP-declared shared helper/library
+        packages beneath the canonical `code` root (for example `code/common/`) use module-root-coherent relative or
+        absolute imports rather than inventing plane-local pseudo-packages such as `code.ap.common`.
+      - >-
+        Compiled Obligation (OBL-PLANE-CP-RUNTIME-SCAFFOLD): Scaffold the control plane runtime for the adopted
+        api_service_http shape.
+      - >-
+        Compiled Obligation (O-TBP-PY-01-python-package-markers): Materialize Python package markers for candidate code
+        packages (TBP: TBP-PY-01)
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Does the CP runtime scaffold match resolved runtime pins without adding new technology choices?
+        - Are CP composition boundaries clear enough for policy and persistence tasks?
+        - >-
+          TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Do generated Python package roots, imports, and entrypoints
+
+ succeeded in 541ms:
+# Build Dispatch Manifest (v1)
+
+Derived mechanically from:
+- `reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml`
+- `architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml`
+
+This file is a dispatch aid for `caf-build-candidate` Step 3.
+It does **not** execute workers; it resolves deterministic ordering + worker IDs.
+
+## Wave 0
+
+### TG-00-AP-runtime-scaffold â€” Scaffold AP runtime (python api_service_http)
+
+- required_capability: `plane_runtime_scaffolding`
+- worker_id: `worker-plane-runtime`
+- depends_on: (none)
+
+**Inputs (paths only; open as needed):**
+- (required) `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+- (required) `reference_architectures/codex-saas/design/playbook/application_design_v1.md`
+
+**Steps:**
+- Confirm AP runtime pins and selected api_service_http shape for python services.
+- Create AP runtime scaffold modules and composition root boundaries.
+- Wire configuration loading for mock auth and tenant context dependencies.
+- Establish bootstrap entrypoints aligned to compose-first local execution.
+- Record runtime assumptions for API, service, persistence, and UI consumers.
+
+**Definition of Done:**
+- AP runtime scaffold aligns with resolved rails for python, mock auth, and api_service_http.
+- Composition root boundaries are explicit for API, service, and persistence slices.
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Runtime package structure, imports, and entrypoints align to the resolved Python module-root conventions across generated plane surfaces.
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Canonical plane module roots are realized consistently across runtime scaffolds, operator entrypoints, and tests.
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Cross-package imports into TBP-declared shared helper/library packages beneath the canonical `code` root (for example `code/common/`) use module-root-coherent relative or absolute imports rather than inventing plane-local pseudo-packages such as `code.ap.common`.
+- Compiled Obligation (OBL-PLANE-AP-RUNTIME-SCAFFOLD): Scaffold the application plane runtime for the adopted api_service_http shape.
+- Compiled Obligation (O-TBP-PY-01-python-package-markers): Materialize Python package markers for candidate code packages (TBP: TBP-PY-01)
+
+**Semantic review questions:**
+- Does the AP runtime scaffold match resolved runtime pins without adding new technology choices?
+- Are AP boundaries clear enough for API, service, persistence, and UI tasks?
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Do generated Python package roots, imports, and entrypoints all reflect the same resolved module-root conventions?
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Are plane package markers and import paths coherent across runtime surfaces?
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): When a runtime surface imports a TBP-declared shared helper/library package from under `code/`, does the import path land on the real package root rather than a non-existent plane-local child package?
+- Compiled Obligation (OBL-PLANE-AP-RUNTIME-SCAFFOLD): Is there concrete implementation evidence for OBL-PLANE-AP-RUNTIME-SCAFFOLD â€” Scaffold the application plane runtime for the adopted api_service_http shape.?
+- Compiled Obligation (O-TBP-PY-01-python-package-markers): Is there concrete implementation evidence for O-TBP-PY-01-python-package-markers â€” Materialize Python package markers for candidate code packages (TBP: TBP-PY-01)?
+
+**Trace anchors (compact):**
+- kind=plan_step_archetype | pattern_id=pinned_input:planes.ap.runtime_shape
+- kind=plan_step_archetype | pattern_id=pattern_obligation_id:OBL-PLANE-AP-RUNTIME-SCAFFOLD
+- kind=plan_step_archetype | pattern_id=pattern_obligation_id:O-TBP-PY-01-python-package-markers
+
+**Dispatch packet (copy into worker prompt):**
+
+```yaml
+task_id: TG-00-AP-runtime-scaffold
+title: Scaffold AP runtime (python api_service_http)
+required_capability: plane_runtime_scaffolding
+worker_id: worker-plane-runtime
+depends_on:
+  - (none)
+inputs:
+  - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+    required: required
+  - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+    required: required
+steps:
+  - Confirm AP runtime pins and selected api_service_http shape for python services.
+  - Create AP runtime scaffold modules and composition root boundaries.
+  - Wire configuration loading for mock auth and tenant context dependencies.
+  - Establish bootstrap entrypoints aligned to compose-first local execution.
+  - Record runtime assumptions for API, service, persistence, and UI consumers.
+definition_of_done:
+  - AP runtime scaffold aligns with resolved rails for python, mock auth, and api_service_http.
+  - Composition root boundaries are explicit for API, service, and persistence slices.
+  - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Runtime package structure, imports, and entrypoints align to the resolved Python module-root conventions across generated plane surfaces.
+  - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Canonical plane module roots are realized consistently across runtime scaffolds, operator entrypoints, and tests.
+  - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Cross-package imports into TBP-declared shared helper/library packages beneath the canonical `code` root (for example `code/common/`) use module-root-coherent relative or absolute imports rather than inventing plane-local pseudo-packages such as `code.ap.common`.
+  - Compiled Obligation (OBL-PLANE-AP-RUNTIME-SCAFFOLD): Scaffold the application plane runtime for the adopted api_service_http shape.
+  - Compiled Obligation (O-TBP-PY-01-python-package-markers): Materialize Python package markers for candidate code packages (TBP: TBP-PY-01)
+semantic_review:
+  severity_threshold: blocker
+  review_questions:
+    - Does the AP runtime scaffold match resolved runtime pins without adding new technology choices?
+    - Are AP boundaries clear enough for API, service, persistence, and UI tasks?
+    - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Do generated Python package roots, imports, and entrypoints all reflect the same resolved module-root conventions?
+    - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Are plane package markers and import paths coherent across runtime surfaces?
+    - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): When a runtime surface imports a TBP-declared shared helper/library package from under `code/`, does the import path land on the real package root rather than a non-existent plane-local child package?
+    - Compiled Obligation (OBL-PLANE-AP-RUNTIME-SCAFFOLD): Is there concrete implementation evidence for OBL-PLANE-AP-RUNTIME-SCAFFOLD â€” Scaffold the application plane runtime for the adopted api_service_http shape.?
+    - Compiled Obligation (O-TBP-PY-01-python-package-markers): Is there concrete implementation evidence for O-TBP-PY-01-python-package-markers â€” Materialize Python package markers for candidate code packages (TBP: TBP-PY-01)?
+trace_anchors:
+  -
+    anchor_kind: plan_step_archetype
+    pattern_id: pinned_input:planes.ap.runtime_shape
+  -
+    anchor_kind: plan_step_archetype
+    pattern_id: pattern_obligation_id:OBL-PLANE-AP-RUNTIME-SCAFFOLD
+  -
+    anchor_kind: plan_step_archetype
+    pattern_id: pattern_obligation_id:O-TBP-PY-01-python-package-markers
+```
+
+### TG-00-CP-runtime-scaffold â€” Scaffold CP runtime (python api_service_http)
+
+- required_capability: `plane_runtime_scaffolding`
+- worker_id: `worker-plane-runtime`
+- depends_on: (none)
+
+**Inputs (paths only; open as needed):**
+- (required) `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+- (required) `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`
+
+**Steps:**
+- Confirm CP runtime pins and selected api_service_http shape for python services.
+- Create CP runtime scaffold modules and composition root boundaries.
+- Wire configuration loading for mock auth and policy surface dependencies.
+- Establish bootstrap entrypoints aligned to compose-first local execution.
+- Record runtime assumptions for downstream persistence and wiring tasks.
+
+**Definition of Done:**
+- CP runtime scaffold aligns with resolved rails for python, mock auth, and api_service_http.
+- Composition root boundaries are explicit for policy and persistence integration points.
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Runtime package structure, imports, and entrypoints align to the resolved Python module-root conventions across generated plane surfaces.
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Canonical plane module roots are realized consistently across runtime scaffolds, operator entrypoints, and tests.
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Cross-package imports into TBP-declared shared helper/library packages beneath the canonical `code` root (for example `code/common/`) use module-root-coherent relative or absolute imports rather than inventing plane-local pseudo-packages such as `code.ap.common`.
+- Compiled Obligation (OBL-PLANE-CP-RUNTIME-SCAFFOLD): Scaffold the control plane runtime for the adopted api_service_http shape.
+- Compiled Obligation (O-TBP-PY-01-python-package-markers): Materialize Python package markers for candidate code packages (TBP: TBP-PY-01)
+
+**Semantic review questions:**
+- Does the CP runtime scaffold match resolved runtime pins without adding new technology choices?
+- Are CP composition boundaries clear enough for policy and persistence tasks?
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Do generated Python package roots, imports, and entrypoints all reflect the same resolved module-root conventions?
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Are plane package markers and import paths coherent across runtime surfaces?
+- TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): When a runtime surface imports a TBP-declared shared helper/library package from under `code/`, does the import path land on the real package root rather than a non-existent plane-local child package?
+- Compiled Obligation (OBL-PLANE-CP-RUNTIME-SCAFFOLD): Is there concrete implementation evidence for OBL-PLANE-CP-RUNTIME-SCAFFOLD â€” Scaffold the control plane runtime for the adopted api_service_http shape.?
+- Compiled Obligation (O-TBP-PY-01-python-package-markers): Is there concrete implementation evidence for O-TBP-PY-01-python-package-markers â€” Materialize Python package markers for candidate code packages (TBP: TBP-PY-01)?
+
+**Trace anchors (compact):**
+- kind=plan_step_archetype | pattern_id=pinned_input:planes.cp.runtime_shape
+- kind=plan_step_archetype | pattern_id=pattern_obligation_id:OBL-PLANE-CP-RUNTIME-SCAFFOLD
+- kind=plan_step_archetype | pattern_id=pattern_obligation_id:O-TBP-PY-01-python-package-markers
+
+**Dispatch packet (copy into worker prompt):**
+
+```yaml
+task_id: TG-00-CP-runtime-scaffold
+title: Scaffold CP runtime (python api_service_http)
+required_capability: plane_runtime_scaffolding
+worker_id: worker-plane-runtime
+depends_on:
+  - (none)
+inputs:
+  - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+    required: required
+  - path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+    required: required
+steps:
+  - Confirm CP runtime pins and selected api_service_http shape for python services.
+  - Create CP runtime scaffold modules and composition root boundaries.
+  - Wire configuration loading for mock auth and policy surface dependencies.
+  - Establish bootstrap entrypoints aligned to compose-first local execution.
+  - Record runtime assumptions for downstream persistence and wiring tasks.
+definition_of_done:
+  - CP runtime scaffold aligns with resolved rails for python, mock auth, and api_service_http.
+  - Composition root boundaries are explicit for policy and persistence integration points.
+  - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Runtime package structure, imports, and entrypoints align to the resolved Python module-root conventions across generated plane surfaces.
+  - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Canonical plane module roots are realized consistently across runtime scaffolds, operator entrypoints, and tests.
+  - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Cross-package imports into TBP-declared shared helper/library packages beneath the canonical `code` root (for example `code/common/`) use module-root-coherent relative or absolute imports rather than inventing plane-local pseudo-packages such as `code.ap.common`.
+  - Compiled Obligation (OBL-PLANE-CP-RUNTIME-SCAFFOLD): Scaffold the control plane runtime for the adopted api_service_http shape.
+  - Compiled Obligation (O-TBP-PY-01-python-package-markers): Materialize Python package markers for candidate code packages (TBP: TBP-PY-01)
+semantic_review:
+  severity_threshold: blocker
+  review_questions:
+    - Does the CP runtime scaffold match resolved runtime pins without adding new technology choices?
+    - Are CP composition boundaries clear enough for policy and persistence tasks?
+    - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Do generated Python package roots, imports, and entrypoints all reflect the same resolved module-root conventions?
+    - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Are plane package markers and import paths coherent across runtime surfaces?
+    - TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): When a runtime surface imports a TBP-declared shared helper/library package from under `code/`, does the import path land on the real package root rather than a non-existent plane-local child package?
+    - Compiled Obligation (OBL-PLANE-CP-RUNTIME-SCAFFOLD): Is there concrete implementation evidence for OBL-PLANE-CP-RUNTIME-SCAFFOLD â€” Scaffold the control plane runtime for the adopted api_service_http shape.?
+    - Compiled Obligation (O-TBP-PY-01-python-package-markers): Is there concrete implementation evidence for O-TBP-PY-01-python-package-markers â€” Materialize Python package markers for candidate code packages (TBP: TBP-PY-01)?
+trace_anchors:
+
+ succeeded in 646ms:
+  - task_id: TG-00-AP-runtime-scaffold
+    title: Scaffold AP runtime (python api_service_http)
+    required_capabilities:
+      - plane_runtime_scaffolding
+    inputs:
+      - path: reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+        required: true
+      - path: reference_architectures/codex-saas/design/playbook/application_design_v1.md
+        required: true
+    steps:
+      - Confirm AP runtime pins and selected api_service_http shape for python services.
+      - Create AP runtime scaffold modules and composition root boundaries.
+      - Wire configuration loading for mock auth and tenant context dependencies.
+      - Establish bootstrap entrypoints aligned to compose-first local execution.
+      - Record runtime assumptions for API, service, persistence, and UI consumers.
+    definition_of_done:
+      - AP runtime scaffold aligns with resolved rails for python, mock auth, and api_service_http.
+      - Composition root boundaries are explicit for API, service, and persistence slices.
+      - >-
+        TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Runtime package structure, imports, and entrypoints align to
+        the resolved Python module-root conventions across generated plane surfaces.
+      - >-
+        TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Canonical plane module roots are realized consistently across
+        runtime scaffolds, operator entrypoints, and tests.
+      - >-
+        TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Cross-package imports into TBP-declared shared helper/library
+        packages beneath the canonical `code` root (for example `code/common/`) use module-root-coherent relative or
+        absolute imports rather than inventing plane-local pseudo-packages such as `code.ap.common`.
+      - >-
+        Compiled Obligation (OBL-PLANE-AP-RUNTIME-SCAFFOLD): Scaffold the application plane runtime for the adopted
+        api_service_http shape.
+      - >-
+        Compiled Obligation (O-TBP-PY-01-python-package-markers): Materialize Python package markers for candidate code
+        packages (TBP: TBP-PY-01)
+    semantic_review:
+      severity_threshold: blocker
+      review_questions:
+        - Does the AP runtime scaffold match resolved runtime pins without adding new technology choices?
+        - Are AP boundaries clear enough for API, service, persistence, and UI tasks?
+        - >-
+          TBP Gate (TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE): Do generated Python package roots, imports, and entrypoints
+
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'rg --files skills | rg "worker-plane-runtime|worker-code-reviewer|caf-build"' in C:\data\contura\caf-dev
+ succeeded in 545ms:
+skills\worker-code-reviewer\SKILL.md
+skills\caf-build-candidate\SKILL.md
+skills\worker-plane-runtime\SKILL.md
+
+codex
+I’ve identified the exact worker and reviewer skills for wave 0. I’m loading those procedures now and will execute them for `TG-00-AP-runtime-scaffold` and `TG-00-CP-runtime-scaffold`.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw skills/worker-plane-runtime/SKILL.md' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw skills/worker-code-reviewer/SKILL.md' in C:\data\contura\caf-dev
+ succeeded in 504ms:
+---
+name: worker-plane-runtime
+description: >
+  Materialize plane runtime scaffold artifacts declared by the Task Graph, without assuming frameworks.
+  Writes runtime scaffolding needed to satisfy the task Definition of Done and trace anchors. Fail-closed.
+status: active
+---
+
+> **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
+> Also read `tools/caf/contracts/cp_runtime_application_surface_contract_v1.md` when executing control-plane HTTP runtime scaffold tasks.
+> If this SKILL conflicts with a contract, the contract wins.
+
+
+# worker-plane-runtime
+
+## Capabilities
+
+- plane_runtime_scaffolding
+
+## Purpose
+
+Produce **plane runtime scaffold** artifacts for a given plane, as declared in `task_graph_v1.yaml`.
+
+This worker is **framework-agnostic**. It does not assume FastAPI, ASGI, HTTP, queues, or vendors.
+Those choices must come from declarations (patterns/options) and (later) TBPs/PBPs.
+
+## Inputs (authoritative)
+
+- `companion_repositories/<name>/profile_*/caf/task_graph_v1.yaml` (or the reference_architectures copy)
+- The assigned Task Graph task for this worker
+
+## Task eligibility
+
+A task is eligible if:
+
+- `required_capabilities` contains `plane_runtime_scaffolding`.
+
+If a task does not meet eligibility, refuse.
+
+## Execution rules (non-negotiable)
+
+- You MUST open and use every `task.inputs[]` entry where `required: true`.
+  - If any required input is missing â†’ fail closed with a feedback packet.
+  - In your task report, include an **Inputs consumed** section listing each required input and what you derived from it.
+
+- You MUST treat `trace_anchors[]` as binding constraints.
+  - If a trace anchor references a CAF/core/external pattern id (e.g., `CAF-TCTX-01`), you MUST follow the adopted option as recorded in the design inputs.
+  - If the design does not clearly record the adopted option â†’ fail closed (do not guess).
+
+- Use the task's **Definition of Done** as the completion contract, but interpret it in the full instance context (inputs + trace anchors).
+  - Do not introduce new framework/vendor choices unless the inputs/trace_anchors require them.
+
+- You MAY create any files/directories needed to satisfy the Definition of Done, but ONLY within Guardrails rails.
+
+- You MUST write a task report to `caf/task_reports/<task_id>.md` listing:
+  - inputs consumed
+  - decisions derived (with citations to inputs)
+  - files touched
+  - how to validate (semantic guidance; no brittle path assertions)
+
+- Any file you create or substantially rewrite MUST include a `CAF_TRACE:` header block at the top, using the correct comment syntax for the file type (see CAF Operating Contract: "CAF trace headers").
+
+- Placeholder hygiene: generated files must not contain `TBD`, `TODO`, `REPLACE_ME`, `FIXME`, `<?`, `??`.
+
+## Content rules (semantic-only)
+
+Typical artifacts (when warranted by the task's Definition of Done):
+
+### `runtime/README.md`
+
+Must state:
+
+- the plane identifier (from the output path context)
+- the selected runtime shape (if the Task Graph provides it in task metadata; otherwise state "runtime shape selected by planner" without inventing details)
+- the intended ingress class in words (HTTP API, event worker, embedded library, custom)
+- what this scaffold provides (module boundary + documentation only)
+- what it intentionally does **not** provide (framework wiring, deployment config), and that those come from TBPs/PBPs.
+
+### `asgi.py`
+
+If an output path ends with `/asgi.py`, produce a minimal ASGI export file that:
+
+- Uses a **package-relative** import:
+  - `from .main import app`
+- Exposes `app` as the ASGI callable.
+
+This is scaffolding-only and must not claim production readiness.
+
+### Python module-root coherence for shared helpers
+
+When `runtime.language=python`, the canonical import root is `code` and sibling shared packages may live under `code/common/`.
+
+- If a runtime scaffold imports a helper that resolves under a sibling package beneath `code/`, keep the import path coherent with the real package root.
+- Do **not** invent plane-local pseudo-packages such as `code/ap/common` or `code/cp/common`.
+- When the selected auth contract resolves `mock_auth_claims_module` to `code/common/auth/mock_claims.py`, an AP composition root like `code/ap/main.py` must import that helper coherently (for example `from ..common.auth.mock_claims import ...`), not as `.common...`.
+- In the task report, call out any shared-helper imports you anchored to resolved role bindings or canonical module-root conventions.
+
+### `cp_runtime_repository_health_owner` for control-plane HTTP scaffolds
+
+When the task scaffolds the **control plane** as `api_service_http`:
+
+- Resolve the TBP role binding key `cp_runtime_repository_health_owner` with `node tools/caf/resolve_tbp_role_binding_key_v1.mjs <instance> --role-binding-key cp_runtime_repository_health_owner --format json`.
+- Materialize the resolved artifact as the explicit CP runtime consumer seam.
+- Keep it scaffold-only: define the module surface and imports needed for later policy/persistence/runtime-wiring work, but do not invent business capabilities.
+- Do not stop at package markers alone; package markers do not satisfy the CP runtime application surface contract.
+- In the task report, list the resolved artifact under outputs/files touched and explain that the file exists to anchor later control-plane runtime behavior deterministically.
+
+
+## Failure modes
+
+- Any placeholder token detected â†’ fail closed.
+- Any acceptance check cannot be evaluated deterministically â†’ fail closed.
+- Any required output cannot be written within rails â†’ fail closed.
+
+
+ succeeded in 459ms:
+---
+name: worker-code-reviewer
+description: >
+  Perform semantic review of candidate code changes for a single Task Graph task.
+  Emits feedback packets on high-severity findings; otherwise writes a review note.
+status: active
+---
+
+> **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
+> If this SKILL conflicts with the contract, the contract wins.
+
+
+# worker-code-reviewer
+
+## Capabilities
+
+- semantic_code_review
+
+## Purpose
+
+Provide a **compiler-like semantic gate** after each task:
+
+- correctness (broken imports, missing wiring, inconsistent names)
+- security (obvious vulns, unsafe defaults, auth/tenant leakage)
+- performance (gross inefficiencies, pathological patterns)
+- architecture alignment (pattern obligations, contract boundaries)
+
+This worker does **not** run scripts or tests. It reasons from code + declarations.
+
+## Inputs (authoritative)
+
+- Task Assignment Contract (in-memory) containing:
+  - instance_name
+  - companion_repo_target
+  - rails (allowed_write_paths, allowed_artifact_classes, forbidden_actions)
+  - platform spine pins
+  - task object: inputs, definition_of_done, semantic_review, trace_anchors
+- `<companion_repo_target>/caf/task_reports/<task_id>.md`
+- The current candidate repository contents under `<companion_repo_target>/...`
+- Planning inputs under `<companion_repo_target>/caf/` (spec/design/contracts/task_graph)
+- `reference_architectures/<instance_name>/spec/guardrails/profile_parameters_resolved.yaml` (for adopted / derived tech choices, when present)
+
+## Review rubrics (v1)
+
+Reviewer MUST apply relevant rubric checks in addition to task-local review questions.
+
+Rubric library:
+- `architecture_library/phase_8/review_rubrics/rubrics/*.yaml`
+
+Rubric selection:
+1) If the task's `semantic_review.rubric_ids` is non-empty: apply those rubrics (fail-closed if any ID cannot be resolved), PLUS the baseline rubrics `RR-TASK-REPORT-01` and `RR-TBP-ROLE-BINDINGS-01`.
+2) Otherwise, auto-select using pins/derived atoms and task-managed contract lines:
+   - If `platform.runtime_language == python`: apply `RR-PY-GENERAL-01` and `RR-PY-TESTS-01`.
+   - If `platform.packaging` is `docker_compose` or `podman_compose`: apply `RR-COMPOSE-01`.
+   - If `profile_parameters_resolved.yaml` contains `runtime.framework: fastapi`: apply `RR-FASTAPI-SVC-01`.
+   - If the task's required capabilities include `ui_frontend_scaffolding` or `ux_frontend_realization`, or the resolved pins indicate `ui.kind: web_spa`, apply `RR-WEB-SPA-01`.
+   - If the task's managed DoD / review questions include `G-PY-PACKAGING-CANONICAL-MANIFEST`, apply `RR-PY-DEPENDENCY-MANIFEST-01`.
+   - If the task's managed DoD / review questions include `G-AUTH-MOCK-CONTRACT-REALIZATION` or `G-AUTH-MOCK-HEADER-PRECEDENCE-COHERENCE`, apply `RR-AUTH-MOCK-CLAIM-CONTRACT-01`.
+   - Always apply `RR-TASK-REPORT-01` (task report structure + step evidence).
+   - Always apply `RR-TBP-ROLE-BINDINGS-01` (manifest-driven TBP output placement).
+
+Rubric evaluation:
+- The review note MUST include a PASS/FAIL row for EVERY selected `check_id`.
+- Evidence MUST cite concrete file paths and (when helpful) short snippets/line ranges.
+- For `RR-TBP-ROLE-BINDINGS-01`, you MUST run:
+  - `node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance_name> --capability <task.required_capabilities[0]>`
+  and verify each expected `path_template` exists under the companion repo and contains every `evidence_contains` string.
+
+- For `RR-PY-GENERAL-01` / `RR-PY-CORR-01`, inspect every touched Python import and the imported target path it implies under the canonical `code` root. When a module under `code/ap/` or `code/cp/` imports a shared helper from `code/common/`, fail if the import path would land on a plane-local pseudo-package such as `code.ap.common` instead of the real sibling package.
+
+- For `RR-PY-DEPENDENCY-MANIFEST-01`, inspect the canonical dependency manifest and the runtime-wiring/container build surfaces named by the task report or touched files. Verify the build installs from the canonical manifest selected by the task-managed packaging contract rather than duplicating inline package lists.
+
+- For `RR-AUTH-MOCK-CLAIM-CONTRACT-01`, inspect the policy, API-boundary, and UI helper surfaces touched by the task (plus any resolved auth role-binding paths) and verify they preserve one coherent mock Authorization/Bearer claim contract. When Python runtime surfaces import the shared auth helper, verify the import path lands on the resolved `mock_auth_claims_module` package root rather than a plane-local pseudo-package.
+
+- For `RR-WEB-SPA-01`, you MUST inspect the rendered shell/page wiring evidence directly in the touched SPA files. For the smoke-test lane, inspect at minimum `code/ui/src/App.jsx`, `code/ui/src/api.js`, `caf/application_product_surface_v1.md`, and any touched `code/ui/src/pages/*.jsx`. For the separate UX lane, inspect at minimum `code/ux/src/App.jsx`, `code/ux/src/api.js`, `caf/application_product_surface_v1.md`, the task report coverage matrices, and any touched `code/ux/src/pages/*`. When the task writes `caf/ux_operator_notes.md`, also inspect that file against the current richer UX shell/pages/helpers and fail if the notes claim runtime controls or flows that are not observably present. Treat descriptive/static pages presented as implemented functionality as a blocker.
+
+- For each rubric check, decide PASS or FAIL with brief evidence.
+- Any FAIL at or above the configured threshold MUST be emitted as a finding.
+
+If the task report is missing or empty: fail closed with a feedback packet.
+
+## Outputs
+
+### Success path (no blocking issues)
+
+Write a review note to:
+- `<companion_repo_target>/caf/reviews/<task_id>.md`
+
+The note MUST include:
+- a rubric evaluation table:
+  - `| check_id | PASS/FAIL | Evidence |`
+  - include one row per selected check
+- a brief summary
+- a list of high/medium/low issues (may be empty)
+- a statement that no issues at/above the configured threshold were found
+
+### Failure path (blocking issues)
+
+Write a feedback packet to:
+- `reference_architectures/<instance_name>/feedback_packets/BP-YYYYMMDD-code-review-<task_id>.md`
+
+The packet MUST include:
+
+- Stuck At: semantic_code_review
+- Task: `<task_id>` + title
+- Threshold: `<severity_threshold>`
+- Findings:
+  - Each finding includes: severity (blocker/high/medium/low), category, file paths, and a short rationale.
+- Required fixes (backlog style): 3â€“7 concrete bullet items.
+- Suggested rework routing:
+  - `rework_tasks:` list containing `<task_id>` by default
+  - If the fix clearly belongs to another existing task, list that task_id instead (do not invent new tasks).
+- Evidence:
+  - cite the relevant snippet (<= 5 lines) or symbol names + paths
+
+Do not include prescriptive file-path outputs. Review is semantic.
+
+## Severity model
+
+- **blocker**: cannot run / cannot import / obvious broken wiring / auth or tenant isolation violation / missing required boundary for declared external API
+- **high**: significant correctness bug likely / security risk / architectural break of contract boundaries
+- **medium**: correctness edge, missing tests, suboptimal structure
+- **low**: style / minor best-practice suggestions
+
+## Review procedure (deterministic)
+
+1) Read the task definition:
+- Definition of Done
+- Semantic review questions
+- Trace anchors
+
+2) Read the worker task report and enumerate touched files.
+
+3) Inspect the touched files first, then inspect dependent modules that those files import/call.
+
+4) Answer each `semantic_review.review_questions` explicitly.
+
+5) If any finding is at/above `severity_threshold`, emit feedback packet and STOP.
+
+6) Otherwise, write the review note.
+
+## Hard rules
+
+- No scripts, no test execution.
+- Do not modify candidate code.
+- Do not invent missing planning inputs.
+- If required inputs are missing/ambiguous: fail closed with feedback packet.
+
+
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-ChildItem -Force companion_repositories/codex-saas/profile_v1' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-ChildItem -Recurse -Depth 3 companion_repositories/codex-saas/profile_v1/code' in C:\data\contura\caf-dev
+ succeeded in 569ms:
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   2:08 PM                caf                                                                  
+d-----          4/8/2026  11:52 AM                code                                                                 
+d-----          4/8/2026  12:05 PM                docker                                                               
+d-----          4/8/2026  11:52 AM                infrastructure                                                       
+d-----          4/8/2026  11:54 AM                tests                                                                
+-a----          4/8/2026  11:46 AM            693 .env                                                                 
+-a----          4/8/2026  11:46 AM            286 .gitignore                                                           
+-a----          4/8/2026   6:16 AM           1439 AGENTS.md                                                            
+-a----          4/8/2026  11:54 AM           3604 README.md                                                            
+-a----          4/8/2026   6:34 AM            260 requirements.txt                                                     
+
+
+
+ succeeded in 743ms:
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:28 AM                ap                                                                   
+d-----          4/8/2026   6:49 AM                common                                                               
+d-----          4/8/2026   6:28 AM                cp                                                                   
+d-----          4/8/2026   6:34 AM                ui                                                                   
+d-----          4/8/2026  11:52 AM                ux                                                                   
+-a----          4/8/2026   6:20 AM            345 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ap
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:46 AM                api                                                                  
+d-----          4/8/2026   7:00 AM                application                                                          
+d-----          4/8/2026   6:28 AM                contracts                                                            
+d-----          4/8/2026   7:26 AM                persistence                                                          
+-a----          4/8/2026   6:20 AM            295 asgi.py                                                              
+-a----          4/8/2026   6:31 AM           1319 main.py                                                              
+-a----          4/8/2026   6:20 AM            318 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ap\api
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   7:26 AM                routers                                                              
+-a----          4/8/2026   6:46 AM            647 auth_context.py                                                      
+-a----          4/8/2026   6:47 AM            538 dependencies.py                                                      
+-a----          4/8/2026   6:20 AM            311 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ap\api\routers
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   7:02 AM           1559 activity_events.py                                                   
+-a----          4/8/2026   7:01 AM           1495 collections.py                                                       
+-a----          4/8/2026   7:01 AM           1682 collection_memberships.py                                            
+-a----          4/8/2026   7:01 AM           1682 collection_permissions.py                                            
+-a----          4/8/2026   7:01 AM           1698 tenant_role_assignments.py                                           
+-a----          4/8/2026   7:02 AM           1431 widgets.py                                                           
+-a----          4/8/2026   7:02 AM           1559 widget_versions.py                                                   
+-a----          4/8/2026   6:46 AM           2197 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ap\application
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:32 AM           2072 services.py                                                          
+-a----          4/8/2026   7:24 AM           1126 service_facade_activity_events.py                                    
+-a----          4/8/2026   7:25 AM           1104 service_facade_collections.py                                        
+-a----          4/8/2026   7:24 AM           1168 service_facade_collection_memberships.py                             
+-a----          4/8/2026   7:25 AM           1168 service_facade_collection_permissions.py                             
+-a----          4/8/2026   7:25 AM           1172 service_facade_tenant_role_assignments.py                            
+-a----          4/8/2026   7:26 AM           1080 service_facade_widgets.py                                            
+-a----          4/8/2026   7:26 AM           1126 service_facade_widget_versions.py                                    
+-a----          4/8/2026   6:20 AM            327 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ap\contracts
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:31 AM                bnd_cp_ap_01                                                         
+-a----          4/8/2026   6:28 AM            254 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ap\contracts\bnd_cp_ap_01
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:29 AM            747 envelope.py                                                          
+-a----          4/8/2026   6:31 AM           1914 http_client.py                                                       
+-a----          4/8/2026   6:31 AM           1115 README.md                                                            
+-a----          4/8/2026   6:28 AM            254 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ap\persistence
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   7:22 AM            561 postgres_activity_events_repository.py                               
+-a----          4/8/2026   7:22 AM            392 postgres_adapter.py                                                  
+-a----          4/8/2026   7:23 AM            544 postgres_collections_repository.py                                   
+-a----          4/8/2026   7:22 AM            596 postgres_collection_memberships_repository.py                        
+-a----          4/8/2026   7:22 AM            596 postgres_collection_permissions_repository.py                        
+-a----          4/8/2026   7:23 AM            598 postgres_tenant_role_assignments_repository.py                       
+-a----          4/8/2026   7:23 AM            524 postgres_widgets_repository.py                                       
+-a----          4/8/2026   7:23 AM            561 postgres_widget_versions_repository.py                               
+-a----          4/8/2026   7:23 AM           2094 repository_factory.py                                                
+-a----          4/8/2026   7:23 AM            629 schema_bootstrap.py                                                  
+-a----          4/8/2026   7:22 AM           1972 _ap_repository_base.py                                               
+-a----          4/8/2026   6:20 AM            319 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\common
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:20 AM                auth                                                                 
+d-----          4/8/2026   6:29 AM                contracts                                                            
+d-----          4/8/2026   6:50 AM                persistence                                                          
+d-----          4/8/2026   6:28 AM                policy                                                               
+d-----          4/8/2026   6:31 AM                runtime                                                              
+-a----          4/8/2026   6:20 AM            340 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\common\auth
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:28 AM           2116 mock_claims.py                                                       
+-a----          4/8/2026   6:20 AM            324 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\common\contracts
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:29 AM                bnd_cp_ap_01                                                         
+-a----          4/8/2026   6:29 AM            254 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\common\contracts\bnd_cp_ap_01
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:29 AM            875 transport.py                                                         
+-a----          4/8/2026   6:29 AM            254 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\common\persistence
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   7:22 AM           5394 sqlalchemy_metadata.py                                               
+-a----          4/8/2026   6:50 AM           1182 sqlalchemy_runtime.py                                                
+-a----          4/8/2026   6:49 AM            247 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\common\policy
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:28 AM           1394 context.py                                                           
+-a----          4/8/2026   6:28 AM            319 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\common\runtime
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:31 AM            684 observability.py                                                     
+-a----          4/8/2026   6:20 AM            702 settings.py                                                          
+-a----          4/8/2026   6:20 AM            333 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\cp
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:20 AM                api                                                                  
+d-----          4/8/2026   6:28 AM                application                                                          
+d-----          4/8/2026   6:29 AM                contracts                                                            
+d-----          4/8/2026   6:51 AM                persistence                                                          
+-a----          4/8/2026   6:20 AM            295 asgi.py                                                              
+-a----          4/8/2026   6:32 AM           1062 main.py                                                              
+-a----          4/8/2026   6:20 AM            314 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\cp\api
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:30 AM                routers                                                              
+-a----          4/8/2026   6:20 AM            311 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\cp\api\routers
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:30 AM           2876 cp_ap_boundary.py                                                    
+-a----          4/8/2026   6:28 AM            873 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\cp\application
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:28 AM            845 policy_service.py                                                    
+-a----          4/8/2026   6:20 AM            791 services.py                                                          
+-a----          4/8/2026   6:20 AM            327 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\cp\contracts
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:31 AM                bnd_cp_ap_01                                                         
+-a----          4/8/2026   6:28 AM            254 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\cp\contracts\bnd_cp_ap_01
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:29 AM            747 envelope.py                                                          
+-a----          4/8/2026   6:30 AM           1323 http_server.py                                                       
+-a----          4/8/2026   6:31 AM           1145 README.md                                                            
+-a----          4/8/2026   6:29 AM            254 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\cp\persistence
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:50 AM            386 postgres_adapter.py                                                  
+-a----          4/8/2026   6:51 AM            579 postgres_approval_decision_repository.py                             
+-a----          4/8/2026   6:51 AM            574 postgres_deletion_request_repository.py                              
+-a----          4/8/2026   6:51 AM            574 postgres_execution_record_repository.py                              
+-a----          4/8/2026   6:51 AM            527 postgres_policy_repository.py                                        
+-a----          4/8/2026   6:51 AM            564 postgres_retention_rule_repository.py                                
+-a----          4/8/2026   6:51 AM           1640 repository_factory.py                                                
+-a----          4/8/2026   6:52 AM            623 schema_bootstrap.py                                                  
+-a----          4/8/2026   6:51 AM           3128 _cp_repository_base.py                                               
+-a----          4/8/2026   6:20 AM            319 __init__.py                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ui
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:49 AM                src                                                                  
+-a----          4/8/2026   6:33 AM            515 index.html                                                           
+-a----          4/8/2026   6:32 AM            558 package.json                                                         
+-a----          4/8/2026   6:34 AM            570 README.md                                                            
+-a----          4/8/2026   6:32 AM            465 vite.config.js                                                       
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ui\src
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026   6:33 AM                auth                                                                 
+d-----          4/8/2026   7:06 AM                pages                                                                
+-a----          4/8/2026   7:02 AM           7060 api.js                                                               
+-a----          4/8/2026   7:06 AM           4581 App.jsx                                                              
+-a----          4/8/2026   6:33 AM            464 main.jsx                                                             
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ui\src\auth
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   6:33 AM           1137 mockAuth.js                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ui\src\pages
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026   7:03 AM           4679 activity_events.jsx                                                  
+-a----          4/8/2026   7:04 AM           4510 collections.jsx                                                      
+-a----          4/8/2026   7:03 AM           4926 collection_memberships.jsx                                           
+-a----          4/8/2026   7:04 AM           4926 collection_permissions.jsx                                           
+-a----          4/8/2026   6:49 AM           3059 policy_admin.jsx                                                     
+-a----          4/8/2026   7:05 AM           5000 tenant_role_assignments.jsx                                          
+-a----          4/8/2026   7:06 AM           4386 widgets.jsx                                                          
+-a----          4/8/2026   7:06 AM           4673 widget_versions.jsx                                                  
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ux
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026  11:53 AM                src                                                                  
+-a----          4/8/2026  11:52 AM            440 components.json                                                      
+-a----          4/8/2026  11:52 AM            524 index.html                                                           
+-a----          4/8/2026  11:52 AM            668 package.json                                                         
+-a----          4/8/2026  11:52 AM            479 vite.config.js                                                       
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ux\src
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          4/8/2026  11:53 AM                auth                                                                 
+d-----          4/8/2026  12:05 PM                pages                                                                
+-a----          4/8/2026  12:01 PM           5914 api.js                                                               
+-a----          4/8/2026  12:02 PM           5402 App.jsx                                                              
+-a----          4/8/2026  11:52 AM            512 main.jsx                                                             
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ux\src\auth
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026  11:53 AM           1576 mockAuth.js                                                          
+
+
+    Directory: C:\data\contura\caf-dev\companion_repositories\codex-saas\profile_v1\code\ux\src\pages
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          4/8/2026  12:05 PM           2799 ActivityPage.jsx                                                     
+-a----          4/8/2026  12:04 PM           4164 AdminPage.jsx                                                        
+-a----          4/8/2026  12:03 PM           5522 CatalogPage.jsx                                                      
+-a----          4/8/2026  12:04 PM           7259 CollectionsPage.jsx                                                  
+-a----          4/8/2026  12:03 PM           3837 DetailPage.jsx                                                       
+-a----          4/8/2026  12:04 PM           1904 PublishedPage.jsx                                                    
+
+
+
+codex
+I found that the companion repo already has substantial runtime code, so I’m verifying whether wave-0 requirements are already satisfied or need incremental fixes before I emit task reports/reviews. I’m checking required inputs and the CP role-binding output path now.
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'node tools/caf/resolve_tbp_role_binding_key_v1.mjs codex-saas --role-binding-key cp_runtime_repository_health_owner --format json' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw reference_architectures/codex-saas/design/playbook/application_design_v1.md' in C:\data\contura\caf-dev
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command 'Get-Content -Raw reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md' in C:\data\contura\caf-dev
+ succeeded in 829ms:
+schema_version: "phase8_profile_parameters_v1"
+instance_name: "codex-saas"
+lifecycle:
+  evolution_stage: "stage_0_local_prototype"
+  generation_phase: "implementation_scaffolding"
+  allowed_artifact_classes:
+    - "directories"
+    - "markdown_docs"
+    - "config_stubs_non_executable"
+    - "code_placeholders_non_runnable"
+    - "code_runnable_candidate"
+    - "tests_runnable_candidate"
+    - "todo_comments"
+  allowed_write_paths:
+    - "companion_repositories/codex-saas/profile_v1/"
+    - "reference_architectures/codex-saas/spec/playbook/"
+    - "reference_architectures/codex-saas/spec/caf_meta/"
+    - "reference_architectures/codex-saas/layer_7/"
+    - "reference_architectures/codex-saas/spec/guardrails/"
+    - "reference_architectures/codex-saas/feedback_packets/"
+    - "reference_architectures/codex-saas/design/"
+  forbidden_actions:
+    - "generate_runnable_production_code"
+    - "deploy_to_production"
+    - "claim_production_readiness"
+    - "select_vendors_or_providers"
+    - "introduce_new_architecture_choices"
+    - "modify_architecture_shape_parameters"
+    - "bypass_refusal_conditions"
+    - "write_outside_allowed_paths"
+    - "alter_security_or_safety_posture_without_explicit_choice"
+architecture:
+  architecture_style: "clean_architecture"
+platform:
+  infra_target: "local"
+  packaging: "docker_compose"
+  runtime_language: "python"
+  database_engine: "postgres"
+  framework: "fastapi"
+  dependency_wiring_mode: "manual_composition_root"
+  persistence_orm: "sqlalchemy_orm"
+  auth_mode: "mock"
+  eventing_backend: "mock_in_memory"
+profile_version: "profile_v1"
+companion_repo_target: "companion_repositories/codex-saas/profile_v1"
+runnable_code_approved: false
+refusal_posture: "fail_closed"
+candidate_enforcement_bar:
+  bar_id: "candidate_code_bar_v1"
+  test_policy:
+    require_unit: true
+    require_smoke: false
+    require_contract: false
+    required_test_kinds:
+      - "unit"
+  required_paths: []
+  placeholder_policy:
+    forbidden_tokens:
+      - "<...>"
+  runnable_policy:
+    require_infrastructure_readme: false
+    require_runtime_wiring: true
+runtime:
+  language: "python"
+  framework: "fastapi"
+tbp_conventions:
+  module_conventions:
+    absolute_import_root: "code"
+    intra_package_import_style: "explicit_relative_preferred"
+    plane_module_roots:
+      ap: "code.ap"
+      cp: "code.cp"
+database:
+  engine: "postgresql"
+  schema_management_strategy: "code_bootstrap"
+persistence:
+  orm: "sqlalchemy_orm"
+ui:
+  present: true
+  kind: "web_spa"
+  framework: "react"
+  deployment_preference: "separate_ui_service"
+  component_system: "shadcn"
+deployment:
+  mode: "docker_compose"
+  stack_name: "codex-saas"
+planes:
+  cp:
+    runtime_shape: "api_service_http"
+  ap:
+    runtime_shape: "api_service_http"
+plane:
+  runtime_shape: "api_service_http"
+meta:
+  requested_by: "caf-saas-init"
+  change_reason: "initial_instance_creation"
+  notes: "Initialized by caf-saas-init."
+  profile_template_id: "intentionally_boring_saas_v1"
+  derived_by: "tools/caf/guardrails_v1.mjs"
+  derived_policy_id: "PM-default-implementation_scaffolding"
+  derived_at: "2026-04-07T15:18:18.862Z"
+  derived_from_pins:
+    evolution_stage: "stage_0_local_prototype"
+    generation_phase: "implementation_scaffolding"
+    architecture_style: "clean_architecture"
+    infra_target: "local"
+    packaging: "docker_compose"
+    runtime_language: "python"
+    database_engine: "postgres"
+    framework: "fastapi"
+    dependency_wiring_mode: "manual_composition_root"
+    persistence_orm: "sqlalchemy_orm"
+    schema_management_strategy: "code_bootstrap"
+    auth_mode: "mock"
+    eventing_backend: "mock_in_memory"
+    ui_present: true
+    ui_kind: "web_spa"
+    ui_framework: "react"
+    ui_deployment_preference: "separate_ui_service"
+  derived_plane_runtime_shapes:
+    source: "architect_choice"
+    derivation_mode: "derive_missing_planes"
+
+
+ succeeded in 835ms:
+# Application Plane Design (v1)
+
+## Purpose
+Application-plane design for tenant-scoped widget workflows, policy/safety-governed orchestration, and evidence-aware runtime behavior.
+
+## Application architecture summary
+- AP exposes widget, collection, sharing, and tenant-admin capabilities through service-facade boundaries.
+- AP performs inline policy and safety checks before execution and side effects.
+- AP emits synchronous evidence events for key decisions and state changes.
+
+## Core service boundaries
+- WidgetService: widget lifecycle and version operations.
+- CollectionService: collection curation and membership operations.
+- SharingService: publication and role-based access updates.
+- TenantAdminService: role assignments and tenant settings orchestration.
+
+<!-- CAF_MANAGED_BLOCK: decision_trace_v1 START -->
+## Decision trace (CAF-managed)
+- Adopted design-driving patterns from `system_spec_v1.md` `decision_resolutions_v1`: CAF-TCTX-01, CAF-MTEN-01, CAF-PLANE-01, CAF-AI-01, CAF-COMP-01, CTX-01, PST-01, SVC-01, VAL-01, CAF-AIOBS-01.
+- These decisions influence AP service boundaries, pre-execution checks, and evidence posture.
+- Carried-forward unresolved pattern questions represented in `open_questions_v1`: 0 for current scaffold.
+<!-- CAF_MANAGED_BLOCK: decision_trace_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 START -->
+## Decision resolutions carried into this design (architect-edit)
+
+```yaml
+schema_version: design_decision_resolutions_v1
+source_ref: reference_architectures/codex-saas/spec/playbook/system_spec_v1.md#decision_resolutions_v1
+notes:
+  - This block is a compact design-local bridge and does not replace system_spec decision ownership.
+```
+
+<!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 START -->
+## Open questions (architect-edit)
+
+```yaml
+schema_version: open_questions_v1
+questions:
+  ap_policy_decision_contract:
+    question_id: Q-AP-POLICY-DECISION-CONTRACT-01
+    question: Should AP cache policy decisions for short-lived retries or always evaluate inline per request?
+    options:
+      - option_id: always_inline
+        status: adopt
+        summary: Always evaluate inline for first release clarity.
+        payload: {}
+      - option_id: short_ttl_cache
+        status: defer
+        summary: Cache decisions for a short TTL with strict invalidation.
+        payload: {}
+      - option_id: custom
+        status: defer
+        summary: Custom strategy.
+        payload: {}
+    anchors:
+      - caf_pattern: POL-01
+      - evidence_hook_id: M-7
+```
+
+<!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: planning_pattern_payload_v1 START -->
+
+## Planning pattern payload (CAF-managed)
+
+```yaml
+schema_version: 'planning_pattern_payload_v1'
+generated_from:
+  retrieval_surface_path: 'architecture_library/patterns/retrieval_surface_v1/pattern_retrieval_surface_v1.jsonl'
+  retrieval_profile: 'solution_architecture'
+  selected_patterns_source: 'system_spec_v1.md:decision_resolutions_v1 (status: adopt)'
+  adopted_option_choices_source: 'system_spec_v1.md:decision_resolutions_v1 (questions.options status: adopt)'
+  materialized_by: 'tools/caf/materialize_planning_pattern_payload_v1.mjs'
+notes:
+  - 'Selected patterns and adopted option choices are materialized here as the design -> planning handoff. Planning still compiles obligations/tasks during /caf plan. Reference:'
+  - 'reference_architectures/codex-saas/design/playbook/design_summary_v1.md'
+  - 'reference_architectures/codex-saas/design/playbook/pattern_obligations_v1.yaml'
+  - 'reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml'
+selected_patterns:
+  caf:
+    - 'CAF-TCTX-01'
+    - 'CAF-MTEN-01'
+    - 'CAF-PLANE-01'
+    - 'CAF-AI-01'
+    - 'CAF-COMP-01'
+    - 'CAF-AIOBS-01'
+    - 'CAF-POL-02'
+    - 'CAF-IAM-02'
+    - 'CAF-COMP-02'
+  core:
+    - 'CTX-01'
+    - 'VAL-01'
+    - 'PST-01'
+    - 'SVC-01'
+  external:
+    - 'EXT-BACKEND_FOR_FRONTEND_BFF'
+    - 'EXT-CIRCUIT_BREAKER'
+adopted_option_choices:
+  - source: 'system'
+    evidence_hook_id: 'H-1'
+    pattern_id: 'CAF-TCTX-01'
+    question_id: 'Q-AP-TENANT-CARRIER-01'
+    option_set_id: 'tenant_context.ingress_carrier'
+    option_id: 'auth_claim'
+    summary: 'Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-1'
+    pattern_id: 'CAF-TCTX-01'
+    question_id: 'Q-CPAP-TENANT-CARRIER-01'
+    option_set_id: 'tenant_context.ingress_carrier'
+    option_id: 'auth_claim'
+    summary: 'Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-1'
+    pattern_id: 'CAF-TCTX-01'
+    question_id: 'Q-CPAP-TCTX-CONFLICT-01'
+    option_set_id: 'tenant_context.conflict_precedence_rule'
+    option_id: 'claim_over_header'
+    summary: 'Verified claim wins; reject if any other carrier conflicts.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-2'
+    pattern_id: 'CAF-MTEN-01'
+    question_id: 'Q-MTEN-ISO-MODE-01'
+    option_set_id: 'tenancy.isolation_mode'
+    option_id: 'hybrid_tiered'
+    summary: 'Hybrid isolation (selective and tiered by tenant).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-3'
+    pattern_id: 'CAF-PLANE-01'
+    question_id: 'Q-CP-AP-SURFACE-01'
+    option_set_id: 'cp_ap.contract_surface'
+    option_id: 'mixed'
+    summary: 'Mix: sync for enforcement, async for lifecycle and audit.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-4'
+    pattern_id: 'CAF-AI-01'
+    question_id: 'Q-AI-PART-01'
+    option_set_id: 'ai_safety.governance_partitioning'
+    option_id: 'cp_governs_ap_enforces'
+    summary: 'Control Plane governs policy; Application Plane enforces at runtime.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-5'
+    pattern_id: 'CAF-COMP-01'
+    question_id: 'Q-CAF-COMP-01-01'
+    option_set_id: 'compliance_evidence.persistence_strategy'
+    option_id: 'stream_plus_immutable_store'
+    summary: 'Use an event stream plus an immutable store (preferred for audit readiness).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-11'
+    pattern_id: 'CAF-AIOBS-01'
+    question_id: 'Q-CAF-AIOBS-01-01'
+    option_set_id: 'ai_observability.hook_level'
+    option_id: 'trace_metadata'
+    summary: 'Include structured trace metadata (no full reasoning content).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-17'
+    pattern_id: 'CAF-POL-02'
+    question_id: 'Q-POL-DIST-01'
+    option_set_id: 'policy.responsibility_distribution'
+    option_id: 'cp_central_decision_ap_enforces'
+    summary: 'Control Plane centralizes policy decision; Application Plane enforces.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-18'
+    pattern_id: 'CAF-IAM-02'
+    question_id: 'Q-CAF-IAM-02-01'
+    option_set_id: 'iam.identity_context_propagation'
+    option_id: 'verified_token_claims'
+    summary: 'Propagate identity and tenant context via verified token claims at ingress.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-19'
+    pattern_id: 'CAF-COMP-02'
+    question_id: 'Q-CAF-COMP-02-01'
+    option_set_id: 'compliance.anti_pattern_enforcement_mode'
+    option_id: 'warn_then_gate'
+    summary: 'Warn during scaffolding; fail closed at gate checks if unresolved.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-14'
+    pattern_id: 'EXT-BACKEND_FOR_FRONTEND_BFF'
+    question_id: 'Q-EXT-BFF-01'
+    option_set_id: 'ui.bff_shape'
+    option_id: 'thin_facade_only'
+    summary: 'Thin BFF focused on auth/session/context and minor shaping; minimal aggregation.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-15'
+    pattern_id: 'EXT-CIRCUIT_BREAKER'
+    question_id: 'Q-EXT-CB-01'
+    option_set_id: 'resilience.circuit_breaker_placement'
+    option_id: 'client_side_library'
+    summary: 'Circuit breaker enforced in client/SDK/library at call sites.'
+    payload: {}
+promotions:
+  semantic_inputs: []
+  required_trace_anchors: []
+  required_role_bindings: []
+  plane_placements: []
+```
+
+<!-- CAF_MANAGED_BLOCK: planning_pattern_payload_v1 END -->
+
+ succeeded in 904ms:
+{
+  "schema_version": "caf_tbp_role_binding_key_resolution_v1",
+  "instance_name": "codex-saas",
+  "role_binding_key": "cp_runtime_repository_health_owner",
+  "resolved_tbps": [
+    "TBP-ASGI-01",
+    "TBP-AUTH-MOCK-01",
+    "TBP-COMPOSE-01",
+    "TBP-FASTAPI-01",
+    "TBP-PG-01",
+    "TBP-PY-01",
+    "TBP-PY-PACKAGING-01",
+    "TBP-SQLALCHEMY-01",
+    "TBP-UI-REACT-VITE-01",
+    "TBP-UI-REACT-VITE-SHADCN-01"
+  ],
+  "manifests_used": [
+    {
+      "tbp_id": "TBP-ASGI-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-ASGI-01\\tbp_manifest_v1.yaml"
+    },
+    {
+      "tbp_id": "TBP-AUTH-MOCK-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-AUTH-MOCK-01\\tbp_manifest_v1.yaml"
+    },
+    {
+      "tbp_id": "TBP-COMPOSE-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-COMPOSE-01\\tbp_manifest_v1.yaml"
+    },
+    {
+      "tbp_id": "TBP-FASTAPI-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-FASTAPI-01\\tbp_manifest_v1.yaml"
+    },
+    {
+      "tbp_id": "TBP-PG-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-PG-01\\tbp_manifest_v1.yaml"
+    },
+    {
+      "tbp_id": "TBP-PY-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-PY-01\\tbp_manifest_v1.yaml"
+    },
+    {
+      "tbp_id": "TBP-PY-PACKAGING-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-PY-PACKAGING-01\\tbp_manifest_v1.yaml"
+    },
+    {
+      "tbp_id": "TBP-SQLALCHEMY-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-SQLALCHEMY-01\\tbp_manifest_v1.yaml"
+    },
+    {
+      "tbp_id": "TBP-UI-REACT-VITE-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-UI-REACT-VITE-01\\tbp_manifest_v1.yaml"
+    },
+    {
+      "tbp_id": "TBP-UI-REACT-VITE-SHADCN-01",
+      "manifest_path": "C:\\data\\contura\\caf-dev\\architecture_library\\phase_8\\tbp\\atoms\\TBP-UI-REACT-VITE-SHADCN-01\\tbp_manifest_v1.yaml"
+    }
+  ],
+  "matches": [
+    {
+      "tbp_id": "TBP-FASTAPI-01",
+      "role_binding_key": "cp_runtime_repository_health_owner",
+      "path_template": "code/cp/application/services.py",
+      "path_templates_any_of": [
+        "code/cp/application/services.py"
+      ],
+      "artifact_class": "code_runnable_candidate",
+      "evidence_contains": [
+        "class",
+        "def"
+      ],
+      "validator_kind": "cp_runtime_repository_health_alignment",
+      "validator_config": {
+        "execution_surfaces_any_of": [
+          "build_postgate_cp_runtime_repository_health"
+        ],
+        "persistence_role_binding_keys_any_of": [
+          "cp_sqlalchemy_schema_bootstrap",
+          "sqlalchemy_runtime_module",
+          "sqlalchemy_metadata_module",
+          "postgres_adapter_module",
+          "raw_sql_runtime_module",
+          "raw_sql_schema_bootstrap"
+        ]
+      }
+    }
+  ]
+}
+
+ succeeded in 887ms:
+# Control Plane Design (v1)
+
+## Purpose
+Control-plane governance design for policy lifecycle, safety-gate orchestration, identity governance, and cross-plane integration with the application plane.
+
+## Governance architecture summary
+- CP remains the authoritative lifecycle owner for tenant, policy, and safety definitions.
+- CP publishes versioned governance decisions consumed by AP inline enforcement points.
+- CP emits auditable evidence for policy, approval, and lifecycle transitions.
+
+## Plane Integration Contract (CP ? AP)
+
+<!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_choices_v1 START -->
+## Plane Integration Contract questions (architect-edit)
+
+```yaml
+schema_version: plane_integration_contract_choices_v1
+choices:
+  cp_runtime_shape:
+    question_id: Q-CP-RUNTIME-SHAPE-01
+    question: Control Plane runtime shape
+    options:
+      - option_id: api_service_http
+        status: adopt
+        summary: Separately deployable CP HTTP API service.
+      - option_id: worker_service_events
+        status: defer
+        summary: Event-driven worker runtime.
+      - option_id: library_embedded
+        status: defer
+        summary: Embedded library runtime.
+      - option_id: custom
+        status: defer
+        summary: Custom runtime shape.
+  ap_runtime_shape:
+    question_id: Q-AP-RUNTIME-SHAPE-01
+    question: Application Plane runtime shape
+    options:
+      - option_id: api_service_http
+        status: adopt
+        summary: Separately deployable AP HTTP API service.
+      - option_id: worker_service_events
+        status: defer
+        summary: Event-driven worker runtime.
+      - option_id: library_embedded
+        status: defer
+        summary: Embedded library runtime.
+      - option_id: custom
+        status: defer
+        summary: Custom runtime shape.
+  cp_ap_contract_surface:
+    question_id: Q-CP-AP-SURFACE-01
+    question: Primary CP?AP contract surface
+    options:
+      - option_id: mixed
+        status: adopt
+        summary: Sync for enforcement; async for lifecycle and audit.
+      - option_id: synchronous_http
+        status: defer
+        summary: Synchronous HTTP APIs only.
+      - option_id: async_events
+        status: defer
+        summary: Async events only.
+      - option_id: custom
+        status: defer
+        summary: Custom contract surface.
+```
+
+<!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_choices_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_open_questions_v1 START -->
+## Plane Integration Contract open questions (architect-edit)
+
+```yaml
+schema_version: open_questions_v1
+questions: {}
+```
+
+<!-- ARCHITECT_EDIT_BLOCK: plane_integration_contract_open_questions_v1 END -->
+
+<!-- DESIGNER_MANAGED_BLOCK: plane_integration_contract_v1 START -->
+## Plane Integration Contract (CP ? AP)
+
+### Contract scope
+- Boundary: governance control-plane to application-plane orchestration.
+- Purpose: authorize and govern AP actions under tenant context.
+
+### Commands and responses
+- `POST /cp/policy-decisions/evaluate`: AP requests policy decision for action intent.
+- `POST /cp/safety-gates/evaluate`: AP requests pre-invocation safety gate decision.
+- `GET /cp/policies/{policy_id}/active`: AP fetches currently active policy metadata.
+
+### Events
+- `policy_version_activated`
+- `safety_rule_changed`
+- `tenant_lifecycle_state_changed`
+
+### Context and invariants
+- Tenant context and principal context are required for every CP?AP interaction.
+- Requests missing tenant context are rejected fail-closed.
+- Policy decision responses carry version/provenance identifiers for audit.
+<!-- DESIGNER_MANAGED_BLOCK: plane_integration_contract_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: decision_trace_v1 START -->
+## Decision trace (CAF-managed)
+- Adopted decisions consumed from `system_spec_v1.md` `decision_resolutions_v1` include: CAF-TCTX-01, CAF-MTEN-01, CAF-PLANE-01, CAF-AI-01, CAF-COMP-01, CTX-01, POL-01, VAL-01, CAF-AIOBS-01, CAF-POL-01.
+- These decisions influence CP governance boundaries, CP?AP contract choices, and evidence requirements in this design.
+- Carried-forward unresolved pattern questions represented as open questions in design docs: 0 for current scaffold.
+<!-- CAF_MANAGED_BLOCK: decision_trace_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 START -->
+## Decision resolutions carried into this design (architect-edit)
+
+```yaml
+schema_version: design_decision_resolutions_v1
+source_ref: reference_architectures/codex-saas/spec/playbook/system_spec_v1.md#decision_resolutions_v1
+notes:
+  - This block is a compact design-local bridge and does not replace system_spec decision ownership.
+```
+
+<!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 END -->
+
+<!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 START -->
+## Open questions (architect-edit)
+
+```yaml
+schema_version: open_questions_v1
+questions: {}
+```
+
+<!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 END -->
+
+<!-- CAF_MANAGED_BLOCK: planning_pattern_payload_v1 START -->
+
+## Planning pattern payload (CAF-managed)
+
+```yaml
+schema_version: 'planning_pattern_payload_v1'
+generated_from:
+  retrieval_surface_path: 'architecture_library/patterns/retrieval_surface_v1/pattern_retrieval_surface_v1.jsonl'
+  retrieval_profile: 'solution_architecture'
+  selected_patterns_source: 'system_spec_v1.md:decision_resolutions_v1 (status: adopt)'
+  adopted_option_choices_source: 'system_spec_v1.md:decision_resolutions_v1 (questions.options status: adopt)'
+  materialized_by: 'tools/caf/materialize_planning_pattern_payload_v1.mjs'
+notes:
+  - 'Selected patterns and adopted option choices are materialized here as the design -> planning handoff. Planning still compiles obligations/tasks during /caf plan. Reference:'
+  - 'reference_architectures/codex-saas/design/playbook/design_summary_v1.md'
+  - 'reference_architectures/codex-saas/design/playbook/pattern_obligations_v1.yaml'
+  - 'reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml'
+selected_patterns:
+  caf:
+    - 'CAF-TCTX-01'
+    - 'CAF-MTEN-01'
+    - 'CAF-PLANE-01'
+    - 'CAF-AI-01'
+    - 'CAF-COMP-01'
+    - 'CAF-AIOBS-01'
+    - 'CAF-POL-01'
+    - 'CAF-POL-02'
+    - 'CAF-IAM-02'
+    - 'CAF-COMP-02'
+  core:
+    - 'CTX-01'
+    - 'VAL-01'
+    - 'POL-01'
+  external:
+    - 'EXT-API_GATEWAY'
+    - 'EXT-CIRCUIT_BREAKER'
+    - 'EXT-AUDITABILITY'
+adopted_option_choices:
+  - source: 'system'
+    evidence_hook_id: 'H-1'
+    pattern_id: 'CAF-TCTX-01'
+    question_id: 'Q-AP-TENANT-CARRIER-01'
+    option_set_id: 'tenant_context.ingress_carrier'
+    option_id: 'auth_claim'
+    summary: 'Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-1'
+    pattern_id: 'CAF-TCTX-01'
+    question_id: 'Q-CPAP-TENANT-CARRIER-01'
+    option_set_id: 'tenant_context.ingress_carrier'
+    option_id: 'auth_claim'
+    summary: 'Tenant context from a verified auth claim inside the Authorization credential (for example a JWT `tenant_id` claim), not from client-supplied tenant headers.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-1'
+    pattern_id: 'CAF-TCTX-01'
+    question_id: 'Q-CPAP-TCTX-CONFLICT-01'
+    option_set_id: 'tenant_context.conflict_precedence_rule'
+    option_id: 'claim_over_header'
+    summary: 'Verified claim wins; reject if any other carrier conflicts.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-2'
+    pattern_id: 'CAF-MTEN-01'
+    question_id: 'Q-MTEN-ISO-MODE-01'
+    option_set_id: 'tenancy.isolation_mode'
+    option_id: 'hybrid_tiered'
+    summary: 'Hybrid isolation (selective and tiered by tenant).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-3'
+    pattern_id: 'CAF-PLANE-01'
+    question_id: 'Q-CP-AP-SURFACE-01'
+    option_set_id: 'cp_ap.contract_surface'
+    option_id: 'mixed'
+    summary: 'Mix: sync for enforcement, async for lifecycle and audit.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-4'
+    pattern_id: 'CAF-AI-01'
+    question_id: 'Q-AI-PART-01'
+    option_set_id: 'ai_safety.governance_partitioning'
+    option_id: 'cp_governs_ap_enforces'
+    summary: 'Control Plane governs policy; Application Plane enforces at runtime.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-5'
+    pattern_id: 'CAF-COMP-01'
+    question_id: 'Q-CAF-COMP-01-01'
+    option_set_id: 'compliance_evidence.persistence_strategy'
+    option_id: 'stream_plus_immutable_store'
+    summary: 'Use an event stream plus an immutable store (preferred for audit readiness).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-11'
+    pattern_id: 'CAF-AIOBS-01'
+    question_id: 'Q-CAF-AIOBS-01-01'
+    option_set_id: 'ai_observability.hook_level'
+    option_id: 'trace_metadata'
+    summary: 'Include structured trace metadata (no full reasoning content).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-12'
+    pattern_id: 'CAF-POL-01'
+    question_id: 'Q-AP-POLICY-POINTS-01'
+    option_set_id: 'policy_gating.default_crud'
+    option_id: 'gate_all_ops'
+    summary: 'Gate all CRUD operations.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-17'
+    pattern_id: 'CAF-POL-02'
+    question_id: 'Q-POL-DIST-01'
+    option_set_id: 'policy.responsibility_distribution'
+    option_id: 'cp_central_decision_ap_enforces'
+    summary: 'Control Plane centralizes policy decision; Application Plane enforces.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-18'
+    pattern_id: 'CAF-IAM-02'
+    question_id: 'Q-CAF-IAM-02-01'
+    option_set_id: 'iam.identity_context_propagation'
+    option_id: 'verified_token_claims'
+    summary: 'Propagate identity and tenant context via verified token claims at ingress.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-19'
+    pattern_id: 'CAF-COMP-02'
+    question_id: 'Q-CAF-COMP-02-01'
+    option_set_id: 'compliance.anti_pattern_enforcement_mode'
+    option_id: 'warn_then_gate'
+    summary: 'Warn during scaffolding; fail closed at gate checks if unresolved.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-13'
+    pattern_id: 'EXT-API_GATEWAY'
+    question_id: 'Q-EXT-API-GW-01'
+    option_set_id: 'ingress.api_gateway_policy_placement'
+    option_id: 'shared_gateway_and_services'
+    summary: 'Default: implement the gateway inside the Control Plane ingress boundary (no standalone gateway product). CP enforces baseline policies; services enforce additional policies with explicit boundaries.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-15'
+    pattern_id: 'EXT-CIRCUIT_BREAKER'
+    question_id: 'Q-EXT-CB-01'
+    option_set_id: 'resilience.circuit_breaker_placement'
+    option_id: 'client_side_library'
+    summary: 'Circuit breaker enforced in client/SDK/library at call sites.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-16'
+    pattern_id: 'EXT-AUDITABILITY'
+    question_id: 'Q-EXT-AUDIT-01'
+    option_set_id: 'ops.audit_event_scope'
+    option_id: 'security_plus_admin_actions'
+    summary: 'Audit security events plus privileged admin/operator actions.'
+    payload: {}
+promotions:
+  semantic_inputs: []
+  required_trace_anchors: []
+  required_role_bindings: []
+  plane_placements: []
+```
+
+<!-- CAF_MANAGED_BLOCK: planning_pattern_payload_v1 END -->
+

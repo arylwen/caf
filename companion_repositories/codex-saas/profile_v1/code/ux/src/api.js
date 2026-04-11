@@ -1,180 +1,218 @@
 // CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-// CAF_TRACE: task_id=UX-TG-10-rest-client-and-session-wiring
+// CAF_TRACE: task_id=UX-TG-50-admin-and-activity-surface
 // CAF_TRACE: capability=ux_frontend_realization
 // CAF_TRACE: instance=codex-saas
-// CAF_TRACE: trace_anchor=pattern_id:UX-SESSION-01
+// CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-AUTH-MOCK-01-ux-api-helper
 
-import {
-  buildMockAuthorizationHeader,
-  buildMockAuthState,
-  detectTenantContextConflict,
-  parseMockToken,
-} from "./auth/mockAuth.js";
+import { buildAuthContext } from "./auth/mockAuth";
 
-function parseErrorDetail(bodyText) {
-  if (!bodyText) {
-    return "no error body";
-  }
-
+function readErrorDetail(bodyText) {
   try {
     const parsed = JSON.parse(bodyText);
-    if (typeof parsed.detail === "string" && parsed.detail.trim()) {
-      return parsed.detail;
-    }
-    if (Array.isArray(parsed.detail)) {
-      return JSON.stringify(parsed.detail);
-    }
-    return JSON.stringify(parsed);
+    return parsed.detail || bodyText;
   } catch {
     return bodyText;
   }
 }
 
-function buildMutationMessage(method, resourceLabel, item) {
-  const action = method === "POST" ? "created" : method === "PUT" ? "updated" : "completed";
-  const suffix = item && typeof item === "object" ? ` (${resourceLabel})` : "";
-  return `${resourceLabel} ${action}${suffix}`;
+export function normalizeResourceItem(item) {
+  const row = item || {};
+  const nestedData = row.data && typeof row.data === "object" ? row.data : {};
+  const normalized = { ...nestedData, ...row };
+
+  if (!normalized.id) {
+    normalized.id =
+      normalized.widget_id ||
+      normalized.version_id ||
+      normalized.collection_id ||
+      normalized.assignment_id ||
+      normalized.event_id ||
+      normalized.user_id ||
+      "unknown-id";
+  }
+
+  return normalized;
 }
 
-export function buildAuthHeaders(authState = buildMockAuthState()) {
+export function normalizeResourcePayload(payload) {
+  const items = Array.isArray(payload?.items) ? payload.items.map(normalizeResourceItem) : [];
+  const item = payload?.item ? normalizeResourceItem(payload.item) : null;
+  return { ...payload, items, item };
+}
+
+export function buildAuthHeaders(personaKey, options = {}) {
+  const context = buildAuthContext(personaKey);
   const headers = {
-    Authorization: buildMockAuthorizationHeader(authState),
+    Authorization: context.authorization,
     "Content-Type": "application/json",
   };
 
-  if (detectTenantContextConflict(headers)) {
-    throw new Error("tenant context conflict between Authorization claim and tenant header");
+  if (options.includeConflictCheckHeaders !== false) {
+    headers["X-Tenant-Context-Check"] = context.tenant_id;
+    headers["X-Principal-Context-Check"] = context.principal_id;
   }
-
   return headers;
 }
 
-export function getSessionContext(authState = buildMockAuthState()) {
-  return parseMockToken(buildMockAuthorizationHeader(authState));
-}
-
-async function apiRequest(path, { method = "GET", body, authState, signal } = {}) {
-  const response = await fetch(path, {
-    method,
-    headers: buildAuthHeaders(authState),
-    body: body ? JSON.stringify(body) : undefined,
-    signal,
-  });
-
+async function requestJson(path, options = {}) {
+  const response = await fetch(path, options);
   if (!response.ok) {
     const bodyText = await response.text();
-    const detail = parseErrorDetail(bodyText);
-    const isDenied = response.status === 401 || response.status === 403;
-    throw new Error(`${isDenied ? "permission denied" : "request failed"} (${response.status}): ${detail}`);
+    throw new Error(`HTTP ${response.status}: ${readErrorDetail(bodyText)}`);
   }
-
   if (response.status === 204) {
     return {};
   }
-
   return response.json();
 }
 
-export function apiGet(path, authState, signal) {
-  return apiRequest(path, { method: "GET", authState, signal });
+function resourcePath(resource, resourceId) {
+  if (!resourceId) {
+    return `/api/ap/resources/${resource}`;
+  }
+  return `/api/ap/resources/${resource}/${resourceId}`;
 }
 
-export function apiPost(path, body, authState, signal) {
-  return apiRequest(path, { method: "POST", body, authState, signal });
+async function listResource(personaKey, resource) {
+  const payload = await requestJson(resourcePath(resource), {
+    method: "GET",
+    headers: buildAuthHeaders(personaKey),
+  });
+  return normalizeResourcePayload(payload);
 }
 
-export function apiPut(path, body, authState, signal) {
-  return apiRequest(path, { method: "PUT", body, authState, signal });
+async function getResource(personaKey, resource, resourceId) {
+  const payload = await requestJson(resourcePath(resource, resourceId), {
+    method: "GET",
+    headers: buildAuthHeaders(personaKey),
+  });
+  return normalizeResourcePayload(payload);
 }
 
-export function apiDelete(path, authState, signal) {
-  return apiRequest(path, { method: "DELETE", authState, signal });
+async function createResource(personaKey, resource, attributes) {
+  const payload = await requestJson(resourcePath(resource), {
+    method: "POST",
+    headers: buildAuthHeaders(personaKey),
+    body: JSON.stringify({ attributes }),
+  });
+  return normalizeResourcePayload(payload);
 }
 
-export async function listWidgets(authState, signal) {
-  const payload = await apiGet("/api/widgets", authState, signal);
-  return payload.items || [];
+async function updateResource(personaKey, resource, resourceId, attributes) {
+  const payload = await requestJson(resourcePath(resource, resourceId), {
+    method: "PUT",
+    headers: buildAuthHeaders(personaKey),
+    body: JSON.stringify({ attributes }),
+  });
+  return normalizeResourcePayload(payload);
 }
 
-export function createWidget(payload, authState, signal) {
-  return apiPost("/api/widgets", payload, authState, signal);
+async function deleteResource(personaKey, resource, resourceId) {
+  return requestJson(resourcePath(resource, resourceId), {
+    method: "DELETE",
+    headers: buildAuthHeaders(personaKey),
+  });
 }
 
-export function updateWidget(widgetId, payload, authState, signal) {
-  return apiPut(`/api/widgets/${widgetId}`, payload, authState, signal);
+export function fetchRuntimeAssumptions(personaKey) {
+  return requestJson("/api/ap/runtime/assumptions", {
+    method: "GET",
+    headers: buildAuthHeaders(personaKey),
+  });
 }
 
-export function deleteWidget(widgetId, authState, signal) {
-  return apiDelete(`/api/widgets/${widgetId}`, authState, signal);
+export function previewPolicyDecision(personaKey, action, resource) {
+  return requestJson("/api/ap/policy/preview", {
+    method: "POST",
+    headers: buildAuthHeaders(personaKey),
+    body: JSON.stringify({ action, resource }),
+  });
 }
 
-export async function listWidgetVersions(widgetId, authState, signal) {
-  const query = widgetId ? `?widget_id=${encodeURIComponent(widgetId)}` : "";
-  const payload = await apiGet(`/api/widget_versions${query}`, authState, signal);
-  return payload.items || [];
+export function listWidgets(personaKey) {
+  return listResource(personaKey, "widgets");
 }
 
-export async function listCollections(authState, signal) {
-  const payload = await apiGet("/api/collections", authState, signal);
-  return payload.items || [];
+export function getWidget(personaKey, widgetId) {
+  return getResource(personaKey, "widgets", widgetId);
 }
 
-export function createCollection(payload, authState, signal) {
-  return apiPost("/api/collections", payload, authState, signal);
+export function createWidget(personaKey, attributes) {
+  return createResource(personaKey, "widgets", attributes);
 }
 
-export function updateCollection(collectionId, payload, authState, signal) {
-  return apiPut(`/api/collections/${collectionId}`, payload, authState, signal);
+export function updateWidget(personaKey, widgetId, attributes) {
+  return updateResource(personaKey, "widgets", widgetId, attributes);
 }
 
-export async function listTags(authState, signal) {
-  const payload = await apiGet("/api/tags", authState, signal);
-  return payload.items || [];
+export function deleteWidget(personaKey, widgetId) {
+  return deleteResource(personaKey, "widgets", widgetId);
 }
 
-export async function listCollectionPermissions(authState, signal) {
-  const payload = await apiGet("/api/collection_permissions", authState, signal);
-  return payload.items || [];
+export function listWidgetVersions(personaKey) {
+  return listResource(personaKey, "widget_versions");
 }
 
-export function createCollectionPermission(payload, authState, signal) {
-  return apiPost("/api/collection_permissions", payload, authState, signal);
+export function getWidgetVersion(personaKey, versionId) {
+  return getResource(personaKey, "widget_versions", versionId);
 }
 
-export function updateCollectionPermission(permissionId, payload, authState, signal) {
-  return apiPut(`/api/collection_permissions/${permissionId}`, payload, authState, signal);
+export function listCollections(personaKey) {
+  return listResource(personaKey, "collections");
 }
 
-export async function listTenantUsersRoles(authState, signal) {
-  const payload = await apiGet("/api/tenant_users_roles", authState, signal);
-  return payload.items || [];
+export function getCollection(personaKey, collectionId) {
+  return getResource(personaKey, "collections", collectionId);
 }
 
-export function createTenantUserRole(payload, authState, signal) {
-  return apiPost("/api/tenant_users_roles", payload, authState, signal);
+export function createCollection(personaKey, attributes) {
+  return createResource(personaKey, "collections", attributes);
 }
 
-export function deleteTenantUserRole(roleAssignmentId, authState, signal) {
-  return apiDelete(`/api/tenant_users_roles/${roleAssignmentId}`, authState, signal);
+export function updateCollection(personaKey, collectionId, attributes) {
+  return updateResource(personaKey, "collections", collectionId, attributes);
 }
 
-export function getTenantSettings(authState, signal) {
-  return apiGet("/api/tenant_settings", authState, signal);
+export function deleteCollection(personaKey, collectionId) {
+  return deleteResource(personaKey, "collections", collectionId);
 }
 
-export function updateTenantSettings(payload, authState, signal) {
-  return apiPut("/api/tenant_settings", payload, authState, signal);
+export function listCollectionMemberships(personaKey) {
+  return listResource(personaKey, "collection_memberships");
 }
 
-export async function listActivityEvents(targetId, authState, signal) {
-  const query = targetId ? `?target_id=${encodeURIComponent(targetId)}` : "";
-  const payload = await apiGet(`/api/activity_events${query}`, authState, signal);
-  return payload.items || [];
+export function createCollectionMembership(personaKey, attributes) {
+  return createResource(personaKey, "collection_memberships", attributes);
 }
 
-export function getRuntimeHealth(authState, signal) {
-  return Promise.all([apiGet("/api/runtime-health", authState, signal), apiGet("/cp/runtime-health", authState, signal)]);
+export function deleteCollectionMembership(personaKey, membershipId) {
+  return deleteResource(personaKey, "collection_memberships", membershipId);
 }
 
-export { buildMutationMessage };
+export function listCollectionPermissions(personaKey) {
+  return listResource(personaKey, "collection_permissions");
+}
 
+export function updateCollectionPermission(personaKey, permissionId, attributes) {
+  return updateResource(personaKey, "collection_permissions", permissionId, attributes);
+}
+
+export function listTenantRoleAssignments(personaKey) {
+  return listResource(personaKey, "tenant_role_assignments");
+}
+
+export function createTenantRoleAssignment(personaKey, attributes) {
+  return createResource(personaKey, "tenant_role_assignments", attributes);
+}
+
+export function deleteTenantRoleAssignment(personaKey, assignmentId) {
+  return deleteResource(personaKey, "tenant_role_assignments", assignmentId);
+}
+
+export function listActivityEvents(personaKey) {
+  return listResource(personaKey, "activity_events");
+}
+
+export function getActivityEvent(personaKey, eventId) {
+  return getResource(personaKey, "activity_events", eventId);
+}

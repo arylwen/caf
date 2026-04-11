@@ -1,24 +1,34 @@
-# UX Review: UX-TG-30-detail-review-report-surface
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=UX-TG-30-detail-review-report-surface -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: UX-TG-30-detail-review-report-surface
+
+Threshold: `blocker`
+
+Selected rubrics:
+- `RR-WEB-SPA-01`
+- `RR-TASK-REPORT-01`
+- `RR-TBP-ROLE-BINDINGS-01`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-GENERAL-01 | PASS | No Python module changes in this detail-surface task. |
-| RR-PY-TESTS-01 | PASS | Existing tests unaffected by JS-only detail surface implementation. |
-| RR-WEB-SPA-01 | PASS | `code/ux/src/pages/DetailPage.jsx` provides concrete edit/update/delete operations and evidence panes sourced from real APIs. |
-| RR-TASK-REPORT-01 | PASS | Task report documents inputs, claims, matrices, and evidence anchors. |
-| RR-TBP-ROLE-BINDINGS-01 | PASS | Required ux_frontend_realization role-binding outputs remain valid after detail implementation. |
+| RR-SPA-WIRE-01 | PASS | Detail editor flow is wired with load/save helpers and route-level context (`code/ux/src/pages/DetailPage.jsx`). |
+| RR-SPA-ERR-DETAIL-01 | PASS | Validation/failure messaging remains explicit and preserves draft-state semantics in detail flow. |
+| RR-SPA-ACTION-01 | PASS | Consequential edit/save outcomes are observable and tied to shared API helper paths. |
+| RR-SPA-DOC-TRUTH-01 | PASS | Review/report claims in task report align with implemented detail and activity surfaces. |
+| RR-TR-STRUCT-01 | PASS | Task report is present with required matrices and anchors. |
+| RR-TBP-RB-01 | PASS | Frontend role-binding artifacts remain intact for this capability. |
 
-## Semantic review questions
-- Detail/edit behavior supports CRUD continuity and validation clarity with explicit status rail messaging and preserved draft fields.
-- Version/activity evidence is rendered near the detail context and remains readable for trace review.
-- Destructive changes are guarded by explicit confirmation before delete mutation.
+Summary:
+- Detail/review/report surface is coherently wired and aligns with declared continuity/recovery posture.
+- No blocker findings identified.
 
-## Summary
-- No blocking semantic issues found.
-
-## Issues
+Issues:
 - High: none.
 - Medium: none.
 - Low: none.
 
-No issues at/above severity threshold (`blocker`) were found.
+No issues at or above the configured threshold (`blocker`) were found.
+

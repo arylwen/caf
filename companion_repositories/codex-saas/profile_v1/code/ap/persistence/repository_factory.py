@@ -2,47 +2,77 @@
 # CAF_TRACE: task_id=TG-40-persistence-activity_events
 # CAF_TRACE: capability=persistence_implementation
 # CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-AP-RESOURCE-ACTIVITY_EVENTS-PERSISTENCE
 
-"""AP repository factory for SQLAlchemy-backed postgres persistence."""
+"""AP repository provider with fail-closed runtime DB selection."""
 
-from ...common.persistence.sqlalchemy_runtime import get_session_factory
-from .postgres_activity_events_repository import PostgresActivityEventsRepository
-from .postgres_collection_permissions_repository import PostgresCollectionPermissionsRepository
-from .postgres_collections_repository import PostgresCollectionsRepository
-from .postgres_tags_repository import PostgresTagsRepository
-from .postgres_tenant_settings_repository import PostgresTenantSettingsRepository
-from .postgres_tenant_users_roles_repository import PostgresTenantUsersRolesRepository
-from .postgres_widget_versions_repository import PostgresWidgetVersionsRepository
-from .postgres_widgets_repository import PostgresWidgetsRepository
+from __future__ import annotations
 
+from typing import Any
 
-def get_widgets_repository() -> PostgresWidgetsRepository:
-    return PostgresWidgetsRepository(get_session_factory())
-
-
-def get_widget_versions_repository() -> PostgresWidgetVersionsRepository:
-    return PostgresWidgetVersionsRepository(get_session_factory())
+from .postgres_adapter import get_database_url
+from .repository import (
+    ActivityEventsRepository,
+    CollectionMembershipsRepository,
+    CollectionPermissionsRepository,
+    CollectionsRepository,
+    TenantRoleAssignmentsRepository,
+    WidgetVersionsRepository,
+    WidgetsRepository,
+)
 
 
-def get_collections_repository() -> PostgresCollectionsRepository:
-    return PostgresCollectionsRepository(get_session_factory())
+def _assert_postgres_database_url() -> str:
+    database_url = get_database_url()
+    if not database_url.startswith("postgresql"):
+        raise RuntimeError("resolved engine is postgres; DATABASE_URL must use postgresql scheme")
+    return database_url
 
 
-def get_tags_repository() -> PostgresTagsRepository:
-    return PostgresTagsRepository(get_session_factory())
+def build_access_port_registry() -> dict[str, Any]:
+    _assert_postgres_database_url()
+    return {
+        "widgets": WidgetsRepository(),
+        "widget_versions": WidgetVersionsRepository(),
+        "collections": CollectionsRepository(),
+        "collection_memberships": CollectionMembershipsRepository(),
+        "collection_permissions": CollectionPermissionsRepository(),
+        "tenant_role_assignments": TenantRoleAssignmentsRepository(),
+        "activity_events": ActivityEventsRepository(),
+    }
 
 
-def get_collection_permissions_repository() -> PostgresCollectionPermissionsRepository:
-    return PostgresCollectionPermissionsRepository(get_session_factory())
+def get_access_port(resource: str) -> Any:
+    registry = build_access_port_registry()
+    access_port = registry.get(resource)
+    if access_port is None:
+        raise ValueError(f"unknown resource '{resource}'")
+    return access_port
 
 
-def get_tenant_users_roles_repository() -> PostgresTenantUsersRolesRepository:
-    return PostgresTenantUsersRolesRepository(get_session_factory())
+def provide_activity_events_access_interface() -> ActivityEventsRepository:
+    return get_access_port("activity_events")
 
 
-def get_tenant_settings_repository() -> PostgresTenantSettingsRepository:
-    return PostgresTenantSettingsRepository(get_session_factory())
+def provide_collection_memberships_access_interface() -> CollectionMembershipsRepository:
+    return get_access_port("collection_memberships")
 
 
-def get_activity_events_repository() -> PostgresActivityEventsRepository:
-    return PostgresActivityEventsRepository(get_session_factory())
+def provide_collection_permissions_access_interface() -> CollectionPermissionsRepository:
+    return get_access_port("collection_permissions")
+
+
+def provide_collections_access_interface() -> CollectionsRepository:
+    return get_access_port("collections")
+
+
+def provide_tenant_role_assignments_access_interface() -> TenantRoleAssignmentsRepository:
+    return get_access_port("tenant_role_assignments")
+
+
+def provide_widget_versions_access_interface() -> WidgetVersionsRepository:
+    return get_access_port("widget_versions")
+
+
+def provide_widgets_access_interface() -> WidgetsRepository:
+    return get_access_port("widgets")

@@ -1,14 +1,27 @@
-# TG-30-service-facade-collection_permissions Review
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-30-service-facade-collection_permissions -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: TG-30-service-facade-collection_permissions
+
+Threshold: `blocker`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-TR-STRUCT-01 | PASS | Task report includes required sections in `caf/task_reports/TG-30-service-facade-collection_permissions.md`. |
-| RR-TR-STEP-01 | PASS | Report claims are anchored to explicit interface, facade, and dependency-provider seams for this task. |
-| RR-TBP-RB-01 | PASS | `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability service_facade_implementation` returned `expectations: []`. |
-| RR-PY-CORR-01 | PASS | `CollectionPermissionsFacade` depends on `CollectionPermissionsAccessInterface` and preserves transport-free orchestration at `code/ap/application/services.py:L161-L172` and `L451-L491`. |
-| RR-FA-ARCH-01 | PASS | Dependency provider explicitly injects `CAF_TEST_ONLY_COLLECTION_PERMISSIONS_ACCESS` in `code/ap/api/dependencies.py:L65-L108`. |
-| RR-TST-HIGH-01 | FAIL | No new unit tests were added for service-facade update invariants and interface-driven delegation. |
+| RR-FA-ARCH-01 | PASS | AP routes delegate resource operations through `ResourceServiceFacadeRegistry`/`ResourceServiceFacade` service seams (`code/ap/application/services.py`). |
+| RR-FA-CORR-01 | PASS | Declared operation set includes `collection_permissions` and facade operation guards enforce resource declarations. |
+| RR-PY-CORR-01 | PASS | Python import paths remain canonical under `code.ap` and shared helpers are imported from `code.common`. |
+| RR-TASK-REPORT-01 | PASS | Task report includes inputs, claims, and evidence anchors (`caf/task_reports/TG-30-service-facade-collection_permissions.md`). |
+| RR-TBP-ROLE-BINDINGS-01 | PASS | `service_facade_implementation` role-binding expectation set is empty and no unresolved required output paths are declared. |
 
-Summary: No blocker findings for TG-30-service-facade-collection_permissions.
+Summary:
+- Collection Permissions service-facade behavior is present as a transport-free AP seam with declared operation enforcement.
 
-Threshold statement: No issues at or above the configured `blocker` threshold were found.
+Issues:
+- High: none.
+- Medium: none.
+- Low: none.
+
+No issues at or above the configured threshold (`blocker`) were found.
+

@@ -1,6 +1,6 @@
 schema_version: caf_graph_expansion_open_list_v1
 profile: ux_design
-generated_at: "2026-03-29T16:26:09.341Z"
+generated_at: "2026-04-07T21:06:38.958Z"
 config:
   enabled: true
   max_hops: 2
@@ -23,18 +23,31 @@ config:
     - CAF-MODEL-01
 seeds:
   - EXT-AUDITABILITY
-  - EXT-GRACEFUL_DEGRADATION
-  - EXT-SECURITY_TRIMMING
+  - EXT-BACKEND_FOR_FRONTEND_BFF
+  - CTX-01
+  - VAL-01
   - UX-CRUD-01
   - UX-DENSITY-01
   - UX-EXPLAIN-01
   - UX-RECOVERY-01
+  - UX-REPORT-01
   - UX-REVIEW-01
   - UX-SEARCH-01
   - UX-SESSION-01
   - UX-VISUAL-01
   - UX-WORKLIST-01
 candidates:
+  -
+    id: EXT-GRACEFUL_DEGRADATION
+    namespace: external_v1
+    hop: 1
+    via_kind: depends_on
+    from_seed: UX-RECOVERY-01
+    path:
+      -
+        from: UX-RECOVERY-01
+        kind: depends_on
+        to: EXT-GRACEFUL_DEGRADATION
   -
     id: EXT-MATERIALIZED_VIEW
     namespace: external_v1
@@ -47,6 +60,17 @@ candidates:
         kind: depends_on
         to: EXT-MATERIALIZED_VIEW
   -
+    id: CAF-IAM-01
+    namespace: caf_v1
+    hop: 1
+    via_kind: depends_on
+    from_seed: UX-SESSION-01
+    path:
+      -
+        from: UX-SESSION-01
+        kind: depends_on
+        to: CAF-IAM-01
+  -
     id: CAF-ZT-01
     namespace: caf_v1
     hop: 1
@@ -58,27 +82,16 @@ candidates:
         kind: depends_on
         to: CAF-ZT-01
   -
-    id: SVC-01
+    id: OBS-01
     namespace: core_v1
     hop: 1
     via_kind: depends_on
-    from_seed: UX-CRUD-01
+    from_seed: EXT-AUDITABILITY
     path:
       -
-        from: UX-CRUD-01
+        from: EXT-AUDITABILITY
         kind: depends_on
-        to: SVC-01
-  -
-    id: VAL-01
-    namespace: core_v1
-    hop: 1
-    via_kind: depends_on
-    from_seed: UX-CRUD-01
-    path:
-      -
-        from: UX-CRUD-01
-        kind: depends_on
-        to: VAL-01
+        to: OBS-01
   -
     id: UX-ASYNC-01
     namespace: ux_v1
@@ -102,17 +115,6 @@ candidates:
         kind: complements
         to: UX-BULK-01
   -
-    id: UX-REPORT-01
-    namespace: ux_v1
-    hop: 1
-    via_kind: complements
-    from_seed: UX-VISUAL-01
-    path:
-      -
-        from: UX-VISUAL-01
-        kind: complements
-        to: UX-REPORT-01
-  -
     id: UX-WIZARD-01
     namespace: ux_v1
     hop: 1
@@ -124,114 +126,90 @@ candidates:
         kind: complements
         to: UX-WIZARD-01
   -
-    id: EXT-BACKEND_FOR_FRONTEND_BFF
-    namespace: external_v1
-    hop: 1
-    via_kind: complements
-    from_seed: UX-SESSION-01
-    path:
-      -
-        from: UX-SESSION-01
-        kind: complements
-        to: EXT-BACKEND_FOR_FRONTEND_BFF
-  -
-    id: CFG-01
-    namespace: core_v1
-    hop: 1
-    via_kind: complements
-    from_seed: EXT-AUDITABILITY
-    path:
-      -
-        from: EXT-AUDITABILITY
-        kind: complements
-        to: CFG-01
-  -
-    id: EXT-QUEUE_BASED_LOAD_LEVELING
-    namespace: external_v1
-    hop: 2
-    via_kind: depends_on
-    from_seed: UX-RECOVERY-01
-    path:
-      -
-        from: UX-RECOVERY-01
-        kind: complements
-        to: UX-ASYNC-01
-      -
-        from: UX-ASYNC-01
-        kind: depends_on
-        to: EXT-QUEUE_BASED_LOAD_LEVELING
-  -
-    id: EXT-RATE_LIMITING_QUOTAS
-    namespace: external_v1
-    hop: 2
-    via_kind: depends_on
-    from_seed: UX-RECOVERY-01
-    path:
-      -
-        from: UX-RECOVERY-01
-        kind: complements
-        to: UX-BULK-01
-      -
-        from: UX-BULK-01
-        kind: depends_on
-        to: EXT-RATE_LIMITING_QUOTAS
-  -
-    id: CAF-IAM-02
-    namespace: caf_v1
-    hop: 2
-    via_kind: depends_on
-    from_seed: UX-SESSION-01
-    path:
-      -
-        from: UX-SESSION-01
-        kind: depends_on
-        to: CAF-ZT-01
-      -
-        from: CAF-ZT-01
-        kind: depends_on
-        to: CAF-IAM-02
-  -
     id: EXT-ANTI_CORRUPTION_LAYER
     namespace: external_v1
-    hop: 2
+    hop: 1
     via_kind: complements
-    from_seed: EXT-AUDITABILITY
+    from_seed: CTX-01
     path:
       -
-        from: EXT-AUDITABILITY
-        kind: complements
-        to: CFG-01
-      -
-        from: CFG-01
+        from: CTX-01
         kind: complements
         to: EXT-ANTI_CORRUPTION_LAYER
   -
     id: EXT-API_COMPOSITION_AGGREGATOR
     namespace: external_v1
-    hop: 2
+    hop: 1
     via_kind: complements
-    from_seed: EXT-AUDITABILITY
+    from_seed: CTX-01
     path:
-      -
-        from: EXT-AUDITABILITY
-        kind: complements
-        to: CTX-01
       -
         from: CTX-01
         kind: complements
         to: EXT-API_COMPOSITION_AGGREGATOR
   -
-    id: EXT-API_GATEWAY
+    id: EXT-BACKUP_PITR
     namespace: external_v1
-    hop: 2
+    hop: 1
     via_kind: complements
-    from_seed: EXT-AUDITABILITY
+    from_seed: CTX-01
     path:
       -
-        from: EXT-AUDITABILITY
+        from: CTX-01
         kind: complements
-        to: CFG-01
+        to: EXT-BACKUP_PITR
+  -
+    id: EXT-BLUE_GREEN_DEPLOY
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
       -
-        from: CFG-01
+        from: CTX-01
         kind: complements
-        to: EXT-API_GATEWAY
+        to: EXT-BLUE_GREEN_DEPLOY
+  -
+    id: EXT-BULKHEAD_ISOLATION
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-BULKHEAD_ISOLATION
+  -
+    id: EXT-CACHE_ASIDE
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-CACHE_ASIDE
+  -
+    id: EXT-CANARY_RELEASE
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-CANARY_RELEASE
+  -
+    id: EXT-CHOREOGRAPHY
+    namespace: external_v1
+    hop: 1
+    via_kind: complements
+    from_seed: CTX-01
+    path:
+      -
+        from: CTX-01
+        kind: complements
+        to: EXT-CHOREOGRAPHY

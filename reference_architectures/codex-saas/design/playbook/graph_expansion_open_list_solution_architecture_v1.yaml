@@ -1,6 +1,6 @@
 schema_version: caf_graph_expansion_open_list_v1
 profile: solution_architecture
-generated_at: "2026-03-29T13:16:21.490Z"
+generated_at: "2026-04-07T15:06:33.462Z"
 config:
   enabled: true
   max_hops: 2
@@ -21,18 +21,21 @@ config:
   exclude_candidate_ids:
     - CAF-MODEL-01
 seeds:
-  - CAF-AID-01
-  - CAF-IAM-01
+  - CAF-AI-01
+  - CAF-AIOBS-01
+  - CAF-COMP-01
+  - CAF-COMP-02
+  - CAF-IAM-02
   - CAF-MTEN-01
   - CAF-PLANE-01
   - CAF-POL-01
   - CAF-POL-02
   - CAF-TCTX-01
-  - CAF-XPLANE-01
   - CTX-01
-  - OBS-01
   - POL-01
   - PST-01
+  - SVC-01
+  - VAL-01
 candidates:
   -
     id: EXT-ANTI_CORRUPTION_LAYER

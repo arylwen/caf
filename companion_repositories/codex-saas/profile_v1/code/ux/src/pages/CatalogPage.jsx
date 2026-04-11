@@ -2,208 +2,224 @@
 // CAF_TRACE: task_id=UX-TG-20-primary-worklist-surface
 // CAF_TRACE: capability=ux_frontend_realization
 // CAF_TRACE: instance=codex-saas
-// CAF_TRACE: trace_anchor=pattern_id:UX-WORKLIST-01
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 
-import { createWidget, listTags, listWidgets } from "../api.js";
+import {
+  createWidget,
+  deleteWidget,
+  listWidgets,
+  previewPolicyDecision,
+  updateWidget,
+} from "../api";
+import { StatusBlock } from "../components/StatusBlock";
 
-function applyWidgetFilters(items, search, selectedTag, sortBy) {
-  const searchLower = search.trim().toLowerCase();
-  const filtered = items.filter((item) => {
-    const title = String(item.title || "").toLowerCase();
-    const description = String(item.description || "").toLowerCase();
-    const tags = Array.isArray(item.tags) ? item.tags.map((tag) => String(tag).toLowerCase()) : [];
-    const matchesSearch = !searchLower || title.includes(searchLower) || description.includes(searchLower);
-    const matchesTag = !selectedTag || tags.includes(selectedTag.toLowerCase());
-    return matchesSearch && matchesTag;
-  });
-
-  return filtered.sort((left, right) => {
-    const leftTime = Date.parse(left.updated_at || left.created_at || "") || 0;
-    const rightTime = Date.parse(right.updated_at || right.created_at || "") || 0;
-    if (sortBy === "title") {
-      return String(left.title || "").localeCompare(String(right.title || ""));
-    }
-    return rightTime - leftTime;
-  });
+function makeState() {
+  return { status: "idle", message: "" };
 }
 
-export function CatalogPage({ authState, selectedWidget, onOpenDetail }) {
-  const [widgets, setWidgets] = React.useState([]);
-  const [tags, setTags] = React.useState([]);
-  const [search, setSearch] = React.useState("");
-  const [selectedTag, setSelectedTag] = React.useState("");
-  const [sortBy, setSortBy] = React.useState("updated");
-  const [status, setStatus] = React.useState({ state: "loading", message: "Loading widget catalog..." });
-  const [createDraft, setCreateDraft] = React.useState({ title: "", description: "", tags: "" });
+export function CatalogPage({ personaKey, onOpenWidget }) {
+  const [query, setQuery] = useState("");
+  const [sortMode, setSortMode] = useState("updated");
+  const [status, setStatus] = useState(makeState);
+  const [items, setItems] = useState([]);
+  const [createName, setCreateName] = useState("");
+  const [selectedWidgetId, setSelectedWidgetId] = useState("");
+  const [draftSummary, setDraftSummary] = useState("");
+  const [policyState, setPolicyState] = useState(makeState);
+  const [policyPreview, setPolicyPreview] = useState(null);
 
-  const loadCatalog = React.useCallback(async () => {
-    setStatus({ state: "loading", message: "Refreshing widgets and tags..." });
+  async function refresh() {
+    setStatus({ status: "loading", message: "" });
     try {
-      const [widgetItems, tagItems] = await Promise.all([listWidgets(authState), listTags(authState)]);
-      setWidgets(widgetItems);
-      setTags(tagItems);
-      setStatus({ state: "ready", message: `${widgetItems.length} widget(s) available.` });
+      const payload = await listWidgets(personaKey);
+      const rows = Array.isArray(payload.items) ? payload.items : [];
+      setItems(rows);
+      setStatus({ status: rows.length ? "success" : "empty", message: "" });
     } catch (error) {
-      setStatus({ state: "error", message: error.message || String(error) });
+      setStatus({ status: "error", message: `Catalog load failed: ${error.message}` });
     }
-  }, [authState]);
+  }
 
-  React.useEffect(() => {
-    loadCatalog();
-  }, [loadCatalog]);
-
-  const filteredWidgets = React.useMemo(
-    () => applyWidgetFilters(widgets, search, selectedTag, sortBy),
-    [widgets, search, selectedTag, sortBy],
-  );
-
-  const submitCreate = async (event) => {
-    event.preventDefault();
-    setStatus({ state: "loading", message: "Creating widget..." });
-    const payload = {
-      title: createDraft.title,
-      description: createDraft.description,
-      tags: createDraft.tags
-        .split(",")
-        .map((value) => value.trim())
-        .filter(Boolean),
-      status: "draft",
-    };
-
+  async function handleCreateWidget() {
+    if (!createName.trim()) {
+      setStatus({ status: "error", message: "Provide a widget name before creating." });
+      return;
+    }
+    setStatus({ status: "loading", message: "" });
     try {
-      await createWidget(payload, authState);
-      setCreateDraft({ title: "", description: "", tags: "" });
-      await loadCatalog();
-      setStatus({ state: "success", message: "Widget created. Open it from the list to continue editing." });
+      const payload = await createWidget(personaKey, {
+        name: createName.trim(),
+        summary: "Created from catalog quick action",
+        content: "{\"template\":\"starter\"}",
+        status: "draft",
+      });
+      setCreateName("");
+      if (payload.item?.id) {
+        setSelectedWidgetId(payload.item.id);
+      }
+      await refresh();
     } catch (error) {
-      setStatus({ state: "error", message: error.message || String(error) });
+      setStatus({ status: "error", message: `Create widget failed: ${error.message}` });
     }
-  };
+  }
+
+  async function handleSaveDraft() {
+    if (!selectedWidgetId) {
+      setStatus({ status: "error", message: "Select a widget before saving changes." });
+      return;
+    }
+    setStatus({ status: "loading", message: "" });
+    try {
+      await updateWidget(personaKey, selectedWidgetId, {
+        summary: draftSummary,
+      });
+      await refresh();
+      setStatus({ status: "success", message: "" });
+    } catch (error) {
+      setStatus({ status: "error", message: `Save failed and draft stays local: ${error.message}` });
+    }
+  }
+
+  async function handleDeleteWidget() {
+    if (!selectedWidgetId) {
+      setStatus({ status: "error", message: "Select a widget before deleting." });
+      return;
+    }
+    setStatus({ status: "loading", message: "" });
+    try {
+      await deleteWidget(personaKey, selectedWidgetId);
+      setSelectedWidgetId("");
+      await refresh();
+    } catch (error) {
+      setStatus({ status: "error", message: `Delete failed: ${error.message}` });
+    }
+  }
+
+  async function handlePolicyPreview() {
+    setPolicyState({ status: "loading", message: "" });
+    try {
+      const preview = await previewPolicyDecision(personaKey, "publish", "collection");
+      setPolicyPreview(preview);
+      setPolicyState({ status: "success", message: "" });
+    } catch (error) {
+      setPolicyPreview(null);
+      setPolicyState({ status: "error", message: `Policy preview failed: ${error.message}` });
+    }
+  }
+
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const working = [...items];
+    if (normalizedQuery) {
+      working.splice(
+        0,
+        working.length,
+        ...working.filter((item) => {
+          const name = String(item.name || "").toLowerCase();
+          const statusValue = String(item.status || "").toLowerCase();
+          return name.includes(normalizedQuery) || statusValue.includes(normalizedQuery);
+        }),
+      );
+    }
+
+    working.sort((left, right) => {
+      if (sortMode === "name") {
+        return String(left.name || "").localeCompare(String(right.name || ""));
+      }
+      return String(right.updated_at || "").localeCompare(String(left.updated_at || ""));
+    });
+    return working;
+  }, [items, query, sortMode]);
 
   return (
-    <section className="page-frame">
-      <header className="page-header">
-        <div>
-          <h2>Widget catalog</h2>
-          <p>Search and triage widgets, then move directly into detail editing.</p>
-        </div>
-        <div className="inline-actions">
-          <button className="button-primary" type="button" onClick={() => document.getElementById("create-widget-form")?.scrollIntoView({ behavior: "smooth" })}>
-            Create widget
+    <section className="ux-stack">
+      <article className="ux-panel">
+        <h3>Widget catalog triage</h3>
+        <div className="ux-toolbar">
+          <input
+            type="text"
+            placeholder="Search by name or status"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
+            <option value="updated">Sort by updated time</option>
+            <option value="name">Sort by name</option>
+          </select>
+          <button type="button" onClick={refresh}>
+            Refresh
           </button>
-          <button className="button-quiet" type="button" onClick={loadCatalog}>
-            Refresh list
+          <button type="button" className="ux-action-button" onClick={handleCreateWidget}>
+            Create Widget
           </button>
         </div>
-      </header>
-
-      <section className="status-rail">
-        <div className={`status-pill status-${status.state}`}>{status.state}</div>
-        <p>{status.message}</p>
-        {selectedWidget ? <p className="recovery-note">Detail context ready for: {selectedWidget.title || selectedWidget.widget_id}</p> : null}
-      </section>
-
-      <section className="panel">
-        <h3>Filter and sort</h3>
-        <div className="toolbar">
-          <label className="field-row">
-            Search
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="title or description" />
-          </label>
-          <label className="field-row">
-            Tag
-            <select value={selectedTag} onChange={(event) => setSelectedTag(event.target.value)}>
-              <option value="">All tags</option>
-              {tags.map((tag) => {
-                const name = String(tag.name || tag.label || tag.value || tag.tag_id || "");
-                return (
-                  <option key={tag.tag_id || name} value={name}>
-                    {name}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-          <label className="field-row">
-            Sort
-            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-              <option value="updated">Most recent</option>
-              <option value="title">Title</option>
-            </select>
-          </label>
+        <div className="ux-toolbar">
+          <input
+            type="text"
+            placeholder="New widget name"
+            value={createName}
+            onChange={(event) => setCreateName(event.target.value)}
+          />
+          <button type="button" onClick={handlePolicyPreview}>
+            Preview Publish Policy
+          </button>
         </div>
-      </section>
+        <StatusBlock
+          state={status}
+          labels={{ loading: "Loading or mutating catalog...", empty: "No widgets found for current filters.", success: "Catalog is ready." }}
+        />
+        {policyState.status !== "idle" ? (
+          <StatusBlock
+            state={policyState}
+            labels={{ loading: "Loading policy preview...", empty: "No preview output.", success: "Policy preview loaded." }}
+          />
+        ) : null}
+        {policyPreview ? <pre>{JSON.stringify(policyPreview, null, 2)}</pre> : null}
+      </article>
 
-      <section className="list-card table-wrap">
-        <h3>Catalog results</h3>
-        {filteredWidgets.length === 0 ? (
-          <p className="recovery-note">No widgets matched this filter. Clear filters or create a new widget.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Widget</th>
-                <th>Status</th>
-                <th>Updated</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredWidgets.map((widget) => (
-                <tr key={widget.widget_id}>
-                  <td>
-                    <strong>{widget.title || "Untitled widget"}</strong>
-                    <div>{widget.description || "No description"}</div>
-                  </td>
-                  <td>{widget.status || "draft"}</td>
-                  <td>{widget.updated_at || widget.created_at || "n/a"}</td>
-                  <td>
-                    <button className="button-quiet" type="button" onClick={() => onOpenDetail(widget)}>
-                      Open detail
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+      <article className="ux-panel">
+        <h3>Catalog list</h3>
+        {!filteredItems.length ? <p className="ux-muted">No matching rows.</p> : null}
+        <ul className="ux-list">
+          {filteredItems.map((item) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedWidgetId(item.id);
+                  onOpenWidget(item.id);
+                }}
+              >
+                {item.name || item.id}
+              </button>
+              <span className="ux-chip">{item.status || "unknown"}</span>
+            </li>
+          ))}
+        </ul>
+      </article>
 
-      <section className="form-card" id="create-widget-form">
-        <h3>Create widget</h3>
-        <form className="form-grid" onSubmit={submitCreate}>
-          <label className="field-row">
-            Title
-            <input
-              required
-              value={createDraft.title}
-              onChange={(event) => setCreateDraft((current) => ({ ...current, title: event.target.value }))}
-            />
-          </label>
-          <label className="field-row">
-            Description
-            <textarea
-              rows={3}
-              value={createDraft.description}
-              onChange={(event) => setCreateDraft((current) => ({ ...current, description: event.target.value }))}
-            />
-          </label>
-          <label className="field-row">
-            Tags (comma separated)
-            <input
-              value={createDraft.tags}
-              onChange={(event) => setCreateDraft((current) => ({ ...current, tags: event.target.value }))}
-            />
-          </label>
-          <div className="inline-actions">
-            <button className="button-primary" type="submit">
-              Save new widget
-            </button>
-          </div>
-        </form>
-      </section>
+      <article className="ux-panel">
+        <h3>Selected widget actions</h3>
+        <p>Selected widget id: {selectedWidgetId || "none"}</p>
+        <textarea
+          rows={4}
+          value={draftSummary}
+          onChange={(event) => setDraftSummary(event.target.value)}
+          placeholder="Edit summary text before save"
+        />
+        <div className="ux-toolbar">
+          <button type="button" onClick={handleSaveDraft}>
+            Save Draft Update
+          </button>
+          <button type="button" onClick={handleDeleteWidget}>
+            Delete Widget
+          </button>
+          <button type="button" onClick={() => selectedWidgetId && onOpenWidget(selectedWidgetId)}>
+            Open Detail
+          </button>
+        </div>
+      </article>
     </section>
   );
 }

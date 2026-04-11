@@ -98,7 +98,7 @@ meta:
   profile_template_id: "intentionally_boring_saas_v1"
   derived_by: "tools/caf/guardrails_v1.mjs"
   derived_policy_id: "PM-default-implementation_scaffolding"
-  derived_at: "2026-03-29T13:22:32.478Z"
+  derived_at: "2026-04-07T15:18:18.862Z"
   derived_from_pins:
     evolution_stage: "stage_0_local_prototype"
     generation_phase: "implementation_scaffolding"
@@ -119,3 +119,4 @@ meta:
     ui_deployment_preference: "separate_ui_service"
   derived_plane_runtime_shapes:
     source: "architect_choice"
+    derivation_mode: "derive_missing_planes"

@@ -1,10 +1,25 @@
-﻿# TG-20-api-boundary-widget_versions Review
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-20-api-boundary-widget_versions -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: TG-20-api-boundary-widget_versions
+
+Threshold: `blocker`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-TASK-REPORT-01 | PASS | Report includes required inputs, claims, and line-anchored evidence. |
-| RR-TBP-ROLE-BINDINGS-01 | PASS | API boundary module is placed at `code/ap/api/widget_versions_router.py` and dependency/provider rails remain canonical. |
-| RR-FASTAPI-SVC-01 | PASS | Route handler enforces transport concerns and delegates list retrieval to `WidgetVersionsFacade`. |
-| RR-AUTH-MOCK-CLAIM-CONTRACT-01 | PASS | Auth claim resolution and policy checks are explicit before boundary response generation. |
+| RR-FA-CORR-01 | PASS | Resource transport routes are defined in `code/ap/api/routes.py`. |
+| RR-FA-BOUNDARY-ERR-01 | PASS | Policy-denied and operation mismatch paths produce explicit HTTP errors (`code/ap/api/routes.py`). |
+| RR-FA-ARCH-01 | PASS | Boundary delegates to `ResourceServiceFacadeRegistry` and service facades (`code/ap/application/services.py`). |
+| RR-TASK-REPORT-01 | PASS | Task report for TG-20-api-boundary-widget_versions records resource-scoped evidence anchors. |
 
-Summary: No blocker/high findings for TG-20-api-boundary-widget_versions.
+Summary:
+- API boundary behavior for widget_versions is implemented through policy-gated AP resource routes and facade operation guards.
+
+Issues:
+- High: none.
+- Medium: none.
+- Low: none.
+
+No issues at or above the configured threshold (`blocker`) were found.

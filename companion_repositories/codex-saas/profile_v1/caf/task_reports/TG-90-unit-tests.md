@@ -2,41 +2,41 @@
 <!-- CAF_TRACE: task_id=TG-90-unit-tests -->
 <!-- CAF_TRACE: capability=unit_test_scaffolding -->
 <!-- CAF_TRACE: instance=codex-saas -->
-<!-- CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-UNIT-TESTS -->
 
-## Task Spec Digest
-- task_id: `TG-90-unit-tests`
-- title: Scaffold unit-test coverage for candidate runtime surfaces
-- primary capability: `unit_test_scaffolding`
-- depends_on: `TG-90-runtime-wiring`
+# Task Report: TG-90-unit-tests
 
 ## Inputs consumed
-- `caf/profile_parameters_resolved.yaml`: used `runtime.language=python`, `framework=fastapi`, `auth_mode=mock`, and SQLAlchemy/Postgres runtime seams.
-- `caf/task_graph_v1.yaml`: used TG-90 unit-test scope (AP/CP policy seams + tenant/auth context behavior).
 
-## Tests added/updated
-- `tests/test_mock_claims.py`: verifies mock bearer claim round-trip and explicit tenant-context conflict rejection.
-- `tests/test_policy_decision_service.py`: verifies CP policy decision behavior for non-admin deny and admin allow write actions.
-- `tests/test_policy_facade.py`: verifies AP policy facade rejects CP responses with mismatched tenant identity.
-- `requirements.txt`: added `pytest` to keep test harness aligned with runnable candidate toolchain.
+- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+  - Derived: python runtime and mock-auth/tenant-context posture.
+- `reference_architectures/codex-saas/design/playbook/task_graph_v1.yaml`
+  - Derived: unit coverage targets at boundary/auth/service seams.
 
-## What tests validate
-- Claim-based tenant/principal/policy parsing remains canonical and rejects conflicting headers.
-- CP policy semantics enforce admin posture for write actions.
-- AP policy facade preserves tenant integrity checks on CP responses.
+## Tests added/validated
 
-## How to run tests manually
-- `python -m pytest tests`
+- `tests/test_mock_claims.py`
+  - Validates canonical bearer claim decode and conflict rejection behavior.
+- `tests/test_ap_auth_context.py`
+  - Validates AP boundary auth-context resolution including case-insensitive auth header handling and missing/invalid inputs.
+- `tests/test_ap_service_facade.py`
+  - Validates resource operation gating and facade delegation behavior.
 
-## Task completion evidence
+## Manual test run command
 
-### Claims
-- Added deterministic Python unit tests covering mock-auth parsing and CP/AP policy seams.
-- Added explicit negative-path tests for identity conflict and tenant mismatch handling.
-- Updated dependency manifest so unit tests are executable with the candidate toolchain.
+- `python -m unittest discover -s tests -p "test_*.py"`
 
-### Evidence anchors
-- `tests/test_mock_claims.py:L1-L33` - supports Claims 1 and 2
-- `tests/test_policy_decision_service.py:L1-L40` - supports Claims 1 and 2
-- `tests/test_policy_facade.py:L1-L45` - supports Claims 1 and 2
-- `requirements.txt:L1-L11` - supports Claim 3
+## Claims
+
+- Unit tests cover auth claim parsing, tenant-context conflict handling, and AP service-facade behavioral seams.
+- Tests include negative paths (missing auth, invalid bearer prefix, conflict headers, disallowed operations).
+- Tests are deterministic and do not require external network dependencies.
+
+## Evidence anchors
+
+- `companion_repositories/codex-saas/profile_v1/tests/test_mock_claims.py:L1-L33`
+- `companion_repositories/codex-saas/profile_v1/tests/test_ap_auth_context.py:L1-L44`
+- `companion_repositories/codex-saas/profile_v1/tests/test_ap_service_facade.py:L1-L53`
+
+## Output
+
+- `companion_repositories/codex-saas/profile_v1/caf/task_reports/TG-90-unit-tests.md`

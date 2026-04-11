@@ -2,70 +2,63 @@
 // CAF_TRACE: task_id=UX-TG-10-rest-client-and-session-wiring
 // CAF_TRACE: capability=ux_frontend_realization
 // CAF_TRACE: instance=codex-saas
-// CAF_TRACE: trace_anchor=pattern_id:UX-SESSION-01
+// CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-AUTH-MOCK-01-ux-claim-builder
 
-const PRESETS = {
-  tenant_admin: {
-    tenant_id: "tenant-demo",
-    principal_id: "user:demo:admin",
+const PERSONAS = {
+  ux_admin: {
+    label: "Tenant Admin",
+    tenant_id: "tenant-alpha",
+    principal_id: "ux-admin-user",
+    role_id: "tenant_admin",
+    display_name: "Alex Admin",
     policy_version: "v1",
-    role_label: "Tenant Admin",
   },
-  tenant_lead: {
-    tenant_id: "tenant-demo",
-    principal_id: "user:demo:lead",
+  ux_editor: {
+    label: "Catalog Editor",
+    tenant_id: "tenant-alpha",
+    principal_id: "ux-editor-user",
+    role_id: "catalog_editor",
+    display_name: "Erin Editor",
     policy_version: "v1",
-    role_label: "Team Lead",
-  },
-  team_member: {
-    tenant_id: "tenant-demo",
-    principal_id: "user:demo:member",
-    policy_version: "v1",
-    role_label: "Team Member",
   },
 };
 
-export function buildMockAuthState(preset = "tenant_admin") {
-  const chosen = PRESETS[preset] || PRESETS.tenant_admin;
-  return { ...chosen, preset };
+function encodeClaimPayload(payload) {
+  return btoa(JSON.stringify(payload)).replace(/=+$/g, "");
 }
 
-export function listMockAuthPresets() {
-  return Object.entries(PRESETS).map(([id, value]) => ({
-    id,
-    label: value.role_label,
-    principal_id: value.principal_id,
-    tenant_id: value.tenant_id,
-  }));
+export function getPersonaOptions() {
+  return Object.entries(PERSONAS).map(([key, persona]) => ({ key, label: persona.label }));
 }
 
-export function buildMockAuthorizationHeader({ tenant_id, principal_id, policy_version }) {
-  const claimPayload = {
-    tenant_id,
-    principal_id,
-    policy_version,
-  };
-  const encoded = btoa(JSON.stringify(claimPayload));
+export function buildMockBearerToken(personaKey) {
+  const persona = PERSONAS[personaKey];
+  if (!persona) {
+    throw new Error(`unknown persona '${personaKey}'`);
+  }
+
+  const encoded = encodeClaimPayload({
+    tenant_id: persona.tenant_id,
+    principal_id: persona.principal_id,
+    role_id: persona.role_id,
+    policy_version: persona.policy_version,
+  });
   return `Bearer mock.${encoded}.token`;
 }
 
-export function parseMockToken(authHeader) {
-  if (!authHeader || !authHeader.startsWith("Bearer mock.")) {
-    return buildMockAuthState();
+export function buildAuthContext(personaKey) {
+  const persona = PERSONAS[personaKey];
+  if (!persona) {
+    throw new Error(`unknown persona '${personaKey}'`);
   }
 
-  const tokenBody = authHeader.slice("Bearer ".length).split(".")[1] || "";
-  try {
-    const decoded = atob(tokenBody);
-    return JSON.parse(decoded);
-  } catch {
-    return buildMockAuthState();
-  }
-}
-
-export function detectTenantContextConflict(headers) {
-  const auth = headers.Authorization || headers.authorization;
-  const tenantHeader = headers["X-Tenant-Id"] || headers["x-tenant-id"];
-  // tenant context conflict guard remains explicit for claim-over-header posture.
-  return Boolean(auth && tenantHeader);
+  return {
+    authorization: buildMockBearerToken(personaKey),
+    tenant_id: persona.tenant_id,
+    principal_id: persona.principal_id,
+    role_id: persona.role_id,
+    display_name: persona.display_name,
+    policy_version: persona.policy_version,
+    notes: "tenant context conflict checks stay explicit in api helper headers",
+  };
 }

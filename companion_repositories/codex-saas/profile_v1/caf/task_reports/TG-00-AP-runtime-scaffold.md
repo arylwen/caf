@@ -2,50 +2,55 @@
 <!-- CAF_TRACE: task_id=TG-00-AP-runtime-scaffold -->
 <!-- CAF_TRACE: capability=plane_runtime_scaffolding -->
 <!-- CAF_TRACE: instance=codex-saas -->
-<!-- CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-PLANE-AP-RUNTIME-SCAFFOLD -->
+
+# Task Report: TG-00-AP-runtime-scaffold
 
 ## Task Spec Digest
-- task_id: `TG-00-AP-runtime-scaffold`
-- title: Scaffold application plane runtime
-- primary capability: `plane_runtime_scaffolding`
-- task graph source: `caf/task_graph_v1.yaml`
 
-## Inputs declared by task
-- required: `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
-- required: `reference_architectures/codex-saas/design/playbook/application_design_v1.md`
+- Title: Scaffold AP runtime (python api_service_http)
+- Capability: `plane_runtime_scaffolding`
+- Depends on: none
+- Scope: application-plane runtime scaffold, composition root boundaries, mock-auth and tenant context runtime assumptions.
 
-## Inputs consumed
-- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`: confirmed `runtime.language=python`, `platform.framework=fastapi`, `planes.ap.runtime_shape=api_service_http`, and module-root conventions.
-- `reference_architectures/codex-saas/design/playbook/application_design_v1.md`: consumed AP responsibilities, runtime shape, and tenant-context assumptions (`auth_claim`, policy enforcement posture).
+## Inputs Declared By Task
 
-## Step execution evidence
-- Established AP composition root for HTTP runtime shape at `code/ap/main.py` and ASGI export at `code/ap/asgi.py`.
-- Defined explicit AP layering seams in `code/ap/application/services.py` (`PolicyFacade`, `WidgetRepository`) and consumed them from the composition root.
-- Connected startup configuration/bootstrap seam via `bootstrap_schema_if_needed()` from `code/common/persistence/bootstrap.py`.
-- Registered AP dependency seams for downstream API/service/persistence tasks (`code/ap/application/services.py`).
-- Confirmed scaffold semantics against design intent in `code/ap/runtime/README.md` and preserved adopted tenant/principal assumptions with `code/common/auth/mock_claims.py`.
+- Required: `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+- Required: `reference_architectures/codex-saas/design/playbook/application_design_v1.md`
 
-## Outputs produced
-- `code/__init__.py`
-- `code/common/__init__.py`
-- `code/common/auth/__init__.py`
-- `code/common/auth/mock_claims.py`
-- `code/common/persistence/__init__.py`
-- `code/common/persistence/bootstrap.py`
-- `code/ap/__init__.py`
-- `code/ap/asgi.py`
-- `code/ap/main.py`
-- `code/ap/application/__init__.py`
-- `code/ap/application/services.py`
-- `code/ap/runtime/README.md`
+## Inputs Consumed
 
-## Rails/TBP satisfaction
-- Writes are confined to `companion_repositories/codex-saas/profile_v1/` as allowed by resolved guardrails.
-- Python module-root coherence is preserved: AP imports shared helpers via sibling-package coherent `..common...` imports.
-- Tenant/principal semantics are explicit in shared mock-claim parsing with canonical claim fields (`tenant_id`, `principal_id`, `policy_version`).
-- No new architecture or vendor choices were introduced beyond resolved profile/design inputs.
+- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+  - Derived: `runtime.language=python`, `auth_mode=mock`, `planes.ap.runtime_shape=api_service_http`.
+- `reference_architectures/codex-saas/design/playbook/application_design_v1.md`
+  - Derived: AP runtime assumptions and tenant context carrier posture anchored to verified Authorization claim semantics.
 
-## How to validate (semantic)
-- Confirm AP scaffold has composition root + ASGI seam and uses explicit service boundaries.
-- Confirm shared claim parsing is centralized and conflict-precedence behavior is fail-closed.
-- Confirm runtime README states what is scaffolded vs intentionally deferred.
+## Step Execution Evidence
+
+1. Confirm AP runtime pins and selected `api_service_http` shape for python services.
+   - Verified from resolved guardrails and AP design inputs.
+2. Create AP runtime scaffold modules and composition root boundaries.
+   - Confirmed scaffold surfaces: `code/ap/main.py`, `code/ap/asgi.py`, package markers under `code/` + `code/ap/*`.
+3. Wire configuration loading for mock auth and tenant context dependencies.
+   - `code/ap/main.py` loads `RuntimeSettings.for_plane("ap")`; AP API/service surfaces consume shared auth context.
+4. Establish bootstrap entrypoints aligned to compose-first local execution.
+   - `code/ap/main.py` startup hook calls AP bootstrap via `bootstrap_schema()`.
+   - `code/ap/asgi.py` exposes package-relative `from .main import app`.
+5. Record runtime assumptions for API, service, persistence, and UI consumers.
+   - Runtime assumptions endpoint is exposed via AP routes and service layer seam.
+
+## Outputs Produced
+
+- `companion_repositories/codex-saas/profile_v1/code/ap/main.py`
+- `companion_repositories/codex-saas/profile_v1/code/ap/asgi.py`
+- `companion_repositories/codex-saas/profile_v1/code/__init__.py`
+- `companion_repositories/codex-saas/profile_v1/code/ap/__init__.py`
+- `companion_repositories/codex-saas/profile_v1/code/common/auth/mock_claims.py`
+
+Note: scaffold artifacts were already present and compliant in the candidate; this task execution validated and accepted those artifacts without introducing new runtime framework choices.
+
+## Rails/TBP Satisfaction
+
+- Rails: writes are within companion repo rails (`profile_v1/caf/task_reports`); no forbidden actions performed.
+- TBP Gate `TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE`: AP imports resolve through canonical `code` root and shared helpers (`code/common`) without pseudo-package paths.
+- Compiled obligation `OBL-PLANE-AP-RUNTIME-SCAFFOLD`: AP runtime scaffold for `api_service_http` is materialized.
+- Compiled obligation `O-TBP-PY-01-python-package-markers`: package markers exist for candidate Python packages.

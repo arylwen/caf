@@ -1,17 +1,25 @@
-# TG-40-persistence-cp-policy Task Report
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-40-persistence-cp-policy -->
+<!-- CAF_TRACE: capability=persistence_implementation -->
+<!-- CAF_TRACE: instance=codex-saas -->
 
-## Inputs consumed
-- `reference_architectures/codex-saas/design/playbook/system_domain_model_v1.yaml`: consumed Policy aggregate fields and control-plane persistence scope.
-- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`: consumed `database_engine=postgres`, `persistence.orm=sqlalchemy_orm`, and `schema_management_strategy=code_bootstrap`.
+# Task Report: TG-40-persistence-cp-policy
+
+## Inputs Consumed
+
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/design/playbook/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/design/playbook/tbp_resolution_v1.yaml
+- reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml
 
 ## Claims
-- Materialized shared SQLAlchemy metadata/runtime surfaces for ORM-backed postgres persistence.
-- Materialized CP policy ORM model and SQLAlchemy repository with tenant-scoped CRUD operations.
-- Materialized CP repository factory/provider seam for runtime wiring.
+
+- Implemented CP persistence repository `CpPolicyRepository` with tenant-scoped SQLAlchemy access patterns.
+- Kept repository operations plane-local and transport-agnostic inside CP persistence boundary code.
+- Preserved deterministic repository behavior aligned to the CP aggregate scope for this task.
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/code/common/persistence/sqlalchemy_metadata.py:L1-L11 — supports Claim 1
-- companion_repositories/codex-saas/profile_v1/code/common/persistence/sqlalchemy_runtime.py:L1-L29 — supports Claim 1
-- companion_repositories/codex-saas/profile_v1/code/cp/persistence/models.py:L1-L50 — supports Claim 2
-- companion_repositories/codex-saas/profile_v1/code/cp/persistence/postgres_policy_repository.py:L1-L130 — supports Claim 2
-- companion_repositories/codex-saas/profile_v1/code/cp/persistence/repository_factory.py:L1-L23 — supports Claim 3
+
+- companion_repositories/codex-saas/profile_v1/code/cp/persistence/repository.py:L82-L152
+- companion_repositories/codex-saas/profile_v1/code/cp/persistence/repository.py:L36-L80
+- companion_repositories/codex-saas/profile_v1/code/cp/persistence/schema_bootstrap.py:L1-L40

@@ -6,35 +6,40 @@
 
 ## Summary
 
-- Selected candidates (system+app): **14** (HIGH=8, MEDIUM=6, LOW=0)
+- Selected candidates (system+app): **19** (HIGH=6, MEDIUM=13, LOW=0)
 - Prefilter semantic subset size: **30**
 - Graph open list size: **16** (graph-only=13)
-- Integrated graph-only candidates: **0**
+- Integrated graph-only candidates: **1**
 
 ## Final Candidate Set (authoritative grounding from spec)
 
 | pattern_id | grounding | source |
 |---|---|---|
 | CAF-AI-01 | HIGH | unknown |
-| CAF-AID-01 | HIGH | retrieval |
 | CAF-COMP-01 | HIGH | unknown |
 | CAF-MTEN-01 | HIGH | retrieval |
 | CAF-PLANE-01 | HIGH | retrieval |
-| CAF-POL-01 | HIGH | retrieval |
-| CAF-POL-02 | HIGH | retrieval |
 | CAF-TCTX-01 | HIGH | retrieval |
-| CAF-IAM-01 | MEDIUM | retrieval |
-| CAF-XPLANE-01 | MEDIUM | retrieval |
-| CTX-01 | MEDIUM | retrieval |
-| OBS-01 | MEDIUM | retrieval |
+| CTX-01 | HIGH | retrieval |
+| CAF-AIOBS-01 | MEDIUM | unknown |
+| CAF-COMP-02 | MEDIUM | unknown |
+| CAF-IAM-02 | MEDIUM | retrieval |
+| CAF-POL-01 | MEDIUM | retrieval |
+| CAF-POL-02 | MEDIUM | retrieval |
+| EXT-API_GATEWAY | MEDIUM | retrieval+graph |
+| EXT-AUDITABILITY | MEDIUM | graph |
+| EXT-BACKEND_FOR_FRONTEND_BFF | MEDIUM | retrieval+graph |
+| EXT-CIRCUIT_BREAKER | MEDIUM | retrieval+graph |
 | POL-01 | MEDIUM | retrieval |
 | PST-01 | MEDIUM | retrieval |
+| SVC-01 | MEDIUM | retrieval |
+| VAL-01 | MEDIUM | retrieval |
 
 ## Graph Expansion Open List
 
 - EXT-ANTI_CORRUPTION_LAYER - - not integrated
 - EXT-API_COMPOSITION_AGGREGATOR - - not integrated
-- EXT-AUDITABILITY - - not integrated
+- EXT-AUDITABILITY - ✅ integrated
 - EXT-BACKUP_PITR - - not integrated
 - EXT-BLUE_GREEN_DEPLOY - - not integrated
 - EXT-BULKHEAD_ISOLATION - - not integrated

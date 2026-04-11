@@ -1,24 +1,34 @@
-# UX Review: UX-TG-00-ux-shell-and-visual-system
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=UX-TG-00-ux-shell-and-visual-system -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: UX-TG-00-ux-shell-and-visual-system
+
+Threshold: `blocker`
+
+Selected rubrics:
+- `RR-WEB-SPA-01`
+- `RR-TASK-REPORT-01`
+- `RR-TBP-ROLE-BINDINGS-01`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-GENERAL-01 | PASS | No Python files were touched by this UX shell task; existing AP/CP imports remain unchanged. |
-| RR-PY-TESTS-01 | PASS | No runtime-language regression introduced; existing Python tests remain available under `tests/`. |
-| RR-WEB-SPA-01 | PASS | Shell/nav/context bar and routed pages are implemented in `code/ux/src/App.jsx` with concrete UI surfaces, not static placeholder prose. |
-| RR-TASK-REPORT-01 | PASS | Task report includes inputs, claims, interaction matrix, primary action coverage, and evidence anchors. |
-| RR-TBP-ROLE-BINDINGS-01 | PASS | Required ux_frontend_realization role-binding artifacts exist and contain expected markers: `code/ux/package.json`, `code/ux/vite.config.js`, `code/ux/src/main.jsx`, `code/ux/src/api.js`, `code/ux/src/auth/mockAuth.js`, `code/ux/components.json`. |
+| RR-SPA-WIRE-01 | PASS | Shell and main page routing are wired in declared order (`code/ux/src/App.jsx`). |
+| RR-SPA-WIRE-02 | PASS | Dashboard/Catalog/Collections/Activity/Admin are directly reachable through shell navigation. |
+| RR-SPA-ACTION-01 | PASS | Shell keeps one-click primary actions: Create Widget, Publish Collection, Manage Roles (`code/ux/src/App.jsx`). |
+| RR-SPA-STATE-01 | PASS | Shared style/state scaffolding exposes explicit operational-status classes (`code/ux/src/styles.css`). |
+| RR-TR-STRUCT-01 | PASS | Task report exists with required matrices and evidence anchors (`caf/task_reports/UX-TG-00-ux-shell-and-visual-system.md`). |
+| RR-TBP-RB-01 | PASS | UX role-binding outputs required for frontend capability are present (`code/ux/package.json`, `vite.config.js`, `components.json`, `src/main.jsx`, `src/api.js`, `src/auth/mockAuth.js`). |
 
-## Semantic review questions
-- Navigation and tenant-context visibility expectations are preserved through persistent left nav and top context bar in `code/ux/src/App.jsx`.
-- UX shell is richer than smoke-test lane while preserving REST/session posture through shared API/auth helpers in `code/ux/src/api.js` and `code/ux/src/auth/mockAuth.js`.
-- Semantic token roles and primitive families are centralized in `code/ux/src/styles.css` and reused across all page modules.
+Summary:
+- Shell realization aligns with declared navigation, context visibility, and primary-action posture.
+- No blocker findings identified.
 
-## Summary
-- No blocking semantic issues found.
-
-## Issues
+Issues:
 - High: none.
 - Medium: none.
 - Low: none.
 
-No issues at/above severity threshold (`blocker`) were found.
+No issues at or above the configured threshold (`blocker`) were found.
+

@@ -1,260 +1,213 @@
 // CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-// CAF_TRACE: task_id=UX-TG-40-collections-workspace-and-publish-actions
+// CAF_TRACE: task_id=UX-TG-40-collections-and-sharing-surface
 // CAF_TRACE: capability=ux_frontend_realization
 // CAF_TRACE: instance=codex-saas
-// CAF_TRACE: trace_anchor=pattern_id:product_action:publish
 
-import React from "react";
+import React, { useState } from "react";
 
 import {
   createCollection,
-  createCollectionPermission,
+  createCollectionMembership,
+  listCollectionMemberships,
   listCollectionPermissions,
   listCollections,
   updateCollection,
-} from "../api.js";
+  updateCollectionPermission,
+} from "../api";
+import { StatusBlock } from "../components/StatusBlock";
 
-export function CollectionsPage({ authState, onOpenPublished }) {
-  const [collections, setCollections] = React.useState([]);
-  const [permissions, setPermissions] = React.useState([]);
-  const [status, setStatus] = React.useState({ state: "loading", message: "Loading collections workspace..." });
-  const [selectedCollection, setSelectedCollection] = React.useState(null);
-  const [collectionDraft, setCollectionDraft] = React.useState({ name: "", description: "", widget_ids: "" });
-  const [publishDraft, setPublishDraft] = React.useState({ role_name: "viewer", access_level: "view" });
+function makeState() {
+  return { status: "idle", message: "" };
+}
 
-  const loadWorkspace = React.useCallback(async () => {
-    setStatus({ state: "loading", message: "Refreshing collections and publish state..." });
+export function CollectionsPage({ personaKey, activeCollectionId, onCollectionFocus }) {
+  const [status, setStatus] = useState(makeState);
+  const [collections, setCollections] = useState([]);
+  const [memberships, setMemberships] = useState([]);
+  const [permissions, setPermissions] = useState([]);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [newWidgetId, setNewWidgetId] = useState("");
+  const [roleId, setRoleId] = useState("catalog_editor");
+
+  async function refreshCollections() {
+    setStatus({ status: "loading", message: "" });
     try {
-      const [collectionItems, permissionItems] = await Promise.all([
-        listCollections(authState),
-        listCollectionPermissions(authState),
+      const [collectionPayload, membershipPayload, permissionPayload] = await Promise.all([
+        listCollections(personaKey),
+        listCollectionMemberships(personaKey),
+        listCollectionPermissions(personaKey),
       ]);
-      setCollections(collectionItems);
-      setPermissions(permissionItems);
-      setStatus({ state: "ready", message: `${collectionItems.length} collection(s), ${permissionItems.length} publish rule(s).` });
-      if (collectionItems.length > 0 && !selectedCollection) {
-        setSelectedCollection(collectionItems[0]);
-      }
+      setCollections(collectionPayload.items || []);
+      setMemberships(membershipPayload.items || []);
+      setPermissions(permissionPayload.items || []);
+      setStatus({ status: collectionPayload.items?.length ? "success" : "empty", message: "" });
     } catch (error) {
-      setStatus({ state: "error", message: error.message || String(error) });
+      setStatus({ status: "error", message: `Collection workspace load failed: ${error.message}` });
     }
-  }, [authState, selectedCollection]);
+  }
 
-  React.useEffect(() => {
-    loadWorkspace();
-  }, [loadWorkspace]);
-
-  const submitCollection = async (event) => {
-    event.preventDefault();
-    setStatus({ state: "loading", message: selectedCollection ? "Updating collection..." : "Creating collection..." });
-    const payload = {
-      name: collectionDraft.name,
-      description: collectionDraft.description,
-      widget_ids: collectionDraft.widget_ids
-        .split(",")
-        .map((value) => value.trim())
-        .filter(Boolean),
-    };
-
-    try {
-      if (selectedCollection && selectedCollection.collection_id) {
-        await updateCollection(selectedCollection.collection_id, payload, authState);
-      } else {
-        await createCollection(payload, authState);
-      }
-      setCollectionDraft({ name: "", description: "", widget_ids: "" });
-      await loadWorkspace();
-      setStatus({ state: "success", message: "Collection workspace update saved." });
-    } catch (error) {
-      setStatus({ state: "error", message: error.message || String(error) });
-    }
-  };
-
-  const submitPublish = async (event) => {
-    event.preventDefault();
-    if (!selectedCollection) {
-      setStatus({ state: "error", message: "Select a collection before publishing." });
+  async function handleCreateCollection() {
+    if (!newCollectionName.trim()) {
+      setStatus({ status: "error", message: "Collection name is required." });
       return;
     }
+    setStatus({ status: "loading", message: "" });
+    try {
+      const payload = await createCollection(personaKey, {
+        name: newCollectionName.trim(),
+        description: "Created in collections workspace",
+        published: false,
+      });
+      if (payload.item?.id) {
+        onCollectionFocus(payload.item.id);
+      }
+      setNewCollectionName("");
+      await refreshCollections();
+    } catch (error) {
+      setStatus({ status: "error", message: `Create collection failed: ${error.message}` });
+    }
+  }
 
-    const confirmed = window.confirm("Confirm publish permission change for this collection?");
-    if (!confirmed) {
+  async function handlePublishCollection() {
+    if (!activeCollectionId) {
+      setStatus({ status: "error", message: "Select a collection before publishing." });
       return;
     }
-
-    setStatus({ state: "loading", message: "Applying publish permission..." });
+    setStatus({ status: "loading", message: "" });
     try {
-      await createCollectionPermission(
-        {
-          collection_id: selectedCollection.collection_id,
-          role_name: publishDraft.role_name,
-          access_level: publishDraft.access_level,
-        },
-        authState,
-      );
-      await loadWorkspace();
-      setStatus({ state: "success", message: "Publish permission created." });
+      await updateCollection(personaKey, activeCollectionId, { published: true });
+      await refreshCollections();
+      setStatus({ status: "success", message: "" });
     } catch (error) {
-      setStatus({ state: "error", message: error.message || String(error) });
+      setStatus({ status: "error", message: `Publish denied or failed: ${error.message}` });
     }
-  };
+  }
+
+  async function handleAddMembership() {
+    if (!activeCollectionId || !newWidgetId.trim()) {
+      setStatus({ status: "error", message: "Select a collection and provide widget id." });
+      return;
+    }
+    setStatus({ status: "loading", message: "" });
+    try {
+      await createCollectionMembership(personaKey, {
+        collection_id: activeCollectionId,
+        widget_id: newWidgetId.trim(),
+      });
+      setNewWidgetId("");
+      await refreshCollections();
+    } catch (error) {
+      setStatus({ status: "error", message: `Membership update failed: ${error.message}` });
+    }
+  }
+
+  async function handlePermissionUpdate(permissionId) {
+    setStatus({ status: "loading", message: "" });
+    try {
+      await updateCollectionPermission(personaKey, permissionId, { role_id: roleId });
+      await refreshCollections();
+    } catch (error) {
+      setStatus({ status: "error", message: `Permission update denied: ${error.message}` });
+    }
+  }
 
   return (
-    <section className="page-frame">
-      <header className="page-header">
-        <div>
-          <h2>Collections workspace</h2>
-          <p>Create or update collections and keep Publish one click away.</p>
-        </div>
-        <div className="inline-actions">
-          <button className="button-primary" type="button" onClick={onOpenPublished}>
-            Publish
+    <section className="ux-stack">
+      <article className="ux-panel">
+        <h3>Collections workspace</h3>
+        <div className="ux-toolbar">
+          <button type="button" onClick={refreshCollections}>
+            Refresh Workspace
           </button>
-          <button className="button-quiet" type="button" onClick={loadWorkspace}>
-            Refresh
+          <button type="button" className="ux-action-button" onClick={handlePublishCollection}>
+            Publish Collection
           </button>
         </div>
-      </header>
+        <StatusBlock
+          state={status}
+          labels={{
+            loading: "Loading collections, memberships, and sharing permissions...",
+            empty: "No collections available for this tenant.",
+            success: "Collections workspace is ready.",
+          }}
+        />
+      </article>
 
-      <section className="status-rail">
-        <div className={`status-pill status-${status.state}`}>{status.state}</div>
-        <p>{status.message}</p>
-      </section>
+      <article className="ux-panel">
+        <h3>Create collection</h3>
+        <div className="ux-toolbar">
+          <input
+            type="text"
+            value={newCollectionName}
+            placeholder="Collection name"
+            onChange={(event) => setNewCollectionName(event.target.value)}
+          />
+          <button type="button" onClick={handleCreateCollection}>
+            Create
+          </button>
+        </div>
+      </article>
 
-      <section className="surface-grid">
-        <article className="list-card table-wrap">
-          <h3>Collections</h3>
-          {collections.length === 0 ? (
-            <p className="recovery-note">No collections yet. Use New collection below.</p>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Widget count</th>
-                  <th>Select</th>
-                </tr>
-              </thead>
-              <tbody>
-                {collections.map((collection) => (
-                  <tr key={collection.collection_id}>
-                    <td>{collection.name || collection.collection_id}</td>
-                    <td>{collection.description || "-"}</td>
-                    <td>{Array.isArray(collection.widget_ids) ? collection.widget_ids.length : 0}</td>
-                    <td>
-                      <button
-                        className="button-quiet"
-                        type="button"
-                        onClick={() => {
-                          setSelectedCollection(collection);
-                          setCollectionDraft({
-                            name: collection.name || "",
-                            description: collection.description || "",
-                            widget_ids: Array.isArray(collection.widget_ids) ? collection.widget_ids.join(", ") : "",
-                          });
-                        }}
-                      >
-                        Open
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </article>
-
-        <article className="form-card">
-          <h3>{selectedCollection ? "Update collection" : "New collection"}</h3>
-          <form className="form-grid" onSubmit={submitCollection}>
-            <label className="field-row">
-              Name
-              <input
-                required
-                value={collectionDraft.name}
-                onChange={(event) => setCollectionDraft((current) => ({ ...current, name: event.target.value }))}
-              />
-            </label>
-            <label className="field-row">
-              Description
-              <textarea
-                rows={3}
-                value={collectionDraft.description}
-                onChange={(event) => setCollectionDraft((current) => ({ ...current, description: event.target.value }))}
-              />
-            </label>
-            <label className="field-row">
-              Widget IDs (comma separated)
-              <input
-                value={collectionDraft.widget_ids}
-                onChange={(event) => setCollectionDraft((current) => ({ ...current, widget_ids: event.target.value }))}
-              />
-            </label>
-            <div className="inline-actions">
-              <button className="button-primary" type="submit">
-                {selectedCollection ? "Save collection" : "New collection"}
+      <article className="ux-panel">
+        <h3>Collections</h3>
+        {!collections.length ? <p className="ux-muted">No collection rows yet.</p> : null}
+        <ul className="ux-list">
+          {collections.map((item) => (
+            <li key={item.id}>
+              <button type="button" onClick={() => onCollectionFocus(item.id)}>
+                {item.name || item.id}
               </button>
-            </div>
-          </form>
-        </article>
-      </section>
+              <span className="ux-chip">{item.published ? "published" : "draft"}</span>
+            </li>
+          ))}
+        </ul>
+      </article>
 
-      <section className="form-card">
-        <h3>Publish permissions</h3>
-        <form className="form-grid" onSubmit={submitPublish}>
-          <label className="field-row">
-            Role
-            <select value={publishDraft.role_name} onChange={(event) => setPublishDraft((current) => ({ ...current, role_name: event.target.value }))}>
-              <option value="viewer">Viewer</option>
-              <option value="member">Member</option>
-              <option value="lead">Lead</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-          <label className="field-row">
-            Access
-            <select
-              value={publishDraft.access_level}
-              onChange={(event) => setPublishDraft((current) => ({ ...current, access_level: event.target.value }))}
-            >
-              <option value="view">View</option>
-              <option value="edit">Edit</option>
-            </select>
-          </label>
-          <div className="inline-actions">
-            <button className="button-primary" type="submit">
-              Publish
-            </button>
-            <span className="kv-chip">Role consequences shown before commit.</span>
-          </div>
-        </form>
-
-        {permissions.length > 0 ? (
-          <div className="table-wrap" style={{ marginTop: "0.9rem" }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Collection</th>
-                  <th>Role</th>
-                  <th>Access</th>
-                  <th>Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {permissions.map((permission) => (
-                  <tr key={permission.collection_permission_id}>
-                    <td>{permission.collection_id || "unknown"}</td>
-                    <td>{permission.role_name || "viewer"}</td>
-                    <td>{permission.access_level || "view"}</td>
-                    <td>{permission.updated_at || permission.created_at || "n/a"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-      </section>
+      <article className="ux-panel">
+        <h3>Membership and sharing</h3>
+        <p>Focused collection: {activeCollectionId || "none"}</p>
+        <div className="ux-toolbar">
+          <input
+            type="text"
+            value={newWidgetId}
+            placeholder="Widget id for membership"
+            onChange={(event) => setNewWidgetId(event.target.value)}
+          />
+          <button type="button" onClick={handleAddMembership}>
+            Add Membership
+          </button>
+        </div>
+        <div className="ux-toolbar">
+          <label htmlFor="role-select">Role target</label>
+          <select id="role-select" value={roleId} onChange={(event) => setRoleId(event.target.value)}>
+            <option value="catalog_editor">catalog_editor</option>
+            <option value="tenant_admin">tenant_admin</option>
+          </select>
+        </div>
+        <h4>Membership rows</h4>
+        {!memberships.length ? <p className="ux-muted">No membership rows.</p> : null}
+        <ul className="ux-list">
+          {memberships.map((item) => (
+            <li key={item.id}>
+              {item.collection_id} - {item.widget_id}
+            </li>
+          ))}
+        </ul>
+        <h4>Permission rows</h4>
+        {!permissions.length ? <p className="ux-muted">No permissions rows.</p> : null}
+        <ul className="ux-list">
+          {permissions.map((item) => (
+            <li key={item.id}>
+              <span>
+                {item.collection_id} - {item.role_id}
+              </span>
+              <button type="button" onClick={() => handlePermissionUpdate(item.id)}>
+                Update Role
+              </button>
+            </li>
+          ))}
+        </ul>
+      </article>
     </section>
   );
 }

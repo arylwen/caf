@@ -1,70 +1,30 @@
 # CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-# CAF_TRACE: task_id=TG-00-CP-runtime-scaffold
-# CAF_TRACE: capability=plane_runtime_scaffolding
+# CAF_TRACE: task_id=TG-10-OPTIONS-api_boundary_implementation
+# CAF_TRACE: capability=api_boundary_implementation
 # CAF_TRACE: instance=codex-saas
-# CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-PLANE-CP-RUNTIME-SCAFFOLD
 
-"""Control-plane service seams for runtime scaffold composition."""
+"""Control plane service seams for runtime and repository health."""
 
-from dataclasses import dataclass
+from __future__ import annotations
 
-
-@dataclass(frozen=True)
-class RuntimeHealthSnapshot:
-    status: str
-    plane: str
-    detail: str
+from ...common.auth.mock_claims import decode_mock_bearer_token
+from ...common.config import RuntimeSettings
 
 
-@dataclass(frozen=True)
-class PolicyDecision:
-    allowed: bool
-    reason: str
+class ControlPlaneRuntimeService:
+    def runtime_assumptions(self, authorization: str) -> dict[str, str]:
+        claims = decode_mock_bearer_token(authorization)
+        settings = RuntimeSettings.for_plane("cp")
+        return {
+            "policy_surface": "Policy orchestration is anchored in code/cp/contracts and code/cp/api",
+            "persistence_surface": "Persistence integration is isolated in code/cp/persistence",
+            "tenant_carrier": claims["tenant_id"],
+            "auth_mode": settings.auth_mode,
+        }
 
 
-class RepositoryHealthOwner:
-    """CP runtime consumer seam resolved from cp_runtime_repository_health_owner."""
+class RepositoryHealthService:
+    """cp_runtime_repository_health_owner seam for downstream runtime wiring."""
 
-    def read_runtime_health(self) -> RuntimeHealthSnapshot:
-        return RuntimeHealthSnapshot(
-            status="ok",
-            plane="control",
-            detail="repository health seam scaffolded",
-        )
-
-
-class PolicyDecisionService:
-    """CP-owned policy decision surface used by AP runtime enforcement."""
-
-    _WRITE_SUFFIXES = (".create", ".update", ".delete")
-
-    def evaluate(
-        self,
-        *,
-        action: str,
-        tenant_id: str,
-        principal_id: str,
-        policy_version: str,
-        resource_id: str | None = None,
-    ) -> PolicyDecision:
-        if not action:
-            return PolicyDecision(allowed=False, reason="action is required")
-        if not tenant_id:
-            return PolicyDecision(allowed=False, reason="tenant_id is required")
-        if not principal_id:
-            return PolicyDecision(allowed=False, reason="principal_id is required")
-        if not policy_version:
-            return PolicyDecision(allowed=False, reason="policy_version is required")
-        if policy_version != "v1":
-            return PolicyDecision(allowed=False, reason="unsupported policy_version")
-
-        if action.endswith(self._WRITE_SUFFIXES) and not principal_id.endswith(":admin"):
-            return PolicyDecision(
-                allowed=False,
-                reason="write actions require an admin principal in mock policy",
-            )
-
-        if resource_id is not None and not str(resource_id).strip():
-            return PolicyDecision(allowed=False, reason="resource_id cannot be blank when provided")
-
-        return PolicyDecision(allowed=True, reason="policy decision allow")
+    def readiness(self) -> dict[str, str]:
+        return {"repository": "ready", "owner": "cp_runtime_repository_health_owner"}

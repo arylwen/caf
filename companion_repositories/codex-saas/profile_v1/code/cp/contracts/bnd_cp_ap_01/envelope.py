@@ -4,7 +4,9 @@
 # CAF_TRACE: instance=codex-saas
 # CAF_TRACE: trace_anchor=contract_boundary_id:BND-CP-AP-01
 
-"""CP-side envelope types for the CP<->AP integration contract scaffold."""
+"""CP-side envelopes for BND-CP-AP-01 provider surface."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 

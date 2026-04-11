@@ -2,164 +2,55 @@
 // CAF_TRACE: task_id=UX-TG-90-ux-polish
 // CAF_TRACE: capability=ux_frontend_realization
 // CAF_TRACE: instance=codex-saas
-// CAF_TRACE: trace_anchor=pattern_id:UX-VISUAL-01
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 
-import { getRuntimeHealth, getSessionContext } from "./api.js";
-import { buildMockAuthState, listMockAuthPresets } from "./auth/mockAuth.js";
-import { ActivityPage } from "./pages/ActivityPage.jsx";
-import { AdminPage } from "./pages/AdminPage.jsx";
-import { CatalogPage } from "./pages/CatalogPage.jsx";
-import { CollectionsPage } from "./pages/CollectionsPage.jsx";
-import { DetailPage } from "./pages/DetailPage.jsx";
-import { PublishedPage } from "./pages/PublishedPage.jsx";
+import { buildAuthContext, getPersonaOptions } from "./auth/mockAuth";
+import { AdminPage } from "./pages/AdminPage";
+import { CatalogPage } from "./pages/CatalogPage";
+import { CollectionsPage } from "./pages/CollectionsPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { DetailPage } from "./pages/DetailPage";
+import { ActivityPage } from "./pages/ActivityPage";
 
-const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard" },
-  { id: "widgets", label: "Widgets" },
-  { id: "collections", label: "Collections" },
-  { id: "published", label: "Published" },
-  { id: "activity", label: "Activity" },
-  { id: "admin", label: "Admin" },
+const ROUTES = [
+  { key: "dashboard", label: "Dashboard", render: DashboardPage },
+  { key: "catalog", label: "Catalog", render: CatalogPage },
+  { key: "collections", label: "Collections", render: CollectionsPage },
+  { key: "activity", label: "Activity", render: ActivityPage },
+  { key: "admin", label: "Admin", render: AdminPage },
+  { key: "detail", label: "Widget Detail", render: DetailPage },
 ];
 
-function SurfaceCard({ title, body, actionLabel, onAction }) {
-  return (
-    <article className="surface-card">
-      <h3>{title}</h3>
-      <p>{body}</p>
-      {actionLabel ? (
-        <button className="button-quiet" type="button" onClick={onAction}>
-          {actionLabel}
-        </button>
-      ) : null}
-    </article>
-  );
-}
+export function App() {
+  const personaOptions = useMemo(() => getPersonaOptions(), []);
+  const [personaKey, setPersonaKey] = useState(personaOptions[0]?.key || "ux_admin");
+  const [route, setRoute] = useState("dashboard");
+  const [selectedWidgetId, setSelectedWidgetId] = useState("");
+  const [activeCollectionId, setActiveCollectionId] = useState("");
 
-function Dashboard({ runtime, onNav }) {
-  return (
-    <section className="page-frame">
-      <header className="page-header">
-        <div>
-          <h2>Tenant workspace</h2>
-          <p>One operational lane for widget curation, publish flow, and governance-safe admin updates.</p>
-        </div>
-      </header>
+  const context = buildAuthContext(personaKey);
+  const activeRoute = ROUTES.find((candidate) => candidate.key === route) || ROUTES[0];
+  const ActivePage = activeRoute.render;
 
-      <section className="status-rail">
-        <div className={`status-pill status-${runtime.state}`}>{runtime.state}</div>
-        <p>{runtime.message}</p>
-      </section>
-
-      <div className="surface-grid">
-        <SurfaceCard
-          title="Widget worklist"
-          body="Search, filter, and triage widget inventory with one-click Create widget entry."
-          actionLabel="Open widgets"
-          onAction={() => onNav("widgets")}
-        />
-        <SurfaceCard
-          title="Collections workspace"
-          body="Curate membership, assign tags, and move into Publish posture with explicit role impact."
-          actionLabel="Open collections"
-          onAction={() => onNav("collections")}
-        />
-        <SurfaceCard
-          title="Admin and activity"
-          body="Manage roles and tenant settings with readable timeline evidence for trustable review."
-          actionLabel="Open admin"
-          onAction={() => onNav("admin")}
-        />
-      </div>
-    </section>
-  );
-}
-
-export default function App() {
-  const [activeNav, setActiveNav] = React.useState("dashboard");
-  const [selectedWidget, setSelectedWidget] = React.useState(null);
-  const [authPreset, setAuthPreset] = React.useState("tenant_admin");
-  const [runtime, setRuntime] = React.useState({ state: "loading", message: "Loading AP/CP runtime context..." });
-  const authState = React.useMemo(() => buildMockAuthState(authPreset), [authPreset]);
-  const session = React.useMemo(() => getSessionContext(authState), [authState]);
-
-  const refreshRuntime = React.useCallback(async () => {
-    setRuntime({ state: "loading", message: "Refreshing AP and CP health signals..." });
-    try {
-      const [ap, cp] = await getRuntimeHealth(authState);
-      setRuntime({
-        state: "ready",
-        message: `AP ${ap.status} (${ap.detail}) | CP ${cp.status} (${cp.detail})`,
-      });
-    } catch (error) {
-      setRuntime({ state: "error", message: error.message || String(error) });
-    }
-  }, [authState]);
-
-  React.useEffect(() => {
-    refreshRuntime();
-  }, [refreshRuntime]);
-
-  const renderSurface = () => {
-    if (activeNav === "widgets") {
-      return (
-        <CatalogPage
-          authState={authState}
-          selectedWidget={selectedWidget}
-          onOpenDetail={(widget) => {
-            setSelectedWidget(widget);
-            setActiveNav("detail");
-          }}
-        />
-      );
-    }
-
-    if (activeNav === "detail") {
-      return (
-        <DetailPage
-          authState={authState}
-          selectedWidget={selectedWidget}
-          onBackToWidgets={() => setActiveNav("widgets")}
-          onRefreshRuntime={refreshRuntime}
-        />
-      );
-    }
-
-    if (activeNav === "collections") {
-      return <CollectionsPage authState={authState} onOpenPublished={() => setActiveNav("published")} />;
-    }
-
-    if (activeNav === "published") {
-      return <PublishedPage authState={authState} />;
-    }
-
-    if (activeNav === "activity") {
-      return <ActivityPage authState={authState} />;
-    }
-
-    if (activeNav === "admin") {
-      return <AdminPage authState={authState} />;
-    }
-
-    return <Dashboard runtime={runtime} onNav={setActiveNav} />;
-  };
+  const quickActions = [
+    { label: "Create Widget", targetRoute: "catalog" },
+    { label: "Publish Collection", targetRoute: "collections" },
+    { label: "Manage Roles", targetRoute: "admin" },
+  ];
 
   return (
-    <div className="app-shell">
-      <aside className="left-nav" aria-label="primary navigation">
-        <div>
-          <h1>codex-saas UX lane</h1>
-          <p>Calm operational shell</p>
-        </div>
-        <nav>
-          {NAV_ITEMS.map((item) => (
+    <div className="ux-root">
+      <aside className="ux-sidebar">
+        <h1>Codex SaaS UX</h1>
+        <p>Operational workspace</p>
+        <nav aria-label="Primary navigation">
+          {ROUTES.filter((item) => item.key !== "detail").map((item) => (
             <button
-              key={item.id}
+              key={item.key}
               type="button"
-              className={item.id === activeNav ? "nav-btn nav-btn-active" : "nav-btn"}
-              onClick={() => setActiveNav(item.id)}
+              className={item.key === route ? "ux-nav-item active" : "ux-nav-item"}
+              onClick={() => setRoute(item.key)}
             >
               {item.label}
             </button>
@@ -167,29 +58,57 @@ export default function App() {
         </nav>
       </aside>
 
-      <section className="main-panel">
-        <header className="top-context-bar">
+      <main className="ux-main">
+        <header className="ux-header">
           <div>
-            <strong>Tenant:</strong> {session.tenant_id} <span className="divider">|</span> <strong>Principal:</strong>{" "}
-            {session.principal_id}
+            <h2>{activeRoute.label}</h2>
+            <p>
+              Tenant <strong>{context.tenant_id}</strong> · Role <strong>{context.role_id}</strong> · User{" "}
+              <strong>{context.display_name}</strong>
+            </p>
           </div>
-          <div className="toolbar-inline">
-            <label htmlFor="auth-preset">Role context</label>
-            <select id="auth-preset" value={authPreset} onChange={(event) => setAuthPreset(event.target.value)}>
-              {listMockAuthPresets().map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.label}
+          <div className="ux-header-controls">
+            <label htmlFor="persona-select">Persona</label>
+            <select
+              id="persona-select"
+              value={personaKey}
+              onChange={(event) => setPersonaKey(event.target.value)}
+            >
+              {personaOptions.map((persona) => (
+                <option key={persona.key} value={persona.key}>
+                  {persona.label}
                 </option>
               ))}
             </select>
-            <button type="button" onClick={refreshRuntime} className="button-primary">
-              Refresh runtime
-            </button>
+          </div>
+          <div className="ux-actions">
+            {quickActions.map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                className="ux-action-button"
+                onClick={() => setRoute(action.targetRoute)}
+              >
+                {action.label}
+              </button>
+            ))}
           </div>
         </header>
 
-        <div className="content-panel">{renderSurface()}</div>
-      </section>
+        <section className="ux-page">
+          <ActivePage
+            personaKey={personaKey}
+            onOpenWidget={(widgetId) => {
+              setSelectedWidgetId(widgetId);
+              setRoute("detail");
+            }}
+            selectedWidgetId={selectedWidgetId}
+            activeCollectionId={activeCollectionId}
+            onCollectionFocus={setActiveCollectionId}
+            onNavigate={setRoute}
+          />
+        </section>
+      </main>
     </div>
   );
 }

@@ -1,18 +1,20 @@
-# CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-# CAF_TRACE: task_id=TG-90-runtime-wiring
-# CAF_TRACE: capability=runtime_wiring
-# CAF_TRACE: instance=codex-saas
-# CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-RUNTIME-WIRING
-
 schema_version: caf_interface_binding_report_v1
 binding_id: BIND-AP-activity_events
 status: closed
-closed_by:
+consumer:
+  task_id: TG-30-service-facade-activity_events
+  role_id: application_use_cases
+provider:
+  task_id: TG-40-persistence-activity_events
+  role_id: outbound_adapters
+assembler:
   task_id: TG-90-runtime-wiring
+  role_id: composition_root
+  binding_action: bind_consumer_to_provider
 evidence:
   consumer_artifact_paths:
     - code/ap/application/services.py
   provider_artifact_paths:
-    - code/ap/persistence/postgres_activity_events_repository.py
+    - code/ap/persistence/repository_factory.py
   assembler_artifact_paths:
     - code/ap/api/dependencies.py

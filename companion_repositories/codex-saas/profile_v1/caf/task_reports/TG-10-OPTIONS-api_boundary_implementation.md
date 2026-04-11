@@ -1,17 +1,25 @@
-# TG-10-OPTIONS-api_boundary_implementation Task Report
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-10-OPTIONS-api_boundary_implementation -->
+<!-- CAF_TRACE: capability=api_boundary_implementation -->
+<!-- CAF_TRACE: instance=codex-saas -->
 
-## Inputs consumed
-- `reference_architectures/codex-saas/spec/playbook/system_spec_v1.md`: consumed adopted option posture for tenant context and cross-plane integration.
-- `reference_architectures/codex-saas/design/playbook/application_design_v1.md`: consumed AP boundary decomposition intent.
-- `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`: consumed CP<->AP contract interaction assumptions.
-- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`: consumed FastAPI/Python rails and dependency wiring mode.
+# Task Report: TG-10-OPTIONS-api_boundary_implementation
+
+## Inputs Consumed
+
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/design/playbook/application_design_v1.md
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/design/playbook/tbp_resolution_v1.yaml
 
 ## Claims
-- Materialized AP auth-context boundary adapter for canonical mock bearer claim resolution.
-- Materialized AP dependency provider boundary with FastAPI `Depends` seams.
-- Updated AP composition root usage to consume boundary auth-context and provider seams.
+
+- Implemented AP boundary route surface with runtime assumptions endpoint, policy preview endpoint, and resource CRUD transport endpoints.
+- Implemented AP dependency-provider seam for runtime, policy, and facade registry injection.
+- Enforced tenant/principal policy gating at the API boundary before resource operations.
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/code/ap/api/auth_context.py:L1-L23 — supports Claim 1
-- companion_repositories/codex-saas/profile_v1/code/ap/api/dependencies.py:L1-L27 — supports Claim 2
-- companion_repositories/codex-saas/profile_v1/code/ap/main.py:L1-L57 — supports Claim 3
+
+- companion_repositories/codex-saas/profile_v1/code/ap/api/routes.py:L25-L220
+- companion_repositories/codex-saas/profile_v1/code/ap/api/dependencies.py:L23-L40
+- companion_repositories/codex-saas/profile_v1/code/ap/application/services.py:L22-L75

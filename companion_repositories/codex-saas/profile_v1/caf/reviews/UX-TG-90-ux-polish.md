@@ -1,24 +1,34 @@
-# UX Review: UX-TG-90-ux-polish
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=UX-TG-90-ux-polish -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: UX-TG-90-ux-polish
+
+Threshold: `high`
+
+Selected rubrics:
+- `RR-WEB-SPA-01`
+- `RR-TASK-REPORT-01`
+- `RR-TBP-ROLE-BINDINGS-01`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-GENERAL-01 | PASS | No Python changes introduced by UX polish pass. |
-| RR-PY-TESTS-01 | PASS | No runtime-language regressions introduced; existing Python tests unchanged. |
-| RR-WEB-SPA-01 | PASS | Unified visual/state primitives in `styles.css` and page modules improve cross-surface consistency without reducing functional wiring. |
-| RR-TASK-REPORT-01 | PASS | Task report provides required claims and evidence coverage for all major surfaces. |
-| RR-TBP-ROLE-BINDINGS-01 | PASS | TBP role-binding artifacts remain in place with required marker content. |
+| RR-SPA-WIRE-02 | PASS | Main surface continuity remains coherent across dashboard/catalog/collections/activity/admin routes. |
+| RR-SPA-STATE-01 | PASS | Loading/empty/error/deny treatments are consistent across primary pages (`styles.css`, page modules). |
+| RR-SPA-ACTION-01 | PASS | Primary actions remain visible post-polish and map to shared helpers. |
+| RR-SPA-ERR-DETAIL-01 | PASS | Recovery cues remain explicit and trust-preserving in polished flows. |
+| RR-TR-STRUCT-01 | PASS | Task report exists with all required matrices and evidence anchors. |
+| RR-TBP-RB-01 | PASS | Frontend role-binding outputs required by capability remain present. |
 
-## Semantic review questions
-- Polish improves clarity/trust with restrained visual hierarchy; no novelty motion or decorative drift introduced.
-- State/recovery semantics are consistent via shared status rails, empty-state notes, and explicit retry/refresh controls.
-- Visual rhythm remains medium-dense and readable across shell, tables, forms, and action rails.
+Summary:
+- Polish outcomes preserve operational clarity without adding off-scope behavior.
+- No findings at or above `high`.
 
-## Summary
-- No high-severity or blocker issues found.
-
-## Issues
+Issues:
 - High: none.
 - Medium: none.
 - Low: none.
 
-No issues at/above severity threshold (`high`) were found.
+No issues at or above the configured threshold (`high`) were found.
+

@@ -1,10 +1,25 @@
-﻿# TG-20-api-boundary-activity_events Review
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-20-api-boundary-activity_events -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: TG-20-api-boundary-activity_events
+
+Threshold: `blocker`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-TASK-REPORT-01 | PASS | Report includes required inputs consumed, claims, and evidence anchors. |
-| RR-TBP-ROLE-BINDINGS-01 | PASS | Activity events router is at TBP path `code/ap/api/activity_events_router.py`; dependency/composition root obligations remain satisfied. |
-| RR-FASTAPI-SVC-01 | PASS | Boundary handler is transport-focused and delegates retrieval to `ActivityEventsFacade`. |
-| RR-AUTH-MOCK-CLAIM-CONTRACT-01 | PASS | Auth claim carrier and policy checks are enforced before listing activity events. |
+| RR-FA-CORR-01 | PASS | Resource transport routes are defined in `code/ap/api/routes.py`. |
+| RR-FA-BOUNDARY-ERR-01 | PASS | Policy-denied and operation mismatch paths produce explicit HTTP errors (`code/ap/api/routes.py`). |
+| RR-FA-ARCH-01 | PASS | Boundary delegates to `ResourceServiceFacadeRegistry` and service facades (`code/ap/application/services.py`). |
+| RR-TASK-REPORT-01 | PASS | Task report for TG-20-api-boundary-activity_events records resource-scoped evidence anchors. |
 
-Summary: No blocker/high findings for TG-20-api-boundary-activity_events.
+Summary:
+- API boundary behavior for activity_events is implemented through policy-gated AP resource routes and facade operation guards.
+
+Issues:
+- High: none.
+- Medium: none.
+- Low: none.
+
+No issues at or above the configured threshold (`blocker`) were found.

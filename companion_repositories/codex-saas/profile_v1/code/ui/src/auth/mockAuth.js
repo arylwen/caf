@@ -1,38 +1,60 @@
 // CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-// CAF_TRACE: task_id=TG-90-runtime-wiring
-// CAF_TRACE: capability=runtime_wiring
+// CAF_TRACE: task_id=TG-15-ui-shell
+// CAF_TRACE: capability=ui_frontend_scaffolding
 // CAF_TRACE: instance=codex-saas
-// CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-RUNTIME-WIRING
+// CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-AUTH-MOCK-01-ui-claim-builder
 
-export function buildMockAuthorizationHeader({ tenant_id, principal_id, policy_version }) {
-  const claim = {
-    tenant_id,
-    principal_id,
-    policy_version,
-  };
-  const encoded = btoa(JSON.stringify(claim));
-  return `Bearer mock.${encoded}.token`;
+const PERSONAS = {
+  tenant_admin: {
+    label: "Tenant Admin",
+    tenant_id: "tenant-alpha",
+    principal_id: "admin-user",
+    policy_version: "v1",
+  },
+  tenant_viewer: {
+    label: "Tenant Viewer",
+    tenant_id: "tenant-alpha",
+    principal_id: "viewer-user",
+    policy_version: "v1",
+  },
+};
+
+function encodeClaimPayload(payload) {
+  const asJson = JSON.stringify(payload);
+  return btoa(asJson).replace(/=+$/g, "");
 }
 
-export function buildMockAuthState(preset = "tenant_admin") {
-  if (preset === "tenant_admin") {
-    return {
-      tenant_id: "tenant-demo",
-      principal_id: "user:demo:admin",
-      policy_version: "v1",
-    };
+export function getPersonaOptions() {
+  return Object.entries(PERSONAS).map(([key, persona]) => ({
+    key,
+    label: persona.label,
+  }));
+}
+
+export function buildMockBearerToken(personaKey) {
+  const persona = PERSONAS[personaKey];
+  if (!persona) {
+    throw new Error(`unknown persona '${personaKey}'`);
+  }
+
+  const encodedPayload = encodeClaimPayload({
+    tenant_id: persona.tenant_id,
+    principal_id: persona.principal_id,
+    policy_version: persona.policy_version,
+  });
+  return `Bearer mock.${encodedPayload}.token`;
+}
+
+export function buildAuthContext(personaKey) {
+  const persona = PERSONAS[personaKey];
+  if (!persona) {
+    throw new Error(`unknown persona '${personaKey}'`);
   }
 
   return {
-    tenant_id: "tenant-demo",
-    principal_id: "user:demo:viewer",
-    policy_version: "v1",
+    authorization: buildMockBearerToken(personaKey),
+    tenant_id: persona.tenant_id,
+    principal_id: persona.principal_id,
+    policy_version: persona.policy_version,
   };
-}
-
-export function detectTenantContextConflict(headers) {
-  // tenant context conflict handling is explicit for claim-over-header posture.
-  const auth = headers.Authorization || headers.authorization;
-  const tenantHeader = headers["X-Tenant-Id"] || headers["x-tenant-id"];
-  return Boolean(auth && tenantHeader);
 }

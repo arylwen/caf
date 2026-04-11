@@ -27,18 +27,21 @@ exclude_candidate_ids:
 ```
 
 ## Seeds
-- CAF-AID-01
-- CAF-IAM-01
+- CAF-AI-01
+- CAF-AIOBS-01
+- CAF-COMP-01
+- CAF-COMP-02
+- CAF-IAM-02
 - CAF-MTEN-01
 - CAF-PLANE-01
 - CAF-POL-01
 - CAF-POL-02
 - CAF-TCTX-01
-- CAF-XPLANE-01
 - CTX-01
-- OBS-01
 - POL-01
 - PST-01
+- SVC-01
+- VAL-01
 
 ## Selected candidates (open list: top 16 of 174 reachable; desired_new_grounded=4)
 

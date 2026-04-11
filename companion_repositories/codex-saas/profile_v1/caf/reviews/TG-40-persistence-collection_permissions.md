@@ -1,14 +1,25 @@
-# TG-40-persistence-collection_permissions Review
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-40-persistence-collection_permissions -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: TG-40-persistence-collection_permissions
+
+Threshold: `blocker`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-TR-STRUCT-01 | PASS | Task report includes required structure at `caf/task_reports/TG-40-persistence-collection_permissions.md`. |
-| RR-TR-STEP-01 | PASS | Claims are backed by concrete CRUD method and wiring evidence. |
-| RR-TBP-RB-01 | PASS | `resolve_tbp_role_bindings_v1.mjs` for `persistence_implementation` expectations are satisfied by SQLAlchemy runtime/metadata/bootstrap files. |
-| RR-PY-CORR-01 | PASS | Tenant-scoped create/update paths are implemented in `code/ap/persistence/postgres_collection_permissions_repository.py:L39-L78`. |
-| RR-FA-ARCH-01 | PASS | Dependency provider maps facade to persistence factory at `code/ap/api/dependencies.py:L85-L86`. |
-| RR-TST-HIGH-01 | FAIL | No unit tests were added for collection_permissions persistence operations. |
+| RR-PY-CORR-01 | PASS | Collection-permission repository imports and SQLAlchemy mutation flow are coherent and canonical (`code/ap/persistence/repository.py:L468-L520`). |
+| RR-FA-ARCH-01 | PASS | Permission persistence stays inside AP persistence boundary and exposes transport-agnostic repository behavior. |
+| RR-TASK-REPORT-01 | PASS | Task report includes required inputs, claims, and evidence anchors (`caf/task_reports/TG-40-persistence-collection_permissions.md`). |
+| RR-TBP-ROLE-BINDINGS-01 | PASS | Required AP persistence artifacts are present under role-bound output paths in `code/ap/persistence/` and `code/common/persistence/`. |
 
-Summary: No blocker findings for TG-40-persistence-collection_permissions.
+Summary:
+- Collection-permissions persistence is implemented with tenant-scoped list/update semantics and repository-local mutation handling.
 
-Threshold statement: No issues at or above the configured `blocker` threshold were found.
+Issues:
+- High: none.
+- Medium: none.
+- Low: none.
+
+No issues at or above the configured threshold (`blocker`) were found.

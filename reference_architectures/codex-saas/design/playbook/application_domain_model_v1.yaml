@@ -4,38 +4,45 @@ generated_from:
   inputs:
     - reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
     - reference_architectures/codex-saas/spec/playbook/application_domain_model_v1.md
+    - reference_architectures/codex-saas/product/PRD.resolved.md
 domain:
-  summary: Tenant-scoped widget management with collaboration, sharing, tenant administration, and activity audit.
+  summary: Tenant-scoped widget SaaS domain covering widget lifecycle, curation, sharing authorization, and activity audit.
   bounded_contexts:
     - context_id: WIDGET_CATALOG
-      name: Widget Catalog
+      name: Widget Catalog Management
+      description: Owns widget CRUD and version history for tenant-scoped artifacts.
       aggregates:
         - aggregate_id: WIDGET
           name: Widget
+          description: Tenant-scoped reusable artifact created and maintained by team members.
           persistence:
             required: true
             storage_intent: transactional_record
+            notes: Tenant-keyed relational storage with indexes on tenant_id and update time.
           entities:
             - entity_id: WIDGET
               name: Widget
               fields:
-                - name: tenant_id
-                  type: string
-                  required: true
                 - name: widget_id
+                  type: uuid
+                  required: true
+                - name: tenant_id
+                  type: uuid
+                  required: true
+                - name: name
                   type: string
                   required: true
-                - name: title
+                - name: summary
                   type: string
-                  required: true
-                - name: description
-                  type: string
+                  required: false
+                - name: content
+                  type: text_json_payload
                   required: true
                 - name: status
                   type: enum(draft|published|archived)
                   required: true
-                - name: current_version_id
-                  type: string
+                - name: created_by_user_id
+                  type: uuid
                   required: true
                 - name: created_at
                   type: datetime
@@ -43,53 +50,59 @@ domain:
                 - name: updated_at
                   type: datetime
                   required: true
-                - name: created_by_user_id
-                  type: string
-                  required: true
             - entity_id: WIDGET_VERSION
-              name: Widget Version
+              name: WidgetVersion
               fields:
+                - name: version_id
+                  type: uuid
+                  required: true
                 - name: tenant_id
-                  type: string
+                  type: uuid
                   required: true
                 - name: widget_id
-                  type: string
+                  type: uuid
                   required: true
-                - name: version_id
-                  type: string
+                - name: version_number
+                  type: integer
                   required: true
-                - name: payload
-                  type: json
+                - name: content_snapshot
+                  type: text_json_payload
                   required: true
-                - name: created_at
+                - name: changed_by_user_id
+                  type: uuid
+                  required: true
+                - name: changed_at
                   type: datetime
                   required: true
-                - name: created_by_user_id
-                  type: string
-                  required: true
-    - context_id: ORG_AND_SHARING
+    - context_id: COLLECTION_SHARING
       name: Organization and Sharing
+      description: Owns collection curation, memberships, and sharing constraints.
       aggregates:
         - aggregate_id: COLLECTION
           name: Collection
+          description: Tenant-scoped grouping of widgets used for curation and sharing.
           persistence:
             required: true
             storage_intent: transactional_record
+            notes: Relational aggregate with membership and permission tables.
           entities:
             - entity_id: COLLECTION
               name: Collection
               fields:
-                - name: tenant_id
-                  type: string
-                  required: true
                 - name: collection_id
-                  type: string
+                  type: uuid
+                  required: true
+                - name: tenant_id
+                  type: uuid
                   required: true
                 - name: name
                   type: string
                   required: true
                 - name: description
                   type: string
+                  required: false
+                - name: created_by_user_id
+                  type: uuid
                   required: true
                 - name: published
                   type: boolean
@@ -101,191 +114,144 @@ domain:
                   type: datetime
                   required: true
             - entity_id: COLLECTION_MEMBERSHIP
-              name: Collection Membership
+              name: CollectionMembership
               fields:
                 - name: tenant_id
-                  type: string
+                  type: uuid
                   required: true
                 - name: collection_id
-                  type: string
+                  type: uuid
                   required: true
                 - name: widget_id
-                  type: string
+                  type: uuid
+                  required: true
+                - name: sort_order
+                  type: integer
+                  required: false
+                - name: added_by_user_id
+                  type: uuid
                   required: true
                 - name: added_at
                   type: datetime
                   required: true
-            - entity_id: COLLECTION_PERMISSION
-              name: Collection Permission
-              fields:
-                - name: tenant_id
-                  type: string
-                  required: true
-                - name: collection_id
-                  type: string
-                  required: true
-                - name: role_id
-                  type: string
-                  required: true
-                - name: permission
-                  type: enum(view|edit)
-                  required: true
-                - name: granted_at
-                  type: datetime
-                  required: true
-            - entity_id: TAG
-              name: Tag
-              fields:
-                - name: tenant_id
-                  type: string
-                  required: true
-                - name: tag_id
-                  type: string
-                  required: true
-                - name: label
-                  type: string
-                  required: true
-                - name: created_at
-                  type: datetime
-                  required: true
     - context_id: TENANT_ADMIN
       name: Tenant Administration
+      description: Owns tenant role assignments used by admin and sharing authorization.
       aggregates:
-        - aggregate_id: USER_ROLE_ASSIGNMENT
-          name: User Role Assignment
+        - aggregate_id: TENANT_ROLE_ASSIGNMENT
+          name: TenantRoleAssignment
+          description: Tenant user-to-role mapping used by sharing and admin authorization.
           persistence:
             required: true
-            storage_intent: transactional_record
+            storage_intent: catalog_registry
+            notes: Tenant-keyed authorization records.
           entities:
-            - entity_id: USER_ROLE_ASSIGNMENT
-              name: User Role Assignment
+            - entity_id: TENANT_ROLE_ASSIGNMENT
+              name: TenantRoleAssignment
               fields:
+                - name: assignment_id
+                  type: uuid
+                  required: true
                 - name: tenant_id
-                  type: string
+                  type: uuid
                   required: true
                 - name: user_id
-                  type: string
+                  type: uuid
                   required: true
                 - name: role_id
-                  type: string
+                  type: uuid
+                  required: true
+                - name: assigned_by_user_id
+                  type: uuid
                   required: true
                 - name: assigned_at
                   type: datetime
                   required: true
-                - name: assigned_by_user_id
-                  type: string
-                  required: true
-        - aggregate_id: TENANT_SETTING
-          name: Tenant Setting
-          persistence:
-            required: true
-            storage_intent: transactional_record
-          entities:
-            - entity_id: TENANT_SETTING
-              name: Tenant Setting
-              fields:
-                - name: tenant_id
-                  type: string
-                  required: true
-                - name: setting_key
-                  type: string
-                  required: true
-                - name: setting_value
-                  type: string|json
-                  required: true
-                - name: updated_at
-                  type: datetime
-                  required: true
-                - name: updated_by_user_id
-                  type: string
-                  required: true
     - context_id: ACTIVITY_AUDIT
-      name: Activity and Audit
+      name: Activity and Audit Trail
+      description: Owns append-only activity events for auditable product changes.
       aggregates:
         - aggregate_id: ACTIVITY_EVENT
-          name: Activity Event
+          name: ActivityEvent
+          description: Event stream for widget, collection, sharing, and admin changes.
           persistence:
             required: true
             storage_intent: audit_log
+            notes: Tenant-partitioned append-only event table.
           entities:
             - entity_id: ACTIVITY_EVENT
-              name: Activity Event
+              name: ActivityEvent
               fields:
-                - name: tenant_id
-                  type: string
-                  required: true
                 - name: event_id
-                  type: string
+                  type: uuid
+                  required: true
+                - name: tenant_id
+                  type: uuid
                   required: true
                 - name: event_type
-                  type: string
+                  type: enum(widget_change|collection_change|publish_change|admin_change)
                   required: true
                 - name: actor_user_id
+                  type: uuid
+                  required: true
+                - name: subject_type
                   type: string
                   required: true
-                - name: target_type
-                  type: string
-                  required: true
-                - name: target_id
-                  type: string
+                - name: subject_id
+                  type: uuid
                   required: true
                 - name: occurred_at
                   type: datetime
                   required: true
                 - name: metadata
                   type: json
-                  required: true
+                  required: false
   use_cases:
     - use_case_id: UC-CREATE-UPDATE-WIDGET
       title: Create or update widget
-      intent: Allow team members to author and revise widgets within tenant scope.
+      intent: Allow a team member to create new widgets or update existing widget content.
       primary_context_id: WIDGET_CATALOG
       touches_entities:
         - Widget
-        - Widget Version
-        - Activity Event
-    - use_case_id: UC-ORGANIZE-WIDGETS
-      title: Organize widgets with tags and collections
-      intent: Allow team leads to structure widget catalog for discoverability.
-      primary_context_id: ORG_AND_SHARING
+        - WidgetVersion
+        - ActivityEvent
+    - use_case_id: UC-ORGANIZE-COLLECTIONS
+      title: Organize widgets into collections
+      intent: Allow a team lead to curate widgets using tags and collections for discovery.
+      primary_context_id: COLLECTION_SHARING
       touches_entities:
         - Widget
-        - Tag
         - Collection
-        - Collection Membership
-        - Activity Event
+        - CollectionMembership
+        - ActivityEvent
     - use_case_id: UC-PUBLISH-COLLECTION
       title: Publish collection to tenant roles
-      intent: Allow controlled sharing of curated widget sets within tenant.
-      primary_context_id: ORG_AND_SHARING
+      intent: Allow a team lead to grant role-based visibility and edit rights for a collection.
+      primary_context_id: COLLECTION_SHARING
       touches_entities:
         - Collection
-        - Collection Permission
-        - User Role Assignment
-        - Activity Event
-    - use_case_id: UC-MANAGE-TENANT
-      title: Manage tenant roles and settings
-      intent: Allow tenant admins to manage access model and core tenant configuration.
+        - TenantRoleAssignment
+        - ActivityEvent
+    - use_case_id: UC-ADMINISTER-TENANT
+      title: Administer tenant users roles and settings
+      intent: Allow tenant admins to maintain role assignments and baseline tenant configuration.
       primary_context_id: TENANT_ADMIN
       touches_entities:
-        - User Role Assignment
-        - Tenant Setting
-        - Activity Event
+        - TenantRoleAssignment
+        - ActivityEvent
 api_candidates:
   resources:
     - name: widgets
       operations: [list, get, create, update, delete]
     - name: widget_versions
-      operations: [list]
+      operations: [list, get]
     - name: collections
-      operations: [list, get, create, update]
-    - name: tags
-      operations: [list, create]
-    - name: collection_permissions
-      operations: [list, create, update]
-    - name: tenant_users_roles
+      operations: [list, get, create, update, delete]
+    - name: collection_memberships
       operations: [list, create, delete]
-    - name: tenant_settings
-      operations: [get, update]
+    - name: collection_permissions
+      operations: [list, update]
+    - name: tenant_role_assignments
+      operations: [list, create, delete]
     - name: activity_events
-      operations: [list]
+      operations: [list, get]

@@ -2,80 +2,68 @@
 # CAF_TRACE: task_id=TG-00-CONTRACT-BND-CP-AP-01-AP
 # CAF_TRACE: capability=contract_scaffolding
 # CAF_TRACE: instance=codex-saas
-# CAF_TRACE: trace_anchor=contract_boundary_id:BND-CP-AP-01
+# CAF_TRACE: trace_anchor=decision_option:CAF-TCTX-01/Q-CPAP-TCTX-CONFLICT-01/claim_over_header
 
-"""AP-side HTTP client scaffold for CP<->AP contract consumption."""
+"""AP-side synchronous CP policy evaluation client scaffold."""
 
-import base64
+from __future__ import annotations
+
 import json
-from urllib import request as urllib_request
+import uuid
+import urllib.request
+from dataclasses import asdict
+import base64
 
+from ....common.auth.mock_claims import decode_mock_bearer_token
 from .envelope import ContractRequestEnvelope, ContractResponseEnvelope
 
 
-def _build_authorization_header(tenant_id: str, principal_id: str, policy_version: str) -> str:
-    payload = json.dumps(
-        {
-            "tenant_id": tenant_id,
-            "principal_id": principal_id,
-            "policy_version": policy_version,
-        },
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode("utf-8")
-    encoded = base64.urlsafe_b64encode(payload).decode("utf-8").rstrip("=")
+def call_contract_http(base_url: str, request: ContractRequestEnvelope) -> ContractResponseEnvelope:
+    """Invoke CP policy decision contract with the adopted Authorization/Bearer claim carrier."""
+    token = _build_bearer_token(request)
+    headers = {
+        "Authorization": token,
+        "Content-Type": "application/json",
+        "X-Correlation-Id": request.correlation_id or str(uuid.uuid4()),
+    }
+    body = json.dumps(asdict(request)).encode("utf-8")
+    http_request = urllib.request.Request(
+        url=f"{base_url.rstrip('/')}/cp/policy-decisions/evaluate",
+        data=body,
+        headers=headers,
+        method="POST",
+    )
+    with urllib.request.urlopen(http_request, timeout=5) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+
+    return ContractResponseEnvelope(
+        tenant_id=str(payload.get("tenant_id", request.tenant_id)),
+        principal_id=str(payload.get("principal_id", request.principal_id)),
+        correlation_id=str(payload.get("correlation_id", request.correlation_id)),
+        payload=dict(payload.get("payload", {})),
+    )
+
+
+def _build_bearer_token(request: ContractRequestEnvelope) -> str:
+    """Use the canonical mock.<base64-json>.token contract during scaffolding."""
+    claims_payload = {
+        "tenant_id": request.tenant_id,
+        "principal_id": request.principal_id,
+        "policy_version": "v1",
+    }
+    encoded = base64.b64encode(json.dumps(claims_payload).encode("utf-8")).decode("utf-8").rstrip("=")
     return f"Bearer mock.{encoded}.token"
 
 
-def call_contract_http(base_url: str, request: ContractRequestEnvelope) -> ContractResponseEnvelope:
-    body = {
-        "tenant_id": request.tenant_id,
-        "principal_id": request.principal_id,
-        "correlation_id": request.correlation_id,
-        "payload": request.payload,
-    }
-    encoded_body = json.dumps(body).encode("utf-8")
-    http_request = urllib_request.Request(
-        url=f"{base_url.rstrip('/')}/cp/contract/BND-CP-AP-01",
-        data=encoded_body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib_request.urlopen(http_request) as response:
-        parsed = json.loads(response.read().decode("utf-8"))
-    return ContractResponseEnvelope(
-        tenant_id=parsed["tenant_id"],
-        principal_id=parsed["principal_id"],
-        correlation_id=parsed["correlation_id"],
-        payload=parsed.get("payload", {}),
-    )
-
-
-def call_policy_decision(
-    base_url: str,
-    *,
-    tenant_id: str,
-    principal_id: str,
-    policy_version: str,
-    action: str,
-    resource_id: str | None = None,
-) -> dict[str, str | bool | None]:
-    body = {
-        "tenant_id": tenant_id,
-        "principal_id": principal_id,
-        "policy_version": policy_version,
-        "action": action,
-        "resource_id": resource_id,
-    }
-    encoded_body = json.dumps(body).encode("utf-8")
-    http_request = urllib_request.Request(
-        url=f"{base_url.rstrip('/')}/cp/contract/BND-CP-AP-01/policy-decision",
-        data=encoded_body,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": _build_authorization_header(tenant_id, principal_id, policy_version),
-        },
-        method="POST",
-    )
-    with urllib_request.urlopen(http_request) as response:
-        return json.loads(response.read().decode("utf-8"))
+def validate_claim_over_header_contract(
+    authorization: str,
+    tenant_header: str | None,
+    principal_header: str | None,
+) -> dict[str, str]:
+    """Enforce claim-over-header precedence and explicit conflict rejection."""
+    claims = decode_mock_bearer_token(authorization)
+    if tenant_header and tenant_header != claims["tenant_id"]:
+        raise PermissionError("tenant context conflict between Authorization claim and tenant header")
+    if principal_header and principal_header != claims["principal_id"]:
+        raise PermissionError("principal context conflict between Authorization claim and principal header")
+    return claims

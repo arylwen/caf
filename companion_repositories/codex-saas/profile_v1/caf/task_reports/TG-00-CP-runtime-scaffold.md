@@ -2,45 +2,57 @@
 <!-- CAF_TRACE: task_id=TG-00-CP-runtime-scaffold -->
 <!-- CAF_TRACE: capability=plane_runtime_scaffolding -->
 <!-- CAF_TRACE: instance=codex-saas -->
-<!-- CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-PLANE-CP-RUNTIME-SCAFFOLD -->
+
+# Task Report: TG-00-CP-runtime-scaffold
 
 ## Task Spec Digest
-- task_id: `TG-00-CP-runtime-scaffold`
-- title: Scaffold control plane runtime
-- primary capability: `plane_runtime_scaffolding`
-- task graph source: `caf/task_graph_v1.yaml`
 
-## Inputs declared by task
-- required: `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
-- required: `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`
+- Title: Scaffold CP runtime (python api_service_http)
+- Capability: `plane_runtime_scaffolding`
+- Depends on: none
+- Scope: control-plane runtime scaffold, policy/persistence composition seams, mock-auth runtime assumptions.
 
-## Inputs consumed
-- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`: confirmed `runtime.language=python`, `platform.framework=fastapi`, `planes.cp.runtime_shape=api_service_http`, and module-root conventions.
-- `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`: consumed CP governance/runtime scope and integration assumptions.
-- `node tools/caf/resolve_tbp_role_binding_key_v1.mjs codex-saas --role-binding-key cp_runtime_repository_health_owner --format json`: resolved `code/cp/application/services.py` as required CP runtime consumer seam.
+## Inputs Declared By Task
 
-## Step execution evidence
-- Established CP composition root for HTTP runtime shape at `code/cp/main.py` and ASGI export at `code/cp/asgi.py`.
-- Defined CP runtime boundaries and governance seam with `RepositoryHealthOwner` in `code/cp/application/services.py`.
-- Connected startup configuration/bootstrap seam via `bootstrap_schema_if_needed()` from `code/common/persistence/bootstrap.py`.
-- Registered CP plane-local dependency seam consumed by `/cp/runtime-health` route.
-- Confirmed scaffold semantics and scope limits in `code/cp/runtime/README.md` and preserved adopted tenant/principal assumptions via shared claim helper.
+- Required: `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+- Required: `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`
 
-## Outputs produced
-- `code/cp/__init__.py`
-- `code/cp/asgi.py`
-- `code/cp/main.py`
-- `code/cp/application/__init__.py`
-- `code/cp/application/services.py`
-- `code/cp/runtime/README.md`
+## Inputs Consumed
 
-## Rails/TBP satisfaction
-- Writes are confined to `companion_repositories/codex-saas/profile_v1/` rails.
-- CP runtime consumer seam contract is satisfied: `cp_runtime_repository_health_owner` materialized at `code/cp/application/services.py` with explicit class/def seam.
-- Python module-root coherence is preserved for CP imports into shared helper packages.
-- No new architecture or vendor choices were introduced beyond resolved profile/design inputs.
+- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`
+  - Derived: `runtime.language=python`, `auth_mode=mock`, `planes.cp.runtime_shape=api_service_http`.
+- `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`
+  - Derived: CP policy-governance runtime semantics and CP<->AP contract posture for tenant/principal claim context.
 
-## How to validate (semantic)
-- Confirm CP scaffold has composition root + ASGI seam and explicit runtime health owner seam.
-- Confirm CP runtime routes consume canonical mock-claim parsing and fail-closed claim requirements.
-- Confirm runtime README documents scaffold boundaries and deferred capabilities.
+## Step Execution Evidence
+
+1. Confirm CP runtime pins and selected `api_service_http` shape for python services.
+   - Verified from resolved guardrails and CP design inputs.
+2. Create CP runtime scaffold modules and composition root boundaries.
+   - Confirmed scaffold surfaces: `code/cp/main.py`, `code/cp/asgi.py`, package markers under `code/` + `code/cp/*`.
+3. Wire configuration loading for mock auth and policy surface dependencies.
+   - `code/cp/main.py` loads `RuntimeSettings.for_plane("cp")` and wires CP router/policy surfaces.
+4. Establish bootstrap entrypoints aligned to compose-first local execution.
+   - `code/cp/main.py` startup hook calls CP bootstrap via `bootstrap_schema()`.
+   - `code/cp/asgi.py` exposes package-relative `from .main import app`.
+5. Record runtime assumptions for downstream persistence and wiring tasks.
+   - CP routes expose runtime assumptions and repository health seams.
+   - Resolved `cp_runtime_repository_health_owner` role binding to `code/cp/application/services.py`, verified materialized.
+
+## Outputs Produced
+
+- `companion_repositories/codex-saas/profile_v1/code/cp/main.py`
+- `companion_repositories/codex-saas/profile_v1/code/cp/asgi.py`
+- `companion_repositories/codex-saas/profile_v1/code/cp/application/services.py`
+- `companion_repositories/codex-saas/profile_v1/code/__init__.py`
+- `companion_repositories/codex-saas/profile_v1/code/cp/__init__.py`
+
+Note: scaffold artifacts were already present and compliant in the candidate; this task execution validated and accepted those artifacts without introducing new runtime framework choices.
+
+## Rails/TBP Satisfaction
+
+- Rails: writes are within companion repo rails (`profile_v1/caf/task_reports`); no forbidden actions performed.
+- TBP Gate `TBP-PY-01/G-PY-MODULE-ROOT-COHERENCE`: CP imports resolve through canonical `code` root and shared helpers (`code/common`) without pseudo-package paths.
+- Compiled obligation `OBL-PLANE-CP-RUNTIME-SCAFFOLD`: CP runtime scaffold for `api_service_http` is materialized.
+- Compiled obligation `O-TBP-PY-01-python-package-markers`: package markers exist for candidate Python packages.
+- CP runtime contract seam: `cp_runtime_repository_health_owner` resolved and present at `code/cp/application/services.py`.

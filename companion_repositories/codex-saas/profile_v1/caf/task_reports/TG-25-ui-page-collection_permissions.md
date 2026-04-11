@@ -3,29 +3,24 @@
 <!-- CAF_TRACE: capability=ui_frontend_scaffolding -->
 <!-- CAF_TRACE: instance=codex-saas -->
 
-## Task Spec Digest
-- task_id: `TG-25-ui-page-collection_permissions`
-- title: Implement UI page for collection_permissions
-- primary capability: `ui_frontend_scaffolding`
-- depends_on: `TG-15-ui-shell`, `TG-20-api-boundary-collection_permissions`
+# Task Report: TG-25-ui-page-collection_permissions
 
-## Inputs consumed
-- `caf/application_domain_model_v1.yaml`: used collection-permission fields and role-based sharing semantics.
-- `caf/application_product_surface_v1.md`: used sharing/permissions surface expectations.
-- `caf/profile_parameters_resolved.yaml`: confirmed React SPA posture.
-- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability ui_frontend_scaffolding`: validated role-binding evidence surfaces.
+## Inputs Consumed
+
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/design/playbook/application_design_v1.md
 
 ## Claims
-1. Added `CollectionPermissionsPage` and wired it into shell navigation.
-2. Bound permission list/create interactions to `GET /api/collection_permissions` and `POST /api/collection_permissions`.
-3. Rendered loading, empty, success, and failure states for permission workflows.
 
-## Interaction matrix
-| page/module | reachable from shell/router via | AP contract path or action surface used | shared API helper call(s) used | observable loading/success/empty/failure states rendered |
-| --- | --- | --- | --- | --- |
-| `src/pages/CollectionPermissionsPage.jsx` | `src/App.jsx` nav item `collection_permissions` | `GET /api/collection_permissions`, `POST /api/collection_permissions` | `apiGet("/api/collection_permissions")`, `apiPost("/api/collection_permissions", ...)` | `loading`, `success`, `empty`, `error` |
+- Implemented a concrete Collection Permissions page wired through the shared `ResourcePage` surface.
+- Bound the page to the declared `collection_permissions` resource with `list` and `update` operations.
+- Captured contract-aligned update fields (`collection_id`, `role_id`, `permission_level`) in the page binding.
 
 ## Evidence anchors
-- `code/ui/src/App.jsx:L1-L91`
-- `code/ui/src/api.js:L1-L104`
-- `code/ui/src/pages/CollectionPermissionsPage.jsx:L1-L84`
+
+- companion_repositories/codex-saas/profile_v1/code/ui/src/pages/CollectionPermissionsPage.jsx:L10-L18
+- companion_repositories/codex-saas/profile_v1/code/ui/src/pages/ResourcePage.jsx:L60-L305
+- companion_repositories/codex-saas/profile_v1/code/ui/src/App.jsx:L19-L28
+- companion_repositories/codex-saas/profile_v1/code/ui/src/api.js:L69-L103
+

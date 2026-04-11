@@ -5,22 +5,22 @@ contracts:
     materiality:
       is_material: true
       indicators:
-        - multi_tenancy
-        - governance_enforcement
-        - policy_runtime_contract
+        - tenant context propagation is mandatory across CP and AP
+        - policy and safety decisions are CP-authored and AP-enforced
+        - audit and lifecycle signals cross plane boundaries
     contract_form: FORM_B_EMBEDDED_SECTION
     contract_ref:
       path: reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
-      section_heading: Plane Integration Contract (CP <-> AP)
+      section_heading: Plane Integration Contract (CP ? AP)
     anchors:
       - anchor_type: design_decision
-        anchor_ref: H-5:CAF-PLANE-01
+        anchor_ref: H-3
       - anchor_type: caf_pattern
-        anchor_ref: CAF-XPLANE-01
-      - anchor_type: caf_pattern
-        anchor_ref: CAF-POL-02
+        anchor_ref: CAF-PLANE-01
+      - anchor_type: rail
+        anchor_ref: refusal_posture=fail_closed
     justification:
-      why_this_form: Embedded contract keeps CP and AP runtime-shape and surface choices adjacent to control-plane design decisions.
+      why_this_form: Embedded section keeps CP?AP runtime shape and contract surface decisions adjacent to control-plane governance rationale.
       why_not_alternatives:
-        - FORM_A would split tightly-coupled CP and AP contract choices from control-plane design context.
-        - FORM_C would add indirection without reducing ambiguity for this phase.
+        - FORM_A standalone contract doc adds indirection for this single material boundary in early implementation scaffolding.
+        - FORM_C registry referenced is premature while contract scope is still converging inside the CP design artifact.

@@ -1,29 +1,56 @@
 # CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-# CAF_TRACE: task_id=TG-40-persistence-cp-execution-record
+# CAF_TRACE: task_id=TG-40-persistence-cp-policy
 # CAF_TRACE: capability=persistence_implementation
 # CAF_TRACE: instance=codex-saas
 # CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-SQLALCHEMY-01-runtime-module
 
-"""Shared SQLAlchemy runtime helper for engine and session construction."""
+"""Shared SQLAlchemy runtime helpers for engine/session ownership."""
 
-from os import getenv
+from __future__ import annotations
 
-from sqlalchemy import Engine, create_engine
+import os
+from contextlib import contextmanager
+from typing import Generator
+
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+_ENGINE: Engine | None = None
+_SESSION_FACTORY: sessionmaker[Session] | None = None
 
-def get_database_url() -> str:
-    database_url = getenv("DATABASE_URL", "").strip()
+
+def _resolve_database_url() -> str:
+    database_url = os.getenv("DATABASE_URL", "").strip()
     if not database_url:
-        raise RuntimeError("DATABASE_URL is required for postgres/sqlalchemy persistence")
-    if not database_url.startswith(("postgresql+psycopg://", "postgresql://", "postgres://")):
-        raise RuntimeError("DATABASE_URL must be a PostgreSQL SQLAlchemy URL")
+        raise RuntimeError("DATABASE_URL is required for resolved postgres/sqlalchemy rails")
+    if not database_url.startswith("postgresql"):
+        raise RuntimeError("DATABASE_URL must use a SQLAlchemy-compatible postgresql scheme")
     return database_url
 
 
 def get_engine() -> Engine:
-    return create_engine(get_database_url(), pool_pre_ping=True)
+    global _ENGINE
+    if _ENGINE is None:
+        _ENGINE = create_engine(_resolve_database_url(), future=True, pool_pre_ping=True)
+    return _ENGINE
 
 
 def get_session_factory() -> sessionmaker[Session]:
-    return sessionmaker(bind=get_engine(), autoflush=False, expire_on_commit=False)
+    global _SESSION_FACTORY
+    if _SESSION_FACTORY is None:
+        _SESSION_FACTORY = sessionmaker(bind=get_engine(), autoflush=False, autocommit=False, future=True)
+    return _SESSION_FACTORY
+
+
+@contextmanager
+def session_scope() -> Generator[Session, None, None]:
+    session = get_session_factory()()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()

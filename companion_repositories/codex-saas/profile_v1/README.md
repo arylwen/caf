@@ -1,135 +1,103 @@
 <!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
-<!-- CAF_TRACE: task_id=UX-TG-95-ux-operator-notes -->
+<!-- CAF_TRACE: task_id=TG-92-tech-writer-readme -->
 <!-- CAF_TRACE: capability=repo_documentation -->
 <!-- CAF_TRACE: instance=codex-saas -->
-<!-- CAF_TRACE: trace_anchor=pattern_id:UX-LANE:operator_handoff -->
+<!-- CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-REPO-README -->
 
-# codex-saas companion repository
+# Codex SaaS Candidate Operator Guide
 
 ## Overview
 
 - Instance: `codex-saas`
 - Profile: `profile_v1`
-- Runtime: Python + FastAPI, SQLAlchemy, PostgreSQL
-- Packaging: `docker_compose`
-- UI lanes:
-  - Smoke-test lane: `code/ui/` served by `ui` service (port `8080`)
-  - Rich UX lane: `code/ux/` served by `ux` service (port `8081`)
+- Runtime rails: Python + FastAPI + PostgreSQL (`sqlalchemy_orm`)
+- Packaging rail: `docker_compose`
+- Auth rail: `mock` Authorization/Bearer claim contract
 
-This repository contains the main AP/CP runtime plus two separate web frontends. The richer UX lane is additive and does not replace the smoke-test lane.
+This repository is a bounded candidate scaffold for local compose runs and unit-test feedback loops.
 
 ## Prerequisites
 
-- Docker Engine with Compose v2 (`docker compose`)
-- Python 3.11+ (for local tests)
+- Docker with Compose v2 (`docker compose`)
+- Python 3.11+ (for direct local test invocation)
 
-## Quickstart
+## Quickstart (compose-first)
 
-1. Prepare environment file if needed:
-   - Linux/macOS: `cp infrastructure/postgres.env.example .env`
-   - PowerShell: `Copy-Item infrastructure/postgres.env.example .env`
-2. Start full stack with both UI lanes:
+1. Copy and customize env values:
+   - `cp infrastructure/postgres.env.example .env`
+2. Start the candidate stack:
    - `docker compose --env-file ./.env -f docker/compose.candidate.yaml up --build`
-3. Validate core health routes:
-   - AP direct: `curl http://localhost:8000/ap/health`
-   - CP direct: `curl http://localhost:8001/cp/health`
-4. Validate lane routing:
-   - Smoke-test UI AP proxy: `curl http://localhost:8080/api/health`
-   - Rich UX lane AP proxy: `curl http://localhost:8081/api/health`
+3. Verify service health endpoints:
+   - AP: `http://localhost:8000/ap/health`
+   - CP: `http://localhost:8001/cp/health`
+   - UI: `http://localhost:8080`
 
-## Service boundaries
-
-- `ap` (`:8000`): Application-plane REST APIs under `/ap/*`.
-- `cp` (`:8001`): Control-plane APIs and policy decision endpoint.
-- `ui` (`:8080`): smoke-test UI lane, unchanged by UX build lane.
-- `ux` (`:8081`): richer UX lane using `code/ux/` assets and `docker/nginx.ux.conf`.
-- `postgres` (`:5432`): shared persistence for AP/CP runtime.
+Compose topology is declared in `docker/compose.candidate.yaml` with service-local PostgreSQL DNS (`postgres`) and health-gated startup dependencies.
 
 ## Environment variables
 
-The compose stack expects at least:
+Required variables (see `infrastructure/postgres.env.example`):
 
 - `POSTGRES_DB`
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
+- `POSTGRES_HOST`
+- `POSTGRES_PORT`
 - `DATABASE_URL`
-- `CP_POLICY_BASE_URL`
 
-Reference files:
+Notes:
 
-- `infrastructure/postgres.env.example`
-- `.env`
-- `docker/compose.candidate.yaml`
-
-`DATABASE_URL` should remain SQLAlchemy-compatible (`postgresql+psycopg://...`).
+- Host-local helpers use `DATABASE_URL` values like `postgresql+psycopg://...@localhost:5432/...`.
+- AP/CP containers override `DATABASE_URL` to the compose-internal host `postgres`.
+- Runtime auth expectations use:
+  - `AUTH_MODE=mock`
+  - `TENANT_CLAIM_KEY` (claim key selector for tenant context resolution).
 
 ## Unit tests
 
-Run unit tests from repo root:
+Run unit tests from repository root with Python stdlib unittest:
 
-- `python -m pytest tests`
+- `python -m unittest discover -s tests -p "test_*.py"`
 
-Current tests cover mock-auth claim handling and policy decision seams.
+Current unit tests validate:
 
-## UX lane operator notes
-
-### Run/build expectations
-
-- UX lane source root: `code/ux/`
-- UX Dockerfile: `docker/Dockerfile.ux`
-- UX Nginx routing: `docker/nginx.ux.conf`
-- UX compose service: `ux` in `docker/compose.candidate.yaml`
-- UX lane proxies AP and CP through `/api/*` and `/cp/*` on port `8081`
-
-### Surface coverage and preserved primary actions
-
-- Dashboard: shell context + runtime health posture
-- Widgets: catalog + detail editor; preserved action `Create widget`
-- Collections: curation workspace; preserved action `New collection`
-- Sharing/Published: permission review surface; preserved action `Publish`
-- Admin: user-role + tenant settings; preserved action `Manage roles`
-- Activity: actor-action-target timeline filters
-
-### Troubleshooting posture
-
-- If AP/CP probes fail in UX lane, inspect service logs first:
-  - `docker compose -f docker/compose.candidate.yaml logs -f ap cp ux`
-- If mutation calls fail with auth/tenant errors, validate mock bearer claims and avoid conflicting tenant headers.
-- If UX lane loads but API calls fail, confirm `ux` service can resolve `ap` and `cp` by compose service name.
+- mock bearer claim decoding and claim/header conflict handling
+- AP auth-context resolution behavior
+- AP service facade operation gating and delegation seams
 
 ## Local auth debugging
 
-Resolved auth mode is `mock` with claim-over-header posture.
+Mock auth contract is explicit Authorization/Bearer:
 
-Primary carrier:
+- Primary carrier: `Authorization: Bearer mock.<base64-json>.token`
+- Canonical claim keys: `tenant_id`, `principal_id`, `policy_version`
+- Alternate headers (`X-Tenant-Context-Check`, `X-Principal-Context-Check`) are conflict-check carriers only; claim remains authoritative.
 
-- `Authorization: Bearer mock.<base64-json>.token`
+Debug flow:
 
-Canonical claim keys:
+1. Tail AP logs:
+   - `docker compose -f docker/compose.candidate.yaml logs -f ap`
+2. Call AP assumptions endpoint with a mock bearer:
+   - `curl -H "Authorization: Bearer mock.<base64-json>.token" -H "X-Tenant-Context-Check: tenant-alpha" http://localhost:8000/ap/runtime/assumptions`
+3. If headers conflict with claim payload, AP should return HTTP 401 with explicit conflict detail.
 
-- `tenant_id`
-- `principal_id`
-- `policy_version`
+## Troubleshooting
 
-Conflict-detection headers (`X-Tenant-Id`, `X-Principal-Id`, `X-Policy-Version`) are not the happy-path identity carrier.
-
-## UX regression checklist
-
-- Tenant context remains visible in top bar for all primary surfaces.
-- `Create widget`, `New collection`, `Publish`, and `Manage roles` remain visible one-click actions.
-- Publish and role-change flows require explicit confirmation before high-impact mutation.
-- Empty/loading/error/retry surfaces provide clear recovery path without hiding prior committed state.
-- Activity timeline remains readable with actor/action/target/timestamp cues.
+- AP/CP fail at startup with DB errors:
+  - Check postgres health in compose logs and confirm `.env` has valid `POSTGRES_*` and `DATABASE_URL` values.
+- UI can load but API calls fail:
+  - Inspect `docker/nginx.ui.conf` proxy routes and confirm AP/CP services are healthy.
+- Auth failures in AP calls:
+  - Verify bearer payload contains all canonical keys and that conflict-check headers do not disagree.
 
 ## Task completion evidence
 
 ### Claims
-- UX operator notes now define separate smoke-test and richer UX lane boundaries, run commands, and service ownership.
-- Documentation now includes explicit verification coverage for `Create widget`, `New collection`, `Publish`, and `Manage roles`.
-- Handoff guidance now includes recovery and troubleshooting checks for tenant visibility, publish/admin safety, and UX timeline trust.
+- This README now documents compose startup, env configuration, tests, mock-auth behavior, and troubleshooting for the current candidate stack.
+- Operator instructions are grounded in produced runtime files (`docker/compose.candidate.yaml`, `infrastructure/postgres.env.example`, and `tests/`).
 
 ### Evidence anchors
-- `README.md:L1-L138` - supports Claims 1-3
-- `docker/compose.candidate.yaml:L1-L90` - supports Claim 1
-- `docker/Dockerfile.ux:L1-L17` - supports Claim 1
-- `docker/nginx.ux.conf:L1-L29` - supports Claims 1 and 3
+- `README.md:L1-L96` - supports Claim 1
+- `docker/compose.candidate.yaml:L1-L88` - supports Claim 2
+- `infrastructure/postgres.env.example:L1-L11` - supports Claim 2
+- `tests/test_mock_claims.py:L1-L35` - supports Claim 2

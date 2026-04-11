@@ -1,14 +1,25 @@
-# TG-40-persistence-collections Review
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-40-persistence-collections -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: TG-40-persistence-collections
+
+Threshold: `blocker`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-TR-STRUCT-01 | PASS | Task report includes required structure at `caf/task_reports/TG-40-persistence-collections.md`. |
-| RR-TR-STEP-01 | PASS | Evidence covers all implemented collections operations and wiring seams. |
-| RR-TBP-RB-01 | PASS | `resolve_tbp_role_bindings_v1.mjs` for `persistence_implementation` expectations are satisfied by shared SQLAlchemy files. |
-| RR-PY-CORR-01 | PASS | Tenant-scoped list/get/create/update repository methods exist in `code/ap/persistence/postgres_collections_repository.py:L32-L84`. |
-| RR-FA-ARCH-01 | PASS | Collections facade dependency is backed by repository factory at `code/ap/api/dependencies.py:L77-L78`. |
-| RR-TST-HIGH-01 | FAIL | No unit tests were added for collections persistence behavior. |
+| RR-PY-CORR-01 | PASS | Collections model/repository and shared persistence imports are coherent (`code/ap/persistence/repository.py:L297-L404`, `code/common/persistence/sqlalchemy_metadata.py`). |
+| RR-FA-ARCH-01 | PASS | Collections CRUD persistence remains plane-local and transport-independent in AP persistence module. |
+| RR-TASK-REPORT-01 | PASS | Task report includes required inputs, claims, and evidence anchors (`caf/task_reports/TG-40-persistence-collections.md`). |
+| RR-TBP-ROLE-BINDINGS-01 | PASS | AP persistence outputs are present in resolved role-binding paths (`code/ap/persistence/repository.py`, `code/ap/persistence/schema_bootstrap.py`). |
 
-Summary: No blocker findings for TG-40-persistence-collections.
+Summary:
+- Collections persistence is implemented with tenant-scoped CRUD operations and canonical AP persistence layering.
 
-Threshold statement: No issues at or above the configured `blocker` threshold were found.
+Issues:
+- High: none.
+- Medium: none.
+- Low: none.
+
+No issues at or above the configured threshold (`blocker`) were found.

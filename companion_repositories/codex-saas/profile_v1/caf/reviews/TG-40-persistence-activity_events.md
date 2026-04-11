@@ -1,14 +1,25 @@
-# TG-40-persistence-activity_events Review
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-40-persistence-activity_events -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: TG-40-persistence-activity_events
+
+Threshold: `blocker`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-TR-STRUCT-01 | PASS | Task report includes required structure at `caf/task_reports/TG-40-persistence-activity_events.md`. |
-| RR-TR-STEP-01 | PASS | Claims map to concrete repository implementation, binding seam, and bootstrap evidence. |
-| RR-TBP-RB-01 | PASS | `resolve_tbp_role_bindings_v1.mjs` for `persistence_implementation` returned SQLAlchemy expectations, and required paths/evidence exist (`code/common/persistence/sqlalchemy_runtime.py`, `sqlalchemy_metadata.py`, `sqlalchemy_schema_bootstrap.py`). |
-| RR-PY-CORR-01 | PASS | Tenant-scoped SQLAlchemy list implementation is present in `code/ap/persistence/postgres_activity_events_repository.py:L27-L30` with no transport-layer coupling. |
-| RR-FA-ARCH-01 | PASS | FastAPI dependency seam binds to persistence provider via `code/ap/api/dependencies.py:L97-L98`. |
-| RR-TST-HIGH-01 | FAIL | No unit tests were added for activity_events persistence behavior. |
+| RR-PY-CORR-01 | PASS | Activity-event model/repository compile to canonical imports under `code.ap` and shared `code.common` SQLAlchemy runtime modules (`code/ap/persistence/repository.py`, `code/ap/persistence/schema_bootstrap.py`). |
+| RR-FA-ARCH-01 | PASS | Persistence logic stays in AP persistence boundary and is consumed by higher-layer service facades without HTTP coupling (`code/ap/persistence/repository.py:L583-L631`). |
+| RR-TASK-REPORT-01 | PASS | Task report includes required inputs, claims, and evidence anchors (`caf/task_reports/TG-40-persistence-activity_events.md`). |
+| RR-TBP-ROLE-BINDINGS-01 | PASS | Expected AP persistence outputs exist under resolved boundary paths (`code/ap/persistence/repository.py`, `code/ap/persistence/schema_bootstrap.py`, `code/common/persistence/sqlalchemy_metadata.py`). |
 
-Summary: No blocker findings for TG-40-persistence-activity_events.
+Summary:
+- Activity-events persistence is present as a tenant-scoped SQLAlchemy repository with AP-layer payload shaping.
 
-Threshold statement: No issues at or above the configured `blocker` threshold were found.
+Issues:
+- High: none.
+- Medium: none.
+- Low: none.
+
+No issues at or above the configured threshold (`blocker`) were found.

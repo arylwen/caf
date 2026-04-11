@@ -1,55 +1,66 @@
-# Application Design (v1)
+# Application Plane Design (v1)
 
-## Scope
+## Purpose
+Application-plane design for tenant-scoped widget workflows, policy/safety-governed orchestration, and evidence-aware runtime behavior.
 
-Application Plane owns product request handling, domain workflows, and runtime policy/safety enforcement for tenant-scoped widget operations.
+## Application architecture summary
+- AP exposes widget, collection, sharing, and tenant-admin capabilities through service-facade boundaries.
+- AP performs inline policy and safety checks before execution and side effects.
+- AP emits synchronous evidence events for key decisions and state changes.
 
-## Responsibilities
+## Core service boundaries
+- WidgetService: widget lifecycle and version operations.
+- CollectionService: collection curation and membership operations.
+- SharingService: publication and role-based access updates.
+- TenantAdminService: role assignments and tenant settings orchestration.
 
-- Expose AP HTTP surfaces for widget, collection, sharing, and tenant-admin workflows.
-- Enforce policy and safety checks inline before side effects.
-- Preserve tenant context through request lifecycle and persistence boundaries.
-- Emit runtime evidence for audit-critical operations.
-
-## Runtime Shape
-
-Application Plane runtime shape is `api_service_http` in this phase.
-
-## Domain Interaction Notes
-
-- Widget and collection workflows are AP-owned business flows.
-- Policy decisions originate from CP-owned governance and are enforced in AP.
-- Tenant context is immutable across request execution.
+<!-- CAF_MANAGED_BLOCK: decision_trace_v1 START -->
+## Decision trace (CAF-managed)
+- Adopted design-driving patterns from `system_spec_v1.md` `decision_resolutions_v1`: CAF-TCTX-01, CAF-MTEN-01, CAF-PLANE-01, CAF-AI-01, CAF-COMP-01, CTX-01, PST-01, SVC-01, VAL-01, CAF-AIOBS-01.
+- These decisions influence AP service boundaries, pre-execution checks, and evidence posture.
+- Carried-forward unresolved pattern questions represented in `open_questions_v1`: 0 for current scaffold.
+<!-- CAF_MANAGED_BLOCK: decision_trace_v1 END -->
 
 <!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 START -->
+## Decision resolutions carried into this design (architect-edit)
+
 ```yaml
-schema_version: decision_resolutions_v1
-decisions: []
+schema_version: design_decision_resolutions_v1
+source_ref: reference_architectures/codex-saas/spec/playbook/system_spec_v1.md#decision_resolutions_v1
+notes:
+  - This block is a compact design-local bridge and does not replace system_spec decision ownership.
 ```
+
 <!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 END -->
 
 <!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 START -->
+## Open questions (architect-edit)
+
 ```yaml
 schema_version: open_questions_v1
-questions: {}
+questions:
+  ap_policy_decision_contract:
+    question_id: Q-AP-POLICY-DECISION-CONTRACT-01
+    question: Should AP cache policy decisions for short-lived retries or always evaluate inline per request?
+    options:
+      - option_id: always_inline
+        status: adopt
+        summary: Always evaluate inline for first release clarity.
+        payload: {}
+      - option_id: short_ttl_cache
+        status: defer
+        summary: Cache decisions for a short TTL with strict invalidation.
+        payload: {}
+      - option_id: custom
+        status: defer
+        summary: Custom strategy.
+        payload: {}
+    anchors:
+      - caf_pattern: POL-01
+      - evidence_hook_id: M-7
 ```
+
 <!-- ARCHITECT_EDIT_BLOCK: open_questions_v1 END -->
-
-<!-- CAF_MANAGED_BLOCK: decision_trace_v1 START -->
-## Decision Trace (CAF-managed)
-
-- Adopted decisions consumed from `system_spec_v1.md:decision_resolutions_v1`:
-  - `H-1` `CAF-TCTX-01` -> `Responsibilities` and `Domain Interaction Notes`
-  - `H-2` `CAF-MTEN-01` -> `Responsibilities`
-  - `H-3` `CAF-POL-01` -> `Responsibilities`
-  - `H-5` `CAF-PLANE-01` -> `Runtime Shape`
-  - `H-6` `CAF-POL-02` -> `Domain Interaction Notes`
-  - `M-8` `CTX-01` -> `Responsibilities`
-  - `M-9` `PST-01` -> `Domain Interaction Notes`
-  - `M-12` `CAF-XPLANE-01` -> `Domain Interaction Notes`
-- Carried-forward pattern questions: 0
-- Source pattern ids with carried-forward questions: none
-<!-- CAF_MANAGED_BLOCK: decision_trace_v1 END -->
 
 <!-- CAF_MANAGED_BLOCK: planning_pattern_payload_v1 START -->
 
@@ -72,15 +83,21 @@ selected_patterns:
   caf:
     - 'CAF-TCTX-01'
     - 'CAF-MTEN-01'
+    - 'CAF-PLANE-01'
     - 'CAF-AI-01'
     - 'CAF-COMP-01'
+    - 'CAF-AIOBS-01'
     - 'CAF-POL-02'
-    - 'CAF-PLANE-01'
-    - 'CAF-XPLANE-01'
+    - 'CAF-IAM-02'
+    - 'CAF-COMP-02'
   core:
-    - 'PST-01'
     - 'CTX-01'
-  external: []
+    - 'VAL-01'
+    - 'PST-01'
+    - 'SVC-01'
+  external:
+    - 'EXT-BACKEND_FOR_FRONTEND_BFF'
+    - 'EXT-CIRCUIT_BREAKER'
 adopted_option_choices:
   - source: 'system'
     evidence_hook_id: 'H-1'
@@ -115,31 +132,7 @@ adopted_option_choices:
     summary: 'Hybrid isolation (selective and tiered by tenant).'
     payload: {}
   - source: 'system'
-    evidence_hook_id: 'H-13'
-    pattern_id: 'CAF-AI-01'
-    question_id: 'Q-AI-PART-01'
-    option_set_id: 'ai_safety.governance_partitioning'
-    option_id: 'cp_governs_ap_enforces'
-    summary: 'Control Plane governs policy; Application Plane enforces at runtime.'
-    payload: {}
-  - source: 'system'
-    evidence_hook_id: 'H-14'
-    pattern_id: 'CAF-COMP-01'
-    question_id: 'Q-CAF-COMP-01-01'
-    option_set_id: 'compliance_evidence.persistence_strategy'
-    option_id: 'stream_plus_immutable_store'
-    summary: 'Use an event stream plus an immutable store (preferred for audit readiness).'
-    payload: {}
-  - source: 'system'
-    evidence_hook_id: 'H-6'
-    pattern_id: 'CAF-POL-02'
-    question_id: 'Q-POL-DIST-01'
-    option_set_id: 'policy.responsibility_distribution'
-    option_id: 'cp_central_decision_ap_enforces'
-    summary: 'Control Plane centralizes policy decision; Application Plane enforces.'
-    payload: {}
-  - source: 'system'
-    evidence_hook_id: 'H-5'
+    evidence_hook_id: 'H-3'
     pattern_id: 'CAF-PLANE-01'
     question_id: 'Q-CP-AP-SURFACE-01'
     option_set_id: 'cp_ap.contract_surface'
@@ -147,12 +140,68 @@ adopted_option_choices:
     summary: 'Mix: sync for enforcement, async for lifecycle and audit.'
     payload: {}
   - source: 'system'
-    evidence_hook_id: 'M-12'
-    pattern_id: 'CAF-XPLANE-01'
-    question_id: 'Q-XPLANE-MODE-01'
-    option_set_id: 'cross_plane.interaction_mode'
-    option_id: 'synchronous_api'
-    summary: 'Synchronous request/response API call across the plane boundary.'
+    evidence_hook_id: 'H-4'
+    pattern_id: 'CAF-AI-01'
+    question_id: 'Q-AI-PART-01'
+    option_set_id: 'ai_safety.governance_partitioning'
+    option_id: 'cp_governs_ap_enforces'
+    summary: 'Control Plane governs policy; Application Plane enforces at runtime.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'H-5'
+    pattern_id: 'CAF-COMP-01'
+    question_id: 'Q-CAF-COMP-01-01'
+    option_set_id: 'compliance_evidence.persistence_strategy'
+    option_id: 'stream_plus_immutable_store'
+    summary: 'Use an event stream plus an immutable store (preferred for audit readiness).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-11'
+    pattern_id: 'CAF-AIOBS-01'
+    question_id: 'Q-CAF-AIOBS-01-01'
+    option_set_id: 'ai_observability.hook_level'
+    option_id: 'trace_metadata'
+    summary: 'Include structured trace metadata (no full reasoning content).'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-17'
+    pattern_id: 'CAF-POL-02'
+    question_id: 'Q-POL-DIST-01'
+    option_set_id: 'policy.responsibility_distribution'
+    option_id: 'cp_central_decision_ap_enforces'
+    summary: 'Control Plane centralizes policy decision; Application Plane enforces.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-18'
+    pattern_id: 'CAF-IAM-02'
+    question_id: 'Q-CAF-IAM-02-01'
+    option_set_id: 'iam.identity_context_propagation'
+    option_id: 'verified_token_claims'
+    summary: 'Propagate identity and tenant context via verified token claims at ingress.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-19'
+    pattern_id: 'CAF-COMP-02'
+    question_id: 'Q-CAF-COMP-02-01'
+    option_set_id: 'compliance.anti_pattern_enforcement_mode'
+    option_id: 'warn_then_gate'
+    summary: 'Warn during scaffolding; fail closed at gate checks if unresolved.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-14'
+    pattern_id: 'EXT-BACKEND_FOR_FRONTEND_BFF'
+    question_id: 'Q-EXT-BFF-01'
+    option_set_id: 'ui.bff_shape'
+    option_id: 'thin_facade_only'
+    summary: 'Thin BFF focused on auth/session/context and minor shaping; minimal aggregation.'
+    payload: {}
+  - source: 'system'
+    evidence_hook_id: 'M-15'
+    pattern_id: 'EXT-CIRCUIT_BREAKER'
+    question_id: 'Q-EXT-CB-01'
+    option_set_id: 'resilience.circuit_breaker_placement'
+    option_id: 'client_side_library'
+    summary: 'Circuit breaker enforced in client/SDK/library at call sites.'
     payload: {}
 promotions:
   semantic_inputs: []

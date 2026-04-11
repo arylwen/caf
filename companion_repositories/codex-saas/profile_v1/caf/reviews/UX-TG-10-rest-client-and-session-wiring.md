@@ -1,24 +1,35 @@
-# UX Review: UX-TG-10-rest-client-and-session-wiring
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=UX-TG-10-rest-client-and-session-wiring -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: UX-TG-10-rest-client-and-session-wiring
+
+Threshold: `blocker`
+
+Selected rubrics:
+- `RR-WEB-SPA-01`
+- `RR-AUTH-MOCK-CLAIM-CONTRACT-01`
+- `RR-TASK-REPORT-01`
+- `RR-TBP-ROLE-BINDINGS-01`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-GENERAL-01 | PASS | No Python module rewiring performed in this task. |
-| RR-PY-TESTS-01 | PASS | Existing Python unit-test surfaces unchanged; no new regression vectors introduced by JS-only API helper changes. |
-| RR-WEB-SPA-01 | PASS | `code/ux/src/api.js` wires concrete list/detail/mutation endpoints; `code/ux/src/auth/mockAuth.js` keeps claim carrier behavior explicit. |
-| RR-TASK-REPORT-01 | PASS | Task report includes required claims, matrices, and evidence. |
-| RR-TBP-ROLE-BINDINGS-01 | PASS | Role-binding outputs for ux_frontend_realization are present and include required evidence markers (Bearer token, buildAuthHeaders, Vite/React metadata). |
+| RR-SPA-CONTRACT-01 | PASS | Shared UX API helper keeps REST/OpenAPI posture and does not collapse into CP-only proxying (`code/ux/src/api.js`). |
+| RR-SPA-ERR-DETAIL-01 | PASS | Error detail handling and retry-safe messaging are explicit in shared helper and pages (`code/ux/src/api.js`, `code/ux/src/pages/*.jsx`). |
+| RR-AUTH-MOCK-01 | PASS | Mock bearer claims include tenant/principal/role/policy version contract (`code/ux/src/auth/mockAuth.js`). |
+| RR-AUTH-MOCK-02 | PASS | API helper emits Authorization bearer plus tenant conflict-check header (`code/ux/src/api.js`). |
+| RR-TR-STRUCT-01 | PASS | Task report exists and documents action coverage and evidence (`caf/task_reports/UX-TG-10-rest-client-and-session-wiring.md`). |
+| RR-TBP-RB-01 | PASS | Frontend role-binding evidence markers are satisfied in required UX files. |
 
-## Semantic review questions
-- Client wiring preserves existing REST touchpoints via `/api/*` and `/cp/*` routing only, with no alternate contract style.
-- Tenant and role consequences remain visible in shell context and bearer-claim helper surfaces.
-- Mutation error/result handling is explicit through normalized request error parsing and user-visible status messages in page surfaces.
+Summary:
+- Session and client wiring remain explicit, tenant-aware, and contract-compatible with current AP/CP posture.
+- No blocker findings identified.
 
-## Summary
-- No blocking semantic issues found.
-
-## Issues
+Issues:
 - High: none.
 - Medium: none.
 - Low: none.
 
-No issues at/above severity threshold (`blocker`) were found.
+No issues at or above the configured threshold (`blocker`) were found.
+

@@ -1,115 +1,125 @@
-### H-1: UX-CRUD-01 - List-Detail-Edit Flow (confidence: HIGH)
-- **Plane:** application
-- **Rationale:** Core widget create/edit maintenance is the highest-frequency user job and needs resilient list-detail-edit continuity with validation-safe recovery.
+### HIGH-1: UX-WORKLIST-01 - Operational Worklist and Triage Surface (confidence: high)
 **Evidence:**
-- E1 [instance_signal] Core journeys emphasize create/edit widgets with validation and save confirmation. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
-- E2 [pattern_definition] UX-CRUD-01 encodes list-detail-edit and dirty-state handling for resource maintenance. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-crud-01.yaml
+- E1 [pinned_input] Product surface requires a searchable widget catalog with tenant-scoped filters and status visibility.
+- E2 [pinned_input] Primary journeys begin in dashboard and catalog workspaces with one-click actions.
+- E3 [pattern_definition] UX-WORKLIST-01 maps directly to queue-like worklist triage and status counts.
+**Rationale:** Core operator flow depends on a strong list-first triage surface.
 
-### H-2: UX-SEARCH-01 - Search, Filter, and Sort Workspace (confidence: HIGH)
-- **Plane:** application
-- **Rationale:** Widget catalog and collection operations depend on strong filtering, sorting, and query clarity.
+### HIGH-2: UX-CRUD-01 - List-Detail-Edit Flow (confidence: high)
 **Evidence:**
-- E1 [instance_signal] Product surface requires searchable widget catalog with tenant-safe filters and tags. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
-- E2 [pattern_definition] UX-SEARCH-01 provides search/filter/sort and query persistence posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-search-01.yaml
+- E1 [pinned_input] CAP-001 requires create/edit/save widget behavior with validation and stable identifiers.
+- E2 [pinned_input] UX core journey `widget-lifecycle` anchors list to detail to edit transitions.
+- E3 [pattern_definition] UX-CRUD-01 defines draft-safe list-detail-edit mechanics.
+**Rationale:** Widget lifecycle is the product center, so CRUD detail flow is mandatory.
 
-### H-3: UX-WORKLIST-01 - Operational Worklist and Triage Surface (confidence: HIGH)
-- **Plane:** application
-- **Rationale:** The primary operator flow is worklist-driven and needs triage-ready status and row actions.
+### HIGH-3: UX-SEARCH-01 - Search, Filter, and Sort Workspace (confidence: high)
 **Evidence:**
-- E1 [instance_signal] Main surfaces include dashboard, catalog, activity, and one-click primary actions. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
-- E2 [pattern_definition] UX-WORKLIST-01 defines operational worklist and triage behaviors. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-worklist-01.yaml
+- E1 [pinned_input] Widget catalog surface requires searchable/sortable list with tenant-scoped filters.
+- E2 [pinned_input] UX pressure `search_filter_sort` is marked high priority.
+- E3 [pattern_definition] UX-SEARCH-01 covers faceted filtering, saved views, and no-results handling.
+**Rationale:** Fast discovery and narrowing are prerequisites for all widget and collection actions.
 
-### H-4: UX-REVIEW-01 - Review and Approval Workspace (confidence: HIGH)
-- **Plane:** application
-- **Rationale:** Publish and permission changes are consequential and require explicit review/confirmation posture.
+### HIGH-4: UX-REVIEW-01 - Review and Approval Workspace (confidence: high)
 **Evidence:**
-- E1 [instance_signal] Sharing flows require explicit and confirmable role-based publish/access changes. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
-- E2 [pattern_definition] UX-REVIEW-01 captures decision rationale and approval/reject workspace behavior. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-review-01.yaml
+- E1 [pinned_input] CAP-003 publish flow requires role-targeted permissions and confirmation.
+- E2 [pinned_input] UX pressure `review_approval` is high priority for publish decisions.
+- E3 [pattern_definition] UX-REVIEW-01 captures explicit approval/denial rationale posture.
+**Rationale:** Publish decisions are consequential and require review-grade clarity.
 
-### H-5: UX-SESSION-01 - Session, Role, and Tenant-Aware Browser Posture (confidence: HIGH)
-- **Plane:** application
-- **Rationale:** Tenant context and role consequences must remain visible in primary navigation and action flows.
+### HIGH-5: UX-SESSION-01 - Session, Role, and Tenant-Aware Browser Posture (confidence: high)
 **Evidence:**
-- E1 [instance_signal] UX constraints require visible tenant context and role visibility near publish/share actions. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
-- E2 [pattern_definition] UX-SESSION-01 defines role-aware navigation and tenant/session-visible browser posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-session-01.yaml
+- E1 [pinned_input] UI posture requires tenant and role consequences to remain visible.
+- E2 [pinned_input] Product constraints require explicit tenant isolation in user-facing flows.
+- E3 [pattern_definition] UX-SESSION-01 enforces role-aware navigation and session-expiry consequences.
+**Rationale:** Tenant/role context visibility is a first-class UX safety rail.
 
-### H-6: UX-RECOVERY-01 - Empty, Error, and Recovery Guidance (confidence: HIGH)
-- **Plane:** application
-- **Rationale:** Reliable recovery is required across validation failures, permission denials, and transient save issues.
+### HIGH-6: UX-RECOVERY-01 - Empty, Error, and Recovery Guidance (confidence: high)
 **Evidence:**
-- E1 [instance_signal] State model requires explicit empty/loading/error/retry and keep-input-on-failure behavior. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
-- E2 [pattern_definition] UX-RECOVERY-01 provides recovery/partial-failure guidance patterns. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-recovery-01.yaml
+- E1 [pinned_input] UX state/recovery requires explicit empty/loading/error/deny states.
+- E2 [pinned_input] Fail-closed posture requires non-destructive deny and retry-safe guidance.
+- E3 [pattern_definition] UX-RECOVERY-01 codifies recovery and remediation guidance.
+**Rationale:** Reliability and trust depend on clear recovery behavior.
 
-### H-7: UX-EXPLAIN-01 - Auditability and Explainability Surface (confidence: HIGH)
-- **Plane:** application
-- **Rationale:** Activity and evidence readability are explicit product value signals for trust.
+### HIGH-7: UX-EXPLAIN-01 - Auditability and Explainability Surface (confidence: high)
 **Evidence:**
-- E1 [instance_signal] Product value proposition includes audit-friendly activity history and quick traceability. cite: reference_architectures/codex-saas/product/PRD.resolved.md
-- E2 [pattern_definition] UX-EXPLAIN-01 formalizes explainability and evidence-surface posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-explain-01.yaml
+- E1 [pinned_input] Activity/audit visibility is explicitly first-class in product constraints.
+- E2 [pinned_input] Admin and publish journeys require visible request/decision/outcome continuity.
+- E3 [pattern_definition] UX-EXPLAIN-01 provides explainability and evidence presentation posture.
+**Rationale:** Governance-focused product value requires explainable outcomes in the UI.
 
-### H-8: UX-VISUAL-01 - Calm Operational Shell and Visual Hierarchy (confidence: HIGH)
-- **Plane:** application
-- **Rationale:** UX lane explicitly targets a calm operational shell with restrained accents and clear hierarchy.
+### HIGH-8: UX-VISUAL-01 - Calm Operational Shell and Visual Hierarchy (confidence: high)
 **Evidence:**
-- E1 [instance_signal] UX vision and semantic projection require calm operational shell and readable hierarchy. cite: reference_architectures/codex-saas/product/UX_VISION.md
-- E2 [pattern_definition] UX-VISUAL-01 captures shell hierarchy and polished but calm visual posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-visual-01.yaml
+- E1 [pinned_input] UX vision calls for calm operational shell and medium-density readability.
+- E2 [pinned_input] Visual direction requires persistent navigation shell and restrained accents.
+- E3 [pattern_definition] UX-VISUAL-01 targets polished but calm shell hierarchy.
+**Rationale:** The richer UX lane must be visibly stronger than smoke-test UI without visual noise.
 
-### H-9: UX-DENSITY-01 - Dense Panel, Card, and Toolbar Rhythm (confidence: HIGH)
-- **Plane:** application
-- **Rationale:** Medium-dense desktop workspace and data-heavy views require deliberate density rhythm.
+### MEDIUM-9: UX-DENSITY-01 - Dense Panel, Card, and Toolbar Rhythm (confidence: medium)
 **Evidence:**
-- E1 [instance_signal] UX cues call for medium-density workspace with readable list/table posture. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
-- E2 [pattern_definition] UX-DENSITY-01 defines dense panel/card/toolbar rhythm. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-density-01.yaml
+- E1 [pinned_input] UX vision sets a medium-dense desktop workspace bias.
+- E2 [pinned_input] Product surfaces include dashboard, catalog, collections, activity, and admin.
+- E3 [pattern_definition] UX-DENSITY-01 supports dense but readable panel rhythm.
+**Rationale:** Density rhythm improves operational scanability across multiple surfaces.
 
-### H-10: EXT-AUDITABILITY - Auditability (confidence: HIGH)
-- **Plane:** control
-- **Rationale:** Cross-surface activity and exportability expectations require auditable event trace posture visible to users.
+### MEDIUM-10: UX-REPORT-01 - Editorial Findings and Report Composition (confidence: medium)
 **Evidence:**
-- E1 [instance_signal] PRD and platform brief require immediate evidence and audit trail per action and outcome. cite: reference_architectures/codex-saas/product/PLATFORM_PRD.resolved.md
-- E2 [pattern_definition] EXT-AUDITABILITY provides tenant-scoped audit trail and traceability expectations. cite: architecture_library/patterns/external_v1/definitions_v1/ext-auditability.yaml
+- E1 [pinned_input] Report readability and history scanning are explicit UX brief signals.
+- E2 [pinned_input] Activity history surface should feel editorial and easy to scan.
+- E3 [pattern_definition] UX-REPORT-01 captures summary-first readability patterns.
+**Rationale:** Timeline and evidence-oriented views benefit from editorial composition patterns.
 
-### H-11: EXT-SECURITY_TRIMMING - Security Trimming (confidence: HIGH)
-- **Plane:** both
-- **Rationale:** Role-aware publish and admin surfaces need visibility trimming driven by permissions.
+### MEDIUM-11: EXT-BACKEND_FOR_FRONTEND_BFF - Backend-for-Frontend (BFF) (confidence: medium)
 **Evidence:**
-- E1 [instance_signal] Sharing and admin flows rely on role-based access and visibility constraints. cite: reference_architectures/codex-saas/spec/playbook/application_product_surface_v1.md
-- E2 [pattern_definition] EXT-SECURITY_TRIMMING aligns result visibility with permission posture. cite: architecture_library/patterns/external_v1/definitions_v1/ext-security_trimming.yaml
+- E1 [pinned_input] UI posture and planning payload adopt a thin BFF option.
+- E2 [pinned_input] UX journeys need composed list/detail/admin reads with reduced chatty calls.
+- E3 [pattern_definition] EXT-BACKEND_FOR_FRONTEND_BFF addresses UI-tailored contract shaping.
+**Rationale:** Thin BFF posture supports richer UX without changing core API ownership.
 
-### M-12: EXT-GRACEFUL_DEGRADATION - Graceful Degradation (confidence: MEDIUM)
-- **Plane:** both
-- **Rationale:** The UX state model needs clear behavior under partial failures without hard-stop breakage.
+### MEDIUM-12: CTX-01 - Request Context and Propagation (confidence: medium)
 **Evidence:**
-- E1 [instance_signal] Recovery principles call for retry-safe actions and stable committed-state visibility on failures. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
-- E2 [pattern_definition] EXT-GRACEFUL_DEGRADATION provides reduced-fidelity fallback posture under dependency issues. cite: architecture_library/patterns/external_v1/definitions_v1/ext-graceful_degradation.yaml
+- E1 [pinned_input] Tenant and principal context must remain visible and consistent across flows.
+- E2 [pinned_input] CP/AP contracts rely on stable context carriers for policy outcomes.
+- E3 [pattern_definition] CTX-01 defines context propagation boundaries.
+**Rationale:** UX role-aware behavior depends on reliable context propagation semantics.
 
-### M-13: VAL-01 - Validation and Error Handling Boundary (confidence: MEDIUM)
-- **Plane:** both
-- **Rationale:** CAP-001/CAP-004 flows require deterministic validation feedback and stable rejection handling.
+### MEDIUM-13: VAL-01 - Validation and Error Handling Boundary (confidence: medium)
 **Evidence:**
-- E1 [instance_signal] Core journeys include inline validation, explicit denials, and correction paths. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
-- E2 [graph_expansion] VAL-01 was pulled as a direct dependency of UX-CRUD-01. cite: reference_architectures/codex-saas/design/playbook/graph_expansion_open_list_ux_design_v1.yaml
-- E3 [pattern_definition] VAL-01 encodes boundary-level validation and error-shape handling. cite: architecture_library/patterns/core_v1/definitions_v1/VAL-01.yaml
+- E1 [pinned_input] CAP-001 and admin flows require validation clarity before persistence.
+- E2 [pinned_input] Fail-closed posture requires explicit deny/reject contracts.
+- E3 [pattern_definition] VAL-01 codifies consistent validation and error boundary behavior.
+**Rationale:** UX recovery and trust rely on stable validation/error semantics.
 
-### M-14: UX-ASYNC-01 - Async Job Progress and Result Surface (confidence: MEDIUM)
-- **Plane:** application
-- **Rationale:** Activity exports, policy-driven operations, and potential delayed updates benefit from explicit pending/running/completed/failed posture.
+### MEDIUM-14: EXT-AUDITABILITY - Auditability (confidence: medium)
 **Evidence:**
-- E1 [instance_signal] UX state model includes publish_pending and publish_complete states with retry-safe recovery. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
-- E2 [graph_expansion] UX-ASYNC-01 was opened as a complement to UX-RECOVERY-01. cite: reference_architectures/codex-saas/design/playbook/graph_expansion_open_list_ux_design_v1.yaml
-- E3 [pattern_definition] UX-ASYNC-01 provides explicit long-running progress/result UX posture. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-async-01.yaml
+- E1 [pinned_input] Product value includes audit-friendly activity history and exportable evidence.
+- E2 [pinned_input] Platform posture requires immediate decision/execution evidence.
+- E3 [pattern_definition] EXT-AUDITABILITY defines traceable cross-plane audit posture.
+**Rationale:** UX audit views need external auditability constraints to stay grounded.
 
-### M-15: UX-REPORT-01 - Editorial Findings and Report Composition (confidence: MEDIUM)
-- **Plane:** application
-- **Rationale:** Activity and evidence views should remain editorially readable for operator and admin review.
+### MEDIUM-15: UX-ASYNC-01 - Async Job Progress and Result Surface (confidence: medium)
 **Evidence:**
-- E1 [instance_signal] UX direction asks for readable timeline/report posture and scan-friendly summaries. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
-- E2 [graph_expansion] UX-REPORT-01 was opened as a complement to UX-VISUAL-01. cite: reference_architectures/codex-saas/design/playbook/graph_expansion_open_list_ux_design_v1.yaml
-- E3 [pattern_definition] UX-REPORT-01 captures summary-first editorial report composition. cite: architecture_library/patterns/ux_v1/definitions_v1/ux-report-01.yaml
+- E1 [pinned_input] Graph expansion opened UX-ASYNC-01 from UX-RECOVERY-01 complement relation.
+- E2 [pinned_input] Recovery model includes loading, retry, and explicit outcome states.
+- E3 [pattern_definition] UX-ASYNC-01 structures pending/running/completed/failed UX feedback.
+**Rationale:** Async progress patterns strengthen recovery quality for operations with delayed outcomes.
 
-### M-16: EXT-MATERIALIZED_VIEW - Materialized View (confidence: MEDIUM)
-- **Plane:** both
-- **Rationale:** Fast and stable filtered catalogs often need pre-shaped read models to avoid chatty or expensive UI-driven query composition.
+### MEDIUM-16: EXT-GRACEFUL_DEGRADATION - Graceful Degradation (confidence: medium)
 **Evidence:**
-- E1 [instance_signal] Search/filter/sort pressure and detail hydration expectations are explicit in interface contract pressures. cite: reference_architectures/codex-saas/design/playbook/retrieval_context_blob_ux_design_v1.md
-- E2 [graph_expansion] EXT-MATERIALIZED_VIEW was opened as a dependency of UX-SEARCH-01. cite: reference_architectures/codex-saas/design/playbook/graph_expansion_open_list_ux_design_v1.yaml
-- E3 [pattern_definition] EXT-MATERIALIZED_VIEW defines pre-composed read model posture for query-heavy surfaces. cite: architecture_library/patterns/external_v1/definitions_v1/ext-materialized_view.yaml
+- E1 [pinned_input] Graph expansion opened EXT-GRACEFUL_DEGRADATION from UX-RECOVERY-01 dependency.
+- E2 [pinned_input] UX constraints require non-destructive failure handling and retry-safe actions.
+- E3 [pattern_definition] EXT-GRACEFUL_DEGRADATION defines reduced-fidelity behavior under partial failure.
+**Rationale:** Graceful fallback posture complements fail-closed behavior for user trust.
+
+### MEDIUM-17: CAF-IAM-01 - Identity Principal Taxonomy (Platform/Tenant/Service/Agent) (confidence: medium)
+**Evidence:**
+- E1 [pinned_input] Graph expansion opened CAF-IAM-01 from UX-SESSION-01 dependency.
+- E2 [pinned_input] Session and role-aware UX relies on consistent principal semantics.
+- E3 [pattern_definition] CAF-IAM-01 clarifies identity taxonomy across governance and UX touchpoints.
+**Rationale:** Identity taxonomy grounding helps keep role-aware UX behavior coherent.
+
+### MEDIUM-18: EXT-API_COMPOSITION_AGGREGATOR - API Composition / Aggregator (confidence: medium)
+**Evidence:**
+- E1 [pinned_input] Graph expansion opened EXT-API_COMPOSITION_AGGREGATOR from CTX-01 complement relation.
+- E2 [pinned_input] UX journeys require composed reads to avoid multi-call UI stitching.
+- E3 [pattern_definition] EXT-API_COMPOSITION_AGGREGATOR supports bounded fan-in response composition.
+**Rationale:** Aggregation posture improves journey continuity while keeping REST contract style.

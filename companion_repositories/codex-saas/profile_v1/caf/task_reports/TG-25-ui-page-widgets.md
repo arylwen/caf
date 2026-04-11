@@ -3,29 +3,23 @@
 <!-- CAF_TRACE: capability=ui_frontend_scaffolding -->
 <!-- CAF_TRACE: instance=codex-saas -->
 
-## Task Spec Digest
-- task_id: `TG-25-ui-page-widgets`
-- title: Implement UI page for widgets
-- primary capability: `ui_frontend_scaffolding`
-- depends_on: `TG-15-ui-shell`, `TG-20-api-boundary-widgets`
+# Task Report: TG-25-ui-page-widgets
 
-## Inputs consumed
-- `caf/application_domain_model_v1.yaml`: used widget fields (`title`, `description`, `status`) and server-generated id posture.
-- `caf/application_product_surface_v1.md`: used widget-catalog and create-widget action expectations.
-- `caf/profile_parameters_resolved.yaml`: confirmed React SPA posture.
-- `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability ui_frontend_scaffolding`: validated role-binding evidence surfaces.
+## Inputs Consumed
+
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/design/playbook/application_design_v1.md
 
 ## Claims
-1. Added `WidgetsPage` and wired it into shell navigation.
-2. Bound list/create/delete interactions to `GET /api/widgets`, `POST /api/widgets`, and `DELETE /api/widgets/{id}`.
-3. Kept create form free of user-entered widget id and rendered loading, empty, success, and failure states.
 
-## Interaction matrix
-| page/module | reachable from shell/router via | AP contract path or action surface used | shared API helper call(s) used | observable loading/success/empty/failure states rendered |
-| --- | --- | --- | --- | --- |
-| `src/pages/WidgetsPage.jsx` | `src/App.jsx` nav item `widgets` | `GET /api/widgets`, `POST /api/widgets`, `DELETE /api/widgets/{id}` | `apiGet(...)`, `apiPost(...)`, `apiDelete(...)` | `loading`, `success`, `empty`, `error` |
+- Implemented a concrete Widgets page wired through the shared `ResourcePage` surface.
+- Bound the page to the declared `widgets` resource with `list`, `get`, `create`, `update`, and `delete` operations.
+- Wired create/update fields (`name`, `summary`, `content`, `status`) to explicit form state in the shared page surface.
 
 ## Evidence anchors
-- `code/ui/src/App.jsx:L1-L91`
-- `code/ui/src/api.js:L1-L104`
-- `code/ui/src/pages/WidgetsPage.jsx:L1-L101`
+
+- companion_repositories/codex-saas/profile_v1/code/ui/src/pages/WidgetsPage.jsx:L10-L19
+- companion_repositories/codex-saas/profile_v1/code/ui/src/pages/ResourcePage.jsx:L60-L305
+- companion_repositories/codex-saas/profile_v1/code/ui/src/App.jsx:L19-L28
+- companion_repositories/codex-saas/profile_v1/code/ui/src/api.js:L69-L103

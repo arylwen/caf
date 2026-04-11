@@ -1,414 +1,286 @@
 # CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-# CAF_TRACE: task_id=TG-00-AP-runtime-scaffold
-# CAF_TRACE: capability=plane_runtime_scaffolding
-# CAF_TRACE: instance=codex-saas
-# CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-PLANE-AP-RUNTIME-SCAFFOLD
-# CAF_TRACE: task_id=TG-20-api-boundary-widgets
-# CAF_TRACE: task_id=TG-20-api-boundary-widget_versions
-# CAF_TRACE: task_id=TG-20-api-boundary-collections
-# CAF_TRACE: task_id=TG-20-api-boundary-tags
-# CAF_TRACE: task_id=TG-20-api-boundary-collection_permissions
-# CAF_TRACE: task_id=TG-20-api-boundary-tenant_users_roles
-# CAF_TRACE: task_id=TG-20-api-boundary-tenant_settings
-# CAF_TRACE: task_id=TG-20-api-boundary-activity_events
-# CAF_TRACE: capability=api_boundary_implementation
-# CAF_TRACE: task_id=TG-30-service-facade-activity_events
-# CAF_TRACE: task_id=TG-30-service-facade-collection_permissions
-# CAF_TRACE: task_id=TG-30-service-facade-collections
-# CAF_TRACE: task_id=TG-30-service-facade-tags
-# CAF_TRACE: task_id=TG-30-service-facade-tenant_settings
-# CAF_TRACE: task_id=TG-30-service-facade-tenant_users_roles
-# CAF_TRACE: task_id=TG-30-service-facade-widget_versions
 # CAF_TRACE: task_id=TG-30-service-facade-widgets
 # CAF_TRACE: capability=service_facade_implementation
+# CAF_TRACE: instance=codex-saas
+# CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-AP-RESOURCE-WIDGETS-SERVICE
 
-"""Application-plane service seams for runtime scaffold composition and AP boundary facades."""
+"""AP service seams for runtime assumptions, policy enforcement, and resource service facades."""
 
-import json
-import os
-from copy import deepcopy
-from dataclasses import dataclass
-from typing import Any, Protocol
-from urllib import error as urllib_error
-from urllib import request as urllib_request
+from __future__ import annotations
 
-from ...common.auth.mock_claims import MockClaims, build_mock_authorization_header
+from typing import Protocol
+from uuid import uuid4
+
+from ...common.auth.mock_claims import decode_mock_bearer_token
+from ...common.config import RuntimeSettings
+from ..contracts.bnd_cp_ap_01.envelope import ContractRequestEnvelope
+from ..contracts.bnd_cp_ap_01.http_client import call_contract_http
+from ..persistence.repository_factory import build_access_port_registry
+
+ResourceContext = dict[str, object]
+ResourceEntity = dict[str, object]
+
+_RESOURCE_OPERATIONS: dict[str, set[str]] = {
+    "widgets": {"list", "get", "create", "update", "delete"},
+    "widget_versions": {"list", "get"},
+    "collections": {"list", "get", "create", "update", "delete"},
+    "collection_memberships": {"list", "create", "delete"},
+    "collection_permissions": {"list", "update"},
+    "tenant_role_assignments": {"list", "create", "delete"},
+    "activity_events": {"list", "get"},
+}
 
 
-@dataclass(frozen=True)
-class PolicyDecision:
-    allowed: bool
-    reason: str
+def allowed_operations(resource: str) -> set[str]:
+    return _RESOURCE_OPERATIONS.get(resource, set())
 
 
-class PolicyFacade:
-    """CP-governed policy seam consumed by AP runtime enforcement hooks."""
-
-    def __init__(self, cp_base_url: str | None = None) -> None:
-        self._cp_base_url = (cp_base_url or os.getenv("CP_POLICY_BASE_URL") or "http://cp:8001").rstrip("/")
-
-    def evaluate(
-        self,
-        *,
-        action: str,
-        tenant_id: str,
-        principal_id: str,
-        policy_version: str,
-        resource_id: str | None = None,
-    ) -> PolicyDecision:
-        if not action:
-            return PolicyDecision(allowed=False, reason="action is required")
-        if not tenant_id:
-            return PolicyDecision(allowed=False, reason="tenant_id is required")
-        if not principal_id:
-            return PolicyDecision(allowed=False, reason="principal_id is required")
-        if not policy_version:
-            return PolicyDecision(allowed=False, reason="policy_version is required")
-
-        payload = {
-            "action": action,
-            "tenant_id": tenant_id,
-            "principal_id": principal_id,
-            "policy_version": policy_version,
-            "resource_id": resource_id,
+class ApplicationRuntimeService:
+    def runtime_assumptions(self, authorization: str) -> dict[str, str]:
+        claims = decode_mock_bearer_token(authorization)
+        settings = RuntimeSettings.for_plane("ap")
+        return {
+            "api": "HTTP API boundary owned by code/ap/api",
+            "service": "Business orchestration lives in code/ap/application",
+            "persistence": "Persistence adapters are isolated in code/ap/persistence",
+            "ui": "Web SPA calls AP via AP boundary contracts",
+            "tenant_carrier": claims["tenant_id"],
+            "auth_mode": settings.auth_mode,
         }
-        authorization = build_mock_authorization_header(
-            MockClaims(
-                tenant_id=tenant_id,
-                principal_id=principal_id,
-                policy_version=policy_version,
-            )
+
+
+class ApplicationPolicyEnforcementService:
+    """AP enforcement seam that delegates policy decisions to CP contract surface."""
+
+    def evaluate_operation(
+        self,
+        claims: dict[str, str],
+        action: str,
+        resource: str,
+        correlation_id: str,
+    ) -> dict[str, object]:
+        settings = RuntimeSettings.for_plane("ap")
+        contract_request = ContractRequestEnvelope(
+            tenant_id=claims["tenant_id"],
+            principal_id=claims["principal_id"],
+            correlation_id=correlation_id,
+            payload={"action": action, "resource": resource},
         )
-
-        http_request = urllib_request.Request(
-            url=f"{self._cp_base_url}/cp/contract/BND-CP-AP-01/policy-decision",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": authorization,
-            },
-            method="POST",
-        )
-        try:
-            with urllib_request.urlopen(http_request) as response:
-                parsed = json.loads(response.read().decode("utf-8"))
-        except urllib_error.HTTPError as exc:
-            return PolicyDecision(allowed=False, reason=f"cp policy decision rejected request: {exc.code}")
-        except (urllib_error.URLError, json.JSONDecodeError, TimeoutError):
-            return PolicyDecision(allowed=False, reason="cp policy decision unavailable")
-
-        if parsed.get("tenant_id") != tenant_id:
-            return PolicyDecision(allowed=False, reason="cp response tenant_id mismatch")
-        if parsed.get("principal_id") != principal_id:
-            return PolicyDecision(allowed=False, reason="cp response principal_id mismatch")
-        if parsed.get("policy_version") != policy_version:
-            return PolicyDecision(allowed=False, reason="cp response policy_version mismatch")
-        if parsed.get("action") != action:
-            return PolicyDecision(allowed=False, reason="cp response action mismatch")
-
-        allowed = bool(parsed.get("allowed"))
-        reason = str(parsed.get("reason") or "policy decision missing reason")
-        return PolicyDecision(allowed=allowed, reason=reason)
-
-
-class WidgetRepository:
-    """Placeholder persistence seam for downstream AP repository adapters."""
-
-    def health_snapshot(self) -> dict[str, str]:
-        return {"status": "ready", "detail": "repository seam scaffolded"}
+        decision = call_contract_http(settings.cp_api_base_url, contract_request)
+        return {
+            "tenant_id": decision.tenant_id,
+            "principal_id": decision.principal_id,
+            "policy_version": claims["policy_version"],
+            "correlation_id": decision.correlation_id,
+            "decision": decision.payload,
+        }
 
 
 class WidgetsAccessInterface(Protocol):
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]: ...
-    def get_item(self, *, tenant_id: str, item_id: str) -> dict[str, Any]: ...
-    def create_item(self, *, tenant_id: str, actor_user_id: str, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def update_item(
+    def list(self, context: ResourceContext) -> list[ResourceEntity]: ...
+
+    def get(self, context: ResourceContext, resource_id: str) -> ResourceEntity | None: ...
+
+    def create(self, context: ResourceContext, payload: dict[str, object]) -> ResourceEntity: ...
+
+    def update(
         self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        item_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]: ...
-    def delete_item(self, *, tenant_id: str, item_id: str) -> dict[str, str]: ...
+        context: ResourceContext,
+        resource_id: str,
+        payload: dict[str, object],
+    ) -> ResourceEntity | None: ...
+
+    def delete(self, context: ResourceContext, resource_id: str) -> bool: ...
 
 
 class WidgetVersionsAccessInterface(Protocol):
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]: ...
+    def list(self, context: ResourceContext) -> list[ResourceEntity]: ...
+
+    def get(self, context: ResourceContext, resource_id: str) -> ResourceEntity | None: ...
 
 
 class CollectionsAccessInterface(Protocol):
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]: ...
-    def get_item(self, *, tenant_id: str, item_id: str) -> dict[str, Any]: ...
-    def create_item(self, *, tenant_id: str, actor_user_id: str, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def update_item(
+    def list(self, context: ResourceContext) -> list[ResourceEntity]: ...
+
+    def get(self, context: ResourceContext, resource_id: str) -> ResourceEntity | None: ...
+
+    def create(self, context: ResourceContext, payload: dict[str, object]) -> ResourceEntity: ...
+
+    def update(
         self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        item_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]: ...
+        context: ResourceContext,
+        resource_id: str,
+        payload: dict[str, object],
+    ) -> ResourceEntity | None: ...
+
+    def delete(self, context: ResourceContext, resource_id: str) -> bool: ...
 
 
-class TagsAccessInterface(Protocol):
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]: ...
-    def create_item(self, *, tenant_id: str, actor_user_id: str, payload: dict[str, Any]) -> dict[str, Any]: ...
+class CollectionMembershipsAccessInterface(Protocol):
+    def list(self, context: ResourceContext) -> list[ResourceEntity]: ...
+
+    def create(self, context: ResourceContext, payload: dict[str, object]) -> ResourceEntity: ...
+
+    def delete(self, context: ResourceContext, resource_id: str) -> bool: ...
 
 
 class CollectionPermissionsAccessInterface(Protocol):
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]: ...
-    def create_item(self, *, tenant_id: str, actor_user_id: str, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def update_item(
+    def list(self, context: ResourceContext) -> list[ResourceEntity]: ...
+
+    def update(
         self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        item_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]: ...
+        context: ResourceContext,
+        resource_id: str,
+        payload: dict[str, object],
+    ) -> ResourceEntity | None: ...
 
 
-class TenantUsersRolesAccessInterface(Protocol):
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]: ...
-    def create_item(self, *, tenant_id: str, actor_user_id: str, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def delete_item(self, *, tenant_id: str, item_id: str) -> dict[str, str]: ...
+class TenantRoleAssignmentsAccessInterface(Protocol):
+    def list(self, context: ResourceContext) -> list[ResourceEntity]: ...
 
+    def create(self, context: ResourceContext, payload: dict[str, object]) -> ResourceEntity: ...
 
-class TenantSettingsAccessInterface(Protocol):
-    def get_settings(self, *, tenant_id: str) -> dict[str, Any]: ...
-    def update_settings(
-        self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]: ...
+    def delete(self, context: ResourceContext, resource_id: str) -> bool: ...
 
 
 class ActivityEventsAccessInterface(Protocol):
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]: ...
+    def list(self, context: ResourceContext) -> list[ResourceEntity]: ...
+
+    def get(self, context: ResourceContext, resource_id: str) -> ResourceEntity | None: ...
 
 
-class WidgetsFacade:
-    def __init__(self, access: WidgetsAccessInterface) -> None:
-        self._access = access
+class InMemoryResourceAccess:
+    """CAF_TEST_ONLY provider until TG-40 persistence adapters are bound at TG-90 runtime wiring."""
 
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]:
-        return self._access.list_items(tenant_id=tenant_id)
+    def __init__(self) -> None:
+        self._store: dict[str, dict[str, dict[str, ResourceEntity]]] = {
+            resource: {} for resource in _RESOURCE_OPERATIONS
+        }
 
-    def get_item(self, *, tenant_id: str, item_id: str) -> dict[str, Any]:
-        return self._access.get_item(tenant_id=tenant_id, item_id=item_id)
+    def list(self, context: ResourceContext) -> list[ResourceEntity]:
+        resource = _resource_key(context)
+        tenant_id = _tenant_id(context)
+        tenant_bucket = self._store[resource].get(tenant_id, {})
+        return list(tenant_bucket.values())
 
-    def create_item(
+    def get(self, context: ResourceContext, resource_id: str) -> ResourceEntity | None:
+        resource = _resource_key(context)
+        tenant_id = _tenant_id(context)
+        return self._store[resource].get(tenant_id, {}).get(resource_id)
+
+    def create(self, context: ResourceContext, payload: dict[str, object]) -> ResourceEntity:
+        resource = _resource_key(context)
+        tenant_id = _tenant_id(context)
+        resource_id = str(uuid4())
+        entity = {
+            "id": resource_id,
+            "tenant_id": tenant_id,
+            "resource": resource,
+            "principal_id": context["principal_id"],
+            "correlation_id": context["correlation_id"],
+            "attributes": dict(payload),
+        }
+        self._store[resource].setdefault(tenant_id, {})[resource_id] = entity
+        return entity
+
+    def update(
         self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        payload_copy = deepcopy(payload)
-        payload_copy.pop("tenant_id", None)
-        payload_copy.pop("widget_id", None)
-        return self._access.create_item(
-            tenant_id=tenant_id,
-            actor_user_id=actor_user_id,
-            payload=payload_copy,
-        )
+        context: ResourceContext,
+        resource_id: str,
+        payload: dict[str, object],
+    ) -> ResourceEntity | None:
+        resource = _resource_key(context)
+        tenant_id = _tenant_id(context)
+        tenant_bucket = self._store[resource].setdefault(tenant_id, {})
+        if resource_id not in tenant_bucket:
+            return None
+        existing = tenant_bucket[resource_id]
+        next_attributes = dict(existing.get("attributes", {}))
+        body = dict(payload)
+        body.pop("id", None)
+        body.pop("resource_id", None)
+        next_attributes.update(body)
+        existing["attributes"] = next_attributes
+        existing["principal_id"] = context["principal_id"]
+        existing["correlation_id"] = context["correlation_id"]
+        return existing
 
-    def update_item(
+    def delete(self, context: ResourceContext, resource_id: str) -> bool:
+        resource = _resource_key(context)
+        tenant_id = _tenant_id(context)
+        tenant_bucket = self._store[resource].setdefault(tenant_id, {})
+        return tenant_bucket.pop(resource_id, None) is not None
+
+
+class ResourceServiceFacade:
+    """Transport-agnostic AP service facade for a single resource contract."""
+
+    def __init__(self, resource: str, access_port: object) -> None:
+        self._resource = resource
+        self._access_port = access_port
+
+    def list(self, context: ResourceContext) -> list[ResourceEntity]:
+        self._ensure_operation("list")
+        return self._access_port.list(context)
+
+    def get(self, context: ResourceContext, resource_id: str) -> ResourceEntity | None:
+        self._ensure_operation("get")
+        return self._access_port.get(context, resource_id)
+
+    def create(self, context: ResourceContext, payload: dict[str, object]) -> ResourceEntity:
+        self._ensure_operation("create")
+        return self._access_port.create(context, payload)
+
+    def update(
         self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        item_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        payload_copy = deepcopy(payload)
-        payload_copy.pop("tenant_id", None)
-        payload_copy.pop("widget_id", None)
-        return self._access.update_item(
-            tenant_id=tenant_id,
-            actor_user_id=actor_user_id,
-            item_id=item_id,
-            payload=payload_copy,
-        )
+        context: ResourceContext,
+        resource_id: str,
+        payload: dict[str, object],
+    ) -> ResourceEntity | None:
+        self._ensure_operation("update")
+        return self._access_port.update(context, resource_id, payload)
 
-    def delete_item(self, *, tenant_id: str, item_id: str) -> dict[str, str]:
-        return self._access.delete_item(tenant_id=tenant_id, item_id=item_id)
+    def delete(self, context: ResourceContext, resource_id: str) -> bool:
+        self._ensure_operation("delete")
+        return self._access_port.delete(context, resource_id)
+
+    def _ensure_operation(self, operation: str) -> None:
+        if operation not in allowed_operations(self._resource):
+            raise PermissionError(f"operation '{operation}' is not declared for resource '{self._resource}'")
 
 
-class WidgetVersionsFacade:
-    def __init__(self, access: WidgetVersionsAccessInterface) -> None:
-        self._access = access
+class ResourceServiceFacadeRegistry:
+    def __init__(self, registry: dict[str, ResourceServiceFacade]) -> None:
+        self._registry = registry
 
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]:
-        return self._access.list_items(tenant_id=tenant_id)
-
-
-class CollectionsFacade:
-    def __init__(self, access: CollectionsAccessInterface) -> None:
-        self._access = access
-
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]:
-        return self._access.list_items(tenant_id=tenant_id)
-
-    def get_item(self, *, tenant_id: str, item_id: str) -> dict[str, Any]:
-        return self._access.get_item(tenant_id=tenant_id, item_id=item_id)
-
-    def create_item(
-        self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        payload_copy = deepcopy(payload)
-        payload_copy.pop("tenant_id", None)
-        payload_copy.pop("collection_id", None)
-        return self._access.create_item(
-            tenant_id=tenant_id,
-            actor_user_id=actor_user_id,
-            payload=payload_copy,
-        )
-
-    def update_item(
-        self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        item_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        payload_copy = deepcopy(payload)
-        payload_copy.pop("tenant_id", None)
-        payload_copy.pop("collection_id", None)
-        return self._access.update_item(
-            tenant_id=tenant_id,
-            actor_user_id=actor_user_id,
-            item_id=item_id,
-            payload=payload_copy,
-        )
+    def get(self, resource: str) -> ResourceServiceFacade:
+        facade = self._registry.get(resource)
+        if facade is None:
+            raise ValueError(f"unknown resource '{resource}'")
+        return facade
 
 
-class TagsFacade:
-    def __init__(self, access: TagsAccessInterface) -> None:
-        self._access = access
-
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]:
-        return self._access.list_items(tenant_id=tenant_id)
-
-    def create_item(
-        self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        payload_copy = deepcopy(payload)
-        payload_copy.pop("tenant_id", None)
-        payload_copy.pop("tag_id", None)
-        return self._access.create_item(
-            tenant_id=tenant_id,
-            actor_user_id=actor_user_id,
-            payload=payload_copy,
-        )
+def build_default_resource_service_facade_registry() -> ResourceServiceFacadeRegistry:
+    # Runtime wiring closes AP required/provided interface bindings at composition-root time.
+    access_port_registry = build_access_port_registry()
+    registry: dict[str, ResourceServiceFacade] = {}
+    for resource in _RESOURCE_OPERATIONS:
+        access_port = access_port_registry.get(resource)
+        if access_port is None:
+            raise RuntimeError(f"missing persistence access port for resource '{resource}'")
+        registry[resource] = ResourceServiceFacade(resource=resource, access_port=access_port)
+    return ResourceServiceFacadeRegistry(registry)
 
 
-class CollectionPermissionsFacade:
-    def __init__(self, access: CollectionPermissionsAccessInterface) -> None:
-        self._access = access
-
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]:
-        return self._access.list_items(tenant_id=tenant_id)
-
-    def create_item(
-        self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        payload_copy = deepcopy(payload)
-        payload_copy.pop("tenant_id", None)
-        payload_copy.pop("collection_permission_id", None)
-        return self._access.create_item(
-            tenant_id=tenant_id,
-            actor_user_id=actor_user_id,
-            payload=payload_copy,
-        )
-
-    def update_item(
-        self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        item_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        payload_copy = deepcopy(payload)
-        payload_copy.pop("tenant_id", None)
-        payload_copy.pop("collection_permission_id", None)
-        return self._access.update_item(
-            tenant_id=tenant_id,
-            actor_user_id=actor_user_id,
-            item_id=item_id,
-            payload=payload_copy,
-        )
+def _resource_key(context: ResourceContext) -> str:
+    resource = context.get("resource")
+    if not isinstance(resource, str):
+        raise ValueError("resource context is required")
+    return resource
 
 
-class TenantUsersRolesFacade:
-    def __init__(self, access: TenantUsersRolesAccessInterface) -> None:
-        self._access = access
-
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]:
-        return self._access.list_items(tenant_id=tenant_id)
-
-    def create_item(
-        self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        payload_copy = deepcopy(payload)
-        payload_copy.pop("tenant_id", None)
-        payload_copy.pop("tenant_user_role_id", None)
-        return self._access.create_item(
-            tenant_id=tenant_id,
-            actor_user_id=actor_user_id,
-            payload=payload_copy,
-        )
-
-    def delete_item(self, *, tenant_id: str, item_id: str) -> dict[str, str]:
-        return self._access.delete_item(tenant_id=tenant_id, item_id=item_id)
-
-
-class TenantSettingsFacade:
-    def __init__(self, access: TenantSettingsAccessInterface) -> None:
-        self._access = access
-
-    def get_settings(self, *, tenant_id: str) -> dict[str, Any]:
-        return self._access.get_settings(tenant_id=tenant_id)
-
-    def update_settings(
-        self,
-        *,
-        tenant_id: str,
-        actor_user_id: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        return self._access.update_settings(
-            tenant_id=tenant_id,
-            actor_user_id=actor_user_id,
-            payload=payload,
-        )
-
-
-class ActivityEventsFacade:
-    def __init__(self, access: ActivityEventsAccessInterface) -> None:
-        self._access = access
-
-    def list_items(self, *, tenant_id: str) -> list[dict[str, Any]]:
-        return self._access.list_items(tenant_id=tenant_id)
-
+def _tenant_id(context: ResourceContext) -> str:
+    tenant_id = context.get("tenant_id")
+    if not isinstance(tenant_id, str):
+        raise ValueError("tenant_id context is required")
+    return tenant_id

@@ -1,16 +1,25 @@
-﻿# TG-20-api-boundary-activity_events Task Report
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-20-api-boundary-activity_events -->
+<!-- CAF_TRACE: capability=api_boundary_implementation -->
+<!-- CAF_TRACE: instance=codex-saas -->
 
-## Inputs consumed
-- `reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml`: consumed activity-events audit resource operation posture (`list`) and tenant-scoping constraints.
-- `reference_architectures/codex-saas/design/playbook/application_design_v1.md`: consumed AP boundary adapter and service-facade separation posture.
-- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`: consumed auth-claim and policy-evaluation rails for ingress handling.
+# Task Report: TG-20-api-boundary-activity_events
+
+## Inputs Consumed
+
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/design/playbook/application_design_v1.md
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/design/playbook/tbp_resolution_v1.yaml
 
 ## Claims
-- Materialized an activity_events boundary list handler with explicit auth-claim + policy enforcement and optional target filtering.
-- Preserved boundary thinness by delegating event retrieval to `ActivityEventsFacade` through dependency-provider seams.
-- Registered activity_events dependency provider and AP composition-root router wiring.
+
+- Confirmed AP boundary endpoints are available for resource transport operations on `activity_events`.
+- Confirmed boundary authorization path enforces policy evaluation before resource operations.
+- Confirmed resource operation set is constrained by application-service declarations for `activity_events`.
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/code/ap/api/activity_events_router.py:L1-L49 — supports Claims 1-2
-- companion_repositories/codex-saas/profile_v1/code/ap/api/dependencies.py:L69-L120 — supports Claim 3
-- companion_repositories/codex-saas/profile_v1/code/ap/main.py:L89-L89 — supports Claim 3
+
+- companion_repositories/codex-saas/profile_v1/code/ap/api/routes.py:L129-L215
+- companion_repositories/codex-saas/profile_v1/code/ap/application/services.py:L30-L30
+- companion_repositories/codex-saas/profile_v1/code/ap/application/services.py:L224-L257

@@ -1,18 +1,25 @@
-# TG-40-persistence-widget_versions Task Report
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-40-persistence-widget_versions -->
+<!-- CAF_TRACE: capability=persistence_implementation -->
+<!-- CAF_TRACE: instance=codex-saas -->
 
-## Inputs consumed
-- `reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml`: consumed widget_versions aggregate list/query semantics and tenant scoping requirements.
-- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`: consumed resolved SQLAlchemy ORM/postgres rails.
-- `reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml`: consumed `BIND-AP-widget_versions` provider requirement for `WidgetVersionsAccessInterface`.
+# Task Report: TG-40-persistence-widget_versions
+
+## Inputs Consumed
+
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/spec/playbook/application_domain_model_v1.yaml
+- reference_architectures/codex-saas/design/playbook/interface_binding_contracts_v1.yaml
 
 ## Claims
-- Implemented tenant-scoped SQLAlchemy-backed widget_versions list operation over persisted records.
-- Wired widget_versions facade provider through AP repository factory and dependency seam.
-- Included widget_versions model in shared AP ORM model registration and bootstrap flow.
+
+- Implemented AP SQLAlchemy persistence model and repository for `widget_versions`.
+- Materialized tenant-scoped list/get behavior aligned to declared resource operations.
+- Preserved immutable version access patterns and resource payload shaping for AP facade consumption.
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/code/ap/persistence/postgres_widget_versions_repository.py:L15-L30 — supports Claim 1
-- companion_repositories/codex-saas/profile_v1/code/ap/persistence/repository_factory.py:L23-L24 — supports Claim 2
-- companion_repositories/codex-saas/profile_v1/code/ap/api/dependencies.py:L73-L74 — supports Claim 2
-- companion_repositories/codex-saas/profile_v1/code/ap/persistence/models.py:L26-L34 — supports Claim 3
-- companion_repositories/codex-saas/profile_v1/code/common/persistence/sqlalchemy_schema_bootstrap.py:L16-L18 — supports Claim 3
+
+- companion_repositories/codex-saas/profile_v1/code/ap/persistence/repository.py:L80-L90
+- companion_repositories/codex-saas/profile_v1/code/ap/persistence/repository.py:L256-L295
+- companion_repositories/codex-saas/profile_v1/code/ap/persistence/schema_bootstrap.py:L1-L13

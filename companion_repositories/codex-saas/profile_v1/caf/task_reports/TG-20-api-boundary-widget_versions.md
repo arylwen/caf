@@ -1,16 +1,25 @@
-﻿# TG-20-api-boundary-widget_versions Task Report
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-20-api-boundary-widget_versions -->
+<!-- CAF_TRACE: capability=api_boundary_implementation -->
+<!-- CAF_TRACE: instance=codex-saas -->
 
-## Inputs consumed
-- `reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml`: consumed widget-version list-only operation posture and tenant scoping requirements.
-- `reference_architectures/codex-saas/design/playbook/application_design_v1.md`: consumed AP boundary-to-service facade separation constraints.
-- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`: consumed auth-claim carrier and FastAPI dependency injection conventions.
+# Task Report: TG-20-api-boundary-widget_versions
+
+## Inputs Consumed
+
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/design/playbook/application_design_v1.md
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/design/playbook/tbp_resolution_v1.yaml
 
 ## Claims
-- Materialized a widget_versions boundary router with tenant-aware auth/policy enforcement and optional widget filter support.
-- Kept boundary logic transport-focused while delegating retrieval to `WidgetVersionsFacade` via dependency seam.
-- Registered the widget_versions router and provider functions in AP composition/dependency surfaces.
+
+- Confirmed AP boundary endpoints are available for resource transport operations on `widget_versions`.
+- Confirmed boundary authorization path enforces policy evaluation before resource operations.
+- Confirmed resource operation set is constrained by application-service declarations for `widget_versions`.
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/code/ap/api/widget_versions_router.py:L1-L49 — supports Claims 1-2
-- companion_repositories/codex-saas/profile_v1/code/ap/api/dependencies.py:L45-L88 — supports Claim 3
-- companion_repositories/codex-saas/profile_v1/code/ap/main.py:L83-L83 — supports Claim 3
+
+- companion_repositories/codex-saas/profile_v1/code/ap/api/routes.py:L129-L215
+- companion_repositories/codex-saas/profile_v1/code/ap/application/services.py:L25-L25
+- companion_repositories/codex-saas/profile_v1/code/ap/application/services.py:L224-L257

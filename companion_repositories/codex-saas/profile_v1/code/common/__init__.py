@@ -3,3 +3,6 @@
 # CAF_TRACE: capability=plane_runtime_scaffolding
 # CAF_TRACE: instance=codex-saas
 # CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-PY-01-python-package-markers
+
+"""Shared helpers used by AP and CP runtime scaffolds."""
+

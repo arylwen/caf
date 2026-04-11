@@ -1,10 +1,25 @@
-﻿# TG-20-api-boundary-collections Review
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-20-api-boundary-collections -->
+<!-- CAF_TRACE: capability=semantic_code_review -->
+<!-- CAF_TRACE: instance=codex-saas -->
+
+# Review Note: TG-20-api-boundary-collections
+
+Threshold: `blocker`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-TASK-REPORT-01 | PASS | Report is complete with inputs consumed, claims, and evidence anchors. |
-| RR-TBP-ROLE-BINDINGS-01 | PASS | Boundary router path matches TBP template (`code/ap/api/collections_router.py`) with canonical provider/composition rails preserved. |
-| RR-FASTAPI-SVC-01 | PASS | Collections boundary delegates business operations to `CollectionsFacade` and does not access persistence directly. |
-| RR-AUTH-MOCK-CLAIM-CONTRACT-01 | PASS | `resolve_auth_context` and policy checks are applied consistently across list/get/create/update handlers. |
+| RR-FA-CORR-01 | PASS | Resource transport routes are defined in `code/ap/api/routes.py`. |
+| RR-FA-BOUNDARY-ERR-01 | PASS | Policy-denied and operation mismatch paths produce explicit HTTP errors (`code/ap/api/routes.py`). |
+| RR-FA-ARCH-01 | PASS | Boundary delegates to `ResourceServiceFacadeRegistry` and service facades (`code/ap/application/services.py`). |
+| RR-TASK-REPORT-01 | PASS | Task report for TG-20-api-boundary-collections records resource-scoped evidence anchors. |
 
-Summary: No blocker/high findings for TG-20-api-boundary-collections.
+Summary:
+- API boundary behavior for collections is implemented through policy-gated AP resource routes and facade operation guards.
+
+Issues:
+- High: none.
+- Medium: none.
+- Low: none.
+
+No issues at or above the configured threshold (`blocker`) were found.

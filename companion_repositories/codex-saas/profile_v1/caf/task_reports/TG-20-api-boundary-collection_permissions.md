@@ -1,16 +1,25 @@
-﻿# TG-20-api-boundary-collection_permissions Task Report
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-20-api-boundary-collection_permissions -->
+<!-- CAF_TRACE: capability=api_boundary_implementation -->
+<!-- CAF_TRACE: instance=codex-saas -->
 
-## Inputs consumed
-- `reference_architectures/codex-saas/design/playbook/application_domain_model_v1.yaml`: consumed collection permission contract fields and operations (`list/create/update`).
-- `reference_architectures/codex-saas/design/playbook/application_design_v1.md`: consumed AP boundary/service separation and contract discipline.
-- `reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml`: consumed FastAPI, auth-claim tenant context, and fail-closed policy rails.
+# Task Report: TG-20-api-boundary-collection_permissions
+
+## Inputs Consumed
+
+- reference_architectures/codex-saas/spec/playbook/application_spec_v1.md
+- reference_architectures/codex-saas/design/playbook/application_design_v1.md
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
+- reference_architectures/codex-saas/design/playbook/tbp_resolution_v1.yaml
 
 ## Claims
-- Materialized collection_permissions boundary handlers with explicit auth-claim resolution and policy checks for list/create/update.
-- Enforced boundary-owned identity normalization for create/update payloads while honoring path identifiers on update.
-- Registered collection_permissions provider seams and composition-root router wiring.
+
+- Confirmed AP boundary endpoints are available for resource transport operations on `collection_permissions`.
+- Confirmed boundary authorization path enforces policy evaluation before resource operations.
+- Confirmed resource operation set is constrained by application-service declarations for `collection_permissions`.
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/code/ap/api/collection_permissions_router.py:L1-L89 — supports Claims 1-2
-- companion_repositories/codex-saas/profile_v1/code/ap/api/dependencies.py:L57-L102 — supports Claim 3
-- companion_repositories/codex-saas/profile_v1/code/ap/main.py:L86-L86 — supports Claim 3
+
+- companion_repositories/codex-saas/profile_v1/code/ap/api/routes.py:L129-L215
+- companion_repositories/codex-saas/profile_v1/code/ap/application/services.py:L28-L28
+- companion_repositories/codex-saas/profile_v1/code/ap/application/services.py:L224-L257

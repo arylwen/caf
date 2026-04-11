@@ -1,11 +1,11 @@
 # CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-# CAF_TRACE: task_id=TG-90-unit-tests
-# CAF_TRACE: capability=unit_test_scaffolding
+# CAF_TRACE: task_id=TG-85-observability-and-config
+# CAF_TRACE: capability=observability_and_config
 # CAF_TRACE: instance=codex-saas
-# CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-UNIT-TESTS
+# CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-PY-PACKAGING-01-requirements
 
-fastapi
-uvicorn
-sqlalchemy
-psycopg[binary]
-pytest
+fastapi==0.115.4
+uvicorn==0.32.0
+sqlalchemy==2.0.36
+psycopg[binary]==3.2.3
+pydantic-settings==2.6.1

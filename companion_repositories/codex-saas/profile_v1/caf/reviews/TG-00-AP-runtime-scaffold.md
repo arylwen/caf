@@ -2,42 +2,51 @@
 <!-- CAF_TRACE: task_id=TG-00-AP-runtime-scaffold -->
 <!-- CAF_TRACE: capability=semantic_code_review -->
 <!-- CAF_TRACE: instance=codex-saas -->
-<!-- CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-PLANE-AP-RUNTIME-SCAFFOLD -->
+
+# Review Note: TG-00-AP-runtime-scaffold
+
+Threshold: `blocker`
+
+Selected rubrics:
+- `RR-PY-GENERAL-01`
+- `RR-PY-TESTS-01`
+- `RR-COMPOSE-01`
+- `RR-FASTAPI-SVC-01`
+- `RR-TASK-REPORT-01`
+- `RR-TBP-ROLE-BINDINGS-01`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-PY-SEC-01 | PASS | `code/ap/main.py` and `code/common/auth/mock_claims.py` contain no hardcoded secrets or credential literals. |
-| RR-PY-CORR-01 | PASS | AP imports in `code/ap/main.py` use package-root-coherent paths (`..common...`, `.application...`) and resolve under `code/`. |
-| RR-PY-CORR-01A | PASS | Package markers exist at `code/__init__.py`, `code/ap/__init__.py`, `code/common/__init__.py`, and child package markers. |
-| RR-PY-CORR-02 | PASS | No bare `except:` or silent failures were introduced in AP scaffold code. |
-| RR-PY-PERF-01 | PASS | Request paths have no unbounded loops over external boundaries. |
-| RR-TST-BLOCK-01 | PASS | No tautological or placeholder tests were introduced by this task. |
-| RR-TST-HIGH-01 | FAIL | AP endpoints in `code/ap/main.py` currently have no unit tests in `tests/**`. |
-| RR-TST-HIGH-02 | FAIL | No AP negative-path tests for missing/invalid mock claims are present yet. |
-| RR-COMP-CORR-01 | FAIL | Compose runtime surface (`docker/compose.candidate.yaml`) is not materialized in this wave. |
-| RR-COMP-BUILD-01 | FAIL | Docker build/env wiring surfaces (`docker/Dockerfile.ap`, `docker/Dockerfile.cp`, `.env`) are not present in this wave. |
-| RR-COMP-SEC-01 | PASS | No privileged compose settings or Docker socket mounts were introduced. |
-| RR-FA-CORR-01 | PASS | AP router is registered by `app.include_router(router)` in `code/ap/main.py`. |
-| RR-FA-SEC-01 | PASS | Claims parsing is centralized in `code/common/auth/mock_claims.py` and route handlers avoid ad-hoc auth dict parsing. |
-| RR-FA-BOUNDARY-ERR-01 | PASS | AP composition root maps `PermissionError` and `ValueError` to explicit HTTP responses in `code/ap/main.py`. |
-| RR-FA-SCHEMA-BOOTSTRAP-01 | PASS | AP `create_app()` invokes `bootstrap_schema_if_needed()` before router serving. |
-| RR-FA-ARCH-01 | PASS | AP handler stays thin and delegates to `PolicyFacade` and `WidgetRepository` seams. |
-| RR-TR-STRUCT-01 | PASS | `caf/task_reports/TG-00-AP-runtime-scaffold.md` contains required sections from task report rubric. |
-| RR-TR-STEP-01 | PASS | Step evidence in report maps to each task step and required inputs from `caf/task_graph_v1.yaml`. |
-| RR-TR-UX-COVERAGE-01 | PASS | Non-UI task; UI/UX coverage matrix requirement is not applicable. |
-| RR-TBP-RB-01 | PASS | `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability plane_runtime_scaffolding` returned empty expectations; no missing role-binding outputs. |
+| RR-PY-SEC-01 | PASS | No secrets detected in `code/ap/main.py`, `code/ap/asgi.py`, `code/common/auth/mock_claims.py`. |
+| RR-PY-CORR-01 | PASS | Imports resolve with module-root coherence: `code/ap/main.py` uses `from ..common.config import RuntimeSettings`; `code/ap/asgi.py` uses `from .main import app`. |
+| RR-PY-CORR-01A | PASS | Package markers exist: `code/__init__.py`, `code/ap/__init__.py`, `code/common/__init__.py`. |
+| RR-PY-CORR-02 | PASS | No bare `except`; AP boundary translates `PermissionError` and `ValueError` via exception handlers in `code/ap/main.py`. |
+| RR-PY-PERF-01 | PASS | Runtime scaffold files do not add unbounded request-path scans or per-item DB/network loops. |
+| RR-TST-BLOCK-01 | PASS | Test suite contains no tautological `assert True` placeholders (`tests/test_ap_auth_context.py`, `tests/test_ap_service_facade.py`, `tests/test_mock_claims.py`). |
+| RR-TST-HIGH-01 | FAIL | No AP runtime composition-root specific endpoint assertions were added for this task; existing tests target auth context/service behavior, not AP runtime scaffold endpoints. |
+| RR-TST-HIGH-02 | PASS | Negative-path authorization/conflict behavior is tested in `tests/test_ap_auth_context.py`. |
+| RR-COMP-CORR-01 | PASS | Compose defines AP/CP services and API ports in `docker/compose.candidate.yaml`. |
+| RR-COMP-BUILD-01 | PASS | AP/CP services use Dockerfile builds and `.env` via `env_file`; see `docker/compose.candidate.yaml`, `docker/Dockerfile.ap`, `docker/Dockerfile.cp`, `.env`, `.gitignore`. |
+| RR-COMP-RDY-01 | PASS | `postgres` has healthcheck and AP/CP depend on `service_healthy` in `docker/compose.candidate.yaml`. |
+| RR-COMP-SEC-01 | PASS | No privileged mode, docker socket mount, or host network usage in `docker/compose.candidate.yaml`. |
+| RR-FA-CORR-01 | PASS | AP composition root registers router: `app.include_router(ap_router)` in `code/ap/main.py`. |
+| RR-FA-SEC-01 | PASS | AP routes use typed request models (`PolicyPreviewRequest`, `ResourcePayload`) in `code/ap/api/routes.py`. |
+| RR-FA-BOUNDARY-ERR-01 | PASS | Permission and value errors are explicitly mapped to 403/400 in `code/ap/main.py`; route-level policy denials map to HTTP 403 in `code/ap/api/routes.py`. |
+| RR-FA-SCHEMA-BOOTSTRAP-01 | PASS | AP composition root startup event invokes bootstrap via `bootstrap_schema()` in `code/ap/main.py`. |
+| RR-FA-ARCH-01 | PASS | AP route handlers delegate to service/facade dependencies in `code/ap/api/routes.py`. |
+| RR-TR-STRUCT-01 | PASS | Task report contains required sections in `caf/task_reports/TG-00-AP-runtime-scaffold.md`. |
+| RR-TR-STEP-01 | PASS | Report step evidence addresses all declared steps and required inputs. |
+| RR-TR-UX-COVERAGE-01 | PASS | Non-UI capability (`plane_runtime_scaffolding`); UX coverage matrix not required for this task type. |
+| RR-TBP-RB-01 | PASS | `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability plane_runtime_scaffolding` returned `expectations: []`; no unresolved role-binding artifacts for this capability. |
 
 Summary:
-- AP runtime scaffold is coherent for wave-0 objectives and clears blocker-level rubric checks.
+- AP runtime scaffold remains coherent with resolved Python/FastAPI/mock-auth pins and module-root conventions.
+- No blocker findings were identified.
 
-High issues:
-- Missing unit and negative-path tests for AP endpoints.
-- Compose/Docker surfaces are not present in this wave output.
-
-Medium issues:
-- None.
-
-Low issues:
-- None.
+Issues:
+- High:
+  - `RR-TST-HIGH-01`: runtime-scaffold-specific endpoint behavior lacks direct unit coverage.
+- Medium: none.
+- Low: none.
 
 No issues at or above the configured threshold (`blocker`) were found.

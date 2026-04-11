@@ -2,28 +2,36 @@
 <!-- CAF_TRACE: task_id=TG-92-tech-writer-readme -->
 <!-- CAF_TRACE: capability=semantic_code_review -->
 <!-- CAF_TRACE: instance=codex-saas -->
-<!-- CAF_TRACE: trace_anchor=pattern_obligation_id:OBL-REPO-README -->
+
+# Review Note: TG-92-tech-writer-readme
+
+Threshold: `blocker`
+
+Selected rubrics:
+- `RR-PY-GENERAL-01`
+- `RR-PY-TESTS-01`
+- `RR-COMPOSE-01`
+- `RR-FASTAPI-SVC-01`
+- `RR-WEB-SPA-01`
+- `RR-TASK-REPORT-01`
+- `RR-TBP-ROLE-BINDINGS-01`
 
 | check_id | PASS/FAIL | Evidence |
 | --- | --- | --- |
-| RR-COMP-CORR-01 | PASS | README quickstart and health checks align with existing `docker/compose.candidate.yaml` services and ports. |
-| RR-COMP-BUILD-01 | PASS | Startup instructions reference pinned compose command path and env-file usage. |
-| RR-COMP-SEC-01 | PASS | README keeps credentials/environment guidance externalized via `.env` and `infrastructure/postgres.env.example`. |
-| RR-TR-STRUCT-01 | PASS | `caf/task_reports/TG-92-tech-writer-readme.md` includes required inputs, claims, and evidence anchors. |
-| RR-TR-STEP-01 | PASS | Report maps README content directly to TG-92 steps for startup/env/tests/runtime expectations. |
-| RR-TR-UX-COVERAGE-01 | PASS | Not a UX-lane task; UX coverage matrix requirement is not applicable. |
-| RR-TBP-RB-01 | PASS | `node tools/caf/resolve_tbp_role_bindings_v1.mjs codex-saas --capability repo_documentation` returns no required bindings; no missing obligations. |
+| RR-COMP-CORR-01 | PASS | README quickstart and troubleshooting match compose topology and service endpoints (`README.md`, `docker/compose.candidate.yaml`). |
+| RR-COMP-RDY-01 | PASS | Documentation reflects postgres health-gated startup semantics (`README.md`, `docker/compose.candidate.yaml`). |
+| RR-TST-HIGH-01 | PASS | README includes explicit unit-test run command and cites existing tests (`README.md`, `tests/test_*.py`). |
+| RR-SPA-DOC-TRUTH-01 | PASS | Operator guidance remains grounded to currently produced runtime/UI/auth helper artifacts; no aspirational controls are claimed. |
+| RR-TR-STRUCT-01 | PASS | Task report is present with claims and evidence anchors (`caf/task_reports/TG-92-tech-writer-readme.md`). |
+| RR-TBP-RB-01 | PASS | No role-binding expectations are declared for `repo_documentation`; rubric requirement is satisfied by explicit empty expectation set. |
 
 Summary:
-- README now provides grounded operator guidance for local startup, test execution, runtime contracts, and mock-auth diagnostics.
+- README is materially aligned to generated compose, env, test, and mock-auth surfaces.
+- No blocker findings identified.
 
-High issues:
-- None.
-
-Medium issues:
-- None.
-
-Low issues:
-- None.
+Issues:
+- High: none.
+- Medium: none.
+- Low: none.
 
 No issues at or above the configured threshold (`blocker`) were found.

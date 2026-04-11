@@ -1,23 +1,39 @@
 # CAF_TRACE: generated_by=Contura Architecture Framework (CAF)
-# CAF_TRACE: task_id=TG-10-OPTIONS-api_boundary_implementation
-# CAF_TRACE: capability=api_boundary_implementation
+# CAF_TRACE: task_id=TG-35-policy-enforcement-core
+# CAF_TRACE: capability=policy_enforcement
 # CAF_TRACE: instance=codex-saas
-# CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-AUTH-MOCK-01-boundary-adapter
+# CAF_TRACE: trace_anchor=pattern_obligation_id:O-TBP-AUTH-MOCK-01-claim-contract
 
-"""AP boundary auth-context adapter for canonical mock bearer claim resolution."""
+"""AP auth-context adapter for the mock Authorization/Bearer claim contract."""
 
-from collections.abc import Mapping
+from __future__ import annotations
 
-from fastapi import HTTPException, status
+from typing import Mapping
 
-from ...common.auth.mock_claims import MockClaims, parse_mock_claims_from_headers
+from fastapi import HTTPException
+
+from ...common.auth.mock_claims import decode_mock_bearer_token, enforce_claim_over_header_conflict
 
 
-def resolve_auth_context(headers: Mapping[str, str]) -> MockClaims:
+def _header_value(headers: Mapping[str, str], key: str) -> str | None:
+    for existing_key, value in headers.items():
+        if existing_key.lower() == key.lower():
+            return value
+    return None
+
+
+def resolve_auth_context(headers: Mapping[str, str]) -> dict[str, str]:
+    """Resolve tenant/principal context from claim carrier and reject conflicting headers."""
+    authorization = _header_value(headers, "authorization")
+    if not authorization:
+        raise HTTPException(status_code=401, detail="missing Authorization bearer token")
+
     try:
-        return parse_mock_claims_from_headers(headers)
+        claims = decode_mock_bearer_token(authorization)
+        return enforce_claim_over_header_conflict(
+            claims,
+            tenant_header=_header_value(headers, "x-tenant-context-check"),
+            principal_header=_header_value(headers, "x-principal-context-check"),
+        )
     except PermissionError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(exc),
-        ) from exc
+        raise HTTPException(status_code=401, detail=str(exc)) from exc

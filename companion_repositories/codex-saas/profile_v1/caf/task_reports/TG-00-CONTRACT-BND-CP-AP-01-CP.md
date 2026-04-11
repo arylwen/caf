@@ -1,16 +1,24 @@
-# TG-00-CONTRACT-BND-CP-AP-01-CP Task Report
+<!-- CAF_TRACE: generated_by=Contura Architecture Framework (CAF) -->
+<!-- CAF_TRACE: task_id=TG-00-CONTRACT-BND-CP-AP-01-CP -->
+<!-- CAF_TRACE: capability=contract_scaffolding -->
+<!-- CAF_TRACE: instance=codex-saas -->
 
-## Inputs consumed
-- `reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml`: consumed contract declaration and boundary references for CP provider scaffolding.
-- `reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md`: consumed CP-side provider posture for CP<->AP interactions.
+# Task Report: TG-00-CONTRACT-BND-CP-AP-01-CP
+
+## Inputs Consumed
+
+- reference_architectures/codex-saas/design/playbook/contract_declarations_v1.yaml
+- reference_architectures/codex-saas/design/playbook/control_plane_design_v1.md
+- reference_architectures/codex-saas/spec/guardrails/profile_parameters_resolved.yaml
 
 ## Claims
-- Materialized CP-side contract envelopes with explicit context fields.
-- Materialized CP-side synchronous handler and event publish/consume stubs.
-- Added CP contract README with extension posture and traceable completion evidence.
+
+- Implemented CP-side contract envelope dataclasses for request/response/event context transport.
+- Implemented CP-side HTTP contract handler with deterministic policy decision payload.
+- Implemented CP-side async event publish/consume helpers for the same envelope shape.
 
 ## Evidence anchors
-- companion_repositories/codex-saas/profile_v1/code/cp/contracts/BND-CP-AP-01/envelope.py:L1-L33 — supports Claim 1
-- companion_repositories/codex-saas/profile_v1/code/cp/contracts/BND-CP-AP-01/http_server.py:L1-L18 — supports Claim 2
-- companion_repositories/codex-saas/profile_v1/code/cp/contracts/BND-CP-AP-01/events.py:L1-L32 — supports Claim 2
-- companion_repositories/codex-saas/profile_v1/code/cp/contracts/BND-CP-AP-01/README.md:L1-L33 — supports Claim 3
+
+- companion_repositories/codex-saas/profile_v1/code/cp/contracts/bnd_cp_ap_01/envelope.py:L14-L35
+- companion_repositories/codex-saas/profile_v1/code/cp/contracts/bnd_cp_ap_01/http_server.py:L13-L28
+- companion_repositories/codex-saas/profile_v1/code/cp/contracts/bnd_cp_ap_01/events.py:L15-L33
