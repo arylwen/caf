@@ -19,7 +19,11 @@ Public-facing docs should tell one coherent story:
   - `/caf arch`
   - `/caf next <instance> apply`
   - `/caf plan`
+  - `/caf backlog`
   - `/caf build`
+  - `/caf ux`
+  - `/caf ux plan`
+  - `/caf ux build`
 
 Do not mix in retired commands, alternate sample names, or internal helper syntax on public pages.
 

@@ -43,7 +43,14 @@ commands:
             kind: string
       - verb: plan
         skill: skills/caf-plan/SKILL.md
-        summary: Generate planning artifacts (obligations + task graph) after design outputs exist.
+        summary: Generate planning artifacts (obligations + task graph + task plan) after design outputs exist.
+        args:
+          - name: instance_name
+            required: true
+            kind: string
+      - verb: backlog
+        skill: skills/caf-backlog/SKILL.md
+        summary: Project the human backlog view on demand from the existing task graph.
         args:
           - name: instance_name
             required: true

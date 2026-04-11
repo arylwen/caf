@@ -73,6 +73,7 @@ API boundary minimum invariants (generic; no tech stack assumptions):
   - Create endpoints MUST NOT require an id in the request body; generate the id server-side (typically in the service layer).
   - Update endpoints MUST take the id from the URL/path parameter and MUST ignore any id fields in the body.
 - Do not embed persistence logic in the boundary.
+- Treat `caf/application_domain_model_v1.yaml` `api_candidates.resources[].operations` as the authoritative verb set for the resource. Implement every declared operation and do not expose extra CRUD verbs in the AP router.
 
 ## Definition of Done alignment (semantic)
 

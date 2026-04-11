@@ -19,13 +19,12 @@ layout:
       path_template: code/common/auth/mock_claims.py
       artifact_class: code_runnable_candidate
       evidence_contains:
-        - Authorization
-        - Bearer
         - tenant_id
         - principal_id
         - policy_version
         - mock.
         - .token
+      validator_kind: mock_auth_claims_contract_evidence
     mock_auth_ap_boundary_adapter:
       path_template: code/ap/api/auth_context.py
       artifact_class: code_runnable_candidate
@@ -113,7 +112,7 @@ extensions:
         - When tenant context adopts `auth_claim`, the canonical mock contract is an Authorization/Bearer claim surface; alternate tenant/principal headers are only inspected to reject conflicting carriers, not emitted as the primary happy-path contract.
         - Mock auth helpers keep claim parsing and precedence behavior inside the stack-owned auth helper, AP boundary adapter, and UI API helper surfaces rather than scattering ad hoc token parsing across unrelated modules.
         - The canonical mock Authorization/Bearer payload uses `tenant_id`, `principal_id`, and `policy_version`; unrelated request metadata stays outside the auth claim payload.
-        - "UI/UX claim builders must emit the same canonical bearer token shape resolved by the shared auth helper (current canonical shape: `mock.<base64-json>.token`) rather than a lane-local raw base64 variant."
+        - "UI/UX claim builders must emit the same canonical bearer token shape resolved by the role-bound shared auth helper (current canonical shape: `mock.<base64-json>.token`) rather than a lane-local raw base64 variant."
         - UI claim construction and UI API header emission live in their actual owning surfaces rather than relying on a single proxy file to carry all evidence.
         - When scaffolded UI flows include create/admin paths, the mock auth helper surfaces keep demo persona posture explicit (for example via named presets or clearly selected identities) rather than silently hardcoding a non-elevated principal that blocks the declared happy path.
         - Runtime boundary handling preserves case-insensitive HTTP header access for Authorization/Bearer and alternate conflict-detection headers.

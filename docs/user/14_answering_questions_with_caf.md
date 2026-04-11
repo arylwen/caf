@@ -14,7 +14,7 @@ Use one UX surface:
 
 You can write the question naturally. **No backticks required.**
 
-If you don’t mention an instance name, CAF should default to the canonical public sample instance (`codex-saas`, if present).
+If you don’t mention an instance name, CAF should default to the canonical sample instance (`codex-saas`, if present).
 
 ---
 
@@ -46,7 +46,7 @@ Minimum for most questions about your own instance:
 /caf arch <instance>
 ```
 
-For the canonical public sample (`codex-saas`), these artifacts may already exist in a release bundle or release asset.
+For the canonical sample (`codex-saas`), these artifacts may already exist in a release bundle or release asset.
 
 For **work visibility** (tasks, obligations, backlog):
 

@@ -77,6 +77,13 @@ The planner must preserve those declarations through task shaping:
 
 Do not emit a task graph whose wording sounds complete while the declared product actions have no realizable owner.
 
+## Operator-note truthfulness rule
+
+When the graph includes `UX-TG-95-ux-operator-notes`, the intended operator notes must remain truthful to the bounded richer UX runtime posture:
+- do not shape the task so its natural completion would instruct humans to use controls that the bounded UX lane does not actually realize;
+- prefer explicit fixed-posture wording (for example a fixed demo persona) over aspirational instructions about selectors, retry controls, membership review panels, or publish confirmations that are not part of the current build;
+- when a desired validation step depends on a not-yet-realized flow, that gap should be deferred explicitly or surfaced through blocker feedback rather than hidden inside optimistic notes.
+
 ## Capability rule
 
 Allowed required capabilities for this lane:

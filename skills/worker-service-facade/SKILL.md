@@ -62,7 +62,7 @@ Service facade minimum invariants (generic; no tech stack assumptions):
 - **Identifier posture (default):** generate resource ids server-side on create, unless the authoritative app spec explicitly declares client-supplied ids.
   - Create operations should accept a payload without an id and return a payload with an assigned id.
   - Update operations should enforce the id from the function parameter/path, not from the payload.
-- Implement only operations declared for the resource in `caf/application_spec_v1.md`.
+- Implement only operations declared for the resource in `caf/application_spec_v1.md` and `caf/application_domain_model_v1.yaml`. When the two differ, FAIL-CLOSED instead of picking a looser verb set.
 
 ## Definition of Done alignment (semantic)
 

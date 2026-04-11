@@ -60,6 +60,13 @@ layout:
       evidence_contains:
         - React
         - App
+      validator_kind: ux_management_surface_alignment
+      validator_config:
+        execution_surfaces_any_of:
+          - build_postgate_ux_collections_management_surface
+        lane: ux
+        api_helper_role_binding_keys_any_of:
+          - mock_auth_ux_api_helper
     ui_dockerfile:
       path_template: docker/Dockerfile.ui
       artifact_class: config_stubs_non_executable

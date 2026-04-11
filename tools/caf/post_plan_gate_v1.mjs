@@ -49,6 +49,7 @@ const requiredInputEnrichment = path.join(cafToolsDir, "task_graph_required_inpu
 const resolvedRailsVisibilityEnrichment = path.join(cafToolsDir, "task_graph_resolved_rails_visibility_enrichment_v1.mjs");
 const uiSeedEnrichment = path.join(cafToolsDir, "task_graph_ui_seed_semantic_enrichment_v1.mjs");
 const obligationTraceEnrichment = path.join(cafToolsDir, "task_graph_obligation_trace_enrichment_v1.mjs");
+const compiledObligationAcceptanceEnrichment = path.join(cafToolsDir, "task_graph_compiled_obligation_acceptance_enrichment_v1.mjs");
 const genInterfaceBindingContracts = path.join(cafToolsDir, "gen_interface_binding_contracts_v1.mjs");
 const interfaceBindingContractGate = path.join(cafToolsDir, "interface_binding_contract_gate_v1.mjs");
 
@@ -67,6 +68,7 @@ if (!fs.existsSync(requiredInputEnrichment)) die("Missing helper: tools/caf/task
 if (!fs.existsSync(resolvedRailsVisibilityEnrichment)) die("Missing helper: tools/caf/task_graph_resolved_rails_visibility_enrichment_v1.mjs");
 if (!fs.existsSync(uiSeedEnrichment)) die("Missing helper: tools/caf/task_graph_ui_seed_semantic_enrichment_v1.mjs");
 if (!fs.existsSync(obligationTraceEnrichment)) die("Missing helper: tools/caf/task_graph_obligation_trace_enrichment_v1.mjs");
+if (!fs.existsSync(compiledObligationAcceptanceEnrichment)) die("Missing helper: tools/caf/task_graph_compiled_obligation_acceptance_enrichment_v1.mjs");
 if (!fs.existsSync(genInterfaceBindingContracts)) die("Missing helper: tools/caf/gen_interface_binding_contracts_v1.mjs");
 if (!fs.existsSync(interfaceBindingContractGate)) die("Missing helper: tools/caf/interface_binding_contract_gate_v1.mjs");
 if (!fs.existsSync(genTaskPlan)) die("Missing helper: tools/caf/gen_task_plan_v1.mjs");
@@ -104,6 +106,10 @@ if (code !== 0) process.exit(code);
 
 // Step 5d.5 (Compiler-owned obligation trace attachment)
 code = runGate(obligationTraceEnrichment);
+if (code !== 0) process.exit(code);
+
+// Step 5d.6 (Compiler-owned named obligation acceptance enrichment)
+code = runGate(compiledObligationAcceptanceEnrichment);
 if (code !== 0) process.exit(code);
 
 // Step 5e

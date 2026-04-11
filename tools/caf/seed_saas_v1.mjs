@@ -106,12 +106,15 @@ async function ensureDir(p) {
 
 export async function internal_main(argv = process.argv.slice(2)) {
   const args = Array.isArray(argv) ? argv : [];
-  if (args.length < 2) {
-    die('Usage: node tools/caf/seed_saas_v1.mjs <instance_name> <profile_template_id> [--overwrite]', 2);
+  if (args.length < 1) {
+    die('Usage: node tools/caf/seed_saas_v1.mjs <instance_name> [profile_template_id] [--profile=<profile_template_id>] [--overwrite]', 2);
   }
 
-  const instanceName = args[0];
-  const profileTemplateId = args[1];
+  const positionals = args.filter((a) => !String(a).startsWith('--'));
+  const instanceName = positionals[0];
+  const positionalProfileTemplateId = positionals[1] || '';
+  const profileArg = args.find((a) => String(a).startsWith('--profile='));
+  const profileTemplateId = (profileArg ? String(profileArg).slice('--profile='.length).trim() : '') || positionalProfileTemplateId || 'intentionally_boring_saas_v1';
   const overwrite = args.includes('--overwrite');
 
   if (!NAME_RE.test(instanceName)) {

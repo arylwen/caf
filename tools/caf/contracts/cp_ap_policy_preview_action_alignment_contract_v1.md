@@ -1,6 +1,6 @@
 # CP/AP policy preview action alignment contract v1
 
-Owner: framework post-build validation
+Owner: AP runtime policy owner seam executed by framework post-build validation
 
 Intent:
 - Keep browser policy-preview actions aligned with AP-enforced CP policy actions.
@@ -9,7 +9,7 @@ Intent:
 
 Contract:
 - Any action literal passed to `previewPolicyDecision(...)` in generated UI/UX code must also appear in AP service policy enforcement calls.
-- AP service policy enforcement calls are the source of truth for runtime-governed actions because they are the actions actually enforced before AP mutations or reads.
+- The declared AP runtime policy owner surface is the primary source of truth for runtime-governed actions; binding-report-located AP consumer/runtime assembly surfaces may extend that evidence when the active realization spans multiple AP-owned files.
 - Browser preview surfaces may present friendlier labels, but the action sent to CP must match an AP-enforced action literal.
 - The alignment requirement applies when a page actually emits a page-level preview request. A supporting review page that relies only on runtime-governed API helpers does not need to invent a separate preview action literal.
 - If a page obtains its data by calling `listCollections(...)` and also emits a page-level preview, that preview must use the AP-enforced read action for that path rather than a UX-only synonym.

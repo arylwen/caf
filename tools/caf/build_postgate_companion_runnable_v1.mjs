@@ -17,13 +17,16 @@ import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseYamlString } from './lib_yaml_v2.mjs';
+import { resolveConcreteRoleBindingPathsForInstance } from './lib_tbp_role_bindings_v1.mjs';
+import { executeRoleBindingValidator, shouldExecuteRoleBindingValidator } from './lib_role_binding_validators_v1.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 import { loadInterfaceBindingContractsForInstance } from './lib_interface_binding_contracts_v1.mjs';
+import { resolveLanePageDirs } from './lib_validation_subject_resolution_v1.mjs';
 import { internal_main as buildTechnologyChoiceRealizationGate } from './build_technology_choice_realization_gate_v1.mjs';
-import { internal_main as buildUxCollectionsWorkspaceSurfaceGate } from './build_postgate_ux_collections_workspace_surface_v1.mjs';
+import { internal_main as buildUxCollectionsManagementSurfaceGate } from './build_postgate_ux_collections_management_surface_v1.mjs';
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 let WRITE_ALLOWED_ROOTS = null;
 function isWithin(childAbs, parentAbs) {
@@ -157,6 +160,17 @@ function isPlainObject(v) {
 function normalizeRelPath(rel) {
   return String(rel ?? '').trim().replace(/\\/g, '/');
 }
+function resolveExistingConcreteRoleBindingPath(match, companionRoot) {
+  const concreteRels = Array.from(new Set((Array.isArray(match?.concrete_paths_any_of) ? match.concrete_paths_any_of : [])
+    .map((rel) => normalizeRelPath(rel))
+    .filter(Boolean)));
+  if (concreteRels.length === 0) return normalizeRelPath(match?.concrete_path);
+  for (const rel of concreteRels) {
+    const abs = companionRoot ? path.join(companionRoot, rel) : '';
+    if (abs && existsSync(abs)) return rel;
+  }
+  return concreteRels[0];
+}
 function fileMtimeMs(absPath) {
   try {
     return statSync(absPath).mtimeMs;
@@ -238,6 +252,17 @@ function normalizeDependencyWiringMode(v) {
   return mode === 'framework_managed' ? 'framework_managed' : 'manual_composition_root';
 }
 
+function normalizeRuntimeLanguage(v) {
+  return String(v ?? '').trim().toLowerCase();
+}
+
+function resolveRootEntrypointWitnessNames(runtimeLanguage) {
+  if (runtimeLanguage === 'python') return ['main.py', 'app.py', 'server.py', 'asgi.py'];
+  if (runtimeLanguage === 'typescript') return ['main.ts', 'app.ts', 'server.ts', 'index.ts'];
+  if (runtimeLanguage === 'javascript') return ['main.js', 'app.js', 'server.js', 'index.js'];
+  return ['main.py'];
+}
+
 function interfaceBindingClosureBoundaryLabel(mode) {
   return normalizeDependencyWiringMode(mode) === 'framework_managed'
     ? 'framework-managed assembly boundary already supported by the selected stack'
@@ -257,6 +282,48 @@ function isPotentialPersistenceAssemblySurface(relPath) {
   return false;
 }
 
+
+
+
+const REPOSITORY_FACTORY_EXTENSIONS = ['.py', '.ts', '.js', '.mjs', '.cjs'];
+
+function resolvePersistenceAssemblySurfaceRelPaths(companionRoot) {
+  const rels = [];
+  for (const plane of ['ap', 'cp']) {
+    for (const ext of REPOSITORY_FACTORY_EXTENSIONS) {
+      const abs = path.join(companionRoot, 'code', plane, 'persistence', `repository_factory${ext}`);
+      if (existsSync(abs)) {
+        rels.push(normalizeRelPath(path.relative(companionRoot, abs)));
+      }
+    }
+  }
+  return Array.from(new Set(rels)).sort();
+}
+
+async function resolvePrimaryRuntimeEntryExpectations(repoRoot, instanceName, companionRoot) {
+  const roleBindingKeys = ['composition_root', 'ap_http_entrypoint', 'asgi_entrypoint'];
+  const matches = [];
+  for (const roleBindingKey of roleBindingKeys) {
+    const resolved = await resolveConcreteRoleBindingPathsForInstance(repoRoot, instanceName, roleBindingKey);
+    for (const match of resolved) {
+      const rel = resolveExistingConcreteRoleBindingPath(match, companionRoot);
+      if (!rel) continue;
+      matches.push({
+        ...match,
+        role_binding_key: roleBindingKey,
+        relative_path: rel,
+        absolute_path: path.join(companionRoot, rel),
+      });
+    }
+  }
+  const seen = new Set();
+  return matches.filter((match) => {
+    const key = `${match.role_binding_key}:${match.relative_path}:${match.validator_kind || ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 async function listFilesRecursive(dirAbs) {
   const out = [];
@@ -354,24 +421,34 @@ async function runUxSurfacePageModuleGapPostgate(repoRoot, instanceName, taskRep
     'UX-TG-40-collections-publish-surface',
     'UX-TG-50-admin-and-activity-governance-surface',
   ];
-  const completed = uxTaskIds.filter((taskId) => taskEvidenceFresh(taskReportsDir, path.join(repoRoot, 'companion_repositories', instanceName, 'profile_v1'), taskId, freshnessFloorMs));
+  const companionRoot = path.join(repoRoot, 'companion_repositories', instanceName, 'profile_v1');
+  const completed = uxTaskIds.filter((taskId) => taskEvidenceFresh(taskReportsDir, companionRoot, taskId, freshnessFloorMs));
   if (completed.length === 0) return 0;
-  const pagesDir = path.join(repoRoot, 'companion_repositories', instanceName, 'profile_v1', 'code', 'ux', 'src', 'pages');
-  const pageFiles = (await listFilesRecursive(pagesDir)).filter((abs) => /\.(jsx|tsx)$/.test(abs));
+  const pageDirs = await resolveLanePageDirs(repoRoot, instanceName, companionRoot, 'ux');
+  const pageFiles = [];
+  for (const dir of pageDirs) {
+    for (const abs of await listFilesRecursive(dir.absolute_path)) {
+      if (/\.(jsx|tsx)$/.test(abs)) pageFiles.push(abs);
+    }
+  }
   if (pageFiles.length > 0) return 0;
+  const missingDirLabels = pageDirs.length > 0
+    ? pageDirs.map((dir) => `${safeRel(repoRoot, dir.absolute_path)} (${dir.source}${dir.role_binding_key ? ` via ${dir.role_binding_key}` : ''})`)
+    : [safeRel(repoRoot, path.join(companionRoot, 'code', 'ux', 'src', 'pages'))];
   const fp = await writeFeedbackPacket(
     repoRoot,
     instanceName,
     'build-postgate-ux-surface-page-module-gap',
-    'Richer UX tasks completed without materializing any route/page modules under code/ux/src/pages',
+    'Richer UX tasks completed without materializing any route/page modules under the resolved UX page-family surface',
     [
-      'Strengthen the framework-owned UX worker contract so UX-TG-20/30/40/50 materialize page modules under code/ux/src/pages instead of collapsing all major surfaces into App.jsx.',
+      'Resolve the UX page-family surface from the selected UX lane first; do not treat one illustrative `code/ux/src/pages` path as the only normative witness.',
+      'Strengthen the framework-owned UX worker contract so UX-TG-20/30/40/50 materialize page modules under the resolved UX page-family surface instead of collapsing all major surfaces into App.jsx.',
       'Keep App.jsx as the stable shell/router composition surface and move task-owned workspaces into page modules.',
       'Regenerate the UX lane from the owning framework seam rather than hand-editing the witness companion as the primary fix.',
     ],
     [
       ...completed.map((taskId) => `Completed richer UX task: ${safeRel(repoRoot, path.join(taskReportsDir, `${taskId}.md`))}`),
-      `Missing page modules under: ${safeRel(repoRoot, pagesDir)}`,
+      ...missingDirLabels.map((label) => `Missing page modules under: ${label}`),
     ],
   );
   die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 39);
@@ -395,6 +472,30 @@ async function runPolicyPreviewActionAlignmentPostgate(repoRoot, instanceName) {
 
 async function runCpRuntimeRepositoryHealthPostgate(repoRoot, instanceName) {
   const scriptPath = path.join(repoRoot, 'tools', 'caf', 'build_postgate_cp_runtime_repository_health_v1.mjs');
+  if (!existsSync(scriptPath)) return 0;
+  const mod = await import(pathToFileURL(scriptPath).href);
+  if (!mod || typeof mod.internal_main !== 'function') return 0;
+  return await mod.internal_main([instanceName]);
+}
+
+async function runDeclaredResourceOperationsPostgate(repoRoot, instanceName) {
+  const scriptPath = path.join(repoRoot, 'tools', 'caf', 'build_postgate_declared_resource_operations_v1.mjs');
+  if (!existsSync(scriptPath)) return 0;
+  const mod = await import(pathToFileURL(scriptPath).href);
+  if (!mod || typeof mod.internal_main !== 'function') return 0;
+  return await mod.internal_main([instanceName]);
+}
+
+async function runRelationshipResourceShapePostgate(repoRoot, instanceName) {
+  const scriptPath = path.join(repoRoot, 'tools', 'caf', 'build_postgate_relationship_resource_shape_v1.mjs');
+  if (!existsSync(scriptPath)) return 0;
+  const mod = await import(pathToFileURL(scriptPath).href);
+  if (!mod || typeof mod.internal_main !== 'function') return 0;
+  return await mod.internal_main([instanceName]);
+}
+
+async function runUxBrowserPlaneAlignmentPostgate(repoRoot, instanceName) {
+  const scriptPath = path.join(repoRoot, 'tools', 'caf', 'build_postgate_ux_browser_plane_alignment_v1.mjs');
   if (!existsSync(scriptPath)) return 0;
   const mod = await import(pathToFileURL(scriptPath).href);
   if (!mod || typeof mod.internal_main !== 'function') return 0;
@@ -455,17 +556,20 @@ export async function internal_main(argv = process.argv.slice(2)) {
   const taskGraphFreshnessFloorMs = existsSync(taskGraphPath) ? fileMtimeMs(taskGraphPath) : 0;
   let resolvedObj = null;
   let databaseEngine = '';
+  let runtimeLanguage = '';
   let dependencyWiringMode = 'manual_composition_root';
   let expectedDeploymentStackName = instanceName;
   if (existsSync(resolvedPath)) {
     try {
       resolvedObj = parseYamlString(await readUtf8(resolvedPath), resolvedPath) || {};
       databaseEngine = normalizeEngineRequirement(resolvedObj?.database?.engine || resolvedObj?.platform?.database_engine);
+      runtimeLanguage = normalizeRuntimeLanguage(resolvedObj?.runtime?.language || resolvedObj?.platform?.runtime_language);
       dependencyWiringMode = normalizeDependencyWiringMode(resolvedObj?.platform?.dependency_wiring_mode);
       expectedDeploymentStackName = String(resolvedObj?.deployment?.stack_name ?? '').trim() || instanceName;
     } catch {
       resolvedObj = null;
       databaseEngine = '';
+      runtimeLanguage = '';
       dependencyWiringMode = 'manual_composition_root';
     }
   }
@@ -505,9 +609,10 @@ export async function internal_main(argv = process.argv.slice(2)) {
   } else {
     try {
       const techChoiceCode = await buildTechnologyChoiceRealizationGate([instanceName]);
-      const uxCollectionsWorkspaceCode = await buildUxCollectionsWorkspaceSurfaceGate([instanceName]);
+      const uxCollectionsWorkspaceCode = await buildUxCollectionsManagementSurfaceGate([instanceName]);
       if (typeof techChoiceCode === 'number' && techChoiceCode !== 0) return techChoiceCode;
       if (typeof uxCollectionsWorkspaceCode === 'number' && uxCollectionsWorkspaceCode !== 0) return uxCollectionsWorkspaceCode;
+      resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-ux-collections-management-surface-drift');
       resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-ux-collections-workspace-surface-drift');
     } catch (e) {
       if (typeof e?.code === 'number') return e.code;
@@ -538,6 +643,27 @@ export async function internal_main(argv = process.argv.slice(2)) {
   try {
     const cpRuntimeRepositoryHealthCode = await runCpRuntimeRepositoryHealthPostgate(repoRoot, instanceName);
     if (typeof cpRuntimeRepositoryHealthCode === 'number' && cpRuntimeRepositoryHealthCode !== 0) return cpRuntimeRepositoryHealthCode;
+  } catch (e) {
+    if (typeof e?.code === 'number') return e.code;
+    throw e;
+  }
+  try {
+    const uxBrowserPlaneAlignmentCode = await runUxBrowserPlaneAlignmentPostgate(repoRoot, instanceName);
+    if (typeof uxBrowserPlaneAlignmentCode === 'number' && uxBrowserPlaneAlignmentCode !== 0) return uxBrowserPlaneAlignmentCode;
+  } catch (e) {
+    if (typeof e?.code === 'number') return e.code;
+    throw e;
+  }
+  try {
+    const declaredResourceOperationsCode = await runDeclaredResourceOperationsPostgate(repoRoot, instanceName);
+    if (typeof declaredResourceOperationsCode === 'number' && declaredResourceOperationsCode !== 0) return declaredResourceOperationsCode;
+  } catch (e) {
+    if (typeof e?.code === 'number') return e.code;
+    throw e;
+  }
+  try {
+    const relationshipResourceShapeCode = await runRelationshipResourceShapePostgate(repoRoot, instanceName);
+    if (typeof relationshipResourceShapeCode === 'number' && relationshipResourceShapeCode !== 0) return relationshipResourceShapeCode;
   } catch (e) {
     if (typeof e?.code === 'number') return e.code;
     throw e;
@@ -614,6 +740,8 @@ export async function internal_main(argv = process.argv.slice(2)) {
         const status = String(reportObj?.status ?? '').trim();
         const bindingId = String(reportObj?.binding_id ?? '').trim();
         const closedByTaskId = String(reportObj?.closed_by?.task_id ?? '').trim();
+        const assemblerTaskId = String(reportObj?.assembler?.task_id ?? '').trim();
+        const effectiveClosureTaskId = assemblerTaskId || closedByTaskId;
         const consumerArtifacts = Array.isArray(reportObj?.evidence?.consumer_artifact_paths) ? reportObj.evidence.consumer_artifact_paths : [];
         const providerArtifacts = Array.isArray(reportObj?.evidence?.provider_artifact_paths) ? reportObj.evidence.provider_artifact_paths : [];
         const assemblerArtifacts = Array.isArray(reportObj?.evidence?.assembler_artifact_paths) ? reportObj.evidence.assembler_artifact_paths : [];
@@ -626,8 +754,8 @@ export async function internal_main(argv = process.argv.slice(2)) {
         if (status !== 'closed') {
           bindingIssues.push(`${safeRel(repoRoot, reportPath)}: status must be closed (found ${status || '(missing)'})`);
         }
-        if (closedByTaskId !== binding.assembler.task_id) {
-          bindingIssues.push(`${safeRel(repoRoot, reportPath)}: closed_by.task_id must equal ${binding.assembler.task_id}`);
+        if (effectiveClosureTaskId !== binding.assembler.task_id) {
+          bindingIssues.push(`${safeRel(repoRoot, reportPath)}: assembler.task_id (or legacy closed_by.task_id) must equal ${binding.assembler.task_id}`);
         }
         if (consumerArtifacts.length === 0) {
           bindingIssues.push(`${safeRel(repoRoot, reportPath)}: evidence.consumer_artifact_paths must list the consumer artifact`);
@@ -692,8 +820,7 @@ export async function internal_main(argv = process.argv.slice(2)) {
     const fallbackIssues = [];
     const fallbackEvidenceRelPaths = [
       ...activePersistenceAssemblyRelPaths,
-      'code/ap/persistence/repository_factory.py',
-      'code/cp/persistence/repository_factory.py',
+      ...resolvePersistenceAssemblySurfaceRelPaths(companionRoot),
     ];
     for (const artifactAbs of await listProductionPersistenceFiles(companionRoot, fallbackEvidenceRelPaths)) {
       const rel = safeRel(repoRoot, artifactAbs);
@@ -1025,26 +1152,69 @@ resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-ui-ux-lockfile-assu
     );
     die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 18);
   }
-  // 2) Stray root entrypoint: root main.py should not appear when a plane-scoped main exists.
-  const rootMain = path.join(companionRoot, 'main.py');
-  const apMain = path.join(companionRoot, 'code', 'ap', 'main.py');
-  if (existsSync(rootMain) && existsSync(apMain)) {
-    const fp = await writeFeedbackPacket(
-      repoRoot,
-      instanceName,
-      'build-postgate-stray-root-main',
-      'Companion repo contains a stray root main.py in addition to code/ap/main.py',
-      [
-        'Remove the stray companion repo root main.py (prefer plane-scoped entrypoints under code/ap/ and code/cp/).',
-        'Strengthen the TBP role binding for FastAPI composition root to point to code/ap/main.py and forbid duplicate composition roots.',
-        'Rerun `/caf build <instance>`.',
-      ],
-      [
-        `Found: ${safeRel(repoRoot, rootMain)}`,
-        `Found: ${safeRel(repoRoot, apMain)}`,
-      ],
-    );
-    die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 14);
+  // 2) Runtime-entry topology: prefer declared role-binding validator ownership, fall back to bounded root-witness detection only when declarations are absent.
+  const resolvedPrimaryEntryExpectations = await resolvePrimaryRuntimeEntryExpectations(repoRoot, instanceName, companionRoot);
+  const validatorOwnedPrimaryEntryExpectations = resolvedPrimaryEntryExpectations.filter((surface) => surface?.validator_kind && shouldExecuteRoleBindingValidator(surface, { executionSurface: 'build_postgate_companion_runnable' }));
+  if (validatorOwnedPrimaryEntryExpectations.length > 0) {
+    const topologyIssues = [];
+    for (const expectation of validatorOwnedPrimaryEntryExpectations) {
+      topologyIssues.push(...await executeRoleBindingValidator(expectation, {
+        repoRoot,
+        companionRoot,
+        instanceName,
+        label: 'Runnable entry topology',
+        executionSurface: 'build_postgate_companion_runnable',
+        readUtf8,
+        resolvedProfile: resolvedObj,
+      }));
+    }
+    if (topologyIssues.length > 0) {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        'build-postgate-runtime-entry-topology-drift',
+        'Companion repo runtime entry topology drifted away from the declared role-bound primary entry surfaces',
+        [
+          'Keep primary runtime entry topology owned by the declared runtime-entry role bindings rather than by gate-local file lore.',
+          'Remove undeclared repo-root runtime entry witnesses unless the selected TBP role bindings explicitly declare them.',
+          'If the selected stack needs a different primary entry topology, update the owning TBP role-binding declarations and validator config instead of extending generic postgate path assumptions.',
+          'Rerun `/caf build <instance>`.',
+        ],
+        [
+          `resolved_dependency_wiring_mode: ${dependencyWiringMode}`,
+          `resolved_runtime_language: ${runtimeLanguage || '(unknown)'}`,
+          ...topologyIssues,
+        ],
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 14);
+    }
+    resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-runtime-entry-topology-drift');
+  } else {
+    const activeDeclaredPrimaryEntrySurfaces = resolvedPrimaryEntryExpectations.filter((surface) => existsSync(surface.absolute_path));
+    const rootWitnessNames = resolveRootEntrypointWitnessNames(runtimeLanguage);
+    const undeclaredRootWitnesses = rootWitnessNames
+      .map((rel) => ({ rel, abs: path.join(companionRoot, rel) }))
+      .filter((entry) => existsSync(entry.abs))
+      .filter((entry) => !activeDeclaredPrimaryEntrySurfaces.some((surface) => normalizeRelPath(surface.relative_path) === entry.rel));
+    if (undeclaredRootWitnesses.length > 0 && activeDeclaredPrimaryEntrySurfaces.length > 0) {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        'build-postgate-stray-root-main',
+        'Companion repo contains undeclared repo-root runtime entrypoint witnesses alongside resolved primary runtime entry surfaces',
+        [
+          'Remove undeclared companion repo root entrypoint witnesses unless they are the selected runtime entry surfaces declared by the resolved role bindings.',
+          `Keep primary runtime entry topology aligned to the resolved role bindings for ${dependencyWiringMode} rather than carrying both a repo-root witness and a second declared entry surface.`,
+          'Rerun `/caf build <instance>`.',
+        ],
+        [
+          ...undeclaredRootWitnesses.map((entry) => `Found undeclared repo-root entry witness: ${safeRel(repoRoot, entry.abs)}`),
+          ...activeDeclaredPrimaryEntrySurfaces.map((surface) => `Resolved primary entry surface (${surface.role_binding_key} via ${surface.tbp_id || 'resolved TBP'}): ${surface.relative_path}`),
+          `resolved_dependency_wiring_mode: ${dependencyWiringMode}`,
+        ],
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 14);
+    }
   }
   resolveFeedbackPacketsBySlugSync(packetsDir, 'build-postgate-helper-runtime-error');
   return 0;

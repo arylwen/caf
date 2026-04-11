@@ -96,7 +96,9 @@ extensions:
       criteria:
         - Runtime wiring includes explicit services for CP and AP (and DB/event runtime when adopted), with clear role names matching the plane contract.
         - CP/AP services use compose builds (Dockerfile-based) so developers do not need host-local language/runtime tooling for the selected stack.
+        - When a stateful support service such as postgres is materialized and AP/CP startup depends on it, the support service exposes a compose healthcheck and dependent services use depends_on with condition: service_healthy.
         - Port exposure and volumes are minimal and documented; local dev conveniences are isolated and optional.
       review_questions:
         - Do service names and roles align with the CP/AP plane boundary and the adopted integration contract?
+        - If compose materializes postgres or another stateful support service for AP/CP startup, is startup gated on service health rather than service creation order alone?
       focus_areas: [maintainability]

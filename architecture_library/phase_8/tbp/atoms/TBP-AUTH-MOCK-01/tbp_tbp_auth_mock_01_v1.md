@@ -3,7 +3,7 @@ TITLE: Mock Auth Claim Contract for Python HTTP Surfaces
 INTENT: Bind mock auth mode to an explicit claim-bearing Authorization/Bearer runtime contract for Python HTTP services without pushing auth-mode realization into planner prose or bespoke scanners.
 
 ROLE BINDINGS:
-- mock_auth_claims_module: shared helper that parses the mock Authorization/Bearer claim contract using the canonical claim keys `tenant_id`, `principal_id`, and `policy_version`. The current canonical bearer token shape is `mock.<base64-json>.token`.
+- mock_auth_claims_module: shared helper that parses the mock Authorization/Bearer claim contract using the canonical claim keys `tenant_id`, `principal_id`, and `policy_version`. Deterministic proof may be satisfied either by explicit `Authorization`/`Bearer` contract wording in the helper surface or by an explicit authorization-header + bearer-parser seam in that helper. The current canonical bearer token shape is `mock.<base64-json>.token`.
 - mock_auth_ap_boundary_adapter: AP HTTP boundary helper that resolves Authorization/Bearer inputs using case-insensitive HTTP header access; alternate tenant/principal headers are read only to reject conflicting carriers when claim-over-header is adopted. The request-object handoff may be split with the framework-owned dependency provider boundary, so deterministic proof must not require every request-surface marker to live in `auth_context.py` itself.
 - mock_auth_ui_claim_builder: UI claim builder that encodes the selected mock Authorization/Bearer payload and owns the canonical mock claim shape.
 - mock_auth_ui_api_helper: UI API helper that emits the selected Authorization/Bearer header and preserves claim-over-header conflict behavior at the browser/client edge.

@@ -90,13 +90,6 @@ function safeRel(repoRoot, absPath) {
   return path.relative(repoRoot, absPath).split('\\').join('/');
 }
 
-function stripUtf8Bom(text) {
-  const s = String(text ?? '');
-  if (!s) return { bom: false, text: s };
-  if (s.charCodeAt(0) === 0xfeff) return { bom: true, text: s.slice(1) };
-  return { bom: false, text: s };
-}
-
 async function ensureDir(p) {
   await fs.mkdir(p, { recursive: true });
 }
@@ -244,29 +237,10 @@ export async function internal_main(argv = process.argv.slice(2)) {
   }
 
   const raw = await readUtf8(registryPath);
-  const { bom, text } = stripUtf8Bom(raw);
-
-  if (bom) {
-    const fp = await writeFeedbackPacket(
-      repoRoot,
-      instanceName,
-      'design-postgate-contract-declarations-bom',
-      'contract_declarations_v1.yaml begins with a UTF-8 BOM. This breaks canonical schema expectations and has caused recurring drift.',
-      [
-        'Remove the BOM and rewrite the file as plain UTF-8.',
-        `Then rerun: /caf arch ${instanceName} (implementation_scaffolding).`,
-      ],
-      [
-        `file: ${safeRel(repoRoot, registryPath)}`,
-      ]
-    );
-    process.stdout.write(safeRel(repoRoot, fp) + '\n');
-    return 22;
-  }
 
   let obj = null;
   try {
-    obj = parseYamlString(text, registryPath);
+    obj = parseYamlString(raw, registryPath);
   } catch (e) {
     const fp = await writeFeedbackPacket(
       repoRoot,

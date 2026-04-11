@@ -14,6 +14,7 @@ CAF is evolving, and multiple shims exist. Before assuming any single artifact i
 - **Skills (canonical implementation):** `skills/`
 - **Codex shim:** `.codex/` (entry skills are thin shims that delegate to `skills/` or `skills_portable/`; must not fork behavior)
 - **Claude Code shim:** `.claude/` (entry skills are thin shims that delegate to `skills/` or `skills_portable/`; must not fork behavior)
+- **Kiro IDE shim:** `.kiro/skills/` (workspace skills are thin shims that delegate to `skills/` or `skills_portable/`; must not fork behavior)
 - **Agent workflows:** `.agent/workflows/` (usage/how-to; may lag or drift)
 - **Agent runtime permissions:** repo-root `AGENTS.md` and the companion template used by `caf-companion-init`
 - **Command surface docs (human-facing):** `architecture_library/14_contura_command_surface_standard_v1.md`
@@ -27,11 +28,11 @@ If these sources disagree:
 2. Write a **drift note** capturing the mismatch and the proposed resolution.
 3. Update the relevant sources together (inventory + docs + shims) so they converge.
 
-The goal is: **one coherent command surface**, with shims (`.codex/`, `.agent/`) staying mechanically aligned with `skills/`.
+The goal is: **one coherent command surface**, with shims (`.codex/`, `.claude/`, `.copilot/`, `.kiro/`, `.agent/`) staying mechanically aligned with `skills/`.
 
 ## Meta-pattern CMD-01: One inventory, kept in sync
 
-**Rule:** Maintain a single command inventory file (`architecture_library/15_contura_command_surface_inventory_v1.yaml`) as the **intended registry**, but **do not assume it is correct by default**. Reconcile it with `skills/`, `.codex/`, `.agent/workflows/`, and `AGENTS.md` when discrepancies are found.
+**Rule:** Maintain a single command inventory file (`architecture_library/15_contura_command_surface_inventory_v1.yaml`) as the **intended registry**, but **do not assume it is correct by default**. Reconcile it with `skills/`, `.codex/`, `.claude/`, `.copilot/`, `.kiro/skills/`, `.agent/workflows/`, and `AGENTS.md` when discrepancies are found.
 
 Docs and help output must **reference** this inventory; they must not re-state or fork it.
 

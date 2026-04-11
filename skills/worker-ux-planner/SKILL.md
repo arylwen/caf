@@ -107,7 +107,7 @@ Do not route UX realization tasks through smoke-test `ui_frontend_scaffolding`.
 6. Add a bounded follow-on task when declared product surfaces such as collections, published browsing, activity, or admin would otherwise be hidden inside an over-compressed worklist/detail pair.
 7. Decide the late polish task from the visual-system and state/readability posture.
 8. Decide the separate-UX-service packaging task from the current same-stack separate-container posture.
-9. Decide the operator-notes task from the task graph and packaging reality.
+9. Decide the operator-notes task from the task graph and packaging reality. The operator-notes output must be runtime-truthful: it may only instruct humans to use controls and flows that the current richer UX lane is expected to realize observably, and it must describe fixed demo posture honestly when persona switching or similar controls are not part of the bounded build.
 10. Attach trace anchors and semantic review questions that match the selected UX patterns and preserved product actions.
 
 ## Fail-closed rule

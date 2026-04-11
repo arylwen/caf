@@ -20,6 +20,14 @@ checks:
       - "inspect docker/compose.candidate.yaml for build: + env_file"
       - "inspect docker/Dockerfile.cp and docker/Dockerfile.ap"
       - "inspect .env and .gitignore (.env + *.local ignored)"
+
+  - check_id: RR-COMP-RDY-01
+    severity: high
+    category: correctness
+    rule: "When compose materializes a stateful support service that AP/CP startup depends on (for example postgres), the support service exposes a healthcheck and dependent services use depends_on with condition: service_healthy."
+    evidence_hints:
+      - "inspect docker/compose.candidate.yaml for postgres.healthcheck"
+      - "inspect docker/compose.candidate.yaml for depends_on.<support-service>.condition: service_healthy on AP/CP services"
   - check_id: RR-COMP-SEC-01
     severity: medium
     category: security

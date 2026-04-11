@@ -16,6 +16,7 @@ Best-practice (normative for this TBP):
 - CP/AP services MUST use `build:` with `docker/Dockerfile.cp` and `docker/Dockerfile.ap` so developers do not need host-local language/runtime tooling for the selected stack.
 - `.env` MUST be a real file with non-secret local defaults (no placeholders), and `.gitignore` MUST ignore `.env` and `*.local`.
 - When an adopted database engine/runtime contract requires a canonical connection URL shape (for example PostgreSQL + SQLAlchemy), `.env` should carry that same canonical URL form rather than a drifting alternate example.
+- When compose materializes a stateful support service that AP/CP startup depends on (for example `postgres`), the support service MUST expose a compose `healthcheck:` and dependent AP/CP services MUST express `depends_on` with `condition: service_healthy`.
 
 ADDS_EVIDENCE_HOOKS:
 - E-TBP-COMPOSE-01-01: `docker/compose.candidate.yaml` exists.
@@ -29,6 +30,7 @@ ADDS_STRUCTURAL_VALIDATIONS:
 - V-TBP-COMPOSE-01-02: No plaintext credentials are embedded in compose; secrets must be injected via env or a secret mechanism.
 - V-TBP-COMPOSE-01-03: If a support service is declared (e.g., postgres), the primary service references it by service name in configuration (static string match in env vars).
 - V-TBP-COMPOSE-01-04: CP/AP services use Dockerfile-based builds (no local pip prerequisite).
+- V-TBP-COMPOSE-01-05: When a stateful support service such as `postgres` is materialized for AP/CP startup, the support service defines a compose `healthcheck:` and dependent AP/CP services use `depends_on.<service>.condition: service_healthy`.
 
 REQUIRES_TBPS: None
 CONFLICTS_WITH_TBPS: None

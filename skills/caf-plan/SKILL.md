@@ -70,7 +70,9 @@ Refuse to overwrite existing planning artifacts.
 
 If you intentionally want to rerun planning:
 - Run: `node tools/caf/planning_reset_v1.mjs <name> overwrite`
-- Then rerun: `/caf plan <name>`
+- STOP the current partial planning attempt.
+- Then restart: `/caf plan <name>` from the top.
+- Do **not** continue directly to post-plan helpers (`planning_invariant_gate`, `validate_instance`) after reset while `task_graph_v1.yaml` is absent.
 
 3b) Planning handoff preflight (fail-closed)
 
@@ -152,14 +154,19 @@ Rules:
 - Do **not** print the invocation.
 - If it exits non-zero, it will write a feedback packet. STOP and surface only that packet path.
 
-9) Finalize derived views:
+9) Finalize planning traceability view (non-authoritative; overwrite=true)
 
-- Invoke: `skills/caf-arch-postprocess/SKILL.md`
+- Follow: `skills/worker-traceability-mindmap/SKILL.md`
 
-Important ownership note:
-- `task_backlog_v1.md` is **not** planner-owned output from Step 4.
-- The canonical backlog path is instruction-owned by `skills/worker-task-backlog-projector/SKILL.md`, invoked by `caf-arch-postprocess` as part of `/caf plan` finalization.
-- If a stale or wrong file already exists at `design/playbook/task_backlog_v1.md` (for example a task-plan-shaped file), the postprocess step must overwrite it with the worker-projected backlog view.
+Postcondition:
+- Require `reference_architectures/<name>/design/caf_meta/plan_traceability_mindmap_v3.md` exists.
+- If missing: write a feedback packet and STOP.
+
+10) Optional human backlog projection
+
+- `task_backlog_v1.md` is **not** planner-owned output from Step 5.
+- The human backlog view is now projected on demand by `/caf backlog <name>` from the already-emitted `task_graph_v1.yaml`.
+- Do **not** invent temporary backlog projector scripts under `tools/caf/` just because the task graph is large.
 
 STOP.
 

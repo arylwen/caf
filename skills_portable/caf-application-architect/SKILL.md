@@ -341,7 +341,7 @@ Troubleshooting rule (non-negotiable):
   - `pattern_obligation_id:<obligation_id>`
 - Every task MUST have exactly one `required_capabilities` entry.
 - Required capability ids MUST come from `80_phase_8_worker_capability_catalog_v1.yaml`.
-- Every task MUST include a first-class `steps:` array (5–12 items). Each step is a short imperative verb phrase.
+- Every task MUST include a first-class `steps:` array (5–14 items). Each step is a short imperative verb phrase.
 - YAML output MUST use ASCII quotes only (`"` / `'`). Do not emit smart quotes.
 - Any scalar that contains `: ` MUST be quoted or rephrased so the emitted YAML remains parseable. This applies to `title`, `description`, and any list-item scalar text.
 
@@ -359,7 +359,7 @@ Planning promotions + references (required; no new decisions):
 
 Task story + steps (must reach codegen):
 
-- Each task MUST include a first-class `steps:` array (5–12 items). Each step is a short imperative verb phrase.
+- Each task MUST include a first-class `steps:` array (5–14 items). Each step is a short imperative verb phrase.
 - Each task MUST include `semantic_review.constraints_notes` containing:
   - `Story:` 1–3 sentences explaining *why this task exists*, derived from the obligation(s) it covers and the adopted patterns.
   - `References:` bullet list of `inputs[].path` plus the `trace_anchors[].pattern_id` values.
@@ -731,7 +731,7 @@ Why:
 Planner output boundary here:
 - Emit `task_graph_v1.yaml` and `task_graph_index_v1.tsv`.
 - Do **not** write or overwrite `reference_architectures/<name>/design/playbook/task_backlog_v1.md`.
-- The backlog will be emitted later by `/caf plan` finalization via `caf-arch-postprocess`.
+- The backlog will be emitted later on demand by `/caf backlog <name>` from the canonical task graph.
 
 
 I) Pattern structural validation tasks (required)

@@ -23,6 +23,8 @@ Core subcommands:
 - `caf help [question...]`
 - `caf saas <instance_name>`
 - `caf arch <instance_name>`
+- `caf plan <instance_name>`
+- `caf backlog <instance_name>`
 - `caf next <instance_name> [apply]`
 - `caf build <instance_name>`
 

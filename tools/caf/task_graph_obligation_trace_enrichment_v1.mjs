@@ -63,6 +63,18 @@ function ensureTaskTrace(task, obligationId) {
   task.trace_anchors.push({ pattern_id: token, anchor_kind: 'plan_step_archetype' });
   return true;
 }
+
+function stripStaleObligationTraces(task, activeObligationIds) {
+  if (!Array.isArray(task?.trace_anchors)) return 0;
+  const before = task.trace_anchors.length;
+  task.trace_anchors = task.trace_anchors.filter((anchor) => {
+    const pid = String(anchor?.pattern_id || '').trim();
+    if (!pid.startsWith('pattern_obligation_id:')) return true;
+    const obligationId = pid.substring('pattern_obligation_id:'.length).trim();
+    return activeObligationIds.has(obligationId);
+  });
+  return before - task.trace_anchors.length;
+}
 function extractOptionToken(obligationId) {
   const m = String(obligationId).match(/^OBL-OPT-(.+)-Q[^-]+-.+$/);
   return m;
@@ -193,7 +205,11 @@ const obligationsObj = readYamlOrPacket(repoRoot, instanceName, obligationsPath,
 const taskGraphObj = readYamlOrPacket(repoRoot, instanceName, taskGraphPath, 'task graph');
 const tasks = Array.isArray(taskGraphObj?.tasks) ? taskGraphObj.tasks : [];
 const obligations = Array.isArray(obligationsObj?.obligations) ? obligationsObj.obligations : [];
+const activeObligationIds = new Set(obligations.map((obligation) => String(obligation?.obligation_id || '').trim()).filter(Boolean));
 let changed = 0;
+for (const task of tasks) {
+  changed += stripStaleObligationTraces(task, activeObligationIds);
+}
 const unresolved = [];
 for (const obligation of obligations) {
   const candidates = resolveCandidates(tasks, obligation);

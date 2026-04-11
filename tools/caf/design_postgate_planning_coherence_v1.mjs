@@ -28,6 +28,7 @@ import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlString } from './lib_yaml_v2.mjs';
+import { normalizeJsonlLineIngress } from './lib_text_ingress_v1.mjs';
 import { internal_main as traceability_internal_main } from './worker_traceability_mindmap_v3.mjs';
 import { internal_main as retrieval_debug_internal_main } from './build_retrieval_debug_v1.mjs';
 import { internal_main as candidate_report_internal_main } from './build_candidate_selection_report_v1.mjs';
@@ -371,7 +372,7 @@ async function loadRetrievalSurfacePlaneIndex(repoRoot) {
   const txt = await readUtf8(surfacePath);
   const byId = new Map();
   for (const line of String(txt ?? '').split(/\r?\n/)) {
-    const t = String(line ?? '').trim();
+    const t = normalizeJsonlLineIngress(line);
     if (!t) continue;
     try {
       const obj = JSON.parse(t);

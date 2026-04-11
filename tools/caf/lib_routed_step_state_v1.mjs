@@ -54,6 +54,44 @@ function allExist(paths) {
   return paths.every((p) => exists(p));
 }
 
+function readTextSafe(p) {
+  try {
+    return fs.readFileSync(p, 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+function lacksAnyToken(text, tokens) {
+  const haystack = String(text || '');
+  return (tokens || []).every((token) => !haystack.includes(token));
+}
+
+function arch1DeliverablePaths(layout) {
+  return [
+    path.join(layout.specPlaybookDir, 'system_spec_v1.md'),
+    path.join(layout.specPlaybookDir, 'application_spec_v1.md'),
+    path.join(layout.specPlaybookDir, 'application_domain_model_v1.md'),
+    path.join(layout.specPlaybookDir, 'system_domain_model_v1.md'),
+    path.join(layout.specPlaybookDir, 'application_product_surface_v1.md'),
+    path.join(layout.specPlaybookDir, 'semantic_candidate_subset_arch_scaffolding_v1.jsonl'),
+    path.join(layout.specPlaybookDir, 'grounded_candidate_records_arch_scaffolding_v1.md'),
+    path.join(layout.specMetaDir, 'spec_traceability_mindmap_v3.md'),
+  ];
+}
+
+function arch1ContentLooksComplete(layout) {
+  const systemSpec = readTextSafe(path.join(layout.specPlaybookDir, 'system_spec_v1.md'));
+  const applicationSpec = readTextSafe(path.join(layout.specPlaybookDir, 'application_spec_v1.md'));
+  return lacksAnyToken(systemSpec, [
+    '<filled by CAF>',
+    '- (CAF-managed; populated during CAF run.)',
+    '- (CAF-managed run will populate grounded candidates; if none can be grounded, CAF will refuse and write a retrieval diagnostics feedback packet.)',
+  ]) && lacksAnyToken(applicationSpec, [
+    '- (CAF-managed run will populate grounded candidates; if none can be grounded, CAF will refuse and write a retrieval diagnostics feedback packet.)',
+  ]);
+}
+
 function buildState(layout) {
   return readJsonSafe(path.join(layout.instanceRoot, '.caf-state', 'build_wave_state_v1.json'));
 }
@@ -82,13 +120,7 @@ export function checkpointStatus(repoRoot, instanceName, phase, layout) {
     path.join(layout.specPlaybookDir, 'architecture_shape_parameters.proposed.rationale.json'),
   ];
 
-  const arch1Files = [
-    path.join(layout.specPlaybookDir, 'system_spec_v1.md'),
-    path.join(layout.specPlaybookDir, 'application_spec_v1.md'),
-    path.join(layout.specPlaybookDir, 'application_domain_model_v1.md'),
-    path.join(layout.specPlaybookDir, 'system_domain_model_v1.md'),
-    path.join(layout.specPlaybookDir, 'application_product_surface_v1.md'),
-  ];
+  const arch1Files = arch1DeliverablePaths(layout);
 
   const designFiles = [
     path.join(layout.designPlaybookDir, 'contract_declarations_v1.yaml'),
@@ -103,7 +135,6 @@ export function checkpointStatus(repoRoot, instanceName, phase, layout) {
     path.join(layout.designPlaybookDir, 'task_graph_v1.yaml'),
     path.join(layout.designPlaybookDir, 'interface_binding_contracts_v1.yaml'),
     path.join(layout.designPlaybookDir, 'task_plan_v1.md'),
-    path.join(layout.designPlaybookDir, 'task_backlog_v1.md'),
   ];
 
   const uxFiles = [
@@ -126,7 +157,10 @@ export function checkpointStatus(repoRoot, instanceName, phase, layout) {
   return {
     seeded: { complete: allExist(seededFiles), partial: anyExists(seededFiles) && !allExist(seededFiles) },
     prd: { complete: allExist(prdFiles), partial: anyExists(prdFiles) && !allExist(prdFiles) },
-    arch1: { complete: allExist(arch1Files), partial: anyExists(arch1Files) && !allExist(arch1Files) },
+    arch1: {
+      complete: allExist(arch1Files) && arch1ContentLooksComplete(layout),
+      partial: anyExists(arch1Files) && !(allExist(arch1Files) && arch1ContentLooksComplete(layout)),
+    },
     nextApply: { complete: phase && phase !== 'architecture_scaffolding', partial: false },
     arch2: { complete: allExist(designFiles), partial: anyExists(designFiles) && !allExist(designFiles) },
     plan: { complete: allExist(planFiles), partial: anyExists(planFiles) && !allExist(planFiles) },
@@ -160,7 +194,7 @@ export function resolveSteps(instanceName) {
       label: 'Second architecture pass',
       caf: `/caf arch ${instanceName}`,
       prereqs: ['nextApply'],
-      reset: (instance) => [`node tools/caf/implementation_reset_v1.mjs ${instance} overwrite`],
+      reset: (instance) => [`node tools/caf/implementation_scaffolding_reset_v1.mjs ${instance} overwrite`],
     },
     {
       id: 'plan',
@@ -365,12 +399,21 @@ export function listPackets(layout) {
     .map((name) => path.join(layout.feedbackDir, name));
 }
 
-export function unresolvedBlockingPacketsForStep(repoRoot, layout, stepId) {
+function matchingPacketsForStep(repoRoot, layout, stepId, allowedStatuses = ['pending']) {
+  const allowed = new Set((allowedStatuses || []).map((status) => String(status || '').trim().toLowerCase()).filter(Boolean));
   const current = listPackets(layout);
   return current
     .map((abs) => ({ abs, meta: readPacketMetadataSync(abs) }))
-    .filter(({ meta }) => meta.status !== 'resolved' && meta.severity !== 'advisory' && packetMatchesStep(stepId, meta))
+    .filter(({ meta }) => allowed.has(meta.status) && meta.severity !== 'advisory' && packetMatchesStep(stepId, meta))
     .map(({ abs, meta }) => ({ abs, rel: rel(repoRoot, abs), meta }));
+}
+
+export function unresolvedBlockingPacketsForStep(repoRoot, layout, stepId) {
+  return matchingPacketsForStep(repoRoot, layout, stepId, ['pending']);
+}
+
+function unresolvedMatchedPacketsForResolution(repoRoot, layout, stepId) {
+  return matchingPacketsForStep(repoRoot, layout, stepId, ['pending', 'stale']);
 }
 
 export function reconcileRoutedStepStates(repoRoot, layout, instanceName, steps, checkpointByStep, stateDoc, options = {}) {
@@ -427,7 +470,7 @@ export function reconcileRoutedStepStates(repoRoot, layout, instanceName, steps,
 }
 
 export function resolveMatchedPacketsForStep(repoRoot, layout, stepId) {
-  const packets = unresolvedBlockingPacketsForStep(repoRoot, layout, stepId);
+  const packets = unresolvedMatchedPacketsForResolution(repoRoot, layout, stepId);
   const resolved = [];
   for (const packet of packets) {
     if (setFeedbackPacketStatusSync(packet.abs, 'resolved')) resolved.push(rel(repoRoot, packet.abs));

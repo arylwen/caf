@@ -32,11 +32,12 @@ Option B (step-by-step):
 3) `/caf arch <instance_name>`
 4) `/caf next <instance_name> apply` (when the architect is ready to checkpoint adopted decisions and advance)
 5) `/caf arch <instance_name>` (design for the next phase)
-6) `/caf plan <instance_name>` (planning outputs: obligations + task graph + backlog)
-7) `/caf build <instance_name>`
-8) `/caf ux <instance_name>` (optional richer UX derivation lane after the second `/caf arch`; keeps smoke-test UI separate)
-9) `/caf ux plan <instance_name>` (bounded UX task shaping for the richer UX lane)
-10) `/caf ux build <instance_name>` (separate UX realization lane after the main build is complete)
+6) `/caf plan <instance_name>` (planning outputs: obligations + task graph + task plan)
+7) `/caf backlog <instance_name>` (optional human backlog projection when the team is ready to review the backlog)
+8) `/caf build <instance_name>`
+9) `/caf ux <instance_name>` (optional richer UX derivation lane after the second `/caf arch`; keeps smoke-test UI separate)
+10) `/caf ux plan <instance_name>` (bounded UX task shaping for the richer UX lane)
+11) `/caf ux build <instance_name>` (separate UX realization lane after the main build is complete)
 
 Show the happy path:
 
@@ -46,10 +47,11 @@ Show the happy path:
 4) `/caf next <instance_name>` to preview the next phase.
 5) `/caf next <instance_name> apply` to advance.
 6) `/caf plan <instance_name>` to generate planning outputs after design.
-7) `/caf build <instance_name>` to generate candidate artifacts when pins/gates allow.
-8) `/caf ux <instance_name>` to derive the canonical UX artifact and grounded UX pattern candidates for the richer UX lane.
-9) `/caf ux plan <instance_name>` to generate bounded UX planning artifacts for the richer UX lane.
-10) `/caf ux build <instance_name>` to realize the separate UX build lane after `/caf build <instance_name>` completes.
+7) `/caf backlog <instance_name>` to materialize the human backlog view on demand.
+8) `/caf build <instance_name>` to generate candidate artifacts when pins/gates allow.
+9) `/caf ux <instance_name>` to derive the canonical UX artifact and grounded UX pattern candidates for the richer UX lane.
+10) `/caf ux plan <instance_name>` to generate bounded UX planning artifacts for the richer UX lane.
+11) `/caf ux build <instance_name>` to realize the separate UX build lane after `/caf build <instance_name>` completes.
 
 ## If a question is provided
 - Answer directly.

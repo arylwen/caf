@@ -30,6 +30,10 @@ For Codex:
 
 - `.codex/runtime/runtime_vocabulary.md`
 
+For Kiro IDE:
+
+- `.kiro/runtime/runtime_vocabulary.md`
+
 These files map each `command_id` to a runnable command string, but **do not define** what commands exist.
 
 ## `/caf help` presentation rules
@@ -43,10 +47,12 @@ These files map each `command_id` to a runnable command string, but **do not def
    - `/caf prd <name> [promote=true|false]`
    - `/caf arch <name>`
    - `/caf plan <name>`
+   - `/caf backlog <name>`
    - `/caf next <name> [apply]`  *(omit `apply` for dry-run preview; include `apply` to checkpoint and advance)*
    - `/caf build <name>`
 3. Present `/caf prd` as the normal lifecycle step between `/caf saas` and the first `/caf arch`, not as an optional side workflow.
-4. Do not advertise any additional commands.
+4. Present `/caf backlog` as the on-demand human backlog projection, not as an alternate planning producer.
+5. Do not advertise any additional commands.
 
 ## Drift rules
 

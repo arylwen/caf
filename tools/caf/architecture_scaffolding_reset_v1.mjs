@@ -288,7 +288,7 @@ async function main() {
       [
         'This reset is only safe in architecture_scaffolding.',
         'If you only need to wipe design/ and feedback_packets/ (no spec deletion), run:',
-        `node tools/caf/implementation_reset_v1.mjs ${instanceName} overwrite`,
+        `node tools/caf/implementation_scaffolding_reset_v1.mjs ${instanceName} overwrite`,
       ],
       [
         `phase: ${phase}`,

@@ -72,7 +72,7 @@ Rubric evaluation:
 
 - For `RR-AUTH-MOCK-CLAIM-CONTRACT-01`, inspect the policy, API-boundary, and UI helper surfaces touched by the task (plus any resolved auth role-binding paths) and verify they preserve one coherent mock Authorization/Bearer claim contract. When Python runtime surfaces import the shared auth helper, verify the import path lands on the resolved `mock_auth_claims_module` package root rather than a plane-local pseudo-package.
 
-- For `RR-WEB-SPA-01`, you MUST inspect the rendered shell/page wiring evidence directly in the touched SPA files. For the smoke-test lane, inspect at minimum `code/ui/src/App.jsx`, `code/ui/src/api.js`, and any touched `code/ui/src/pages/*.jsx`. For the separate UX lane, inspect at minimum `code/ux/src/App.jsx`, `code/ux/src/api.js`, and any touched `code/ux/src/pages/*`. Treat descriptive/static pages presented as implemented functionality as a blocker.
+- For `RR-WEB-SPA-01`, you MUST inspect the rendered shell/page wiring evidence directly in the touched SPA files. For the smoke-test lane, inspect at minimum `code/ui/src/App.jsx`, `code/ui/src/api.js`, and any touched `code/ui/src/pages/*.jsx`. For the separate UX lane, inspect at minimum `code/ux/src/App.jsx`, `code/ux/src/api.js`, and any touched `code/ux/src/pages/*`. When the task writes `caf/ux_operator_notes.md`, also inspect that file against the current richer UX shell/pages/helpers and fail if the notes claim runtime controls or flows that are not observably present. Treat descriptive/static pages presented as implemented functionality as a blocker.
 
 - For each rubric check, decide PASS or FAIL with brief evidence.
 - Any FAIL at or above the configured threshold MUST be emitted as a finding.

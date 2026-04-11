@@ -231,6 +231,62 @@ function inferPlaneScopeFromPlane(plane) {
   return 'cross_plane';
 }
 
+
+function inferPlaneScopeFromPath(relPath) {
+  const norm = String(relPath || '').trim().replace(/\\/g, '/').toLowerCase();
+  if (!norm) return 'cross_plane';
+  if (norm.startsWith('code/ap/')) return 'AP';
+  if (norm.startsWith('code/cp/')) return 'CP';
+  if (norm.startsWith('code/dp/')) return 'DP';
+  if (norm.startsWith('code/st/')) return 'ST';
+  if (norm.startsWith('code/ai/')) return 'AI';
+  if (norm.startsWith('ui/') || norm.startsWith('ux/') || norm.startsWith('frontend/')) return 'AP';
+  return 'cross_plane';
+}
+
+function collectRoleBindingPaths(roleBinding) {
+  const out = [];
+  const push = (value) => {
+    const s = String(value || '').trim();
+    if (s) out.push(s);
+  };
+  push(roleBinding?.path_template);
+  for (const value of Array.isArray(roleBinding?.path_templates_any_of) ? roleBinding.path_templates_any_of : []) push(value);
+  return Array.from(new Set(out));
+}
+
+function inferPlaneScopeFromRoleBinding(manifest, roleBindingKey, obligationId, capabilityId) {
+  if (String(capabilityId || '').trim() === 'ui_frontend_scaffolding') return 'AP';
+
+  const bindings = manifest?.layout?.role_bindings && typeof manifest.layout.role_bindings === 'object'
+    ? manifest.layout.role_bindings
+    : {};
+  const binding = bindings && typeof bindings === 'object' ? bindings[String(roleBindingKey || '').trim()] : null;
+  const scopes = Array.from(new Set(
+    collectRoleBindingPaths(binding)
+      .map((value) => inferPlaneScopeFromPath(value))
+      .filter((value) => value !== 'cross_plane')
+  ));
+  if (scopes.length === 1) return scopes[0];
+  if (scopes.length > 1) return 'cross_plane';
+
+  const roleKey = String(roleBindingKey || '').trim().toLowerCase();
+  if (/^ap(?:_|$)|_ap(?:_|$)/.test(roleKey)) return 'AP';
+  if (/^cp(?:_|$)|_cp(?:_|$)/.test(roleKey)) return 'CP';
+  if (/^dp(?:_|$)|_dp(?:_|$)/.test(roleKey)) return 'DP';
+  if (/^st(?:_|$)|_st(?:_|$)/.test(roleKey)) return 'ST';
+  if (/^ai(?:_|$)|_ai(?:_|$)/.test(roleKey)) return 'AI';
+
+  const obligation = String(obligationId || '').trim().toLowerCase();
+  if (obligation.includes('-ap-')) return 'AP';
+  if (obligation.includes('-cp-')) return 'CP';
+  if (obligation.includes('-dp-')) return 'DP';
+  if (obligation.includes('-st-')) return 'ST';
+  if (obligation.includes('-ai-')) return 'AI';
+
+  return 'cross_plane';
+}
+
 function readYamlFromDefinition(repoRoot, relPath) {
   const abs = path.join(repoRoot, relPath);
   if (!fs.existsSync(abs)) return null;
@@ -535,11 +591,12 @@ function buildObligations(repoRoot, instanceName, layout, inputs) {
       const obligationId = String(item?.obligation_id || '').trim();
       const title = String(item?.title || '').trim();
       const capabilityId = String(item?.required_capability || '').trim();
+      const roleBindingKey = String(item?.role_binding_key || '').trim();
       if (!obligationId || !capabilityId) continue;
       pushObligation(obligations, seen, {
         obligation_id: obligationId,
         obligation_kind: 'other',
-        plane_scope: capabilityId === 'ui_frontend_scaffolding' ? 'AP' : 'cross_plane',
+        plane_scope: inferPlaneScopeFromRoleBinding(manifest, roleBindingKey, obligationId, capabilityId),
         capability_id: capabilityId,
         description: `${title}${title.includes('(TBP:') ? '' : ` (TBP: ${tbpId})`}`,
         sources: [{ path: manifestRel, anchor: `extensions.obligations obligation_id=${obligationId}` }],

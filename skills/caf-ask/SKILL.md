@@ -81,4 +81,4 @@ Constraints:
 
 - Answer the user’s question directly.
 - Do **not** print file paths, file lists, or internal routing details.
-- If the context pack is missing required information, say what is missing and which high-level CAF step usually produces it (e.g. “run `/caf plan <instance>` to materialize task graph/backlog”).
+- If the context pack is missing required information, say what is missing and which high-level CAF step usually produces it (e.g. “run `/caf plan <instance>` to materialize the task graph and `/caf backlog <instance>` for the human backlog view”).

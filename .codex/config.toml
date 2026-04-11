@@ -13,10 +13,14 @@ developer_instructions = """
 CAF: command surface
 - Use /caf help for command discovery.
 - Use /caf arch <instance> for architecture + design.
-- Use /caf plan <instance> for planning outputs (obligations + task graph + backlog projection).
+- Use /caf plan <instance> for planning outputs (obligations + task graph + task plan).
+- Use /caf backlog <instance> when a human-readable backlog view is wanted.
 
 CAF: safety
 - Do not run any git commands.
+- If CAF_ACTIVE_RUNNER_SESSION=1 is present, you are already inside the CAF Codex runner session. Stay in the current session and do not shell out to `codex`, `codex exec`, or another nested `/caf ...` command to continue the same workflow.
+- If CAF_CURRENT_SESSION_DISPATCH_REQUIRED=1 is present, current-session worker/reviewer dispatch is mandatory.
+- Keep temporary runner-local helper scripts under `.codex/scripts/`, not under `tools/caf/`.
 
 CAF: runtime environment defaults
 - If CAF_PYTHON_CMD is not set, assume python3.
@@ -30,3 +34,7 @@ Windows / PowerShell
 """
 
 approval_policy = "never"
+
+# CAF runner hardening: keep Codex in the current session during routed build flows.
+agents.max_depth = 0
+agents.max_threads = 1

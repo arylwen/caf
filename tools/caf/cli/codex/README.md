@@ -6,7 +6,7 @@ They are also **resume-aware**:
 
 - they detect completed lifecycle checkpoints and skip satisfied steps;
 - they reconcile explicit routed step state in `.caf-state/routed_step_state_v1.json` so reruns consult step status first and artifact presence second;
-- they ignore stale feedback packets that already existed before the current wrapper run;
+- they ignore stale feedback packets that already existed before the current wrapper run as autonomous stop triggers;
 - they use the existing CAF reset helpers for the three phases that are intentionally fail-closed on overwrite (`architecture_scaffolding`, second-pass implementation/design scaffolding, and `planning`);
 - they treat `/caf build` and `/caf ux build` as loop commands driven by CAF wave-state files instead of inventing a parallel resume path.
 
@@ -32,7 +32,7 @@ These helpers follow the lifecycle described in the maintainer diagrams and docs
 ## Prereqs
 
 - OpenAI Codex CLI installed (`codex`).
-- Node.js available on PATH (`node`).
+- Node.js 18+ available on PATH (`node`).
 - Run from the **repo root** (the folder containing `skills/`, `tools/`, `reference_architectures/`).
 - These wrappers assume the repo-local Codex/CAF instructions are available and that invoking `codex exec "/caf ..."` works in your environment.
 - Validate the shell prerequisites before running the wrapper:
@@ -73,7 +73,7 @@ bash tools/caf/cli/codex/run_caf_flow_v1.sh <instance_name>
 With extra Codex CLI flags:
 
 ```bash
-bash tools/caf/cli/codex/run_caf_flow_v1.sh cdx-saas -c 'model_reasoning_effort="high"'
+bash tools/caf/cli/codex/run_caf_flow_v1.sh codex-saas -c 'model_reasoning_effort="high"'
 ```
 
 ### PowerShell (Windows)
@@ -87,18 +87,18 @@ From an existing PowerShell session in the repo root:
 With extra Codex CLI flags:
 
 ```powershell
-.\tools\caf\cli\codex\run_caf_flow_v1.ps1 -InstanceName cdx-saas --% -c model_reasoning_effort="high"
+.\tools\caf\cli\codex\run_caf_flow_v1.ps1 -InstanceName codex-saas --% -c model_reasoning_effort="high"
 ```
 
 If PowerShell blocks the unsigned `.ps1`, you do **not** need admin for a one-off bypass. Use one of these options:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
-.\tools\caf\cli\codex\run_caf_flow_v1.ps1 -InstanceName cdx-saas
+.\tools\caf\cli\codex\run_caf_flow_v1.ps1 -InstanceName codex-saas
 ```
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools/caf/cli/codex/run_caf_flow_v1.ps1 -InstanceName cdx-saas --% -c model_reasoning_effort="high"
+powershell -ExecutionPolicy Bypass -File tools/caf/cli/codex/run_caf_flow_v1.ps1 -InstanceName codex-saas --% -c model_reasoning_effort="high"
 ```
 
 For a persistent per-user setting, check the current policy and then switch the current user scope instead of requiring elevation:
@@ -129,7 +129,7 @@ tools\caf\cli\codex\run_caf_flow_v1.cmd <instance_name>
 With extra Codex CLI flags:
 
 ```cmd
-tools\caf\cli\codex\run_caf_flow_v1.cmd cdx-saas -c model_reasoning_effort="high"
+tools\caf\cli\codex\run_caf_flow_v1.cmd codex-saas -c model_reasoning_effort="high"
 ```
 
 ## Troubleshooting
@@ -250,7 +250,7 @@ The wrappers use these lifecycle checkpoints to decide where to resume:
 
 - **Partial second-pass implementation/design bundle**
   - The wrapper runs:
-    - `node tools/caf/implementation_reset_v1.mjs <instance> overwrite`
+    - `node tools/caf/implementation_scaffolding_reset_v1.mjs <instance> overwrite`
   - Then reruns the second `/caf arch` step.
 
 - **Partial planning bundle**
@@ -260,18 +260,19 @@ The wrappers use these lifecycle checkpoints to decide where to resume:
 
 - **Partial main build lane**
   - No reset by default.
-  - The wrapper keeps rerunning `/caf build <instance>` until `build_wave_state_v1.json` reports `completed=true`, or a new blocking packet is produced.
+  - The wrapper keeps rerunning `/caf build <instance>` until `build_wave_state_v1.json` reports `completed=true`, or a fresh/newly-updated blocking packet is produced during the current run.
   - Resume authority stays with CAF's wave state, companion task reports, and reviews; the wrapper does not guess wave numbers.
 
 - **Partial UX build lane**
   - No reset by default.
-  - The wrapper keeps rerunning `/caf ux build <instance>` until `ux_build_wave_state_v1.json` reports `completed=true`, or a new blocking packet is produced.
+  - The wrapper keeps rerunning `/caf ux build <instance>` until `ux_build_wave_state_v1.json` reports `completed=true`, or a fresh/newly-updated blocking packet is produced during the current run.
   - Resume authority stays with CAF's UX wave state and companion evidence; the wrapper does not guess wave numbers.
 
 ### Feedback-packet behavior
 
 - Existing packets already present before the wrapper starts are treated as **historical** and do not block resume by themselves.
-- The wrapper stops only when a **new blocking** feedback packet is produced during the current run.
+- When the current run writes or updates a blocking packet, the wrapper stops and labels it as either **produced** or **updated**.
+- When the runner exits non-zero without writing a fresh blocker packet, the wrapper now says so explicitly and only shows the **newest existing blocking packet for convenience**. That packet is context, not proof that it was the first failing helper path in the current run.
 - New **advisory** packets are surfaced on-screen, captured in the run log, and do not stop the flow.
 - When a rerun completes a routed step successfully, the shared runner now best-effort resolves any step-scoped blocker packets that still match that step so `.caf-state/routed_step_state_v1.json` can return the step to `completed` deterministically.
 
@@ -295,7 +296,7 @@ The wrappers use these lifecycle checkpoints to decide where to resume:
 - allows extra Codex CLI flags after the instance name;
 - skips already-satisfied checkpoints;
 - runs the matching reset helper when a fail-closed overwrite phase is only partially present, including second-pass implementation/design scaffolding;
-- stops on the first **new blocking** feedback packet produced during the current wrapper run;
+- stops on the first blocking packet that is freshly produced or freshly updated during the current wrapper run, or reports that only a newest-existing blocker was surfaced after a runner failure;
 - surfaces and logs new advisory packets without stopping the flow.
 
 ## Safety posture

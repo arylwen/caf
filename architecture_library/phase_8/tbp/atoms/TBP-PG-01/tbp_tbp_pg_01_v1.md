@@ -21,11 +21,13 @@ ADDS_EVIDENCE_HOOKS:
 - E-TBP-PG-01-02: Configuration references PostgreSQL through engine-owned env/service wiring (for example `DATABASE_URL` and/or `DB_*` variables) without taking ownership of ORM-specific URL syntax validation.
 - E-TBP-PG-01-03: Presence of migration artifacts (e.g., `alembic/` with `versions/`, or Django `migrations/`).
 - E-TBP-PG-01-04: If using Compose, compose declares a `postgres` image service.
+- E-TBP-PG-01-05: When AP/CP startup depends on compose-materialized `postgres`, compose defines a postgres `healthcheck:` and dependent services use `depends_on.postgres.condition: service_healthy`.
 
 ADDS_STRUCTURAL_VALIDATIONS:
 - V-TBP-PG-01-01: DB credentials/host/URL are not hard-coded in source; provided via config_provider/env.
 - V-TBP-PG-01-02: A migrations mechanism exists in-repo (at least one migration artifact is committed).
 - V-TBP-PG-01-03: persistence_adapters encapsulate SQL execution; callers outside infrastructure_adapters do not issue SQL directly.
+- V-TBP-PG-01-04: Compose-backed local startup does not rely on postgres container creation order alone when AP/CP bootstrap touches the database during startup.
 
 REQUIRES_TBPS: TBP-PY-01
 CONFLICTS_WITH_TBPS: None

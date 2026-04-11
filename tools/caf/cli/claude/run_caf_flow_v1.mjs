@@ -1,17 +1,13 @@
 #!/usr/bin/env node
 import { runCafFlow } from '../lib_run_caf_flow_v1.mjs';
-
-function hasPermissionOverride(args) {
-  return args.some((arg) => {
-    const s = String(arg);
-    return s === '--dangerously-skip-permissions' || s === '--permission-mode' || s.startsWith('--permission-mode=') || s === '--permission-prompt-tool' || s.startsWith('--permission-prompt-tool=');
-  });
-}
+import {
+  buildClaudePrintInvocationArgs,
+  extractClaudePrintSessionMetadata,
+  normalizeClaudeRunnerArgs,
+} from '../lib_claude_runner_defaults_v1.mjs';
 
 function normalizeArgs(args) {
-  const out = [...args];
-  if (!hasPermissionOverride(out)) out.unshift('--dangerously-skip-permissions');
-  return out;
+  return normalizeClaudeRunnerArgs(args);
 }
 
 await runCafFlow(import.meta.url, process.argv, {
@@ -19,8 +15,12 @@ await runCafFlow(import.meta.url, process.argv, {
   displayName: 'Claude Code',
   versionArgs: ['--version'],
   usage: 'node tools/caf/cli/claude/run_caf_flow_v1.mjs <instance_name> [claude args...]',
+  enableSessionResume: true,
+  extractRunMetadata(output) {
+    return extractClaudePrintSessionMetadata(output);
+  },
   normalizeArgs,
-  buildInvocationArgs(cafCommand, runnerArgs) {
-    return ['-p', cafCommand, ...runnerArgs];
+  buildInvocationArgs(cafCommand, runnerArgs, repoRoot, runContext) {
+    return buildClaudePrintInvocationArgs(cafCommand, runnerArgs, repoRoot, runContext);
   },
 });

@@ -5,14 +5,14 @@ CAF works like a tiny **architecture compiler**:
 - You declare architectural intent as **pins** (small, explicit inputs).
 - CAF retrieves candidate **patterns** (named architecture decisions), and you adopt/defer/reject.
 - Adopted patterns emit **obligations** (non-optional deliverables).
-- A **planner** compiles obligations into a **task graph** (and backlog).
+- A **planner** compiles obligations into a **task graph**; the human backlog view can then be projected from that semantic planning bundle.
 - Specialized **workers** generate **candidate code** in a companion workspace.
 
 Along the way, deterministic **gates** check invariants so models can’t hand-wave past missing artifacts.
 
 CAF is designed for *iteration* and *guardrailed autonomy*: models can propose decisions and code **within rails**, and CAF validates outputs deterministically.
 
-CAF supports Claude Code, Codex, and Antigravity coding agents and provides a single command surface (`/caf ...`).
+CAF supports Claude Code, Codex, Copilot, Kiro IDE workspace skills, and Antigravity-style agents and provides a single command surface (`/caf ...`).
 
 > Planning is optional. If you want *work visibility* and *candidate code*, run `/caf plan` and `/caf build`.
 
@@ -47,8 +47,8 @@ CAF is designed so you can answer: **“Why is this code here?”** without gues
    - What: concrete obligations emitted when patterns are adopted (e.g., runtime wiring, policy boundaries, observability hooks).
 
 5. **Tasks (work items that cover obligations and implement capabilities)**
-   - Where: `design/playbook/task_graph_v1.yaml` and `design/playbook/task_backlog_v1.md`.
-   - What: a deterministic, inspectable decomposition from obligations/capabilities into buildable work.
+   - Where: `design/playbook/task_graph_v1.yaml` and, when projected for humans, `design/playbook/task_backlog_v1.md`.
+   - What: a deterministic, inspectable decomposition from obligations/capabilities into buildable work, with the backlog markdown kept as a projected human-facing view.
 
 6. **Candidate code (generated from the backlog build process)**
    - Where: `companion_repositories/<instance>/...` (candidate-only workspace).
@@ -103,5 +103,5 @@ Model-owned (bounded):
 
 ## Docs
 
-- User docs (public): [`README.md`](README.md)
+- User docs: [`README.md`](README.md)
 - Pattern browsing: [`../patterns/README.md`](../patterns/README.md)

@@ -143,6 +143,8 @@ For each task in the selected execution set:
 
 Current-session dispatch rule:
 - When this build lane is already running inside a CAF CLI runner session, dispatch worker + reviewer work in the CURRENT session.
+- Treat `CAF_ACTIVE_RUNNER_SESSION=1` as the authoritative signal that you are already inside a CAF CLI runner session.
+- If `CAF_ACTIVE_RUNNER_NAME=codex`, do NOT shell out to `codex`, `codex exec`, or another nested `/caf ...` command merely to continue the same build lane.
 - Do NOT spawn a nested `codex exec`, nested `claude` runner, or any equivalent child runner merely to hop into a worker skill.
 - The deterministic requirement is capability → worker selection and fail-closed review, not runner recursion.
 

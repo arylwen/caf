@@ -25,6 +25,7 @@ import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlFile, parseYamlString } from './lib_yaml_v2.mjs';
+import { normalizeJsonlLineIngress } from './lib_text_ingress_v1.mjs';
 import { cleanFileInPlace } from './lib_clean_candidate_placeholders_v1.mjs';
 import { extractReferencedPinIdsFromCandidateMarkdown, extractPinsByPatternFromCandidateMarkdown } from './lib_pin_recognition_v1.mjs';
 import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
@@ -147,7 +148,7 @@ function buildHumanOperatorGuidance(instanceName, profile, slug) {
   const p = String(profile ?? '').trim() || 'arch_scaffolding';
   const resetCommand = (p === 'arch_scaffolding')
     ? `node tools/caf/architecture_scaffolding_reset_v1.mjs ${instanceName} overwrite`
-    : `node tools/caf/implementation_reset_v1.mjs ${instanceName} overwrite`;
+    : `node tools/caf/implementation_scaffolding_reset_v1.mjs ${instanceName} overwrite`;
   const rerunCommand = (p === 'arch_scaffolding') ? `/caf arch ${instanceName}` : `/caf plan ${instanceName}`;
   if (slug === 'retrieval-gate-pin-coverage-not-met') {
     return [
@@ -397,7 +398,7 @@ async function buildPinSuggestionIndex(repoRoot, allowedNamespaces) {
   const pinRe = /\b(?:CP|AP|DP|AI|ST)-[1-9]\b/g;
 
   for (const line of txt.split(/\r?\n/)) {
-    const t = line.trim();
+    const t = normalizeJsonlLineIngress(line);
     if (!t) continue;
     let obj;
     try { obj = JSON.parse(t); } catch { continue; }
@@ -438,7 +439,7 @@ async function loadPatternDefinitionIndex(repoRoot) {
   if (!existsSync(surfaceAbs)) return idx;
   const txt = await readUtf8(surfaceAbs);
   for (const line of txt.split(/\r?\n/)) {
-    const t = line.trim();
+    const t = normalizeJsonlLineIngress(line);
     if (!t) continue;
     let obj;
     try { obj = JSON.parse(t); } catch { continue; }    const id = String(obj?.id || '').trim();
@@ -678,7 +679,7 @@ async function readJsonlIds(fileAbs) {
   const txt = await readUtf8(fileAbs);
   const ids = new Set();
   for (const line of txt.split(/\r?\n/)) {
-    const t = line.trim();
+    const t = normalizeJsonlLineIngress(line);
     if (!t) continue;
     try {
       const obj = JSON.parse(t);

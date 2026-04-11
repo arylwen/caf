@@ -4,7 +4,7 @@ INTENT: Bind CMP-01 and CFG-01 roles to a conventional Python package layout and
 SCOPE: Project
 APPLIES_WHEN: runtime.language == python
 EXTENDS_CORE_PATTERNS: CMP-01; CFG-01
-BINDS_MODULE_ROLES: app_composition_root; application_boundary; domain_core; infrastructure_adapters; config_registry; config_model; config_provider
+BINDS_MODULE_ROLES: app_composition_root; application_boundary; domain_core; infrastructure_adapters; config_registry; config_model; config_provider; python_requirements_manifest
 
 NOTE (CAF layout):
 - CAF's default Python code root is `code/` (see TBP manifest `layout.code_root`).
@@ -22,11 +22,13 @@ ROLE_BINDINGS:
 
 ADDS_EVIDENCE_HOOKS:
 - E-TBP-PY-01-01: `pyproject.toml` OR `requirements.txt` exists at repo root.
+- E-TBP-PY-01-02: When framework-owned runtime settings scaffolds import `pydantic_settings`, the canonical Python dependency manifest declares `pydantic-settings`.
 - E-TBP-PY-01-02: Repository contains an importable Python code-root package marker (e.g., `code/__init__.py`).
 - E-TBP-PY-01-03: Presence of a composition-root module (e.g., `code/ap/main.py`) that imports the boundary layer and wires dependencies.
 
 ADDS_STRUCTURAL_VALIDATIONS:
 - V-TBP-PY-01-01: Exactly one dependency specification exists at repo root (`pyproject.toml` OR `requirements.txt` OR `requirements.lock`); if multiple exist, the selected canonical file is declared in `config_registry` docs.
+- V-TBP-PY-01-02: Canonical Python dependency manifests remain closed over framework-owned runtime imports; if a runtime settings scaffold imports `pydantic_settings`, `requirements.txt` must include `pydantic-settings`.
 - V-TBP-PY-01-02: Python packages used for application code contain `__init__.py` (no implicit namespace packages for core service code in v1). In CAF layout, this includes `code/__init__.py` and any subpackages referenced by entrypoints (e.g., `code/ap/__init__.py` for `code.ap.*`).
 - V-TBP-PY-01-03: `domain_core` contains no imports from the chosen web framework TBP (e.g., no `fastapi`, `django`).
 - V-TBP-PY-01-04: Config is read via a config_provider (env-backed) rather than hard-coded literals for runtime endpoints/credentials.

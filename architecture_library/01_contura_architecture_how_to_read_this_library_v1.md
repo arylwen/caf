@@ -56,6 +56,7 @@ CAF helps you:
 - Make architectural intent explicit and reviewable
 - Understand which architectural choices are allowed, constrained, or forbidden
 - Reason safely about execution and downstream automation
+- Consume machine-readable invariant catalogs and taxonomy surfaces when audits or automation need stable IDs
 
 CAF does not construct systems or select technologies.  
 Instead, CAF defines, structures, and validates architectural intent - the decisions, constraints, and invariants that shape the system.

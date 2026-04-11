@@ -1,0 +1,1235 @@
+schema_version: caf_invariant_catalog_v1
+catalog_status: public_machine_readable_catalog
+notes:
+- This catalog is a normalized starter sweep of CAF invariants across patterns, contracts, pins, resolved guardrails, gates, workers, and public docs.
+- It now distinguishes semantic family, activation, source class, and derivation lineage so the catalog can represent both always-on framework invariants and instance-activated binding invariants.
+- The current row count is still intentionally conservative; more rows should be added as maintainers sweep the full ABP/PBP/TBP/EXT and pattern-definition surfaces.
+source_coverage:
+  included_source_classes:
+  - pins
+  - profile_parameters
+  - resolved_guardrails
+  - abp
+  - pbp
+  - tbp
+  - ext_pattern
+  - meta_pattern
+  - contract
+  - schema
+  - gate
+  - validator
+  - worker_contract
+  - playbook_block
+  - public_docs
+  - runtime_evidence
+  pending_source_classes:
+  - full_pattern_definition_library
+  - all_ext_pack_surfaces
+  - all_companion_repo_runtime_evidence
+  - all_instance_specific_manifests
+public_docs:
+  human_catalog_path: docs/architect/13_architecture_invariants_and_catalog.md
+  generator_path: tools/caf/render_invariant_catalog_docs_v1.mjs
+  public_examples:
+  - INV-DECISION-EXACTLY-ONE-ADOPTED-OPTION
+  - INV-LAYER8-RESOLVED-VIEW-AUTHORITATIVE
+  - INV-ABP-PBP-RESOLUTION-CANONICAL-STYLE-TO-PLANE
+  - INV-WORKERS-NO-TBP-ID-LEAKAGE
+  - INV-EXT-NON-AUTHORITATIVE-UPSTREAM-DECLARATION
+invariants:
+- invariant_id: INV-DECISION-EXACTLY-ONE-ADOPTED-OPTION
+  title: Each adopted decision question must have exactly one adopted option
+  statement: For CAF decision patterns, every adopted question must resolve to exactly one adopted option; zero or multiple adopted options violates the canonical decision integrity contract.
+  family: decision_option_integrity
+  subject_area: decision_integrity
+  source_classes:
+  - playbook_block
+  - meta_pattern
+  - contract
+  - validator
+  - public_docs
+  scope:
+    lifecycle_phase: spec
+    plane_scope: framework
+    artifact_scope: 'ARCHITECT_EDIT_BLOCK: decision_resolutions_v1'
+  activation:
+    kind: always_on
+    condition: Applies whenever decision_resolutions_v1 contains adopted decision questions.
+  posture:
+    severity: blocker
+    enforcement_mode: fail_closed
+  canonical_owner:
+    kind: architect_edit_block_plus_deterministic_validator
+    path: tools/caf/analyze_decisions_v1.mjs
+  defined_in:
+  - path: docs/architect/05_traceability_chain_and_data_model.md
+    anchor: Decision patterns -> exactly 1 adopted option
+    role: primary
+  - path: tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md
+    anchor: 'ARCHITECT_EDIT_BLOCK: decision_resolutions_v1'
+    role: secondary
+  enforced_by:
+  - kind: architect_resolution_surface
+    path: reference_architectures/<instance>/spec/playbook/system_spec_v1.md
+    note: architect must make adopt/defer/reject explicit in the canonical block
+  - kind: deterministic_validator
+    path: tools/caf/analyze_decisions_v1.mjs
+    note: diagnoses adopted-option invariant violations
+  checked_by:
+  - kind: deterministic_validator
+    path: tools/caf/analyze_decisions_v1.mjs
+    note: emits adopted option invariant errors for zero or multi-adopt selections
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/spec/playbook/system_spec_v1.md
+    anchor: 'ARCHITECT_EDIT_BLOCK: decision_resolutions_v1'
+  downstream_consumers:
+  - path: tools/caf/materialize_planning_pattern_payload_v1.mjs
+    note: adopted options feed planning payload materialization
+  failure_mode:
+    symptom: adopted decision question has zero or more than one adopted option
+    packet_or_gate: analyze_decisions_v1 diagnostics; downstream planning surfaces become invalid
+  lineage:
+    origin_stage: pattern
+    derived_from: []
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-decision-exactly-one-adopted-option
+- invariant_id: INV-PLAYBOOK-BLOCK-SINGLE-OWNER
+  title: Each managed playbook block must have a single canonical owner
+  statement: CAF-managed playbook blocks must have an explicit owner surface (script, skill, or architect), and validators/gates should treat the ownership registry as the single source of truth.
+  family: block_ownership_and_authority
+  subject_area: ownership_and_authority
+  source_classes:
+  - contract
+  - playbook_block
+  - public_docs
+  scope:
+    lifecycle_phase: cross_phase
+    plane_scope: framework
+    artifact_scope: reference_architectures/<instance>/spec/playbook/*.md managed blocks
+  activation:
+    kind: always_on
+    condition: Applies to every CAF-managed playbook block.
+  posture:
+    severity: blocker
+    enforcement_mode: deterministic_helper
+  canonical_owner:
+    kind: contract
+    path: tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md
+  defined_in:
+  - path: tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md
+    anchor: This document is the single source of truth
+    role: primary
+  enforced_by:
+  - kind: ownership_contract
+    path: tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md
+    note: names owner per managed block
+  checked_by:
+  - kind: maintainer_review
+    path: tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md
+    note: current repo-wide enforcement appears contract-driven rather than centrally gated
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/spec/playbook/system_spec_v1.md
+    anchor: CAF_MANAGED_BLOCK markers
+  - path: reference_architectures/<instance>/spec/playbook/application_spec_v1.md
+    anchor: CAF_MANAGED_BLOCK markers
+  failure_mode:
+    symptom: ambiguous producer ownership or competing producer lore for the same block
+    packet_or_gate: ownership drift; validator/gate behavior may diverge by surface
+  lineage:
+    origin_stage: execution
+    derived_from: []
+  current_status: partially_enforced
+  docs_anchor_id: inv-caf-inv-playbook-block-single-owner
+- invariant_id: INV-CANDIDATE-PARSING-SHARED-HELPER-REUSE
+  title: Candidate-block parsing must reuse the shared parser to avoid drift
+  statement: Any deterministic helper that parses decision-pattern candidates must reuse the shared candidate parsing helper rather than introducing a new local regex or divergent normalization path.
+  family: shared_parsing_and_normalization
+  subject_area: parsing_and_normalization
+  source_classes:
+  - contract
+  - validator
+  scope:
+    lifecycle_phase: retrieval
+    plane_scope: framework
+    artifact_scope: caf_decision_pattern_candidates_v1 parsing
+  activation:
+    kind: always_on
+    condition: Applies whenever deterministic helpers parse caf_decision_pattern_candidates_v1.
+  posture:
+    severity: blocker
+    enforcement_mode: deterministic_helper
+  canonical_owner:
+    kind: shared_library
+    path: tools/caf/lib_caf_decision_candidates_v1.mjs
+  defined_in:
+  - path: tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md
+    anchor: Shared parsing and normalization (no drift)
+    role: primary
+  - path: tools/caf/contracts/decision_candidates_block_parsing_contract_v1.md
+    anchor: contract
+    role: secondary
+  enforced_by:
+  - kind: shared_library
+    path: tools/caf/lib_caf_decision_candidates_v1.mjs
+    note: canonical parser and normalization path
+  checked_by:
+  - kind: maintainer_review
+    path: tools/caf/contracts/playbook_blocks_ownership_and_invariants_v1.md
+    note: rule is explicit, but repo-wide automatic misuse detection is not obvious from the current sweep
+  evidence_surfaces:
+  - path: tools/caf/lib_caf_decision_candidates_v1.mjs
+    anchor: exported parser functions
+  - path: tools/caf/*
+    anchor: parser imports/usages
+  failure_mode:
+    symptom: helper-specific regex drift or inconsistent candidate normalization across tools
+    packet_or_gate: inconsistent candidate interpretation across gate, mindmap, or reports
+  lineage:
+    origin_stage: verification
+    derived_from: []
+  current_status: partially_enforced
+  docs_anchor_id: inv-caf-inv-candidate-parsing-shared-helper-reuse
+- invariant_id: INV-PLANNING-PAYLOAD-ADOPTED-OPTIONS-PRESERVED
+  title: Planning payload adopted option tuples must preserve decision resolutions without reinterpretation
+  statement: The emitted planning_pattern_payload_v1.adopted_option_choices block must preserve adopted option tuples from decision_resolutions_v1 without semantic reinterpretation.
+  family: planning_payload_integrity
+  subject_area: planning_payload_integrity
+  source_classes:
+  - meta_pattern
+  - playbook_block
+  - gate
+  scope:
+    lifecycle_phase: design_to_plan
+    plane_scope: cross_plane
+    artifact_scope: 'CAF_MANAGED_BLOCK: planning_pattern_payload_v1'
+  activation:
+    kind: when_artifact_present
+    condition: Applies when planning_pattern_payload_v1 is materialized for a design-to-plan handoff.
+  posture:
+    severity: blocker
+    enforcement_mode: fail_closed
+  canonical_owner:
+    kind: materializer
+    path: tools/caf/materialize_planning_pattern_payload_v1.mjs
+  defined_in:
+  - path: architecture_library/patterns/caf_meta_v1/caf_promotions_and_obligations_meta_patterns_v1.md
+    anchor: Critical invariants
+    role: primary
+  enforced_by:
+  - kind: deterministic_materializer
+    path: tools/caf/materialize_planning_pattern_payload_v1.mjs
+    note: copies adopted option tuples into planning payload blocks
+  checked_by:
+  - kind: design_postgate
+    path: tools/caf/design_postgate_planning_coherence_v1.mjs
+    note: validates planning bridge coherence before planning
+  - kind: planning_gate
+    path: tools/caf/planning_invariant_gate_v1.mjs
+    note: expects planning payload presence and coherence
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/spec/playbook/system_spec_v1.md
+    anchor: 'ARCHITECT_EDIT_BLOCK: decision_resolutions_v1'
+  - path: reference_architectures/<instance>/design/playbook/control_plane_design_v1.md
+    anchor: 'CAF_MANAGED_BLOCK: planning_pattern_payload_v1'
+  - path: reference_architectures/<instance>/design/playbook/application_design_v1.md
+    anchor: 'CAF_MANAGED_BLOCK: planning_pattern_payload_v1'
+  downstream_consumers:
+  - path: tools/caf/compile_pattern_obligations_v1.mjs
+    note: obligation compilation depends on preserved adopted option choices
+  - path: skills/caf-application-architect/SKILL.md
+    note: planner consumes adopted options in a distinct ownership lane
+  failure_mode:
+    symptom: adopted option tuples missing, altered, or semantically reinterpreted in the planning payload
+    packet_or_gate: design_postgate_planning_coherence_v1.mjs / planning_invariant_gate_v1.mjs
+  lineage:
+    origin_stage: planning
+    derived_from:
+    - invariant_id: INV-DECISION-EXACTLY-ONE-ADOPTED-OPTION
+      relation: realizes
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-planning-payload-adopted-options-preserved
+- invariant_id: INV-PLANNING-PAYLOAD-PROMOTIONS-SHAPE
+  title: Planning payload promotions must preserve expected shape and avoid placeholder empty-object drift
+  statement: The emitted planning_pattern_payload_v1.promotions block must preserve the expected canonical shape; it must not collapse to a placeholder empty object and should emit explicit list keys even when empty.
+  family: planning_payload_integrity
+  subject_area: planning_payload_integrity
+  source_classes:
+  - meta_pattern
+  - playbook_block
+  - gate
+  scope:
+    lifecycle_phase: design_to_plan
+    plane_scope: cross_plane
+    artifact_scope: 'CAF_MANAGED_BLOCK: planning_pattern_payload_v1.promotions'
+  activation:
+    kind: when_artifact_present
+    condition: Applies when planning_pattern_payload_v1 promotions are emitted.
+  posture:
+    severity: blocker
+    enforcement_mode: fail_closed
+  canonical_owner:
+    kind: materializer
+    path: tools/caf/materialize_planning_pattern_payload_v1.mjs
+  defined_in:
+  - path: architecture_library/patterns/caf_meta_v1/caf_promotions_and_obligations_meta_patterns_v1.md
+    anchor: Critical invariants
+    role: primary
+  enforced_by:
+  - kind: deterministic_materializer
+    path: tools/caf/materialize_planning_pattern_payload_v1.mjs
+    note: unions promotions from adopted patterns into canonical planning payload shape
+  checked_by:
+  - kind: design_postgate
+    path: tools/caf/design_postgate_planning_coherence_v1.mjs
+    note: validates planning payload shape before plan
+  - kind: planning_gate
+    path: tools/caf/planning_invariant_gate_v1.mjs
+    note: requires coherent planning artifacts before progression
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/design/playbook/control_plane_design_v1.md
+    anchor: 'CAF_MANAGED_BLOCK: planning_pattern_payload_v1'
+  - path: reference_architectures/<instance>/design/playbook/application_design_v1.md
+    anchor: 'CAF_MANAGED_BLOCK: planning_pattern_payload_v1'
+  failure_mode:
+    symptom: promotions rendered as {} or missing expected list keys / canonical shape
+    packet_or_gate: design_postgate_planning_coherence_v1.mjs / planning_invariant_gate_v1.mjs
+  lineage:
+    origin_stage: planning
+    derived_from: []
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-planning-payload-promotions-shape
+- invariant_id: INV-DESIGN-TO-PLAN-PLANNING-BRIDGE-FAIL-CLOSED
+  title: The planning payload bridge is a fail-closed design-to-plan handoff surface
+  statement: Once later design derivation emits the planning payload bridge, /caf plan must consume that framework-owned bridge rather than infer or recreate it, and progression should fail closed when the bridge is missing or malformed.
+  family: design_to_plan_handoff_boundary
+  subject_area: handoff_boundary
+  source_classes:
+  - contract
+  - gate
+  - playbook_block
+  scope:
+    lifecycle_phase: design_to_plan
+    plane_scope: cross_plane
+    artifact_scope: 'CAF_MANAGED_BLOCK: planning_pattern_payload_v1'
+  activation:
+    kind: when_stage_active
+    condition: Applies when later design surfaces are in scope for planning.
+  posture:
+    severity: blocker
+    enforcement_mode: fail_closed
+  canonical_owner:
+    kind: contract
+    path: tools/caf/contracts/design_handoff_preflight_boundary_v1.md
+  defined_in:
+  - path: tools/caf/contracts/design_handoff_preflight_boundary_v1.md
+    anchor: 1) Planning payload bridge blocks
+    role: primary
+  enforced_by:
+  - kind: deterministic_materializer
+    path: tools/caf/materialize_planning_pattern_payload_v1.mjs
+    note: produces the bridge blocks in both design docs
+  checked_by:
+  - kind: design_postgate
+    path: tools/caf/design_postgate_planning_coherence_v1.mjs
+    note: coherence validator for the bridge
+  - kind: planning_gate
+    path: tools/caf/planning_invariant_gate_v1.mjs
+    note: refuses planning progression when canonical planning outputs are absent or malformed
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/design/playbook/application_design_v1.md
+    anchor: 'CAF_MANAGED_BLOCK: planning_pattern_payload_v1'
+  - path: reference_architectures/<instance>/design/playbook/control_plane_design_v1.md
+    anchor: 'CAF_MANAGED_BLOCK: planning_pattern_payload_v1'
+  failure_mode:
+    symptom: planning bridge missing, empty, or malformed after later design derivation
+    packet_or_gate: design_postgate_planning_coherence_v1.mjs / planning_invariant_gate_v1.mjs
+  lineage:
+    origin_stage: verification
+    derived_from: []
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-design-to-plan-planning-bridge-fail-closed
+- invariant_id: INV-CONTRACT-DECLARATIONS-MATERIALITY-BOUNDARY
+  title: Contract declarations become fail-closed only when the design materially declares CP↔AP contracts
+  statement: The contract_declarations_v1 registry is materially required only when the control-plane design contains a material CP↔AP contract section/choices block; in that condition missing or placeholder-like output should fail closed, but CAF must not invent registry obligations when the design handoff did not declare them.
+  family: design_to_plan_handoff_boundary
+  subject_area: handoff_boundary
+  source_classes:
+  - contract
+  - gate
+  - playbook_block
+  scope:
+    lifecycle_phase: design_to_plan
+    plane_scope: cross_plane
+    artifact_scope: design/playbook/contract_declarations_v1.yaml
+  activation:
+    kind: when_artifact_present
+    condition: Applies when the design materially declares CP↔AP contracts.
+  posture:
+    severity: blocker
+    enforcement_mode: fail_closed
+  canonical_owner:
+    kind: contract
+    path: tools/caf/contracts/design_handoff_preflight_boundary_v1.md
+  defined_in:
+  - path: tools/caf/contracts/design_handoff_preflight_boundary_v1.md
+    anchor: 2) Conditional contract declarations registry
+    role: primary
+  enforced_by:
+  - kind: deterministic_scaffolder
+    path: tools/caf/scaffold_contract_declarations_v1.mjs
+    note: scaffold and normalization path for the registry
+  checked_by:
+  - kind: design_postgate
+    path: tools/caf/design_postgate_contract_declarations_coherence_v1.mjs
+    note: coherence validator for the registry
+  - kind: validator
+    path: tools/caf/validate_instance_v1.mjs
+    note: downstream schema/invariant validation
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/design/playbook/contract_declarations_v1.yaml
+    anchor: root document
+  - path: reference_architectures/<instance>/design/playbook/control_plane_design_v1.md
+    anchor: material CP↔AP contract section / choices block
+  failure_mode:
+    symptom: missing, placeholder-like, or incoherent registry when material contract declarations exist
+    packet_or_gate: design_postgate_contract_declarations_coherence_v1.mjs / validate_instance_v1.mjs
+  lineage:
+    origin_stage: planning
+    derived_from: []
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-contract-declarations-materiality-boundary
+- invariant_id: INV-PLANE-INTEGRATION-CONTRACT-CHOICES-CANONICAL-BLOCK
+  title: Plane integration contract choices must exist as a canonical architect-edit block when later design is in scope
+  statement: The plane_integration_contract_choices_v1 block in control_plane_design_v1.md is the canonical planning/build-facing handoff for CP runtime shape, AP runtime shape, and primary CP↔AP contract adoption, and should fail closed when missing, unparsable, or non-canonical once later design derivation is in scope.
+  family: design_to_plan_handoff_boundary
+  subject_area: handoff_boundary
+  source_classes:
+  - contract
+  - playbook_block
+  - gate
+  scope:
+    lifecycle_phase: design_to_plan
+    plane_scope: cross_plane
+    artifact_scope: 'ARCHITECT_EDIT_BLOCK: plane_integration_contract_choices_v1'
+  activation:
+    kind: when_artifact_present
+    condition: Applies when later design-to-plan contract choices are in scope.
+  posture:
+    severity: blocker
+    enforcement_mode: fail_closed
+  canonical_owner:
+    kind: contract
+    path: tools/caf/contracts/design_handoff_preflight_boundary_v1.md
+  defined_in:
+  - path: tools/caf/contracts/design_handoff_preflight_boundary_v1.md
+    anchor: 3) Narrow plane integration contract choices block
+    role: primary
+  enforced_by:
+  - kind: canonical_producer_seam
+    path: skills/caf-solution-architect/SKILL.md
+    note: produces the architect-edit block from the library-owned schema/template seam
+  - kind: schema
+    path: architecture_library/phase_8/86_phase_8_plane_integration_contract_choices_schema_v1.yaml
+    note: canonical block shape
+  checked_by:
+  - kind: design_postgate
+    path: tools/caf/design_postgate_plane_integration_contract_choices_coherence_v1.mjs
+    note: deterministic postgate validator
+  - kind: validator
+    path: tools/caf/validate_instance_v1.mjs
+    note: downstream validation
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/design/playbook/control_plane_design_v1.md
+    anchor: 'ARCHITECT_EDIT_BLOCK: plane_integration_contract_choices_v1'
+  downstream_consumers:
+  - path: tools/caf/task_graph_contract_anchor_postprocess_v1.mjs
+    note: planning/build contract anchor consumer
+  failure_mode:
+    symptom: missing, non-canonical, or unparsable plane integration contract choices block
+    packet_or_gate: design_postgate_plane_integration_contract_choices_coherence_v1.mjs / validate_instance_v1.mjs
+  lineage:
+    origin_stage: planning
+    derived_from: []
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-plane-integration-contract-choices-canonical-block
+- invariant_id: INV-PLANE-DOMAIN-MODEL-VIEWS-CANONICAL-YAML
+  title: Normalized plane domain-model YAML views are canonical planning-facing handoff surfaces
+  statement: Once later design derivation emits normalized application/system plane domain-model YAML views, they are no longer advisory and planning/build may fail closed when either view is missing, unparsable, or violates the canonical planning-facing contract.
+  family: design_to_plan_handoff_boundary
+  subject_area: handoff_boundary
+  source_classes:
+  - contract
+  - playbook_block
+  - gate
+  scope:
+    lifecycle_phase: design_to_plan
+    plane_scope: cross_plane
+    artifact_scope: design/playbook/{application_domain_model_v1.yaml,system_domain_model_v1.yaml}
+  activation:
+    kind: when_artifact_present
+    condition: Applies when normalized plane domain-model YAML views are emitted.
+  posture:
+    severity: blocker
+    enforcement_mode: fail_closed
+  canonical_owner:
+    kind: contract
+    path: tools/caf/contracts/design_handoff_preflight_boundary_v1.md
+  defined_in:
+  - path: tools/caf/contracts/design_handoff_preflight_boundary_v1.md
+    anchor: 4) Normalized plane domain-model YAML views
+    role: primary
+  enforced_by:
+  - kind: canonical_producer_seam
+    path: skills/worker-domain-modeler/SKILL.md
+    note: emits normalized application/system plane views
+  - kind: schema
+    path: architecture_library/phase_8/87b_phase_8_plane_domain_model_schema_v1.yaml
+    note: canonical YAML shape
+  checked_by:
+  - kind: design_postgate
+    path: tools/caf/design_postgate_plane_domain_model_views_coherence_v1.mjs
+    note: deterministic postgate validator
+  - kind: validator
+    path: tools/caf/validate_instance_v1.mjs
+    note: planning/build validation of the canonical views
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/design/playbook/application_domain_model_v1.yaml
+    anchor: root document
+  - path: reference_architectures/<instance>/design/playbook/system_domain_model_v1.yaml
+    anchor: root document
+  failure_mode:
+    symptom: normalized plane views absent, unparsable, or contract-incoherent
+    packet_or_gate: design_postgate_plane_domain_model_views_coherence_v1.mjs / validate_instance_v1.mjs
+  lineage:
+    origin_stage: planning
+    derived_from: []
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-plane-domain-model-views-canonical-yaml
+- invariant_id: INV-ENRICHMENT-OWNERSHIP-SPLIT
+  title: CAF must keep semantic production, deterministic enrichment, gates, and repair tools in distinct ownership lanes
+  statement: CAF flows must distinguish semantic producer / planner-owned structure, framework-owned deterministic enrichment, invariant gates, and maintenance-only repair tools; deterministic helpers must not synthesize missing semantic outputs after the fact.
+  family: deterministic_enrichment_ownership
+  subject_area: deterministic_enrichment
+  source_classes:
+  - meta_pattern
+  - contract
+  - worker_contract
+  - gate
+  scope:
+    lifecycle_phase: cross_phase
+    plane_scope: framework
+    artifact_scope: ownership split across planner, enrichers, gates, and repair tools
+  activation:
+    kind: always_on
+    condition: Applies to CAF-owned semantic producers, deterministic enrichers, gates, and repair tools.
+  posture:
+    severity: blocker
+    enforcement_mode: declared_only
+  canonical_owner:
+    kind: meta_pattern
+    path: architecture_library/patterns/caf_meta_v1/caf_deterministic_enrichment_ownership_meta_pattern_v1.md
+  defined_in:
+  - path: architecture_library/patterns/caf_meta_v1/caf_deterministic_enrichment_ownership_meta_pattern_v1.md
+    anchor: Core rule / Enricher posture
+    role: primary
+  - path: tools/caf/contracts/enrichment_ownership_map_v1.md
+    anchor: Ownership rule
+    role: secondary
+  enforced_by:
+  - kind: registry
+    path: tools/caf/contracts/enrichment_ownership_map_v1.md
+    note: documents covered surfaces and their deterministic enricher/gate pairings
+  checked_by:
+  - kind: maintainer_review
+    path: tools/caf/contracts/enrichment_ownership_map_v1.md
+    note: current enforcement is largely by documented ownership map plus specific gates for covered families
+  evidence_surfaces:
+  - path: tools/caf/contracts/enrichment_ownership_map_v1.md
+    anchor: covered surfaces / known gaps
+  - path: tools/caf/*.mjs
+    anchor: enrichers, compilers, gates
+  failure_mode:
+    symptom: semantic work is recreated by helpers, or library-owned structural pressure is left implicit
+    packet_or_gate: drift across planner prompts, enrichers, and gates
+  lineage:
+    origin_stage: execution
+    derived_from: []
+  current_status: partially_enforced
+  docs_anchor_id: inv-caf-inv-enrichment-ownership-split
+- invariant_id: INV-GATES-VERIFY-NOT-INVENT-MEANING
+  title: Gates should verify compiled or enriched results rather than invent missing semantic meaning
+  statement: CAF gates should verify invariants on the compiled or enriched result and should not compensate for missing semantic work by inventing new meaning or stack-specific lore in top-level gate branches.
+  family: gate_truthfulness_and_fail_closed
+  subject_area: gate_posture
+  source_classes:
+  - meta_pattern
+  - gate
+  - worker_contract
+  scope:
+    lifecycle_phase: cross_phase
+    plane_scope: framework
+    artifact_scope: gates / validators / postgates under tools/caf
+  activation:
+    kind: always_on
+    condition: Applies to gates, validators, and postgates that evaluate semantic outputs.
+  posture:
+    severity: blocker
+    enforcement_mode: declared_only
+  canonical_owner:
+    kind: meta_pattern
+    path: architecture_library/patterns/caf_meta_v1/caf_contract_execution_and_validator_ownership_meta_pattern_v1.md
+  defined_in:
+  - path: architecture_library/patterns/caf_meta_v1/caf_contract_execution_and_validator_ownership_meta_pattern_v1.md
+    anchor: Intent / Anti-patterns
+    role: primary
+  - path: architecture_library/patterns/caf_meta_v1/caf_deterministic_enrichment_ownership_meta_pattern_v1.md
+    anchor: Where to place logic
+    role: secondary
+  enforced_by:
+  - kind: generic_gate_posture
+    path: tools/caf/*.mjs
+    note: generic gates are intended to execute declared contracts and validator kinds
+  checked_by:
+  - kind: maintainer_review
+    path: architecture_library/patterns/caf_meta_v1/caf_contract_execution_and_validator_ownership_meta_pattern_v1.md
+    note: rule is explicit, but the first sweep does not claim a global automated lint for every gate
+  evidence_surfaces:
+  - path: tools/caf/*.mjs
+    anchor: generic gates and validators
+  - path: TBP manifests / role binding declarations
+    anchor: validator_kind and owner delegation semantics
+  failure_mode:
+    symptom: bespoke top-level gate branches recreate semantics or stack lore that belongs in contracts/TBPs/validators
+    packet_or_gate: drift, overfitting, and dishonest fail-closed claims
+  lineage:
+    origin_stage: verification
+    derived_from:
+    - invariant_id: INV-ENRICHMENT-OWNERSHIP-SPLIT
+      relation: refines
+  current_status: partially_enforced
+  docs_anchor_id: inv-caf-inv-gates-verify-not-invent-meaning
+- invariant_id: INV-FAIL-CLOSED-WITH-FEEDBACK-PACKET
+  title: Missing, malformed, contradictory, or ungroundable required outputs should fail closed with a feedback packet
+  statement: 'CAF is fail closed: when required artifacts are missing, malformed, contradictory, or ungroundable, the framework should emit a feedback packet and stop rather than continue by guessing.'
+  family: gate_truthfulness_and_fail_closed
+  subject_area: fail_closed_behavior
+  source_classes:
+  - meta_pattern
+  - gate
+  - public_docs
+  scope:
+    lifecycle_phase: cross_phase
+    plane_scope: framework
+    artifact_scope: gates, preflights, postgates, feedback packet surfaces
+  activation:
+    kind: always_on
+    condition: Applies whenever a required CAF output is missing, malformed, contradictory, or ungroundable.
+  posture:
+    severity: release_critical
+    enforcement_mode: fail_closed
+  canonical_owner:
+    kind: meta_pattern
+    path: architecture_library/patterns/caf_meta_v1/caf_fail_closed_permission_checkpoint_meta_pattern_v1.md
+  defined_in:
+  - path: architecture_library/patterns/caf_meta_v1/caf_fail_closed_permission_checkpoint_meta_pattern_v1.md
+    anchor: Purpose / Core principle
+    role: primary
+  - path: docs/architect/01_mental_model.md
+    anchor: CAF is a fail-closed derivation system
+    role: secondary
+  - path: docs/architect/08_gates_and_fail_closed.md
+    anchor: Gates and fail-closed behavior
+    role: secondary
+  enforced_by:
+  - kind: gate_control_flow
+    path: tools/caf/planning_invariant_gate_v1.mjs
+    note: thin orchestrator that writes a feedback packet on failure
+  - kind: feedback_packet_library
+    path: tools/caf/lib_feedback_packets_v1.mjs
+    note: shared packet header/lifecycle helpers
+  checked_by:
+  - kind: gate_control_flow
+    path: tools/caf/*gate*.mjs
+    note: fail-closed gates/postgates are the primary checking posture
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/feedback_packets/*.md
+    anchor: generated feedback packets
+  - path: required canonical artifacts for the active lifecycle stage
+    anchor: stage-specific evidence surfaces
+  failure_mode:
+    symptom: required structure absent or incoherent, but workflow continues by inference or silence
+    packet_or_gate: stage-specific feedback packet plus stop condition
+  lineage:
+    origin_stage: verification
+    derived_from: []
+  current_status: partially_enforced
+  docs_anchor_id: inv-caf-inv-fail-closed-with-feedback-packet
+- invariant_id: INV-PERMISSION-CHECKPOINT-ASK-ONCE-NO-GATE-JUMP
+  title: Permission checkpoints may ask once before expensive semantic stages but may not be used to skip producer execution
+  statement: Instruction-heavy semantic stages may use a single permission checkpoint before execution, but agents must not use script-only runs, preflight-as-substitute-for-execution, or circular fail-closed logic to avoid the responsible producer stage.
+  family: gate_truthfulness_and_fail_closed
+  subject_area: fail_closed_behavior
+  source_classes:
+  - meta_pattern
+  - worker_contract
+  - gate
+  scope:
+    lifecycle_phase: cross_phase
+    plane_scope: framework
+    artifact_scope: instruction-heavy semantic skills
+  activation:
+    kind: when_stage_active
+    condition: Applies when a stage introduces an ask-once permission checkpoint before expensive semantic work.
+  posture:
+    severity: blocker
+    enforcement_mode: declared_only
+  canonical_owner:
+    kind: meta_pattern
+    path: architecture_library/patterns/caf_meta_v1/caf_fail_closed_permission_checkpoint_meta_pattern_v1.md
+  defined_in:
+  - path: architecture_library/patterns/caf_meta_v1/caf_fail_closed_permission_checkpoint_meta_pattern_v1.md
+    anchor: Permission checkpoint semantics / Forbidden shortcuts
+    role: primary
+  enforced_by:
+  - kind: skill_contract
+    path: skills/caf-arch-implementation-scaffolding/SKILL.md
+    note: intended sanctioned checkpoint surface
+  - kind: skill_contract
+    path: skills/caf-solution-architect/SKILL.md
+    note: intended sanctioned checkpoint surface
+  - kind: skill_contract
+    path: skills/caf-application-architect/SKILL.md
+    note: intended sanctioned checkpoint surface
+  checked_by:
+  - kind: operator_review
+    path: skill execution guidance
+    note: first sweep did not identify a repo-wide automated validator for checkpoint misuse
+  evidence_surfaces:
+  - path: skills/caf-arch-implementation-scaffolding/SKILL.md
+    anchor: permission checkpoint / anti-circularity sections
+  - path: skills/caf-solution-architect/SKILL.md
+    anchor: permission checkpoint / anti-circularity sections
+  - path: skills/caf-application-architect/SKILL.md
+    anchor: permission checkpoint / anti-circularity sections
+  failure_mode:
+    symptom: agent skips the producer stage, runs helpers/gates only, and calls the resulting missing outputs a legitimate fail-closed block
+    packet_or_gate: semantic-stage drift; dishonest fail-closed behavior
+  lineage:
+    origin_stage: verification
+    derived_from:
+    - invariant_id: INV-FAIL-CLOSED-WITH-FEEDBACK-PACKET
+      relation: refines
+  current_status: declared
+  docs_anchor_id: inv-caf-inv-permission-checkpoint-ask-once-no-gate-jump
+- invariant_id: INV-CP-RUNTIME-REPOSITORY-HEALTH-OWNER-PARITY
+  title: Runtime repository-health owner seams and concrete repositories must stay aligned
+  statement: When the resolved CP runtime repository-health owner surface uses repository.health() as a readiness probe through the active persistence assembly surface, every concrete repository returned by that active assembly surface must implement a compatible health() method.
+  family: runtime_contract_owner_parity
+  subject_area: runtime_contracts
+  source_classes:
+  - contract
+  - runtime_evidence
+  - gate
+  scope:
+    lifecycle_phase: build
+    plane_scope: control_plane
+    artifact_scope: cp runtime repository-health owner seam plus active persistence assembly surface
+  activation:
+    kind: when_capability_present
+    condition: Applies when CP runtime repository health capability surfaces are present.
+  posture:
+    severity: blocker
+    enforcement_mode: fail_closed
+  canonical_owner:
+    kind: contract
+    path: tools/caf/contracts/cp_runtime_repository_health_contract_v1.md
+  defined_in:
+  - path: tools/caf/contracts/cp_runtime_repository_health_contract_v1.md
+    anchor: Contract / Postgate expectation
+    role: primary
+  - path: architecture_library/patterns/caf_meta_v1/caf_contract_execution_and_validator_ownership_meta_pattern_v1.md
+    anchor: Proxy/owner delegated proof
+    role: secondary
+  enforced_by:
+  - kind: tbp_role_binding
+    path: adopted runtime TBP role bindings
+    note: binds cp_runtime_repository_health_owner to the concrete owner seam
+  - kind: runtime_realization
+    path: TG-00-CP-runtime-scaffold / TG-90-runtime-wiring producer seams
+    note: concrete runtime files must realize health parity
+  checked_by:
+  - kind: build_postgate
+    path: tools/caf/build_technology_choice_realization_gate_v1.mjs
+    note: validator-driven build verification for technology-choice realization
+  evidence_surfaces:
+  - path: resolved owner seam file from cp_runtime_repository_health_owner binding
+    anchor: repository.health() call site
+  - path: active CP persistence assembly surface / concrete repositories
+    anchor: concrete repository implementations
+  failure_mode:
+    symptom: owner seam calls repository.health() but concrete repositories do not implement a compatible method
+    packet_or_gate: build_technology_choice_realization_gate_v1.mjs and related review surfaces
+  lineage:
+    origin_stage: runtime_evidence
+    derived_from: []
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-cp-runtime-repository-health-owner-parity
+- invariant_id: INV-UX-LANE-PRE-STAGE-SPLIT
+  title: UX lane preflight and retrieval-preflight must remain split at the declared deterministic boundary
+  statement: 'The UX lane must keep ux_preflight_v1 and ux_retrieval_preflight_v1 as distinct deterministic stages: the first owns canonical UX artifact creation and deterministic seed refresh, while the second owns packet application, architect-block hydration, retrieval-blob assembly, and shortlist preparation.'
+  family: ux_lane_orchestration
+  subject_area: ux_lane_governance
+  source_classes:
+  - contract
+  - gate
+  - worker_contract
+  scope:
+    lifecycle_phase: design
+    plane_scope: ux_lane
+    artifact_scope: ux_preflight_v1.mjs / ux_retrieval_preflight_v1.mjs boundary
+  activation:
+    kind: when_stage_active
+    condition: Applies when /caf ux runs its declared deterministic pre-stage boundary.
+  posture:
+    severity: blocker
+    enforcement_mode: gate_checked
+  canonical_owner:
+    kind: contract
+    path: tools/caf/contracts/ux_lane_gate_posture_v1.md
+  defined_in:
+  - path: tools/caf/contracts/ux_lane_gate_posture_v1.md
+    anchor: Pre-stage split
+    role: primary
+  enforced_by:
+  - kind: deterministic_orchestration_contract
+    path: tools/caf/contracts/ux_lane_gate_posture_v1.md
+    note: defines exact helper ownership per stage
+  checked_by:
+  - kind: lane_orchestration_review
+    path: tools/caf/contracts/ux_lane_gate_posture_v1.md
+    note: explicit deterministic posture, though the first sweep does not claim a dedicated central invariant gate for stage mixing
+  evidence_surfaces:
+  - path: tools/caf/ux_preflight_v1.mjs
+    anchor: deterministic helper chain
+  - path: tools/caf/ux_retrieval_preflight_v1.mjs
+    anchor: deterministic retrieval-prep chain
+  failure_mode:
+    symptom: stage responsibilities blur and packet application/retrieval prep are mixed into the wrong preflight stage
+    packet_or_gate: UX lane orchestration drift
+  lineage:
+    origin_stage: execution
+    derived_from: []
+  current_status: partially_enforced
+  docs_anchor_id: inv-caf-inv-ux-lane-pre-stage-split
+- invariant_id: INV-SHAPE-PINS-CLOSED-AND-ALLOWED
+  title: Architecture shape pins must be complete and within the authoritative allowed-value catalog
+  statement: Template instances and their pins must be fully declared, use allowed values, and avoid placeholders so downstream derivation never invents missing architecture choices.
+  family: pin_closure_and_allowed_values
+  subject_area: pin_closure
+  source_classes:
+  - pins
+  - schema
+  - public_docs
+  - validator
+  scope:
+    lifecycle_phase: spec
+    plane_scope: framework
+    artifact_scope: spec/playbook/architecture_shape_parameters.yaml
+  activation:
+    kind: always_on
+    condition: Applies whenever authoritative architecture shape parameters are proposed or promoted.
+  posture:
+    severity: blocker
+    enforcement_mode: gate_checked
+  canonical_owner:
+    kind: architect_shape_surface_plus_validator
+    path: tools/caf/prd_shape_validate_and_promote_v1.mjs
+  defined_in:
+  - path: architecture_library/09_contura_instance_derivation_process_6_to_8_v1b2.md
+    anchor: Validation Gate V1 — Pin Closure (fail-closed)
+    role: primary
+  - path: architecture_library/06_contura_architecture_shape_parameters_schema_v1.yaml
+    anchor: template_instances / pins
+    role: secondary
+  - path: architecture_library/07_contura_parameterized_architecture_templates_v1.md
+    anchor: architect must treat template parameters as authoritative architectural input
+    role: secondary
+  enforced_by:
+  - kind: architect_pinned_input
+    path: reference_architectures/<instance>/spec/playbook/architecture_shape_parameters.yaml
+    note: architect declares template instances and pin values
+  - kind: validator
+    path: tools/caf/prd_shape_validate_and_promote_v1.mjs
+    note: validates proposed shape parameters before promotion
+  checked_by:
+  - kind: validator
+    path: tools/caf/prd_shape_validate_and_promote_v1.mjs
+    note: checks schema_version, pin completeness, and allowed values before authoritative promotion
+  - kind: gate
+    path: tools/caf/arch_gate_v1.mjs
+    note: requires authoritative shape file before architecture scaffolding can proceed
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/spec/playbook/architecture_shape_parameters.yaml
+    anchor: template_instances
+  - path: reference_architectures/<instance>/spec/playbook/architecture_shape_parameters.proposed.yaml
+    anchor: proposed shape parameters before promotion
+  downstream_consumers:
+  - path: tools/caf/build_retrieval_context_blob_v1.mjs
+    note: retrieval context includes authoritative shape parameters
+  - path: tools/caf/guardrails_v1.mjs
+    note: guardrails derivation uses authoritative shape parameters as a pinned input
+  failure_mode:
+    symptom: missing pins, placeholder values, or out-of-catalog values
+    packet_or_gate: pin closure fail / shape promotion blocked before architecture scaffolding
+  lineage:
+    origin_stage: pin
+    derived_from: []
+  current_status: partially_enforced
+  docs_anchor_id: inv-caf-inv-shape-pins-closed-and-allowed
+- invariant_id: INV-LAYER8-RESOLVED-VIEW-AUTHORITATIVE
+  title: Layer 8 resolved view is authoritative for rails and branching behavior
+  statement: When branching behavior depends on pinned values and derived rails, CAF must treat profile_parameters_resolved.yaml as the single source of truth instead of recomputing or reinterpreting the same semantics ad hoc.
+  family: resolved_view_authority
+  subject_area: resolved_view_authority
+  source_classes:
+  - profile_parameters
+  - resolved_guardrails
+  - meta_pattern
+  - gate
+  - public_docs
+  scope:
+    lifecycle_phase: cross_phase
+    plane_scope: framework
+    artifact_scope: spec/guardrails/profile_parameters_resolved.yaml
+  activation:
+    kind: when_artifact_present
+    condition: Applies once Layer 8 resolved guardrails have been derived for an instance.
+  posture:
+    severity: blocker
+    enforcement_mode: gate_checked
+  canonical_owner:
+    kind: guardrails_deriver
+    path: tools/caf/guardrails_v1.mjs
+  defined_in:
+  - path: architecture_library/patterns/caf_meta_v1/caf_meta_patterns_playbook_v1.md
+    anchor: 'MP-13: Layer 8 resolved view is authoritative'
+    role: primary
+  - path: docs/user/13_profile_parameters_configuration.md
+    anchor: The resolved files are the ones deterministic consumers should treat as authoritative
+    role: secondary
+  enforced_by:
+  - kind: deterministic_derivation
+    path: tools/caf/guardrails_v1.mjs
+    note: derives profile_parameters_resolved.yaml from pinned inputs
+  - kind: companion_projection
+    path: tools/caf/companion_init_v1.mjs
+    note: copies resolved guardrails into the companion repo as canonical CAF input
+  checked_by:
+  - kind: gate
+    path: tools/caf/planning_invariant_gate_v1.mjs
+    note: fails closed if profile_parameters_resolved.yaml is missing or unreadable
+  - kind: gate
+    path: tools/caf/build_technology_choice_realization_gate_v1.mjs
+    note: checks runtime realization against canonical resolved rails
+  - kind: gate
+    path: tools/caf/playbook_gate_v1.mjs
+    note: reads resolved guardrails as the enforcement bar source
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml
+    anchor: resolved rails and effective bindings
+  - path: companion_repositories/<instance>/profile_v1/caf/profile_parameters_resolved.yaml
+    anchor: companion copy of canonical resolved rails
+  downstream_consumers:
+  - path: tools/caf/compile_pattern_obligations_v1.mjs
+    note: reads resolved rails to compile obligations and gates
+  - path: tools/caf/build_ux_retrieval_context_blob_v1.mjs
+    note: embeds resolved UI/runtime posture in UX retrieval context
+  failure_mode:
+    symptom: consumers recompute rails ad hoc or branch from stale pin interpretations
+    packet_or_gate: planning/build/playbook gates fail or generated behavior drifts across surfaces
+  lineage:
+    origin_stage: resolution
+    derived_from:
+    - invariant_id: INV-SHAPE-PINS-CLOSED-AND-ALLOWED
+      relation: realizes
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-layer8-resolved-view-authoritative
+- invariant_id: INV-PROFILE-BINDINGS-RATIONALE-SPLIT
+  title: Machine-consumed bindings and architectural rationale must remain split
+  statement: profile_parameters.yaml owns machine-consumed technical bindings, while specs, designs, and decision surfaces own rationale; CAF should not bury architectural reasoning inside pins or silently move machine bindings into prose.
+  family: binding_authority_split
+  subject_area: binding_and_rationale_split
+  source_classes:
+  - profile_parameters
+  - public_docs
+  - playbook_block
+  scope:
+    lifecycle_phase: cross_phase
+    plane_scope: framework
+    artifact_scope: spec/guardrails/profile_parameters.yaml plus spec/design rationale surfaces
+  activation:
+    kind: always_on
+    condition: Applies whenever an instance uses profile_parameters.yaml and architecture rationale surfaces together.
+  posture:
+    severity: blocker
+    enforcement_mode: declared_only
+  canonical_owner:
+    kind: docs_contract
+    path: docs/user/13_profile_parameters_configuration.md
+  defined_in:
+  - path: docs/user/13_profile_parameters_configuration.md
+    anchor: Architecture / rationale split
+    role: primary
+  - path: docs/user/15_prd_first_lifecycle.md
+    anchor: rationale vs binding
+    role: secondary
+  enforced_by:
+  - kind: surface_split
+    path: reference_architectures/<instance>/spec/guardrails/profile_parameters.yaml
+    note: machine bindings live in profile parameters
+  - kind: surface_split
+    path: reference_architectures/<instance>/spec/playbook/*.md
+    note: rationale and architectural reasoning live in specs and decisions
+  checked_by:
+  - kind: maintainer_review
+    path: docs/user/13_profile_parameters_configuration.md
+    note: current enforcement is documented and culturally reinforced rather than centrally linted
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/spec/guardrails/profile_parameters.yaml
+    anchor: platform.* and ui.* pins
+  - path: reference_architectures/<instance>/spec/playbook/system_spec_v1.md
+    anchor: architect rationale surfaces
+  failure_mode:
+    symptom: technology bindings drift into prose or rationale gets buried inside machine pins
+    packet_or_gate: traceability and retrieval degrade; human rationale becomes harder to recover or enforce
+  lineage:
+    origin_stage: pin
+    derived_from: []
+  current_status: declared
+  docs_anchor_id: inv-caf-inv-profile-bindings-rationale-split
+- invariant_id: INV-ABP-PBP-RESOLUTION-CANONICAL-STYLE-TO-PLANE
+  title: Architecture style must resolve through ABP/PBP artifacts instead of being reinterpreted from prose
+  statement: CAF resolves architecture.architecture_style into selected ABP and derived ABP/PBP projections, and planning should consume abp_pbp_resolution_v1.yaml rather than reinterpreting architecture style from prose or local heuristics.
+  family: derivation_cascade_resolution
+  subject_area: style_to_plane_resolution
+  source_classes:
+  - profile_parameters
+  - resolved_guardrails
+  - abp
+  - pbp
+  - public_docs
+  scope:
+    lifecycle_phase: design_to_plan
+    plane_scope: cross_plane
+    artifact_scope: spec/guardrails/abp_pbp_resolution_v1.yaml
+  activation:
+    kind: when_pin_equals
+    condition: Applies whenever architecture.architecture_style is pinned and ABP/PBP projection is derived.
+  posture:
+    severity: blocker
+    enforcement_mode: deterministic_helper
+  canonical_owner:
+    kind: guardrails_deriver
+    path: tools/caf/guardrails_v1.mjs
+  defined_in:
+  - path: docs/user/13_profile_parameters_configuration.md
+    anchor: Architecture style resolution
+    role: primary
+  - path: architecture_library/00_contura_architecture_library_taxonomy_v1.md
+    anchor: ABP / PBP / TBP definitions
+    role: secondary
+  enforced_by:
+  - kind: deterministic_derivation
+    path: tools/caf/guardrails_v1.mjs
+    note: derives ABP/PBP resolution from style pin and profile parameters
+  checked_by:
+  - kind: gate
+    path: tools/caf/planning_invariant_gate_v1.mjs
+    note: planning fails closed if required resolved inputs are missing
+  - kind: planner_contract
+    path: docs/user/13_profile_parameters_configuration.md
+    note: /caf plan should use ABP/PBP projection for style-to-plane role mapping
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/spec/guardrails/abp_pbp_resolution_v1.yaml
+    anchor: selected ABP and derived PBP/plane view
+  - path: reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml
+    anchor: resolved architecture style and rails
+  downstream_consumers:
+  - path: tools/caf/compile_pattern_obligations_v1.mjs
+    note: pattern obligations should remain aligned to resolved style/plane mapping
+  - path: skills/caf-application-architect/SKILL.md
+    note: planning consumes resolved architecture posture rather than free-form prose reinterpretation
+  failure_mode:
+    symptom: planners or workers infer plane roles from prose and diverge from resolved architecture style
+    packet_or_gate: style-to-plane drift across planning and build artifacts
+  lineage:
+    origin_stage: resolution
+    derived_from:
+    - invariant_id: INV-LAYER8-RESOLVED-VIEW-AUTHORITATIVE
+      relation: refines
+  current_status: partially_enforced
+  docs_anchor_id: inv-caf-inv-abp-pbp-resolution-canonical-style-to-plane
+- invariant_id: INV-TASKS-CONSUME-RESOLVED-RAILS-AND-TBPS
+  title: Architectural tasks must consume resolved rails and TBP resolution instead of hardcoded technology branches
+  statement: Architectural tasks should realize different stacks by consuming profile_parameters_resolved.yaml and, when relevant, tbp_resolution_v1.yaml, rather than embedding ad hoc if-postgres or if-docker logic.
+  family: task_parameterization
+  subject_area: task_parameterization
+  source_classes:
+  - resolved_guardrails
+  - tbp
+  - meta_pattern
+  - worker_contract
+  scope:
+    lifecycle_phase: planning
+    plane_scope: cross_plane
+    artifact_scope: task_graph_v1.yaml plus worker/task input contracts
+  activation:
+    kind: when_stage_active
+    condition: Applies when planning and task emission depend on technology rails or TBP consequences.
+  posture:
+    severity: blocker
+    enforcement_mode: declared_only
+  canonical_owner:
+    kind: meta_pattern
+    path: architecture_library/patterns/caf_meta_v1/caf_meta_patterns_playbook_v1.md
+  defined_in:
+  - path: architecture_library/patterns/caf_meta_v1/caf_meta_patterns_playbook_v1.md
+    anchor: 'MP-18: Architectural tasks are parameterized by rails and TBPs, not hardcoded to technologies'
+    role: primary
+  - path: docs/user/13_profile_parameters_configuration.md
+    anchor: That split gives TBP resolution, planning, retrieval, and UI workers one place to read UI technology/runtime choices
+    role: secondary
+  enforced_by:
+  - kind: planner_contract
+    path: tools/caf/planning_technology_choice_realization_gate_v1.mjs
+    note: expects tasks to include resolved rails input where required
+  checked_by:
+  - kind: gate
+    path: tools/caf/planning_technology_choice_realization_gate_v1.mjs
+    note: checks that technology-sensitive tasks declare profile_parameters_resolved.yaml as input
+  evidence_surfaces:
+  - path: reference_architectures/<instance>/plan/task_graph_v1.yaml
+    anchor: task inputs include profile_parameters_resolved.yaml and TBP-derived surfaces when required
+  - path: reference_architectures/<instance>/spec/guardrails/profile_parameters_resolved.yaml
+    anchor: resolved rails consumed by planning tasks
+  failure_mode:
+    symptom: task logic hardcodes technologies instead of following resolved rails/TBP inputs
+    packet_or_gate: planning tasks become brittle and drift when stacks change
+  lineage:
+    origin_stage: planning
+    derived_from:
+    - invariant_id: INV-LAYER8-RESOLVED-VIEW-AUTHORITATIVE
+      relation: realizes
+    - invariant_id: INV-ABP-PBP-RESOLUTION-CANONICAL-STYLE-TO-PLANE
+      relation: realizes
+  current_status: partially_enforced
+  docs_anchor_id: inv-caf-inv-tasks-consume-resolved-rails-and-tbps
+- invariant_id: INV-WORKERS-NO-TBP-ID-LEAKAGE
+  title: Worker skills must not hardcode TBP IDs
+  statement: Workers must bind to TBP consequences via capabilities and role_binding_key rather than hardcoding TBP IDs, so adding or changing TBPs does not require worker rewrites.
+  family: tbp_indirection_and_portability
+  subject_area: worker_portability
+  source_classes:
+  - tbp
+  - meta_pattern
+  - worker_contract
+  - validator
+  scope:
+    lifecycle_phase: build
+    plane_scope: framework
+    artifact_scope: skills/worker-*/SKILL.md and TBP role-binding resolution
+  activation:
+    kind: when_capability_present
+    condition: Applies whenever workers consume TBP-driven placement or layout expectations.
+  posture:
+    severity: blocker
+    enforcement_mode: gate_checked
+  canonical_owner:
+    kind: meta_pattern
+    path: architecture_library/patterns/caf_meta_v1/caf_no_tbp_id_leakage_in_worker_skills_meta_pattern_v1.md
+  defined_in:
+  - path: architecture_library/patterns/caf_meta_v1/caf_no_tbp_id_leakage_in_worker_skills_meta_pattern_v1.md
+    anchor: R1. Workers MUST NOT hardcode TBP IDs
+    role: primary
+  - path: architecture_library/patterns/caf_meta_v1/caf_prevent_combinatorial_sprawl_meta_patterns_v1.md
+    anchor: Technology-specific details MUST be carried by TBPs
+    role: secondary
+  enforced_by:
+  - kind: resolver
+    path: tools/caf/resolve_tbp_role_bindings_v1.mjs
+    note: workers should resolve placement via capability and role_binding_key
+  - kind: worker_contract
+    path: skills/worker-*/SKILL.md
+    note: workers consume resolved role-binding expectations rather than TBP IDs
+  checked_by:
+  - kind: audit
+    path: tools/caf-meta/audit_no_tbp_leakage_in_worker_skills_v1.mjs
+    note: audits worker skills for TBP ID leakage
+  evidence_surfaces:
+  - path: skills/worker-*/SKILL.md
+    anchor: worker instructions avoid TBP-* identifiers
+  - path: reference_architectures/<instance>/caf/tbp_resolution_v1.yaml
+    anchor: resolved role-binding expectations
+  failure_mode:
+    symptom: workers become stale or technology-hardcoded when TBP providers change
+    packet_or_gate: TBP leakage audit fails or workers drift across provider changes
+  lineage:
+    origin_stage: execution
+    derived_from:
+    - invariant_id: INV-TASKS-CONSUME-RESOLVED-RAILS-AND-TBPS
+      relation: refines
+  current_status: enforced
+  docs_anchor_id: inv-caf-inv-workers-no-tbp-id-leakage
+- invariant_id: INV-EXT-NON-AUTHORITATIVE-UPSTREAM-DECLARATION
+  title: Extension packs must remain non-authoritative and declare upstream dependencies
+  statement: Extension packs and modernization playbooks may package cross-cutting guidance, but they must remain non-authoritative, stay downstream of CAF governance, and explicitly declare their upstream dependencies.
+  family: extension_pack_boundary
+  subject_area: extension_pack_governance
+  source_classes:
+  - ext_pattern
+  - public_docs
+  - meta_pattern
+  scope:
+    lifecycle_phase: framework_wide
+    plane_scope: framework
+    artifact_scope: extension packs and modernization playbooks
+  activation:
+    kind: when_manifest_present
+    condition: Applies whenever a new extension pack or modernization playbook is added.
+  posture:
+    severity: blocker
+    enforcement_mode: declared_only
+  canonical_owner:
+    kind: framework_taxonomy_doc
+    path: architecture_library/03_contura_architecture_framework_v1.md
+  defined_in:
+  - path: architecture_library/03_contura_architecture_framework_v1.md
+    anchor: Extension packs and modernization playbooks package non-authoritative guidance
+    role: primary
+  - path: architecture_library/06_contura_architecture_library_roadmap_v1.md
+    anchor: New extension packs and modernization playbooks must declare that they are non-authoritative and list their upstream dependencies
+    role: secondary
+  enforced_by:
+  - kind: taxonomy_boundary
+    path: architecture_library/03_contura_architecture_framework_v1.md
+    note: defines extension packs as downstream, non-authoritative surfaces
+  checked_by:
+  - kind: maintainer_review
+    path: architecture_library/06_contura_architecture_library_roadmap_v1.md
+    note: roadmap currently states the rule but repo-wide automatic enforcement is not yet obvious
+  evidence_surfaces:
+  - path: architecture_library/06_contura_architecture_library_roadmap_v1.md
+    anchor: extensibility rules / dependency relationships
+  - path: architecture_library/03_contura_architecture_framework_v1.md
+    anchor: extension packs & modernization playbooks
+  failure_mode:
+    symptom: extension packs begin acting like authority-bearing frameworks or omit upstream dependencies
+    packet_or_gate: framework governance drifts and package boundaries become ambiguous
+  lineage:
+    origin_stage: intent
+    derived_from: []
+  current_status: declared
+  docs_anchor_id: inv-caf-inv-ext-non-authoritative-upstream-declaration
+purpose: Machine-readable catalog of CAF operational invariants used to audit how CAF preserves intended invariants through derivation.
+docs_catalog_path: docs/architect/invariants/caf_operational_invariant_catalog_v1.md
+taxonomy_path: architecture_library/18_contura_invariant_taxonomy_v1.yaml

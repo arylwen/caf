@@ -17,3 +17,8 @@ The authoritative router skill procedures live at:
 - `skills/caf-meta/SKILL.md`
 
 The shim skills under `.copilot/skills/*` simply point to those canonical paths.
+
+## Local scripts
+
+- Use `.copilot/scripts/` for Copilot-local helper scripts.
+- Keep temporary helpers out of `tools/caf/` unless they are being promoted into a maintainer-vetted canonical framework helper.

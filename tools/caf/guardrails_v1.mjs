@@ -269,6 +269,12 @@ function parsePlaneShapeChoices(pinsObj) {
   };
 }
 
+function planeDerivationMode(pinsObj) {
+  const profileTemplateId = normalizeScalar(pinsObj?.meta?.profile_template_id);
+  if (profileTemplateId === 'single_plane_saas_probe_v1') return 'explicit_only_probe';
+  return 'derive_missing_planes';
+}
+
 function mapDatabaseEngineAtom(dbEnginePin) {
   const v = normalizeScalar(dbEnginePin);
   if (!v) return '';
@@ -516,22 +522,29 @@ function planeShapeDefault() {
   return 'api_service_http';
 }
 
-function derivePlaneShapes({ cpChoice, apChoice }) {
+function derivePlaneShapes({ cpChoice, apChoice, derivationMode = 'derive_missing_planes' }) {
   const def = planeShapeDefault();
-  const cp = normalizeScalar(cpChoice) || def;
-  const ap = normalizeScalar(apChoice) || def;
+  const explicitOnly = derivationMode === 'explicit_only_probe';
+  const cp = explicitOnly ? normalizeScalar(cpChoice) : (normalizeScalar(cpChoice) || def);
+  const ap = explicitOnly ? normalizeScalar(apChoice) : (normalizeScalar(apChoice) || def);
 
+  const realized = [cp, ap].filter(Boolean);
   let plane = def;
-  if (cp && ap && cp === ap) {
-    plane = cp;
-  } else if ([cp, ap].includes('api_service_http')) {
+  if (realized.length === 0) {
+    plane = def;
+  } else if (realized.every((v) => v === realized[0])) {
+    plane = realized[0];
+  } else if (realized.includes('api_service_http')) {
     plane = 'api_service_http';
-  } else if ([cp, ap].includes('worker_service_events')) {
+  } else if (realized.includes('worker_service_events')) {
     plane = 'worker_service_events';
   } else {
-    plane = def;
+    plane = realized[0] || def;
   }
-  return { cp, ap, plane, source: (!cpChoice && !apChoice) ? 'pattern_default' : 'architect_choice' };
+  const source = explicitOnly
+    ? 'explicit_plane_probe'
+    : ((!cpChoice && !apChoice) ? 'pattern_default' : 'architect_choice');
+  return { cp, ap, plane, source, derivation_mode: derivationMode };
 }
 
 function parseTbpCatalogIds(catalogText) {
@@ -903,7 +916,7 @@ if (invalidPlaneShapePins.length > 0) {
 
   // Derive plane runtime shapes
   // NOTE: In v1, we use pattern defaults unless a future contract surface file provides adopted shapes.
-  const planeShapes = derivePlaneShapes({ cpChoice: planeChoices.cpChoice, apChoice: planeChoices.apChoice });
+  const planeShapes = derivePlaneShapes({ cpChoice: planeChoices.cpChoice, apChoice: planeChoices.apChoice, derivationMode: planeDerivationMode(pinsObj) });
 
   // Derive technology atoms
   const atoms = {
@@ -1172,10 +1185,14 @@ if (invalidPlaneShapePins.length > 0) {
       stack_name: instanceName,
       ...(atoms['deployment.target'] ? { target: atoms['deployment.target'] } : {}),
     },
-    planes: {
-      cp: { runtime_shape: planeShapes.cp },
-      ap: { runtime_shape: planeShapes.ap },
-    },
+    ...(planeShapes.cp || planeShapes.ap
+      ? {
+          planes: {
+            ...(planeShapes.cp ? { cp: { runtime_shape: planeShapes.cp } } : {}),
+            ...(planeShapes.ap ? { ap: { runtime_shape: planeShapes.ap } } : {}),
+          },
+        }
+      : {}),
     plane: {
       runtime_shape: planeShapes.plane,
     },
@@ -1205,6 +1222,7 @@ if (invalidPlaneShapePins.length > 0) {
       },
       derived_plane_runtime_shapes: {
         source: planeShapes.source,
+        derivation_mode: planeShapes.derivation_mode,
       },
     },
   };

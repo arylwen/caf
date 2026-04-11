@@ -67,7 +67,7 @@ entries:
   worker_id: worker-runtime-wiring
   role_kind: worker
   status: active
-  notes: Wire AP/CP runtimes into a runnable candidate shape per task DoD (routers, entrypoints, compose wiring).
+  notes: Wire AP/CP runtimes into a runnable candidate shape per task DoD (routers, entrypoints, compose wiring), including health-gated startup for adopted stateful support services in compose-backed local runs.
 
 - capability_id: postgres_persistence_wiring
   worker_id: worker-postgres

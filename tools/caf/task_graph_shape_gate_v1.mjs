@@ -115,6 +115,42 @@ function taskCoversObligation(taskObj, obligationId) {
   return false;
 }
 
+
+function taskAnchoredObligationIds(taskObj) {
+  const out = [];
+  const seen = new Set();
+  for (const a of ensureArray(taskObj?.trace_anchors)) {
+    const pid = asString(a?.pattern_id).trim();
+    if (!pid.startsWith('pattern_obligation_id:')) continue;
+    const obligationId = pid.substring('pattern_obligation_id:'.length).trim();
+    if (!obligationId || seen.has(obligationId)) continue;
+    seen.add(obligationId);
+    out.push(obligationId);
+  }
+  return out;
+}
+
+function hasCompiledObligationLine(lines, obligationId) {
+  const want = `Compiled Obligation (${obligationId}):`;
+  return ensureArray(lines).some((line) => asString(line).trim().startsWith(want));
+}
+
+function stepCorruptionIssue(taskId, index, step) {
+  if (typeof step === 'string') {
+    const s = asString(step);
+    if (s.includes('`r`n') || s.includes('definition_of_done: null') || s.includes('semantic_review: null')) {
+      return `${taskId}: steps[${index}] appears to contain serialized YAML/control text instead of a plain step line`;
+    }
+    return '';
+  }
+  if (step && typeof step === 'object' && !Array.isArray(step)) {
+    const keys = Object.keys(step);
+    const joined = keys.join(', ');
+    return `${taskId}: steps[${index}] is a YAML mapping (${joined || 'object'}) instead of a plain step line`;
+  }
+  return `${taskId}: steps[${index}] is not a plain string step`;
+}
+
 function validateRuntimeWiringClosureOrder(tgObj) {
   const byId = taskById(tgObj);
   const runtimeTask = byId.get('TG-90-runtime-wiring');
@@ -131,11 +167,28 @@ function validateRuntimeWiringClosureOrder(tgObj) {
   );
 }
 
-async function writeFeedbackPacket(repoRoot, instanceName, issues, missingTaskIds, missingCoverage) {
+async function writeFeedbackPacket(repoRoot, instanceName, issues, missingTaskIds, missingCoverage, corruptionIssues = []) {
   const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
   await ensureDir(packetsDir);
   const yyyyMMdd = nowStampYYYYMMDD();
   const fp = path.join(packetsDir, `BP-${yyyyMMdd}-task-graph-shape-incomplete.md`);
+
+  const observedConstraint = corruptionIssues.length
+    ? 'Task Graph appears structurally corrupted after planning (for example serialized YAML/control text leaked into steps[]), so downstream worker dispatch would be nondeterministic.'
+    : 'Planner-emitted Task Graph is schema-valid but structurally incomplete for deterministic worker dispatch.';
+  const minimalFixLines = corruptionIssues.length
+    ? [
+        'Run `node tools/caf/planning_reset_v1.mjs <name> overwrite`, then rerun `/caf plan <name>` so the planner and post-plan compiler chain rebuild task_graph_v1.yaml from authoritative design inputs.',
+        'Do not hand-edit `design/playbook/task_graph_v1.yaml` with regex or ad hoc scripts; planner-owned task structure must come from `/caf plan` and the deterministic post-plan chain.',
+        'If the corruption followed a broader design contradiction, repair the upstream design handoff first, then rerun `/caf plan <name>` from a clean planning bundle.',
+      ]
+    : [
+        'Regenerate design/playbook/task_graph_v1.yaml through /caf plan <name> so caf-application-architect and the post-plan compiler chain re-emit canonical tasks, trace anchors, and named Compiled Obligation (...) acceptance lines.',
+        'Do not collapse CP/AP runtime scaffold, per-boundary contract scaffolding, or per-resource service/persistence tasks into runtime wiring just to make later gates pass.',
+        'Ensure every task includes a first-class steps array (5–14 items) and semantic review questions, per skill contract.',
+        'Keep compiler-owned pattern_obligation_id coverage aligned with compiler-owned Compiled Obligation (...) acceptance lines; missing named obligation pressure is a planner/compiler defect, not a worker-local repair step.',
+        'Keep YAML as source of truth; task_plan_v1.md is derived mechanically.',
+      ];
 
   const body = [
     '# Feedback Packet - caf task graph shape gate',
@@ -147,10 +200,13 @@ async function writeFeedbackPacket(repoRoot, instanceName, issues, missingTaskId
     `- Severity: blocker`,
     '',
     '## Observed Constraint',
-    'Planner-emitted Task Graph is schema-valid but structurally incomplete for deterministic worker dispatch.',
+    observedConstraint,
     '',
     '## Structural issues',
     ...(issues.length ? issues.map((x) => `- ${x}`) : ['- (none)']),
+    '',
+    '## Corruption signals',
+    ...(corruptionIssues.length ? corruptionIssues.map((x) => `- ${x}`) : ['- (none)']),
     '',
     '## Missing canonical tasks (expected from domain/contracts/rails)',
     ...(missingTaskIds.length ? missingTaskIds.map((x) => `- ${x}`) : ['- (none)']),
@@ -159,9 +215,7 @@ async function writeFeedbackPacket(repoRoot, instanceName, issues, missingTaskId
     ...(missingCoverage.length ? missingCoverage.map((x) => `- ${x}`) : ['- (none)']),
     '',
     '## Minimal Fix Proposal',
-    '- Regenerate design/playbook/task_graph_v1.yaml using canonical task mapping rules from caf-application-architect (do not collapse CP/AP runtime scaffold, per-boundary contract scaffolding, or per-resource service/persistence tasks into runtime wiring).',
-    '- Ensure every task includes a first-class steps array (5–12 items) and semantic review questions, per skill contract.',
-    '- Keep YAML as source of truth; task_plan_v1.md is derived mechanically.',
+    ...minimalFixLines.map((x) => `- ${x}`),
     '',
     '## Evidence',
     `- File: reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`,
@@ -171,7 +225,8 @@ async function writeFeedbackPacket(repoRoot, instanceName, issues, missingTaskId
     '',
     '## Autonomous agent guidance',
     '- Autonomous agents with reasoning capabilities MUST apply the edits described in this packet before continuing.',
-    '- After applying the fix, resume the current CAF workflow step; rerun the relevant command (/caf arch, /caf plan, or /caf build) only if required by your runner.',
+    '- Treat this as a planning/post-plan producer defect rooted in task_graph_v1.yaml or the named obligation attachment chain; do not patch around it in build helpers or worker prompts.',
+    '- After applying the fix, rerun /caf plan <name>; rerun /caf build <name> only when this packet was surfaced from build preflight or a build wrapper.',
     '',
   ].join('\n');
 
@@ -227,6 +282,7 @@ async function main() {
   }
 
   const issues = [];
+  const corruptionIssues = [];
   const missingTaskIds = [];
   const missingCoverage = [];
 
@@ -241,13 +297,26 @@ async function main() {
 
     if (!title) issues.push(`${id}: missing title`);
     if (caps.length !== 1) issues.push(`${id}: required_capabilities must contain exactly 1 entry (found ${caps.length})`);
-    if (steps.length < 5 || steps.length > 12) issues.push(`${id}: steps must be 5–12 items (found ${steps.length})`);
+    if (steps.length < 5 || steps.length > 14) issues.push(`${id}: steps must be 5–14 items (found ${steps.length})`);
+    steps.forEach((step, idx) => {
+      const issue = stepCorruptionIssue(id, idx, step);
+      if (issue) corruptionIssues.push(issue);
+    });
 
     const sr = t?.semantic_review;
     const qs = ensureArray(sr?.review_questions).map((x) => asString(x).trim()).filter(Boolean);
     const sev = asString(sr?.severity_threshold).trim();
     if (!sev) issues.push(`${id}: missing semantic_review.severity_threshold`);
     if (qs.length === 0) issues.push(`${id}: missing semantic_review.review_questions`);
+
+    for (const obligationId of taskAnchoredObligationIds(t)) {
+      if (!hasCompiledObligationLine(t.definition_of_done, obligationId)) {
+        issues.push(`${id}: missing definition_of_done line for Compiled Obligation (${obligationId})`);
+      }
+      if (!hasCompiledObligationLine(sr?.review_questions, obligationId)) {
+        issues.push(`${id}: missing semantic_review.review_questions line for Compiled Obligation (${obligationId})`);
+      }
+    }
   }
 
   // 2) Canonical task presence (structural)
@@ -331,8 +400,8 @@ async function main() {
     if (!covered) missingCoverage.push(`pattern_obligation_id:${oid}`);
   }
 
-  if (issues.length || missingTaskIds.length || missingCoverage.length) {
-    const fp = await writeFeedbackPacket(repoRoot, instanceName, issues, missingTaskIds, missingCoverage);
+  if (issues.length || corruptionIssues.length || missingTaskIds.length || missingCoverage.length) {
+    const fp = await writeFeedbackPacket(repoRoot, instanceName, issues, missingTaskIds, missingCoverage, corruptionIssues);
     process.stderr.write(`${fp}\n`);
     process.exit(20);
   }

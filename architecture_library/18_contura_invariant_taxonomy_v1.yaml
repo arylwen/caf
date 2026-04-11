@@ -1,0 +1,236 @@
+schema_version: v1
+status: public_machine_readable_taxonomy
+purpose: Machine-readable taxonomy for CAF invariants. The target-system catalog uses one invariant model with family summaries, atomic invariants, and option-branch invariants. Pins and options remain references and lightweight tags inside invariant rows rather than separate top-level catalog objects.
+catalog_paths:
+  target_system: architecture_library/16_contura_target_system_invariant_catalog_v1.yaml
+  caf_operational: architecture_library/17_contura_caf_operational_invariant_catalog_v1.yaml
+row_types:
+- id: family_summary
+  description: Architect-facing cluster of related truths.
+- id: atomic_invariant
+  description: Smallest independently meaningful target-system invariant row.
+- id: option_branch_invariant
+  description: Selected option branch whose statement becomes active once adopted.
+- id: caf_operational_invariant
+  description: Framework-side invariant describing carry-through, gating, or enforcement behavior.
+activation_kinds:
+- id: always_on
+  description: Applies whenever the relevant surface exists.
+- id: always_on_plus_option_selected
+  description: Base truth is always-on and concrete consequences activate when an option is chosen.
+- id: always_on_plus_pin_declared
+  description: Base truth is always-on and declared pins become part of intended shape.
+- id: becomes_active_when_selected
+  description: Specific option branch becomes binding once selected.
+- id: pin_declared
+  description: Becomes relevant when the pin is explicitly present.
+- id: pin_declared_plus_pin_value_activated
+  description: Declared pin exists and a specific value sharpens the invariant.
+- id: when_artifact_present
+  description: Applies when a named artifact exists in the cascade.
+- id: when_capability_present
+  description: Applies when a capability is materially in scope.
+- id: when_manifest_present
+  description: Applies when a manifest or registry is present.
+- id: when_pin_equals
+  description: Applies when a specific pin value or tuple is selected.
+- id: when_stage_active
+  description: Applies when a lifecycle stage is in play.
+lineage_origin_stages:
+- id: execution
+  description: Worker, producer, or ownership rule.
+- id: intent
+  description: High-level framework or governance intent.
+- id: pattern
+  description: Pattern- or option-level semantic rule.
+- id: pin
+  description: Architect-selected machine binding.
+- id: planning
+  description: Planning payload, obligation, or task-graph rule.
+- id: resolution
+  description: Deterministic resolved view or derived rails.
+- id: runtime_evidence
+  description: Running or emitted proof surface.
+- id: verification
+  description: Gate, postgate, or validator rule.
+caf_semantic_families:
+- id: binding_authority_split
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: block_ownership_and_authority
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: decision_option_integrity
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: derivation_cascade_resolution
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: design_to_plan_handoff_boundary
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: deterministic_enrichment_ownership
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: extension_pack_boundary
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: gate_truthfulness_and_fail_closed
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: pin_closure_and_allowed_values
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: planning_payload_integrity
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: resolved_view_authority
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: runtime_contract_owner_parity
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: shared_parsing_and_normalization
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: task_parameterization
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: tbp_indirection_and_portability
+  description: Operational invariant family used in the CAF carry-through catalog.
+- id: ux_lane_orchestration
+  description: Operational invariant family used in the CAF carry-through catalog.
+caf_subject_areas:
+- id: binding_and_rationale_split
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: decision_integrity
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: deterministic_enrichment
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: extension_pack_governance
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: fail_closed_behavior
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: gate_posture
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: handoff_boundary
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: ownership_and_authority
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: parsing_and_normalization
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: pin_closure
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: planning_payload_integrity
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: resolved_view_authority
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: runtime_contracts
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: style_to_plane_resolution
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: task_parameterization
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: ux_lane_governance
+  description: Operational subject area used in the CAF carry-through catalog.
+- id: worker_portability
+  description: Operational subject area used in the CAF carry-through catalog.
+source_classes:
+- id: abp
+  description: Material source class that defines, carries, or checks an invariant.
+- id: contract
+  description: Material source class that defines, carries, or checks an invariant.
+- id: ext_pattern
+  description: Material source class that defines, carries, or checks an invariant.
+- id: gate
+  description: Material source class that defines, carries, or checks an invariant.
+- id: meta_pattern
+  description: Material source class that defines, carries, or checks an invariant.
+- id: pbp
+  description: Material source class that defines, carries, or checks an invariant.
+- id: pins
+  description: Material source class that defines, carries, or checks an invariant.
+- id: playbook_block
+  description: Material source class that defines, carries, or checks an invariant.
+- id: profile_parameters
+  description: Material source class that defines, carries, or checks an invariant.
+- id: public_docs
+  description: Material source class that defines, carries, or checks an invariant.
+- id: resolved_guardrails
+  description: Material source class that defines, carries, or checks an invariant.
+- id: runtime_evidence
+  description: Material source class that defines, carries, or checks an invariant.
+- id: schema
+  description: Material source class that defines, carries, or checks an invariant.
+- id: tbp
+  description: Material source class that defines, carries, or checks an invariant.
+- id: validator
+  description: Material source class that defines, carries, or checks an invariant.
+- id: worker_contract
+  description: Material source class that defines, carries, or checks an invariant.
+status_values:
+- id: declared
+  description: Current realization/enforcement status in the operational catalog.
+- id: enforced
+  description: Current realization/enforcement status in the operational catalog.
+- id: partially_enforced
+  description: Current realization/enforcement status in the operational catalog.
+severity_values:
+- id: blocker
+  description: Severity used when the invariant is violated.
+- id: release_critical
+  description: Severity used when the invariant is violated.
+enforcement_modes:
+- id: declared_only
+  description: How CAF currently enforces or expresses the invariant.
+- id: deterministic_helper
+  description: How CAF currently enforces or expresses the invariant.
+- id: fail_closed
+  description: How CAF currently enforces or expresses the invariant.
+- id: gate_checked
+  description: How CAF currently enforces or expresses the invariant.
+audit_report_core_fields:
+- invariant_id
+- row_type
+- parent_family_id
+- statement
+- activation_kind
+- classification_tags
+- pin_reference_ids
+- option_reference_ids
+- scope
+- current_status
+- posture
+- defined_in
+- checked_by
+- evidence_surfaces
+- lineage
+notes:
+- Use this taxonomy to normalize audit rows across target-system and CAF-operational catalogs.
+- Automated audit reports should cite invariant IDs and docs_anchor_id values rather than raw source statement IDs.
+- Selected option branches are first-class invariant rows once adopted.
+reference_fields:
+- id: pin_reference_ids
+  description: Architect-selectable pins or pin families that shape, activate, or contextualize the invariant row.
+- id: option_reference_ids
+  description: Option sets or selected option branches that shape the invariant row.
+- id: classification_tags
+  description: Lightweight categories that help readers and audit tooling group rows without creating a second competing taxonomy.
+- id: normalization_basis
+  description: Short explanation of why multiple raw statements were normalized into this row and how pins/options are represented.
+classification_tags:
+- id: pin
+  description: The row is shaped or activated by one or more architect-selectable pins.
+- id: option
+  description: The row is shaped or activated by one or more option sets or branches.
+- id: adopted_shape
+  description: The row is an option-branch invariant that becomes binding once selected.
+- id: tenancy
+  description: Tenant ownership, isolation, or tenant-context semantics.
+- id: tenant_context
+  description: Tenant-context ingress, propagation, or conflict semantics.
+- id: identity
+  description: Identity, trust, actor, or attribution semantics.
+- id: policy
+  description: Policy authority, distribution, or no-bypass semantics.
+- id: runtime
+  description: Runtime posture, eventing, framework, or behavior semantics.
+- id: ui_binding
+  description: UI boundary, deployment, or component binding semantics.
+- id: integration
+  description: Integration ports, adapters, or external contract semantics.
+- id: storage
+  description: Data plane, persistence, or storage semantics.
+- id: evidence
+  description: Telemetry, audit, or compliance evidence semantics.
+counting_rules:
+- Family summaries explain the forest but are not part of the flat invariant-row count.
+- Atomic invariants are the main normalized target-system rows.
+- Option-branch invariants are the adopted-shape rows.
+- Pins and options remain references and tags inside invariant rows; they are not counted as a separate top-level row type in this taxonomy.

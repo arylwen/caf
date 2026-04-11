@@ -1,48 +1,62 @@
 # What is CAF?
 
-CAF (Contura Architecture Framework) turns PRDs into architecture, project plans, and candidate code through orchestrated, governed AI generation.
+CAF (Contura Architecture Framework) is the fail-closed architecture control layer for AI-assisted software delivery.
 
-CAF is a **fail-closed, PRD-first** framework for turning product intent into **architecture decisions, implementation architecture decisions, planning, and candidate code**:
+CAF helps teams use coding agents without letting architecture turn into an afterthought.
 
-- **Architecture decisions** (explicitly adopted, deferred, and rejected patterns)
-- **Required deliverables** (design obligations) and the **work needed** to satisfy them (capabilities)
-- **A task graph and backlog** that engineers can execute
-- **Candidate code** in a companion repository
+It turns PRDs and architecture decisions into explicit checkpoints, evidence, plans, candidate code, and an optional richer UX lane.
 
-CAF is designed for **guardrailed autonomy**: the model can propose and generate, but CAF validates outputs deterministically, preserves human decision gates, and stops on ambiguity.
+![CAF end-to-end pipeline](../images/caf_end_to_end_pipeline.svg)
 
-## Why CAF?
+*CAF is a staged delivery system, not a one-shot generator. Each stage answers one question and hands a durable artifact to the next stage.*
 
-CAF makes architecture work visible and reviewable. Instead of “we’ll figure it out as we go,” you get:
+## What that means
 
-- a concrete set of decisions the team is making
-- a backlog that is **derived** from those decisions
-- an audit trail for why work exists (intent → decision → work item)
-- early surfacing of missing inputs (fail-closed feedback packets)
+CAF is designed for teams that want to move faster with coding agents while still keeping human architectural control.
 
-CAF turns architectural intent into **explicit decisions and an executable backlog** with a traceable “why.”
+The basic idea is:
 
-## What CAF is for
+1. start from product intent and constraints
+2. derive architecture before implementation work
+3. turn adopted architecture into planned work
+4. generate candidate code from that planned work
+5. optionally derive a richer UX lane after the second architecture pass and main build lane
+6. keep the resulting state queryable instead of burying it in chat history
 
-CAF helps you go from “here’s what we want to build” to a **traceable** solution plan:
+## Why CAF exists
 
-1. You pin a small set of explicit inputs (pins). The pins express architectural intent.
-2. CAF retrieves candidate patterns supporting the architectural intent and asks you to adopt, defer, or reject.
-3. Adopted patterns emit obligations (required deliverables).
-4. Obligations compile into a task graph and backlog.
-5. The build step generates **candidate** code aligned to the backlog.
+Many AI coding flows jump from prompt to code.
+
+CAF takes a different path. It keeps architecture active during delivery, so the team can still ask:
+
+- what decisions did we make, and why?
+- how much work does this imply?
+- what is likely affected if something changes?
+
+## What fail-closed means
+
+Fail-closed means CAF does not quietly improvise when required inputs are missing, contradictory, or ambiguous.
+
+Instead, CAF blocks progression and emits a feedback packet telling you what needs to be fixed next.
+
+That matters because it keeps convenience from quietly turning into hidden policy.
+
+## What CAF produces
+
+CAF is designed to produce durable delivery artifacts, including:
+
+- lifecycle-ready product intent
+- architecture scaffolding and adopted decisions
+- planning bundles and task graphs
+- candidate code
+- optional richer UX artifacts, UX plans, and UX build outputs
+- ask/query context built from those artifacts
 
 ## What CAF is not
 
-- Not an autopilot to production.
+- Not a prompt-to-code shortcut.
 - Not a replacement for architectural review.
-- Not a “best practice generator” that guesses when inputs are missing.
-
-## Core design properties
-
-- **Fail-closed:** when inputs are missing or ambiguous, CAF emits a feedback packet instead of guessing.
-- **Deterministic gates:** mechanical checks enforce contracts and stop drift.
-- **Traceability:** outputs are intended to answer “why is this here?” (architectural intent (pins) → patterns → obligations → tasks → code).
+- Not a ship-to-production generator.
 
 ## Find out more
 
@@ -50,7 +64,6 @@ CAF helps you go from “here’s what we want to build” to a **traceable** so
 
 ## You might also be interested in
 
-- [PRD-first lifecycle](15_prd_first_lifecycle.md) — See how product intent becomes architecture, planning, and candidate code.
-- [Product manager view](11_product_manager_view.md) — Read the public framing from the requirements side.
-- [Answering questions with CAF](14_answering_questions_with_caf.md) — Use `/caf ask` to inspect an instance before generating more artifacts.
-
+- [Core concepts](04_core_concepts.md) — Learn the meaning of pins, patterns, obligations, capabilities, gates, feedback packets, and the optional richer UX lane.
+- [PRD-first lifecycle](15_prd_first_lifecycle.md) — See the default flow end to end.
+- [Answering questions with CAF](14_answering_questions_with_caf.md) — Use `/caf ask` to inspect architecture and work without guessing.

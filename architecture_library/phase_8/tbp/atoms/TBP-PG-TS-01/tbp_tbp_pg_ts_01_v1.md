@@ -19,3 +19,12 @@ Non-goals:
 - selecting an ORM
 - choosing migrations tooling
 - writing production-ready persistence code
+
+
+## Additional compose readiness posture
+
+When compose materializes a local `postgres` support service and AP/CP startup depends on it:
+
+- `postgres` must expose a compose `healthcheck:`
+- dependent services must use `depends_on.postgres.condition: service_healthy`
+- do not rely on container creation order alone for startup/bootstrap that eagerly touches the database

@@ -62,6 +62,6 @@ For GitHub-friendly browsing of patterns by family (and a machine-friendly index
 - `docs/patterns/pattern_taxonomy_v1.md`
 - `docs/pattern_index_v1.json`
 
-## Public maintainer entry point
+## Maintainer entry point
 
-For a curated public maintainer-facing navigation surface, start in `docs/maintainer/README.md`.
+For a maintainer-facing navigation surface, start in `docs/maintainer/README.md`.

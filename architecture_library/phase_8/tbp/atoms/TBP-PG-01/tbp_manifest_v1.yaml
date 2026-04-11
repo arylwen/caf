@@ -23,7 +23,9 @@ layout:
       evidence_contains:
       - postgres
     postgres_adapter_module:
-      path_template: code/ap/persistence/postgres_adapter.py
+      path_templates_any_of:
+      - code/ap/persistence/postgres_adapter.py
+      - code/cp/persistence/postgres_adapter.py
       artifact_class: code_placeholders_non_runnable
       evidence_contains:
       - get_database_url
@@ -49,9 +51,8 @@ extensions:
     title: Materialize PostgreSQL environment contract examples (POSTGRES_* and engine-owned references as applicable)
     required_capability: postgres_persistence_wiring
     role_binding_key: database_env_contract
-  - obligation_id: O-TBP-PG-01-app-adapter-hook
-    title: Materialize minimal PostgreSQL persistence adapter hook for the application
-      plane
+  - obligation_id: O-TBP-PG-01-plane-adapter-hook
+    title: Materialize minimal PostgreSQL persistence adapter hook for the selected plane persistence boundary without implying application-plane-only ownership
     required_capability: postgres_persistence_wiring
     role_binding_key: postgres_adapter_module
   - obligation_id: O-TBP-PG-01-driver-dependency
@@ -69,8 +70,10 @@ extensions:
       and/or POSTGRES_*); no credentials are hard-coded in code or versioned config.
     - Runtime wiring uses internal service DNS names for DB connectivity in compose-based
       local runs.
+    - "When compose materializes a postgres support service that AP/CP startup depends on, the postgres service exposes a healthcheck and dependent services use depends_on.postgres.condition: service_healthy."
     review_questions:
     - Are any database credentials embedded directly in source code or committed configuration?
+    - If compose materializes postgres for local startup, does runtime wiring gate AP/CP startup on postgres health rather than service creation order alone?
     focus_areas:
     - security
     - portability

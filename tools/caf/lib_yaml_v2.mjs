@@ -16,6 +16,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
+import { normalizeTextIngress } from './lib_text_ingress_v1.mjs';
 import { renderFeedbackPacketV1, setFeedbackPacketStatusSync } from './lib_feedback_packets_v1.mjs';
 const require = createRequire(import.meta.url);
 
@@ -201,7 +202,7 @@ export function parseYamlString(text, sourcePath = '(string)') {
     // Normalize common “smart” punctuation that LLMs sometimes emit in YAML strings.
     // This is mechanical and drift-resistant: it only rewrites unicode quote codepoints
     // into their ASCII equivalents before js-yaml parsing.
-    const normalized = String(text ?? '')
+    const normalized = normalizeTextIngress(text)
       // Double quotes
       .replace(/[\u201C\u201D\u201E\u00AB\u00BB]/g, '"')
       // Single quotes

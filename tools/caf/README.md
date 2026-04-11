@@ -77,6 +77,12 @@ the file system work to reduce token cost.
 - `planning_invariant_gate_v1.mjs`: producer-side planning invariant check (planning outputs exist + contract/task trace anchors + enforcement-bar capability coverage).
   - Usage: `node tools/caf/planning_invariant_gate_v1.mjs <instance_name>`
   - Intended to be invoked immediately after `caf-application-architect` returns.
+- `project_task_backlog_v1.mjs`: mechanical backlog projection from `task_graph_v1.yaml`.
+  - Usage: `node tools/caf/project_task_backlog_v1.mjs <instance_name>`
+  - Produces: `reference_architectures/<instance>/design/playbook/task_backlog_v1.md`
+  - Invoked by `/caf backlog` when the human backlog view is needed.
+
+
 
 - `pattern_retrieval_scaffold_merge_v1.mjs`: merge-safe decision scaffold refresh + option hydration.
   - Usage: `node tools/caf/pattern_retrieval_scaffold_merge_v1.mjs <instance_name>`
@@ -250,7 +256,7 @@ Note:
 
 ## Skillpack selection (shim-resolved; no folder copying)
 
-CAF shims (`.claude/.codex/.copilot`) resolve the canonical router skill path at runtime using:
+CAF shims (`.claude/.codex/.copilot/.kiro`) resolve the canonical router skill path at runtime using:
 
 - `tools/caf-state/active_skillpack.json` (gitignored)
 

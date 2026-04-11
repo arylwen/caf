@@ -54,7 +54,9 @@ extensions:
       criteria:
         - Database credentials and endpoints are provided via environment variables (DATABASE_URL and/or POSTGRES_*); no credentials are hard-coded in code or versioned config.
         - Runtime wiring uses internal service DNS names for DB connectivity in compose-based local runs.
+        - When compose materializes a postgres support service that AP/CP startup depends on, the postgres service exposes a healthcheck and dependent services use depends_on.postgres.condition: service_healthy.
       review_questions:
         - Are any database credentials embedded directly in source code or committed configuration?
+        - If compose materializes postgres for local startup, does runtime wiring gate AP/CP startup on postgres health rather than service creation order alone?
       focus_areas: [security, portability]
       severity_threshold_override: high

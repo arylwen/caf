@@ -1,7 +1,7 @@
 # Control Plane Domain Constraint Specification
 
 Document ID: 24_contura_control_plane_domain_constraints_v1
-Status: Normative — Control Plane domain constraints (public)
+Status: Normative — Control Plane domain constraints
 Authority: Downstream of Contura Architecture Framework (CAF)  
 Applies To: All systems participating in a Contura-compliant SaaS Control Plane
 

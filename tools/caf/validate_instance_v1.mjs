@@ -432,16 +432,14 @@ async function validateInstanceMain(argv) {
       path.join(specPlaybookDir, 'architecture_shape_parameters.yaml'),
     ];
 
-    // Planning requires obligations + task graph; build requires TBP resolution too.
-    if (mode === 'plan') {
-      requiredPlaybook.push(obligationsPath);
-      requiredPlaybook.push(taskGraphPath);
-    }
+    // Planning must not require planner-owned or post-plan derived outputs.
+    // Build still depends on the compiled task graph bundle produced by planning.
 
     if (!fileExists(abpPbpPath)) missingBuild.push(safeRel(repoRoot, abpPbpPath));
     if (!fileExists(tbpPath)) missingBuild.push(safeRel(repoRoot, tbpPath));
 
     if (mode === 'build') {
+      requiredPlaybook.push(obligationsPath);
       requiredPlaybook.push(taskGraphPath);
     }
     for (const p of requiredPlaybook) {
@@ -528,8 +526,13 @@ async function validateInstanceMain(argv) {
         mode === 'build' ? 'preflight-build-taskgraph-yaml-parse' : 'preflight-plan-taskgraph-yaml-parse',
         'Unable to parse playbook/task_graph_v1.yaml as YAML',
         mode === 'build'
-          ? ['Regenerate the task graph via /caf plan <name>, then rerun /caf build <name>.']
-          : ['Regenerate the task graph via /caf plan <name>.'],
+          ? [
+              'Regenerate the planning bundle via /caf plan <name>; let caf-application-architect and the post-plan compiler chain rebuild task_graph_v1.yaml and its named Compiled Obligation (...) acceptance lines.',
+              'Then rerun /caf build <name>.',
+            ]
+          : [
+              'Regenerate the planning bundle via /caf plan <name>; let caf-application-architect and the post-plan compiler chain rebuild task_graph_v1.yaml and its named Compiled Obligation (...) acceptance lines.',
+            ],
         [`${safeRel(repoRoot, taskGraphPath)}: ${String(e.message ?? e)}`]
       );
       die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 20);
@@ -781,8 +784,13 @@ async function validateInstanceMain(argv) {
         mode === 'build' ? 'preflight-build-taskgraph-invalid' : 'preflight-plan-taskgraph-invalid',
         'Task Graph v1 failed minimal validation checks',
         mode === 'build'
-          ? ['Regenerate the task graph via /caf plan <name> (planning), then rerun /caf build <name>.']
-          : ['Regenerate the task graph via /caf plan <name> (planning).'],
+          ? [
+              'Regenerate the planning bundle via /caf plan <name>; keep canonical task mapping, trace anchors, and named Compiled Obligation (...) acceptance lines intact instead of hand-trimming the Task Graph to satisfy build preflight.',
+              'Then rerun /caf build <name>.',
+            ]
+          : [
+              'Regenerate the planning bundle via /caf plan <name>; keep canonical task mapping, trace anchors, and named Compiled Obligation (...) acceptance lines intact instead of hand-trimming the Task Graph to satisfy preflight.',
+            ],
         [
           safeRel(repoRoot, taskGraphPath),
           ...tgErrors.slice(0, 16),
@@ -812,9 +820,10 @@ try {
           mode === 'build' ? 'preflight-build-ui-seed-coverage-missing' : 'preflight-plan-ui-seed-coverage-missing',
           'Task Graph is missing one or more authoritative UI seed tasks implied by resolved UI pins, adopted patterns, and resource names',
           [
-            'Regenerate the task graph via /caf plan <name>; evaluate architecture_library/phase_8/80_phase_8_ui_task_seeds_v1.yaml against profile_parameters_resolved.yaml, adopted patterns from system_spec_v1.md, and resource names from application_domain_model_v1.yaml.',
-            'Do not collapse per-resource pages or policy-admin pages into TG-15-ui-shell.',
-            mode === 'build' ? 'Then rerun /caf build <name>.' : 'Then rerun /caf plan <name> after fixing the planner output.',
+            'Regenerate the planning bundle via /caf plan <name>; keep the planner-emitted UI task ids and let the framework-owned UI seed semantic enrichment reattach the seed-authored pressure.',
+            'Evaluate architecture_library/phase_8/80_phase_8_ui_task_seeds_v1.yaml against profile_parameters_resolved.yaml, adopted patterns from system_spec_v1.md, and resource names from application_domain_model_v1.yaml.',
+            'Do not collapse per-resource pages or policy-admin pages into TG-15-ui-shell or treat missing UI seed pressure as a build-time repair problem.',
+            mode === 'build' ? 'Then rerun /caf build <name>.' : 'Then rerun /caf plan <name>.',
           ],
           [
             safeRel(repoRoot, taskGraphPath),
@@ -834,7 +843,7 @@ try {
     instanceName,
     mode === 'build' ? 'preflight-build-ui-seed-coverage-parse' : 'preflight-plan-ui-seed-coverage-parse',
     'Unable to validate UI seed coverage deterministically',
-    ['Fix the UI seed inputs (system spec, domain model, or task graph) and rerun planning/build validation.'],
+    ['Fix the deterministic UI seed source artifacts (system spec, domain model, or task graph), then rerun /caf plan <name> and /caf build <name> if applicable.'],
     [String(e && e.message ? e.message : e)]
   );
   die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 22);
@@ -848,8 +857,9 @@ try {
         mode === 'build' ? 'preflight-build-contract-trace-anchors-missing' : 'preflight-plan-contract-trace-anchors-missing',
         'Contract scaffolding tasks are missing required trace anchors needed by worker-contract-scaffolder',
         [
-          'Regenerate the planning task graph via /caf plan <name>; every TG-00-CONTRACT-* task must include contract_boundary_id, contract_ref_path, contract_ref_section, and contract_surface.',
-          mode === 'build' ? 'Then rerun /caf build <name>.' : 'This is a producer-side planning defect; fix the planner output, then rerun /caf plan <name>.',
+          'Regenerate the planning bundle via /caf plan <name>; every TG-00-CONTRACT-* task must include contract_boundary_id, contract_ref_path, contract_ref_section, and contract_surface because worker-contract-scaffolder is the declared consumer seam.',
+          'Do not rely on build-time repair or hidden postprocess steps to invent missing contract trace anchors.',
+          mode === 'build' ? 'Then rerun /caf build <name>.' : 'Then rerun /caf plan <name>.',
         ],
         [
           safeRel(repoRoot, taskGraphPath),

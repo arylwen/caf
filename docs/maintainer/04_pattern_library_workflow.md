@@ -38,7 +38,7 @@ Planning time (design to task graph):
   - an explicit Design Decision Checklist item
   - a normative core pattern requirement
   - a TBP requirement or binding
-  - a Layer 8 rail
+  - a guardrails rail
 
 - External patterns may contribute to planning only through explicit design decisions.
 

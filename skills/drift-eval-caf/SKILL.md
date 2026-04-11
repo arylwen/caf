@@ -21,6 +21,7 @@ Detect and report **CAF framework drift** (CAF library + scaffolding that produc
 - `skills/**` (runner-neutral skills)
 - `.agent/workflows/**` (runner shims; must stay thin)
 - `.codex/skills/**` (runner shims; must stay thin)
+- `.kiro/skills/**` (runner shims; must stay thin)
 - meta indexes under `architecture_library/__meta/**`
 
 This skill is **fail-closed**:
@@ -102,6 +103,7 @@ Flag placeholders like `<...>` in any file under:
 - `skills/**`
 - `.agent/workflows/**`
 - `.codex/skills/**`
+- `.kiro/skills/**`
 - `docs/maintainer/**`
 - `docs/dev/maintainer/**`
 
@@ -116,6 +118,7 @@ Validate that runner adapter files are **shims only** (no CAF semantics duplicat
 
 Targets:
 - `.codex/skills/**/SKILL.md`
+- `.kiro/skills/**/SKILL.md`
 - `.agent/workflows/**`
 
 Minimum expectations:
@@ -249,7 +252,7 @@ is present in the tech catalog (or explicitly documented otherwise).
 If not: drift.
 
 ### 8) Shims must be thin (medium)
-Validate `.agent/workflows/**` and `.codex/skills/**`:
+Validate `.agent/workflows/**`, `.codex/skills/**`, and `.kiro/skills/**`:
 - shims should only open and read the corresponding `skills/**/SKILL.md` and follow it.
 - shims must not contain CAF theory, policy, or long prose.
 

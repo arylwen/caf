@@ -146,6 +146,9 @@ Lower-numbered documents take precedence unless explicitly stated otherwise.
 | `11_contura_ai_observability_and_evaluation_specification_v1.md` | AI Observability & Evaluation | Normative | Telemetry, scoring, drift detection. |
 | `12_contura_cost_governance_finops_v1.md` | Cost Governance / FinOps | Normative | Budgets and cost enforcement. |
 | `13_contura_compliance_automation_framework_v1.md` | Compliance Automation Framework | Normative | Compliance as enforceable controls. |
+| `16_contura_target_system_invariant_catalog_v1.yaml` | Target-System Invariant Catalog | Executable | Machine-readable catalog of architect-facing target-system invariants. |
+| `17_contura_caf_operational_invariant_catalog_v1.yaml` | CAF Operational Invariant Catalog | Executable | Machine-readable catalog of carry-through and enforcement invariants. |
+| `18_contura_invariant_taxonomy_v1.yaml` | Invariant Taxonomy | Executable | Machine-readable row model and audit taxonomy for invariant catalogs. |
 
 ---
 

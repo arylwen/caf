@@ -331,7 +331,7 @@ async function safeDeleteResolvedOnly(repoRoot, resolvedAbsPath, instanceRootAbs
   await fs.unlink(t);
 }
 
-async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines, severity = 'blocker') {
+async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines, severity = 'blocker', options = {}) {
   const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
   await ensureDir(packetsDir);
 
@@ -350,6 +350,8 @@ async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstra
     gapType: 'Stale derived view | Pinned input mismatch',
     minimalFixLines,
     evidenceLines,
+    agentGuidanceLines: Array.isArray(options?.agentGuidanceLines) ? options.agentGuidanceLines : [],
+    humanGuidanceLines: Array.isArray(options?.humanGuidanceLines) ? options.humanGuidanceLines : [],
   });
 
   await writeUtf8(fp, body);
@@ -543,6 +545,7 @@ const layout = getInstanceLayout(repoRoot, instanceName);
 
     const deploymentStackName = normalizeScalar(resolvedObj?.deployment?.stack_name);
     const generationPhase = normalizeScalar(resolvedObj?.lifecycle?.generation_phase);
+    const profileTemplateId = normalizeScalar(resolvedObj?.meta?.profile_template_id || pinsObj?.meta?.profile_template_id);
     if (!deploymentStackName) {
       const fp = await writeFeedbackPacket(
         repoRoot,
@@ -556,6 +559,27 @@ const layout = getInstanceLayout(repoRoot, instanceName);
         [
           safeRel(repoRoot, resolvedPath),
           `instance_name=${instanceName}`,
+        ]
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 31);
+    }
+
+    if (profileTemplateId === 'single_plane_saas_probe_v1') {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        'arch-gate-single-plane-probe-deferred',
+        'The hidden single_plane_saas_probe_v1 starter is seedable, but CAF does not yet support advancing this non-split SaaS runtime family through /caf arch.',
+        [
+          'Treat this as a negative/alternative starter probe only for now.',
+          'Use the default boring SaaS starter for lifecycle-supported AP/CP generation today.',
+          'Roadmap follow-on: add conditional plane materialization so omitted control-plane runtime obligations do not leak into design/planning/build stages.',
+        ],
+        [
+          safeRel(repoRoot, pinsPath),
+          safeRel(repoRoot, resolvedPath),
+          `profile_template_id=${profileTemplateId}`,
+          `generation_phase=${generationPhase || '(missing)'}`,
         ]
       );
       die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 31);
@@ -629,6 +653,27 @@ const layout = getInstanceLayout(repoRoot, instanceName);
     // Ship blocker: prevent accidental regeneration of architecture_scaffolding after deliverables already exist.
     // Rationale: rerunning scaffolding in-place has a high chance of mixing derived artifacts with stale deliverables.
     // Update flows are intentionally explicit (reset + rerun), not implicit.
+    if (profileTemplateId === 'single_plane_saas_probe_v1') {
+      const fp = await writeFeedbackPacket(
+        repoRoot,
+        instanceName,
+        'arch-gate-single-plane-probe-deferred',
+        'The hidden single_plane_saas_probe_v1 starter is seedable, but CAF does not yet support advancing this non-split SaaS runtime family through /caf arch.',
+        [
+          'Treat this as a negative/alternative starter probe only for now.',
+          'Use the default boring SaaS starter for lifecycle-supported AP/CP generation today.',
+          'Roadmap follow-on: add conditional plane materialization so omitted control-plane runtime obligations do not leak into design/planning/build stages.',
+        ],
+        [
+          safeRel(repoRoot, pinsPath),
+          safeRel(repoRoot, resolvedPath),
+          `profile_template_id=${profileTemplateId}`,
+          `generation_phase=${generationPhase || '(missing)'}`,
+        ]
+      );
+      die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 31);
+    }
+
     if (generationPhase === 'architecture_scaffolding') {
       const presentDeliverables = listPresentArchitectureScaffoldingDeliverables(repoRoot, layout);
       if (presentDeliverables.length > 0) {
@@ -642,14 +687,27 @@ const layout = getInstanceLayout(repoRoot, instanceName);
             '  - /caf next <name> apply',
             '  - /caf arch <name> (design stage)',
             '  - /caf plan <name> (planning stage)',
-            'If you truly need to regenerate architecture scaffolding, perform an explicit reset first:',
+            'Fallback for human-directed recovery only: if you truly need to regenerate architecture scaffolding, perform an explicit reset first (destructive to derived outputs):',
             '  - node tools/caf/architecture_scaffolding_reset_v1.mjs <name> overwrite',
             '  - then rerun /caf arch <name>',
           ],
           [
             `phase=${generationPhase}`,
             ...presentDeliverables.slice(0, 20),
-          ]
+          ],
+          'blocker',
+          {
+            agentGuidanceLines: [
+              'Apply the preferred forward path first: /caf next <name> apply, then /caf arch <name> (design stage), then /caf plan <name> (planning stage).',
+              'Do not choose the reset helper just because it appears in this packet. Reset is destructive and is human-directed fallback recovery only unless a human explicitly asked for reset or a packet explicitly says reset is required.',
+              'Treat the Human operator guidance section as operator-only context; autonomous agents should follow the Autonomous agent guidance section and the preferred path above.',
+            ],
+            humanGuidanceLines: [
+              'Human operators should not treat manual packet status edits as the normal recovery path.',
+              'Use the reset helper only when you intentionally want to discard the current architecture scaffolding outputs and restart that phase.',
+              'If you want to preserve the current scaffolding work, prefer /caf next <name> apply and continue forward instead of resetting.',
+            ],
+          }
         );
         die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 32);
       }

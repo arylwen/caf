@@ -1,7 +1,7 @@
 ---
 name: caf
 version: 1
-summary: Single-entry CAF router command. Dispatches to core CAF workflows (help/ask/saas/prd/arch/next/plan/build/ux and ux plan).
+summary: Single-entry CAF router command. Dispatches to core CAF workflows (help/ask/saas/prd/arch/plan/backlog/next/build/ux and ux plan).
 ---
 
 > **Contract compliance:** governed by `architecture_library/__meta/caf_operating_contract_v1.md`.
@@ -19,6 +19,7 @@ Use **one** command:
 - `/caf saas <instance_name>`
 - `/caf arch <instance_name>`
 - `/caf plan <instance_name>`
+- `/caf backlog <instance_name>`
 - `/caf next <instance_name> [apply]`
 - `/caf build <instance_name> [wave_index]`
 - `/caf ux <instance_name>`
@@ -32,6 +33,7 @@ Examples:
 - `/caf saas hello-saas`
 - `/caf arch hello-saas`
 - `/caf plan hello-saas`
+- `/caf backlog hello-saas`
 - `/caf next hello-saas`
 - `/caf next hello-saas apply`
 - `/caf build hello-saas`
@@ -44,7 +46,7 @@ Examples:
 ## Routing rules (deterministic)
 
 1) Parse the first token after `/caf` as `subcommand`.
-2) Fail closed if `subcommand` is missing or not one of: `help | saas | arch | plan | next | build | prd | ask | ux`.
+2) Fail closed if `subcommand` is missing or not one of: `help | saas | arch | plan | backlog | next | build | prd | ask | ux`.
 3) Special case: if the first token is `ux` and the second token is the literal `plan`, dispatch to the canonical `/caf ux plan` skill.
 4) Special case: if the first token is `ux` and the second token is the literal `build`, dispatch to the canonical `/caf ux build` skill.
 5) Dispatch by **executing the canonical skill** listed below. Do not invent alternate steps.
@@ -59,6 +61,7 @@ Canonical skills (authoritative):
 - `saas` → `skills/caf-saas/SKILL.md`
 - `arch` → `skills/caf-arch/SKILL.md`
 - `plan` → `skills/caf-plan/SKILL.md`
+- `backlog` → `skills/caf-backlog/SKILL.md`
 - `next` → `skills/caf-next/SKILL.md`
 - `build` → `skills/caf-build-candidate/SKILL.md`  *(current canonical build skill; invoked via router)*
 - `ux` → `skills/caf-ux/SKILL.md`
@@ -80,6 +83,7 @@ CAF workflows MUST avoid ad-hoc scripting. This default skillpack may invoke exp
 During routed workflows:
 - Treat `tools/**` as **read-only**.
 - Do NOT modify `tools/**`, `skills/**`, or `architecture_library/**`. If a change seems required, fail-closed with a feedback packet describing the needed producer-side fix.
+- If a temporary runner-local helper is absolutely necessary, keep it under the active shim `scripts/` folder, not under `tools/caf/`.
 
 **Allowed (portable, single-line):**
 - list (`ls`, `find`, `Get-ChildItem`)
@@ -103,6 +107,17 @@ If a step seems to “need scripting,” treat that as a CAF design bug and fail
 ### `/caf arch <instance_name>`
 
 - `instance_name` is required.
+
+### `/caf plan <instance_name>`
+
+- `instance_name` is required.
+- `/caf plan` owns the semantic planning artifacts (`pattern_obligations_v1.yaml`, `task_graph_v1.yaml`, `interface_binding_contracts_v1.yaml`, and `task_plan_v1.md`).
+- `/caf plan` does **not** need to emit the human backlog view inline when the task graph is large.
+
+### `/caf backlog <instance_name>`
+
+- `instance_name` is required.
+- `/caf backlog` is the on-demand human backlog projection. It reads the existing `task_graph_v1.yaml` and writes `task_backlog_v1.md` without rerunning semantic planning.
 
 ### `/caf next <instance_name> [apply]`
 

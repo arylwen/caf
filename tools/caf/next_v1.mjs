@@ -230,6 +230,11 @@ function containsBlock(text, marker) {
   return String(text ?? '').includes(marker);
 }
 
+function lacksAnyToken(text, tokens) {
+  const haystack = String(text ?? '');
+  return (tokens || []).every((token) => !haystack.includes(token));
+}
+
 function extractDecisionResolutionsYaml(mdText) {
   const s = String(mdText ?? '');
   const start = s.indexOf('<!-- ARCHITECT_EDIT_BLOCK: decision_resolutions_v1 START -->');
@@ -363,6 +368,7 @@ async function main() {
   const repoRoot = resolveRepoRoot();
   const instRoot = path.join(repoRoot, 'reference_architectures', instanceName);
   const layout = getInstanceLayout(repoRoot, instanceName);
+  const specMetaDir = layout.specMetaDir;
 
   // Write guardrails: this script may only write inside the instance root.
   REPO_ROOT_ABS = path.resolve(repoRoot);
@@ -591,6 +597,46 @@ async function main() {
       path.join(specPlaybookDir, 'system_spec_v1.md'),
       'adopted decision patterns have exactly one adopted option per question'
     );
+
+    const archScaffoldingRequiredFiles = [
+      [path.join(specPlaybookDir, 'semantic_candidate_subset_arch_scaffolding_v1.jsonl'), '`semantic_candidate_subset_arch_scaffolding_v1.jsonl` exists'],
+      [path.join(specPlaybookDir, 'grounded_candidate_records_arch_scaffolding_v1.md'), '`grounded_candidate_records_arch_scaffolding_v1.md` exists'],
+      [path.join(specMetaDir, 'spec_traceability_mindmap_v3.md'), '`spec_traceability_mindmap_v3.md` exists'],
+    ];
+    for (const [filePath, label] of archScaffoldingRequiredFiles) {
+      if (!fileExists(filePath)) {
+        predicatesOk = false;
+        missingForAdvance.push(rel(filePath));
+        predicateLines.push(`  - ${label}: fail (missing file)`);
+      } else {
+        predicateLines.push(`  - ${label}: pass`);
+      }
+    }
+
+    const systemSpecPath = path.join(specPlaybookDir, 'system_spec_v1.md');
+    const applicationSpecPath = path.join(specPlaybookDir, 'application_spec_v1.md');
+    const systemSpecText = fileExists(systemSpecPath) ? await readUtf8(systemSpecPath) : '';
+    const applicationSpecText = fileExists(applicationSpecPath) ? await readUtf8(applicationSpecPath) : '';
+
+    if (!lacksAnyToken(systemSpecText, [
+      '<filled by CAF>',
+      '- (CAF-managed; populated during CAF run.)',
+      '- (CAF-managed run will populate grounded candidates; if none can be grounded, CAF will refuse and write a retrieval diagnostics feedback packet.)',
+    ])) {
+      predicatesOk = false;
+      predicateLines.push('  - `system_spec_v1.md` scaffolding placeholders cleared: fail');
+    } else {
+      predicateLines.push('  - `system_spec_v1.md` scaffolding placeholders cleared: pass');
+    }
+
+    if (!lacksAnyToken(applicationSpecText, [
+      '- (CAF-managed run will populate grounded candidates; if none can be grounded, CAF will refuse and write a retrieval diagnostics feedback packet.)',
+    ])) {
+      predicatesOk = false;
+      predicateLines.push('  - `application_spec_v1.md` grounded candidates populated: fail');
+    } else {
+      predicateLines.push('  - `application_spec_v1.md` grounded candidates populated: pass');
+    }
   } else if (curPhase === 'implementation_scaffolding') {
     predicateLines.push('- implementation_scaffolding prerequisites:');
     const appDesign = path.join(designPlaybookDir, 'application_design_v1.md');

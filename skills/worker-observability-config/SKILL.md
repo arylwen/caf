@@ -97,6 +97,7 @@ Dependency-manifest posture (v1):
 - If resolved expectations for this capability declare a canonical dependency manifest, treat that manifest as authoritative for runnable candidates.
 - Do not invent a parallel dependency-manifest format unless the task DoD or resolved role-binding expectations explicitly require it.
 - Honor dependency names and evidence markers from the resolved expectations exactly; do not substitute alternate package names or extras on worker-local judgment.
+- For `python_requirements_manifest` expectations, materialize every package declared in `validator_config.package_names_all_of` / `package_names_any_of` and any `dependency_rules[].required_package` triggered by framework-owned imports you emit; do not rely on transitive installs to satisfy framework-owned runtime imports.
 
 - Treat `task.definition_of_done[]` as the authoritative acceptance criteria.
 - Do not invent additional acceptance checks beyond the Task Graph.

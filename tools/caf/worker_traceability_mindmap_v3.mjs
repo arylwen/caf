@@ -31,6 +31,7 @@ import { pathToFileURL } from 'node:url';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafMarkdownStampLine } from './lib_caf_version_v1.mjs';
 import { parseYamlString } from './lib_yaml_v2.mjs';
+import { normalizeJsonlLineIngress } from './lib_text_ingress_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { extractPinsByPatternFromCandidateMarkdown } from './lib_pin_recognition_v1.mjs';
 import { parseCandidateRecordsFromBlockText, extractCandidateIdsFromBlockText } from './lib_caf_decision_candidates_v1.mjs';
@@ -83,7 +84,7 @@ function capOneLine(s, n) {
 
 function readJsonl(filePath) {
   const txt = readFileSync(filePath, 'utf8');
-  const lines = txt.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  const lines = txt.split(/\r?\n/).map((l) => normalizeJsonlLineIngress(l)).filter((l) => l.length > 0);
   const out = [];
   for (let i = 0; i < lines.length; i++) {
     try {

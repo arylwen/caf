@@ -23,6 +23,16 @@ import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
+import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
+import {
+  readRoutedStepState,
+  recoverRoutedStepState,
+  routedStepStatePath,
+  buildDependentsMap,
+  listTransitiveDependents,
+  transitionStepState,
+  writeRoutedStepState,
+} from './lib_routed_step_state_v1.mjs';
 
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 function die(msg, code = 2) {
@@ -54,6 +64,37 @@ function safeRel(root, p) {
   } catch {
     return String(p);
   }
+}
+
+async function invalidateExistingRoutedPlanningState(repoRoot, instanceName) {
+  const layout = getInstanceLayout(repoRoot, instanceName);
+  const statePath = routedStepStatePath(layout);
+  const existingState = readRoutedStepState(layout);
+  if (!existsSync(statePath) || !existingState) {
+    return { updated: false, statePath, impactedStepIds: [] };
+  }
+
+  const recovered = await recoverRoutedStepState(repoRoot, instanceName, existingState);
+  const dependentsMap = buildDependentsMap(recovered.steps);
+  const impactedStepIds = ['plan', ...listTransitiveDependents('plan', dependentsMap)];
+  const completedAtUtc = new Date().toISOString();
+
+  for (const stepId of impactedStepIds) {
+    const prev = recovered.stateDoc?.steps?.[stepId];
+    if (!prev) continue;
+    const reason = stepId === 'plan'
+      ? 'planning reset removed canonical planning outputs; rerun /caf plan from top'
+      : 'upstream plan step was reset; downstream state invalidated';
+    recovered.stateDoc.steps[stepId] = transitionStepState(prev, 'invalidated', reason, {
+      evidence_complete: false,
+      evidence_partial: false,
+      last_run_outcome: stepId === 'plan' ? 'reset' : String(prev.last_run_outcome || ''),
+      last_run_completed_at_utc: completedAtUtc,
+    });
+  }
+
+  writeRoutedStepState(layout, recovered.stateDoc);
+  return { updated: true, statePath, impactedStepIds };
 }
 
 async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines) {
@@ -111,6 +152,7 @@ const planningOutputs = [
   'pattern_obligations_index_v1.tsv',
   'task_graph_v1.yaml',
   'task_graph_index_v1.tsv',
+  'interface_binding_contracts_v1.yaml',
   'task_plan_v1.md',
   'task_backlog_v1.md',
 ];
@@ -134,6 +176,13 @@ if (errors.length > 0) {
   );
   process.stderr.write(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}\n`);
   process.exit(19);
+}
+
+const routedStateUpdate = await invalidateExistingRoutedPlanningState(repoRoot, instanceName);
+
+if (routedStateUpdate.updated) {
+  process.stdout.write(`Routed step state invalidated: ${safeRel(repoRoot, routedStateUpdate.statePath)}\n`);
+  process.stdout.write(`Impacted steps: ${routedStateUpdate.impactedStepIds.join(', ')}\n`);
 }
 
 process.exit(0);

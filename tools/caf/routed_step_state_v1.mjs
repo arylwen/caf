@@ -165,7 +165,6 @@ function canonicalEvidenceByStep(repoRoot, layout, instanceName) {
         path.join(layout.designPlaybookDir, 'task_graph_index_v1.tsv'),
         path.join(layout.designPlaybookDir, 'interface_binding_contracts_v1.yaml'),
         path.join(layout.designPlaybookDir, 'task_plan_v1.md'),
-        path.join(layout.designPlaybookDir, 'task_backlog_v1.md'),
       ],
     },
     build: {

@@ -19,6 +19,17 @@ layout:
       evidence_contains:
       - class
       - def
+      validator_kind: cp_runtime_repository_health_alignment
+      validator_config:
+        execution_surfaces_any_of:
+        - build_postgate_cp_runtime_repository_health
+        persistence_role_binding_keys_any_of:
+        - cp_sqlalchemy_schema_bootstrap
+        - sqlalchemy_runtime_module
+        - sqlalchemy_metadata_module
+        - postgres_adapter_module
+        - raw_sql_runtime_module
+        - raw_sql_schema_bootstrap
     cp_ap_contract_shared_transport_module:
       path_template: code/common/contracts/{boundary_id_snake}/transport.py
       artifact_class: code_contract_surface
@@ -31,6 +42,33 @@ layout:
       evidence_contains:
       - ContractRequestEnvelope
       - payload
+      validator_kind: contract_transport_envelope_alignment
+      validator_config:
+        boundary_id_snake: bnd_cp_ap_01
+        shared_transport_role_binding_key: cp_ap_contract_shared_transport_module
+        cp_boundary_router_role_binding_key: cp_ap_contract_cp_boundary_router
+        cp_http_handler_role_binding_key: cp_ap_contract_cp_http_handler
+        ap_envelope_role_binding_key: cp_ap_contract_ap_envelope
+        cp_envelope_role_binding_key: cp_ap_contract_cp_envelope
+        shared_transport_markers_all_of:
+        - payload
+        - correlation_id
+        ap_emitter_shared_markers_all_of:
+        - to_transport_payload(
+        cp_boundary_router_shared_markers_all_of:
+        - parse_transport_payload(
+        ap_emitter_split_markers_all_of:
+        - ContractRequestEnvelope
+        - ContractResponseEnvelope
+        - payload
+        cp_handler_split_markers_all_of:
+        - ContractRequestEnvelope
+        - ContractResponseEnvelope
+        envelope_fields_all_of:
+        - tenant_id
+        - principal_id
+        - correlation_id
+        - payload
     cp_ap_contract_cp_http_handler:
       path_template: code/cp/contracts/{boundary_id_snake}/http_server.py
       artifact_class: code_contract_surface
@@ -65,12 +103,36 @@ layout:
       evidence_contains:
       - router
       - APIRouter
+    ap_runtime_policy_owner:
+      path_template: code/ap/application/services.py
+      artifact_class: code_runnable_candidate
+      evidence_contains:
+      - class
+      - def
+      validator_kind: policy_preview_runtime_action_alignment
+      validator_config:
+        execution_surfaces_any_of:
+        - build_postgate_policy_preview_action_alignment
+        lane_entry_role_binding_keys_any_of:
+        - ui_src_entrypoints
+        - ux_src_entrypoints
     composition_root:
       path_template: code/ap/main.py
+      path_templates_any_of:
+      - code/ap/bootstrap/main.py
       artifact_class: code_runnable_candidate
       evidence_contains:
       - FastAPI
       - include_router
+      validator_kind: runtime_entry_topology_alignment
+      validator_config:
+        sibling_role_binding_keys_any_of:
+        - asgi_entrypoint
+        root_entrypoint_witness_names_any_of:
+        - main.py
+        - app.py
+        - server.py
+        - asgi.py
     dependency_provider_boundary:
       path_template: code/ap/api/dependencies.py
       artifact_class: code_runnable_candidate
@@ -125,11 +187,11 @@ extensions:
     criteria:
     - Composition root creates the FastAPI app and includes resource routers via explicit router registration.
     - Cross-cutting middleware (authn/authz, logging, request-id) is wired at the composition root (or a dedicated boundary wiring module) and documented.
-    - When the resolved schema strategy is code_bootstrap, the composition root invokes the shared schema bootstrap hook before serving traffic instead of leaving schema creation dormant.
+    - When the resolved schema strategy is code_bootstrap, the composition root invokes its plane-owned schema bootstrap entrypoint before serving traffic instead of leaving schema creation dormant.
     - Fail-closed auth/policy exceptions are mapped to explicit HTTP responses at the composition root (or a dedicated boundary wiring module) rather than surfacing as raw framework 500s.
     review_questions:
     - Are routers registered explicitly and discoverably?
-    - When code_bootstrap is selected, does the composition root invoke the shared schema bootstrap hook before serving traffic?
+    - When code_bootstrap is selected, does the composition root invoke its plane-owned schema bootstrap entrypoint before serving traffic?
     - Are fail-closed auth/policy exceptions translated consistently at the boundary/composition root?
     focus_areas: [maintainability, observability]
 

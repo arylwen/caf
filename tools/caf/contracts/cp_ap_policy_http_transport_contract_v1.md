@@ -56,6 +56,13 @@ Direct UI/UX CP policy-preview helpers may realize the same boundary contract in
 
 ## Validation posture
 
+The preferred enforcement shape is a **declared validator-owned seam** attached to the role-bound AP emitter surface for the active runtime TBP.
+
+That validator is responsible for proving the sibling transport family coherently:
+
+- shared transport + AP emitter + CP boundary router when the shared-transport posture is materialized; or
+- AP emitter + CP handler + AP/CP envelopes when the split contract-scaffolding posture is materialized.
+
 The framework must fail closed when a generated companion repo **has adopted the material boundary transport surface** and shows any of the following for `BND-CP-AP-01`:
 
 - AP emits the boundary payload without using the shared transport serializer,

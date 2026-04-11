@@ -6,6 +6,8 @@ import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 import { resolveConcreteRoleBindingPathsForInstance } from './lib_tbp_role_bindings_v1.mjs';
+import { executeRoleBindingValidator, shouldExecuteRoleBindingValidator } from './lib_role_binding_validators_v1.mjs';
+import { listFilesRecursive, resolveBrowserApiHelperFiles } from './lib_validation_subject_resolution_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 const BOUNDARY_ID_SNAKE = 'bnd_cp_ap_01';
@@ -67,23 +69,45 @@ async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstra
   return fp;
 }
 
+async function resolveBrowserApiCandidateFiles(repoRoot, instanceName, companionRoot) {
+  const resolved = await resolveBrowserApiHelperFiles(repoRoot, instanceName, companionRoot);
+  return resolved.map((entry) => entry.absolute_path).sort();
+}
+
+async function resolveLegacyLocalCpRouterCandidates(companionRoot) {
+  const cpDir = path.join(companionRoot, 'code', 'cp');
+  const files = existsSync(cpDir) ? await listFilesRecursive(cpDir) : [];
+  return files.filter((abs) => /[\\/]router\.(py|ts|js|mjs|cjs)$/i.test(abs)).sort();
+}
+
+async function resolveLegacyApEmitterCandidates(companionRoot, presentApEmitter) {
+  const out = new Set();
+  if (presentApEmitter?.absolute_path && existsSync(presentApEmitter.absolute_path)) {
+    out.add(presentApEmitter.absolute_path);
+  }
+  const contractsDir = path.join(companionRoot, 'code', 'ap', 'contracts');
+  const files = existsSync(contractsDir) ? await listFilesRecursive(contractsDir) : [];
+  for (const abs of files) {
+    if (/[\\/]http_client\.(py|ts|js|mjs|cjs)$/i.test(abs)) out.add(abs);
+  }
+  return Array.from(out).sort();
+}
+
 async function detectLegacyLocalPolicySurface(paths) {
-  const { legacyCpRouterPath, uiApiPath, uxApiPath, apClientPath } = paths;
-  if (!existsSync(legacyCpRouterPath)) return false;
-  const [legacyCpText, uiText, uxText, apText] = await Promise.all([
-    readUtf8(legacyCpRouterPath),
-    existsSync(uiApiPath) ? readUtf8(uiApiPath) : Promise.resolve(''),
-    existsSync(uxApiPath) ? readUtf8(uxApiPath) : Promise.resolve(''),
-    existsSync(apClientPath) ? readUtf8(apClientPath) : Promise.resolve(''),
-  ]);
-  const legacyRouterHasLocalPolicyEndpoints = legacyCpText.includes('router = APIRouter(prefix="/cp"')
-    && legacyCpText.includes('/internal/policy/evaluate')
-    && legacyCpText.includes('class PolicyEvaluationRequest')
-    && legacyCpText.includes('action: str')
-    && legacyCpText.includes('resource: str');
-  const browserPreviewUsesLocalPolicyEndpoints = [uiText, uxText].some((text) =>
+  const { legacyCpRouterPaths, browserApiPaths, apClientPaths } = paths;
+  const legacyRouterTexts = await Promise.all(legacyCpRouterPaths.filter((p) => existsSync(p)).map((p) => readUtf8(p)));
+  if (legacyRouterTexts.length === 0) return false;
+  const browserTexts = await Promise.all(browserApiPaths.filter((p) => existsSync(p)).map((p) => readUtf8(p)));
+  const apTexts = await Promise.all(apClientPaths.filter((p) => existsSync(p)).map((p) => readUtf8(p)));
+  const legacyRouterHasLocalPolicyEndpoints = legacyRouterTexts.some((legacyCpText) =>
+    legacyCpText.includes('router = APIRouter(prefix="/cp"')
+      && legacyCpText.includes('/internal/policy/evaluate')
+      && legacyCpText.includes('class PolicyEvaluationRequest')
+      && legacyCpText.includes('action: str')
+      && legacyCpText.includes('resource: str'));
+  const browserPreviewUsesLocalPolicyEndpoints = browserTexts.some((text) =>
     text.includes('/cp/internal/policy/evaluate') || text.includes('/cp/internal/policy/admin-probe'));
-  const apContractStillUsesLegacyContractScaffold = apText.includes('/cp/contracts/bnd-cp-ap-01/evaluate');
+  const apContractStillUsesLegacyContractScaffold = apTexts.some((apText) => apText.includes('/cp/contracts/bnd-cp-ap-01/evaluate'));
   return legacyRouterHasLocalPolicyEndpoints && browserPreviewUsesLocalPolicyEndpoints && apContractStillUsesLegacyContractScaffold;
 }
 
@@ -114,9 +138,6 @@ export async function internal_main(argv = process.argv.slice(2)) {
   WRITE_ALLOWED_ROOTS = [path.join(instRoot, 'feedback_packets')];
 
   const companionRoot = path.join(repoRoot, 'companion_repositories', instanceName, 'profile_v1');
-  const legacyCpRouterPath = path.join(companionRoot, 'code', 'cp', 'adapters', 'inbound', 'http', 'router.py');
-  const uiApiPath = path.join(companionRoot, 'code', 'ui', 'src', 'api.js');
-  const uxApiPath = path.join(companionRoot, 'code', 'ux', 'src', 'api.js');
 
   const roleSurfaces = {
     sharedTransport: await resolveRoleSurfaces(repoRoot, instanceName, companionRoot, ROLE_KEYS.sharedTransport),
@@ -130,10 +151,14 @@ export async function internal_main(argv = process.argv.slice(2)) {
   const present = Object.fromEntries(Object.entries(roleSurfaces).map(([k, v]) => [k, chooseExistingSurface(v)]));
   const sharedTransportPostureReady = Boolean(present.sharedTransport && present.apEmitter && present.cpBoundaryRouter);
   const splitContractPostureReady = Boolean(present.apEmitter && present.cpHandler && present.apEnvelope && present.cpEnvelope);
+  const browserApiPaths = await resolveBrowserApiCandidateFiles(repoRoot, instanceName, companionRoot);
 
   if (!sharedTransportPostureReady && !splitContractPostureReady) {
-    const apEmitterPath = present.apEmitter?.absolute_path || path.join(companionRoot, 'code', 'ap', 'contracts', BOUNDARY_ID_SNAKE, 'http_client.py');
-    const usesLegacyLocalPolicySurface = await detectLegacyLocalPolicySurface({ legacyCpRouterPath, uiApiPath, uxApiPath, apClientPath: apEmitterPath });
+    const usesLegacyLocalPolicySurface = await detectLegacyLocalPolicySurface({
+      legacyCpRouterPaths: await resolveLegacyLocalCpRouterCandidates(companionRoot),
+      browserApiPaths,
+      apClientPaths: await resolveLegacyApEmitterCandidates(companionRoot, present.apEmitter),
+    });
     if (usesLegacyLocalPolicySurface) {
       resolveFeedbackPacketsBySlugSync(path.join(instRoot, 'feedback_packets'), 'build-postgate-cp-ap-contract-transport-missing');
       resolveFeedbackPacketsBySlugSync(path.join(instRoot, 'feedback_packets'), 'build-postgate-cp-ap-contract-transport-drift');
@@ -163,51 +188,64 @@ export async function internal_main(argv = process.argv.slice(2)) {
   }
 
   const readOptional = async (surface) => (surface?.absolute_path && existsSync(surface.absolute_path) ? readUtf8(surface.absolute_path) : '');
-  const [sharedTransportText, apEmitterText, cpHandlerText, apEnvelopeText, cpEnvelopeText, cpBoundaryRouterText, uiText, uxText] = await Promise.all([
+  const [sharedTransportText, apEmitterText, cpHandlerText, apEnvelopeText, cpEnvelopeText, cpBoundaryRouterText, browserApiTexts] = await Promise.all([
     readOptional(present.sharedTransport),
     readOptional(present.apEmitter),
     readOptional(present.cpHandler),
     readOptional(present.apEnvelope),
     readOptional(present.cpEnvelope),
     readOptional(present.cpBoundaryRouter),
-    existsSync(uiApiPath) ? readUtf8(uiApiPath) : Promise.resolve(''),
-    existsSync(uxApiPath) ? readUtf8(uxApiPath) : Promise.resolve(''),
+    Promise.all(browserApiPaths.map((p) => readUtf8(p))),
   ]);
 
   const issues = [];
-  if (sharedTransportPostureReady) {
-    if (!sharedTransportText.includes('payload') || !sharedTransportText.includes('correlation_id')) {
-      issues.push(`${present.sharedTransport.relative_path}: shared transport posture must define the canonical payload/correlation envelope fields`);
+  if (present.apEmitter?.validator_kind && shouldExecuteRoleBindingValidator(present.apEmitter)) {
+    issues.push(...await executeRoleBindingValidator(present.apEmitter, {
+      repoRoot,
+      companionRoot,
+      instanceName,
+      label: 'CP↔AP transport',
+      readUtf8,
+      roleBindingVariables: { boundary_id_snake: BOUNDARY_ID_SNAKE },
+    }));
+  } else {
+    if (sharedTransportPostureReady) {
+      if (!sharedTransportText.includes('payload') || !sharedTransportText.includes('correlation_id')) {
+        issues.push(`${present.sharedTransport.relative_path}: shared transport posture must define the canonical payload/correlation envelope fields`);
+      }
+      if (!apEmitterText.includes('to_transport_payload(')) {
+        issues.push(`${present.apEmitter.relative_path}: AP emitter must serialize through the shared transport module when the shared-transport posture is materialized`);
+      }
+      if (!cpBoundaryRouterText.includes('parse_transport_payload(')) {
+        issues.push(`${present.cpBoundaryRouter.relative_path}: CP boundary router must parse through the shared transport module when the shared-transport posture is materialized`);
+      }
     }
-    if (!apEmitterText.includes('to_transport_payload(')) {
-      issues.push(`${present.apEmitter.relative_path}: AP emitter must serialize through the shared transport module when the shared-transport posture is materialized`);
-    }
-    if (!cpBoundaryRouterText.includes('parse_transport_payload(')) {
-      issues.push(`${present.cpBoundaryRouter.relative_path}: CP boundary router must parse through the shared transport module when the shared-transport posture is materialized`);
+
+    if (splitContractPostureReady) {
+      if (!/ContractRequestEnvelope/.test(apEmitterText) || !/ContractResponseEnvelope/.test(apEmitterText) || !apEmitterText.includes('payload')) {
+        issues.push(`${present.apEmitter.relative_path}: split contract-scaffolding posture must use ContractRequestEnvelope/ContractResponseEnvelope with payload`);
+      }
+      if (apEmitterText.includes('/cp/policy-decisions/evaluate') && !/Authorization/i.test(apEmitterText)) {
+        issues.push(`${present.apEmitter.relative_path}: AP emitter calls /cp/policy-decisions/evaluate but does not carry an Authorization/Bearer header on the outbound request`);
+      }
+      if (!/ContractRequestEnvelope/.test(cpHandlerText) || !/ContractResponseEnvelope/.test(cpHandlerText)) {
+        issues.push(`${present.cpHandler.relative_path}: split contract-scaffolding posture must use ContractRequestEnvelope/ContractResponseEnvelope`);
+      }
+      if (!envelopeHasRequiredFields(apEnvelopeText)) {
+        issues.push(`${present.apEnvelope.relative_path}: AP envelope must define tenant_id, principal_id, correlation_id, and payload`);
+      }
+      if (!envelopeHasRequiredFields(cpEnvelopeText)) {
+        issues.push(`${present.cpEnvelope.relative_path}: CP envelope must define tenant_id, principal_id, correlation_id, and payload`);
+      }
     }
   }
 
-  if (splitContractPostureReady) {
-    if (!/ContractRequestEnvelope/.test(apEmitterText) || !/ContractResponseEnvelope/.test(apEmitterText) || !apEmitterText.includes('payload')) {
-      issues.push(`${present.apEmitter.relative_path}: split contract-scaffolding posture must use ContractRequestEnvelope/ContractResponseEnvelope with payload`);
-    }
-    if (!/ContractRequestEnvelope/.test(cpHandlerText) || !/ContractResponseEnvelope/.test(cpHandlerText)) {
-      issues.push(`${present.cpHandler.relative_path}: split contract-scaffolding posture must use ContractRequestEnvelope/ContractResponseEnvelope`);
-    }
-    if (!envelopeHasRequiredFields(apEnvelopeText)) {
-      issues.push(`${present.apEnvelope.relative_path}: AP envelope must define tenant_id, principal_id, correlation_id, and payload`);
-    }
-    if (!envelopeHasRequiredFields(cpEnvelopeText)) {
-      issues.push(`${present.cpEnvelope.relative_path}: CP envelope must define tenant_id, principal_id, correlation_id, and payload`);
-    }
-  }
-
-  const browserPreviewsBoundaryEndpoint = [uiText, uxText].some((text) => text.includes('/cp-ap/policy/evaluate'));
+  const browserPreviewsBoundaryEndpoint = browserApiTexts.some((text) => text.includes('/cp-ap/policy/evaluate'));
   if (browserPreviewsBoundaryEndpoint) {
-    if (![uiText, uxText].some((text) => text.includes('tenant_id') && text.includes('principal_id') && text.includes('correlation_id') && text.includes('payload'))) {
+    if (!browserApiTexts.some((text) => text.includes('tenant_id') && text.includes('principal_id') && text.includes('correlation_id') && text.includes('payload'))) {
       issues.push('Browser-facing preview helpers that post to /cp-ap/policy/evaluate must emit the shared boundary envelope fields tenant_id, principal_id, correlation_id, and payload.action');
     }
-    if ([uiText, uxText].some((text) => /body:\s*\{\s*action\s*[,}]/.test(text))) {
+    if (browserApiTexts.some((text) => /body:\s*\{\s*action\s*[,}]/.test(text))) {
       issues.push('Browser-facing preview helpers that post to /cp-ap/policy/evaluate must not emit a flat { action } request body');
     }
   }

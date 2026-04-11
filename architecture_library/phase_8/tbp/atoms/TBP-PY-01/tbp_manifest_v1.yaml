@@ -51,12 +51,32 @@ layout:
     smoke_test:
       path_template: tests/test_{resource_snake}_smoke.py
       artifact_class: tests_runnable_candidate
+    python_requirements_manifest:
+      path_template: requirements.txt
+      artifact_class: config_stubs_non_executable
+      evidence_contains:
+      - pydantic-settings
+      validator_kind: python_requirements_manifest
+      validator_config:
+        package_names_all_of:
+        - pydantic-settings
+        dependency_rules:
+        - observed_surface_paths_any_of:
+          - code/common/runtime/settings.py
+          import_markers_any_of:
+          - from pydantic_settings import
+          - import pydantic_settings
+          required_package: pydantic-settings
 extensions:
   obligations:
   - obligation_id: O-TBP-PY-01-python-package-markers
     title: Materialize Python package markers for candidate code packages
     required_capability: python_package_markers_materialization
     role_binding_key: python_package_marker_code_root
+  - obligation_id: O-TBP-PY-01-runtime-settings-dependency
+    title: Materialize the runtime-settings dependency contract in the canonical Python dependency manifest.
+    required_capability: observability_and_config
+    role_binding_key: python_requirements_manifest
   gates:
   - gate_id: G-PY-MODULE-ROOT-COHERENCE
     title: Preserve resolved Python module-root coherence
@@ -68,11 +88,11 @@ extensions:
     criteria:
     - Runtime package structure, imports, and entrypoints align to the resolved Python module-root conventions across generated plane surfaces.
     - Canonical plane module roots are realized consistently across runtime scaffolds, operator entrypoints, and tests.
-    - Cross-package imports into sibling packages beneath the canonical `code` root (for example shared helpers under `code/common/`) use module-root-coherent relative or absolute imports rather than inventing plane-local pseudo-packages such as `code.ap.common`.
+    - Cross-package imports into TBP-declared shared helper/library packages beneath the canonical `code` root (for example `code/common/`) use module-root-coherent relative or absolute imports rather than inventing plane-local pseudo-packages such as `code.ap.common`.
     review_questions:
     - Do generated Python package roots, imports, and entrypoints all reflect the same resolved module-root conventions?
     - Are plane package markers and import paths coherent across runtime surfaces?
-    - When a runtime surface imports a shared helper from a sibling package under `code/`, does the import path land on the real package root rather than a non-existent plane-local child package?
+    - When a runtime surface imports a TBP-declared shared helper/library package from under `code/`, does the import path land on the real package root rather than a non-existent plane-local child package?
     focus_areas:
     - maintainability
     - correctness

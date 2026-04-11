@@ -14,6 +14,12 @@ The shim skills under `.claude/skills/**` delegate to the canonical skills.
 ## Command invocation
 
 - Terminal agents (Claude Code): use `/caf ...`
+- Common public surface: `/caf ask`, `/caf saas`, `/caf prd`, `/caf arch`, `/caf next <instance_name> apply`, `/caf plan`, `/caf backlog`, `/caf build`, `/caf ux`, `/caf ux plan`, `/caf ux build`.
+
+## Local scripts
+
+- Use `.claude/scripts/` for Claude-local helper scripts.
+- Keep temporary helpers out of `tools/caf/` unless they are being promoted into a maintainer-vetted canonical framework helper.
 
 ## Runtime notes
 

@@ -9,28 +9,28 @@ checks:
     severity: high
     category: correctness
     rule: >
-      The shared auth helper, AP boundary adapter, UI claim-builder, and UI API helper surfaces
+      The role-bound shared auth helper, AP boundary adapter, UI claim-builder, and UI API helper surfaces
       realize one coherent mock Authorization/Bearer claim contract when the task-managed auth
       contract requires it; the contract must not disappear into generic tenant/principal
       header-only behavior, the canonical Bearer payload must carry `tenant_id`, `principal_id`,
       and `policy_version`, runtime-boundary header access must remain case-insensitive, and
-      Python runtime surfaces must import the shared auth helper through the real shared package
+      Python runtime surfaces must import the role-bound shared auth helper through the real shared package
       path rather than a plane-local pseudo-package.
     evidence_hints:
-      - "inspect the task-touched shared auth helper, AP boundary, UI claim-builder, and UI API helper files"
+      - "inspect the task-touched role-bound shared auth helper, AP boundary, UI claim-builder, and UI API helper files"
       - "run node tools/caf/resolve_tbp_role_bindings_v1.mjs <instance> --capability policy_enforcement|api_boundary_implementation|ui_frontend_scaffolding|ux_frontend_realization as needed"
       - "look for one coherent Bearer/Authorization contract rather than per-file ad hoc token parsing"
       - "fail if the UI claim payload omits `policy_version` or packs unrelated request metadata into the canonical auth claim"
-      - "fail if the frontend helper emits a different bearer token shape than the shared auth helper (current canonical shape: `mock.<base64-json>.token`)"
+      - "fail if the frontend helper emits a different bearer token shape than the role-bound shared auth helper (current canonical shape: `mock.<base64-json>.token`)"
       - "fail if the TBP points at a proxy UI file while the real contract is split across separate claim-builder and API helper surfaces"
-      - "for Python runtime surfaces, fail if the shared auth helper under code/common is imported through code.ap.common or code.cp.common style paths"
+      - "for Python runtime surfaces, fail if the role-bound shared auth helper beneath the canonical code root is imported through code.ap.common or code.cp.common style paths"
   - check_id: RR-AUTH-MOCK-02
     severity: high
     category: security
     rule: >
       When the task-managed tenant-context contract adopts claim-over-header semantics, alternate
       tenant/principal headers may be inspected only for conflict rejection and must not become the
-      primary happy-path carrier across the AP boundary, shared auth helper, or UI API helper.
+      primary happy-path carrier across the AP boundary, role-bound shared auth helper, or UI API helper.
     evidence_hints:
       - "inspect auth context / policy helper code and UI API helper code for explicit conflict rejection behavior and case-insensitive header resolution"
       - "fail if X-Tenant-Id or X-Principal-Id becomes the primary required carrier while Authorization/Bearer is optional or absent"

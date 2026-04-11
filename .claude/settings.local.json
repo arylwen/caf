@@ -1,4 +1,8 @@
 {
+  "alwaysThinkingEnabled": false,
+    "env": {
+    "API_TIMEOUT_MS": "12000000"
+  },
   "permissions": {
     "allow": [
       "Bash(test:*)",

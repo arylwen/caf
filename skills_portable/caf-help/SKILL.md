@@ -28,22 +28,24 @@ Option A (ask-first):
 Option B (step-by-step):
 
 1) `/caf saas <instance_name>`
-2) `/caf prd <instance_name>` (optional: if you have a PRD and want CAF to infer/pin an architecture shape)
+2) `/caf prd <instance_name>` (default lifecycle: resolve the PRD and promote a lifecycle-ready architecture shape)
 3) `/caf arch <instance_name>`
-4) `/caf next <instance_name> apply` (optional: only when ready to advance phase)
+4) `/caf next <instance_name> apply` (when the architect is ready to checkpoint adopted decisions and advance)
 5) `/caf arch <instance_name>` (design for the next phase)
-6) `/caf plan <instance_name>` (planning outputs: obligations + task graph + backlog)
-7) `/caf build <instance_name>`
+6) `/caf plan <instance_name>` (planning outputs: obligations + task graph + task plan)
+7) `/caf backlog <instance_name>` (optional human backlog projection when the team is ready to review the backlog)
+8) `/caf build <instance_name>`
 
 Show the happy path:
 
 1) `/caf saas <instance_name>` to initialize a new instance.
-2) `/caf prd <instance_name>` (optional) to infer/pin an architecture shape from a PRD.
+2) `/caf prd <instance_name>` to infer/promote the architecture shape that architecture scaffolding consumes.
 3) `/caf arch <instance_name>` to derive the current phase artifacts.
 4) `/caf next <instance_name>` to preview the next phase.
 5) `/caf next <instance_name> apply` to advance.
 6) `/caf plan <instance_name>` to generate planning outputs after design.
-7) `/caf build <instance_name>` to generate candidate artifacts when pins/gates allow.
+7) `/caf backlog <instance_name>` to materialize the human backlog view on demand.
+8) `/caf build <instance_name>` to generate candidate artifacts when pins/gates allow.
 
 ## If a question is provided
 - Answer directly.

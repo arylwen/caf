@@ -76,10 +76,19 @@ Then:
 - The separate UX lane must remain on top of the current REST/OpenAPI AP/CP surfaces.
 - Do not invent a new integration model.
 - Keep tenant/principal/session consequences explicit in the UX shell, pages, empty states, and guarded actions.
+- Product data list/detail/create/update/delete flows for the richer UX lane must use the AP/browser data surface, not a CP contract gateway as the only runtime path.
+- A CP contract/policy boundary may still be used for preview, explainability, or explicit governed confirmation flows, but it must not become the sole source of worklist/detail/admin/activity data.
+- Do not collapse all UX domain helpers into one generic `contractRequest(...)` that posts every product action to `'/cp/contracts/.../enforce'`.
 
 3) **Wired UX behavior is required**
 - Static descriptive screens are not acceptable completion.
 - The shared UX API helper (`profile_v1/code/ux/src/api.js`) must centralize browser-side AP/CP calls.
+- Prefer explicit helper exports for product data actions (for example list/create/update helpers) rather than page-local fetch logic.
+- Browser-facing helper routes MUST correspond to routes that are actually exposed by the generated runtime + same-origin proxy layer. Do not invent helper calls such as `/api/ready` or bare `/context` unless the runtime wiring explicitly realizes those browser-visible routes.
+- When the richer UX lane uses a fixed mock persona and no proxied session endpoint exists, prefer a local session-context helper rather than depending on a nonexistent backend `/context` call.
+- When AP resource rows are shaped as `{ id, data }` or `{ id, attributes }`, `profile_v1/code/ux/src/api.js` MUST export shared normalization helpers (for example `normalizeResourceItem(...)` and `normalizeResourcePayload(...)`) that flatten the realized payload object (`data` or `attributes`) over top-level metadata while preserving canonical identifiers such as `id` and resource-specific `*_id` aliases needed by the rendered pages.
+- Richer UX pages MUST consume normalized resource items from the shared UX API helper instead of reaching into nested `.data` or `.attributes` ad hoc.
+- Collections/create flows MUST import `createCollection` from the shared UX API helper and use a distinct local handler name (for example `handleCreateCollection`) rather than declaring a same-name local `createCollection` function that shadows the imported helper.
 - Implemented surfaces must render observable loading, empty, success, and failure states.
 - Preserve backend error detail when available.
 
@@ -88,6 +97,8 @@ Then:
 - Declared primary actions must remain visibly reachable from an implemented surface, not only implied in prose or buried in future-work notes.
 - Declared main surfaces must be either visibly realized, clearly co-located into another realized surface, or explicitly deferred through blocker feedback.
 - When a task implements create/update/publish semantics, the rendered controls must call a real shared API/helper path that matches the named action.
+- Shared UX API helpers and richer UX pages MUST implement exactly the operations declared for each resource in `caf/application_domain_model_v1.yaml`; do not expose unsupported create/get flows for resources that only declare list/update.
+- Relationship-shaped resources must preserve their declared foreign-key fields in richer UX forms and helper payloads (for example `collection_id`, `widget_id`, `user_id`, `role_id`) instead of generic `name` / `description` scaffolds.
 
 5) **Namespace separation is mandatory**
 - Keep the separate UX lane under `code/ux/`.

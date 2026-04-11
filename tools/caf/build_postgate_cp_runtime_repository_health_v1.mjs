@@ -6,6 +6,8 @@ import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
 import { resolveConcreteRoleBindingPathsForInstance } from './lib_tbp_role_bindings_v1.mjs';
+import { executeRoleBindingValidator, shouldExecuteRoleBindingValidator } from './lib_role_binding_validators_v1.mjs';
+import { parseYamlString } from './lib_yaml_v2.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
 const HEALTH_OWNER_ROLE_KEY = 'cp_runtime_repository_health_owner';
@@ -33,6 +35,190 @@ async function writeUtf8(fileAbs, text) {
 }
 async function readUtf8(p) { return await fs.readFile(p, { encoding: 'utf-8' }); }
 function safeRel(repoRoot, absPath) { return path.relative(repoRoot, absPath).replace(/\\/g, '/'); }
+function normalizeRelPath(relPath) { return String(relPath ?? '').trim().replace(/\\/g, '/'); }
+
+
+function stemWithoutExtension(rel) {
+  const base = path.posix.basename(normalizeRelPath(rel));
+  const ext = path.posix.extname(base);
+  return ext ? base.slice(0, -ext.length) : base;
+}
+
+function collectFactoryBuildFunctionNames(factoryText, factoryPath) {
+  const ext = path.extname(factoryPath).toLowerCase();
+  const source = String(factoryText || '');
+  if (ext === '.py') {
+    return [...source.matchAll(/^def\s+([a-z_][A-Za-z0-9_]*)\s*\(/gm)].map((m) => String(m[1]).trim()).filter(Boolean);
+  }
+  if (['.ts', '.js', '.mjs', '.cjs'].includes(ext)) {
+    const names = [
+      ...source.matchAll(/^(?:export\s+)?function\s+([a-zA-Z_][A-Za-z0-9_]*)\s*\(/gm),
+      ...source.matchAll(/^(?:export\s+)?const\s+([a-zA-Z_][A-Za-z0-9_]*)\s*=\s*\(/gm),
+    ].map((m) => String(m[1]).trim()).filter(Boolean);
+    return Array.from(new Set(names));
+  }
+  return [];
+}
+
+function ownerPlaneFromRelativePath(ownerRel) {
+  const normalized = normalizeRelPath(ownerRel);
+  if (normalized.startsWith('code/cp/')) return 'cp';
+  if (normalized.startsWith('code/ap/')) return 'ap';
+  return '';
+}
+
+function ownerTextActivatesPersistenceRepositoryHealth(ownerText, ownerRel, factoryEntries = []) {
+  const source = String(ownerText || '');
+  if (!source.includes('repository.health()')) return false;
+
+  const markerCandidates = new Set(['repository_factory', 'persistence']);
+  for (const entry of factoryEntries) {
+    const rel = normalizeRelPath(safeRel('', entry.path)).replace(/^\.\.\//, '');
+    if (rel) markerCandidates.add(stemWithoutExtension(rel));
+    for (const name of collectFactoryBuildFunctionNames(entry.text, entry.path)) markerCandidates.add(name);
+  }
+  for (const marker of markerCandidates) {
+    if (marker && source.includes(marker)) return true;
+  }
+
+  const ownerPlane = ownerPlaneFromRelativePath(ownerRel);
+  if (ownerPlane === 'cp' || ownerPlane === 'ap') {
+    const regexes = [
+      new RegExp(String.raw`from\s+\.{1,2}persistence(?:\.|\b)`),
+      new RegExp(String.raw`from\s+code\.${ownerPlane}\.persistence(?:\.|\b)`),
+      new RegExp(String.raw`['"]\.{1,2}/persistence(?:/|['"])`),
+      new RegExp(String.raw`['"]\.{1,2}\./persistence(?:/|['"])`),
+      new RegExp(String.raw`['"]code/${ownerPlane}/persistence(?:/|['"])`),
+    ];
+    if (regexes.some((re) => re.test(source))) return true;
+  }
+
+  return false;
+}
+
+const FACTORY_EXTENSIONS = ['.py', '.ts', '.js', '.mjs', '.cjs'];
+
+function ensureArray(v) {
+  return Array.isArray(v) ? v : [];
+}
+
+async function listFilesRecursive(dirAbs) {
+  const out = [];
+  if (!existsSync(dirAbs)) return out;
+  const queue = [dirAbs];
+  while (queue.length > 0) {
+    const current = queue.pop();
+    const entries = await fs.readdir(current, { withFileTypes: true });
+    for (const entry of entries) {
+      const abs = path.join(current, entry.name);
+      if (entry.isDirectory()) queue.push(abs);
+      else if (entry.isFile()) out.push(abs);
+    }
+  }
+  return out;
+}
+
+async function resolveRepositoryFactoryCandidates(companionRoot) {
+  const rels = new Set();
+  const bindingReportsDir = path.join(companionRoot, 'caf', 'binding_reports');
+  if (existsSync(bindingReportsDir)) {
+    const files = (await listFilesRecursive(bindingReportsDir)).filter((abs) => /\.ya?ml$/i.test(abs));
+    for (const abs of files) {
+      try {
+        const obj = parseYamlString(await readUtf8(abs)) || {};
+        const evidence = obj?.evidence || {};
+        const artifactPaths = [
+          ...ensureArray(evidence.consumer_artifact_paths),
+          ...ensureArray(evidence.provider_artifact_paths),
+          ...ensureArray(evidence.assembler_artifact_paths),
+        ];
+        for (const relPath of artifactPaths) {
+          const rel = normalizeRelPath(relPath);
+          if (!rel.startsWith('code/')) continue;
+          const ext = path.posix.extname(rel).toLowerCase();
+          if (!FACTORY_EXTENSIONS.includes(ext)) continue;
+          const base = path.posix.basename(rel);
+          if (base.startsWith('repository_factory.')) {
+            rels.add(rel);
+            continue;
+          }
+          if (!rel.includes('/persistence/')) continue;
+          rels.add(path.posix.join(path.posix.dirname(rel), `repository_factory${ext}`));
+        }
+      } catch {}
+    }
+  }
+  if (rels.size === 0) {
+    const codeRoot = path.join(companionRoot, 'code');
+    const files = existsSync(codeRoot) ? await listFilesRecursive(codeRoot) : [];
+    for (const abs of files) {
+      const rel = normalizeRelPath(path.relative(companionRoot, abs));
+      if (/^code\/[^/]+\/persistence\/repository_factory\.(py|ts|js|mjs|cjs)$/i.test(rel)) rels.add(rel);
+    }
+  }
+  return Array.from(rels).sort().map((rel) => path.join(companionRoot, rel)).filter((abs) => existsSync(abs));
+}
+
+function collectPythonFactoryTargets(factoryText) {
+  const importMatches = [...factoryText.matchAll(/^from\s+(code\.cp\.persistence\.[A-Za-z0-9_]+)\s+import\s+([A-Za-z0-9_]+)\s*$/gm)];
+  const importMap = new Map();
+  for (const match of importMatches) {
+    importMap.set(match[2], match[1]);
+  }
+  const returned = [...factoryText.matchAll(/return\s+([A-Z][A-Za-z0-9_]*)\s*\(/g)].map((m) => m[1]);
+  return returned
+    .filter((name, idx, arr) => arr.indexOf(name) === idx)
+    .map((className) => ({ className, moduleRef: importMap.get(className) || '' }))
+    .filter((x) => x.moduleRef);
+}
+
+function collectTsFactoryTargets(factoryText) {
+  const importMap = new Map();
+  for (const match of factoryText.matchAll(/^import\s+\{\s*([^}]+?)\s*\}\s+from\s+['"]([^'"]+)['"];?$/gm)) {
+    for (const token of String(match[1]).split(',')) {
+      const local = token.trim().split(/\s+as\s+/i).pop();
+      if (local) importMap.set(local.trim(), String(match[2]).trim());
+    }
+  }
+  for (const match of factoryText.matchAll(/^import\s+([A-Z][A-Za-z0-9_]*)\s+from\s+['"]([^'"]+)['"];?$/gm)) {
+    importMap.set(match[1], String(match[2]).trim());
+  }
+  const returned = [...factoryText.matchAll(/return\s+new\s+([A-Z][A-Za-z0-9_]*)\s*\(/g)].map((m) => m[1]);
+  return returned
+    .filter((name, idx, arr) => arr.indexOf(name) === idx)
+    .map((className) => ({ className, moduleRef: importMap.get(className) || '' }))
+    .filter((x) => x.moduleRef);
+}
+
+function collectFactoryRepositoryTargets(factoryPath, factoryText) {
+  const ext = path.extname(factoryPath).toLowerCase();
+  if (ext === '.py') return collectPythonFactoryTargets(factoryText);
+  if (['.ts', '.js', '.mjs', '.cjs'].includes(ext)) return collectTsFactoryTargets(factoryText);
+  return [];
+}
+
+function resolveFactoryTargetModuleAbs(factoryPath, moduleRef) {
+  const ref = String(moduleRef || '').trim();
+  if (!ref) return '';
+  const factoryDir = path.dirname(factoryPath);
+  const ext = path.extname(factoryPath).toLowerCase();
+  if (ext === '.py') {
+    return path.join(path.dirname(factoryDir), `${ref.replace(/\./g, '/')}.py`);
+  }
+  const candidates = [];
+  if (ref.startsWith('.')) {
+    const resolved = path.resolve(factoryDir, ref);
+    candidates.push(resolved, `${resolved}.ts`, `${resolved}.js`, `${resolved}.mjs`, `${resolved}.cjs`);
+    for (const c of ['index.ts', 'index.js', 'index.mjs', 'index.cjs']) {
+      candidates.push(path.join(resolved, c));
+    }
+  }
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return candidates[0] || '';
+}
+
 async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstraint, minimalFixLines, evidenceLines) {
   const packetsDir = path.join(repoRoot, 'reference_architectures', instanceName, 'feedback_packets');
   await ensureDir(packetsDir);
@@ -56,19 +242,6 @@ async function writeFeedbackPacket(repoRoot, instanceName, slug, observedConstra
   ].join('\n');
   await writeUtf8(fp, ensureFeedbackPacketHeaderV1(body));
   return fp;
-}
-
-function collectFactoryRepositoryTargets(factoryText) {
-  const importMatches = [...factoryText.matchAll(/^from\s+(code\.cp\.persistence\.[A-Za-z0-9_]+)\s+import\s+([A-Za-z0-9_]+)\s*$/gm)];
-  const importMap = new Map();
-  for (const match of importMatches) {
-    importMap.set(match[2], match[1]);
-  }
-  const returned = [...factoryText.matchAll(/return\s+([A-Z][A-Za-z0-9_]*)\s*\(/g)].map((m) => m[1]);
-  return returned
-    .filter((name, idx, arr) => arr.indexOf(name) === idx)
-    .map((className) => ({ className, modulePath: importMap.get(className) || '' }))
-    .filter((x) => x.modulePath);
 }
 
 async function resolveHealthOwnerSurfaces(repoRoot, instanceName, companionRoot) {
@@ -99,7 +272,6 @@ export async function internal_main(argv = process.argv.slice(2)) {
   WRITE_ALLOWED_ROOTS = [path.join(instRoot, 'feedback_packets')];
 
   const companionRoot = path.join(repoRoot, 'companion_repositories', instanceName, 'profile_v1');
-  const factoryPath = path.join(companionRoot, 'code', 'cp', 'persistence', 'repository_factory.py');
   const { resolved: ownerSurfaces, unresolved: unresolvedOwnerSurfaces } = await resolveHealthOwnerSurfaces(repoRoot, instanceName, companionRoot);
 
   const missing = [];
@@ -108,9 +280,6 @@ export async function internal_main(argv = process.argv.slice(2)) {
   }
   for (const unresolved of unresolvedOwnerSurfaces) {
     missing.push(`Unresolved role binding template: ${unresolved?.tbp_id || '(unknown TBP)'}:${unresolved?.role_binding_key || HEALTH_OWNER_ROLE_KEY} -> ${String(unresolved?.path_template || '(none)')}`);
-  }
-  if (!existsSync(factoryPath)) {
-    missing.push(`Missing: ${safeRel(repoRoot, factoryPath)}`);
   }
   for (const surface of ownerSurfaces) {
     if (!existsSync(surface.absolute_path)) {
@@ -132,33 +301,66 @@ export async function internal_main(argv = process.argv.slice(2)) {
     die(`Fail-closed. Wrote feedback packet: ${safeRel(repoRoot, fp)}`, 41);
   }
 
-  const [factoryText, ownerTexts] = await Promise.all([
-    readUtf8(factoryPath),
-    Promise.all(ownerSurfaces.map((surface) => readUtf8(surface.absolute_path))),
-  ]);
-  const activeOwnerSurface = ownerSurfaces.find((_, idx) => ownerTexts[idx].includes('repository.health()')) || null;
-  if (!activeOwnerSurface) {
-    resolveFeedbackPacketsBySlugSync(path.join(instRoot, 'feedback_packets'), 'build-postgate-cp-runtime-repository-health-missing');
-    resolveFeedbackPacketsBySlugSync(path.join(instRoot, 'feedback_packets'), 'build-postgate-cp-runtime-repository-health-drift');
-    return 0;
-  }
+  const ownerTexts = await Promise.all(ownerSurfaces.map((surface) => readUtf8(surface.absolute_path)));
+  const validatorOwnedSurfaces = ownerSurfaces.filter((surface) => surface?.validator_kind && shouldExecuteRoleBindingValidator(surface, { executionSurface: 'build_postgate_cp_runtime_repository_health' }));
 
-  const targets = collectFactoryRepositoryTargets(factoryText);
   const issues = [];
-  if (targets.length === 0) {
-    issues.push(`${safeRel(repoRoot, factoryPath)}: could not resolve concrete CP repository classes returned by repository_factory.py`);
-  }
-
-  for (const target of targets) {
-    const moduleRel = `${target.modulePath.replace(/\./g, '/')}.py`;
-    const moduleAbs = path.join(companionRoot, moduleRel);
-    if (!existsSync(moduleAbs)) {
-      issues.push(`${safeRel(repoRoot, factoryPath)}: returned ${target.className} but ${safeRel(repoRoot, moduleAbs)} is missing`);
-      continue;
+  let driftOwnerSurface = null;
+  if (validatorOwnedSurfaces.length > 0) {
+    driftOwnerSurface = validatorOwnedSurfaces[0] || null;
+    for (const surface of validatorOwnedSurfaces) {
+      issues.push(...await executeRoleBindingValidator(surface, {
+        repoRoot,
+        companionRoot,
+        instanceName,
+        label: 'CP runtime repository health',
+        readUtf8,
+        executionSurface: 'build_postgate_cp_runtime_repository_health',
+      }));
     }
-    const moduleText = await readUtf8(moduleAbs);
-    if (!/def\s+health\s*\(/.test(moduleText)) {
-      issues.push(`${safeRel(repoRoot, moduleAbs)}: ${target.className} is returned by repository_factory.py but does not implement health() while ${activeOwnerSurface.relative_path} calls repository.health()`);
+  } else {
+    const activeOwnerSurface = ownerSurfaces.find((_, idx) => ownerTexts[idx].includes('repository.health()')) || null;
+    driftOwnerSurface = activeOwnerSurface;
+    if (!activeOwnerSurface) {
+      resolveFeedbackPacketsBySlugSync(path.join(instRoot, 'feedback_packets'), 'build-postgate-cp-runtime-repository-health-missing');
+      resolveFeedbackPacketsBySlugSync(path.join(instRoot, 'feedback_packets'), 'build-postgate-cp-runtime-repository-health-drift');
+      return 0;
+    }
+
+    const factoryCandidates = await resolveRepositoryFactoryCandidates(companionRoot);
+    const factoryEntries = await Promise.all(factoryCandidates.map(async (factoryPath) => ({ path: factoryPath, text: await readUtf8(factoryPath) })));
+    if (!ownerTextActivatesPersistenceRepositoryHealth(ownerTexts[ownerSurfaces.findIndex((surface) => surface.absolute_path === activeOwnerSurface.absolute_path)] || '', activeOwnerSurface.relative_path, factoryEntries)) {
+      resolveFeedbackPacketsBySlugSync(path.join(instRoot, 'feedback_packets'), 'build-postgate-cp-runtime-repository-health-missing');
+      resolveFeedbackPacketsBySlugSync(path.join(instRoot, 'feedback_packets'), 'build-postgate-cp-runtime-repository-health-drift');
+      return 0;
+    }
+    if (factoryCandidates.length === 0) {
+      issues.push('Missing CP persistence assembly surface: repository_factory.* at the active CP persistence assembly surface.');
+    }
+    const targets = [];
+    for (const entry of factoryEntries) {
+      for (const target of collectFactoryRepositoryTargets(entry.path, entry.text)) {
+        targets.push({ ...target, factoryPath: entry.path });
+      }
+    }
+    if (targets.length === 0) {
+      const factoryEvidence = factoryEntries.length > 0
+        ? factoryEntries.map((entry) => safeRel(repoRoot, entry.path)).join(', ')
+        : 'repository_factory.* at the active CP persistence assembly surface';
+      issues.push(`${factoryEvidence}: could not resolve concrete CP repositories returned by the active CP persistence assembly surface`);
+    }
+
+    for (const target of targets) {
+      const moduleAbs = resolveFactoryTargetModuleAbs(target.factoryPath, target.moduleRef);
+      if (!moduleAbs || !existsSync(moduleAbs)) {
+        issues.push(`${safeRel(repoRoot, target.factoryPath)}: returned ${target.className} but ${normalizeRelPath(safeRel(repoRoot, moduleAbs || path.join(companionRoot, '(unresolved)')))} is missing`);
+        continue;
+      }
+      const moduleText = await readUtf8(moduleAbs);
+      const healthRe = /(?:def|async\s+def)\s+health\s*\(|(?:async\s+)?health\s*\(/;
+      if (!healthRe.test(moduleText)) {
+        issues.push(`${safeRel(repoRoot, moduleAbs)}: ${target.className} is returned by ${safeRel(repoRoot, target.factoryPath)} but does not implement health() while ${activeOwnerSurface.relative_path} calls repository.health()`);
+      }
     }
   }
 
@@ -167,9 +369,9 @@ export async function internal_main(argv = process.argv.slice(2)) {
       repoRoot,
       instanceName,
       'build-postgate-cp-runtime-repository-health-drift',
-      `Resolved CP runtime repository-health owner ${activeOwnerSurface.relative_path} calls repository.health() but concrete CP persistence repositories returned by repository_factory.py do not all implement it`,
+      `Resolved CP runtime repository-health owner ${(driftOwnerSurface && driftOwnerSurface.relative_path) || 'the declared owner surface'} calls repository.health() but concrete CP repositories returned by the active CP persistence assembly surface do not all implement it`,
       [
-        `Implement health() on each concrete CP repository returned by code/cp/persistence/repository_factory.py when the resolved owner seam ${activeOwnerSurface.relative_path} uses repository.health() readiness probes.`,
+        `Implement health() on each concrete CP repository returned by the active control-plane persistence assembly surface when the resolved owner seam ${((driftOwnerSurface && driftOwnerSurface.relative_path) || 'the declared owner surface')} uses repository.health() readiness probes.`,
         'Keep the health() contract at the shared CP persistence seam and enforce parity with a build postgate.',
       ],
       issues,

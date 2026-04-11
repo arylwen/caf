@@ -94,7 +94,7 @@ async function writeFeedbackPacket(repoRoot, instanceName, observedConstraint, d
     ...driftItems.map((x) => `- ${x}`),
     '',
     `## Minimal Fix Proposal`,
-    `- Regenerate design/playbook/task_graph_v1.yaml using canonical task_id naming contracts per capability (for example TG-20-*, TG-35-policy-enforcement-core, TG-90-*, TG-TBP-*, TG-10-OPTIONS-*).`,
+    `- Regenerate design/playbook/task_graph_v1.yaml using canonical task_id naming contracts per capability and worker compatibility anchors (for example TG-20-*, TG-35-policy-enforcement-core, TG-90-*, TG-10-OPTIONS-*, and TG-TBP-* only when the planner must emit a TBP execution anchor).`,
     `- Legacy policy split task ids remain accepted for backward compatibility only; new planning output MUST use TG-35-policy-enforcement-core when policy/auth/context obligations are present.`,
     `- Do not emit sequential TG-01/TG-02/TG-03 ids for worker-dispatched capabilities unless the worker explicitly documents compatibility.`,
     '',
@@ -143,8 +143,9 @@ function checkTaskId(capabilityId, taskId) {
   }
 
   if (capabilityId === 'postgres_persistence_wiring') {
-    const ok = /^TG-TBP-[A-Z0-9-]+-postgres_persistence_wiring$/.test(id);
-    return ok ? null : 'Expected TG-TBP-<TBP-ID>-postgres_persistence_wiring';
+    const ok = /^TG-TBP-[A-Z0-9-]+-postgres_persistence_wiring$/.test(id)
+      || id === 'TG-10-OPTIONS-postgres_persistence_wiring';
+    return ok ? null : 'Expected a worker-compatible postgres_persistence_wiring execution anchor (TG-10-OPTIONS-postgres_persistence_wiring or TG-TBP-<anchor>-postgres_persistence_wiring when the planner emitted a TBP-derived execution task)';
   }
 
   if (capabilityId === 'runtime_wiring') {

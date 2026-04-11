@@ -100,4 +100,4 @@ If you skip `/caf prd` and run the first `/caf arch` on a bootstrap shape, CAF n
 
 - [Quickstart](03_quickstart.md) — Run the command flow that puts `/caf prd` in context.
 - [Instances, phases, and state](05_instances_phases_and_state.md) — Check where the promoted and advisory artifacts live.
-- [Architect workflows](../architect/10_architect_workflows.md) — Compare the default PRD-first path with the architect-curated override.
+- [Architect workflows](../architect/10_architect_workflows.md) — See when the default PRD-first path fits well and when an architect-guided override is the better move.

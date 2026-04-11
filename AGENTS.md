@@ -44,6 +44,9 @@ Clarification (semantic processing):
 - **Never invent or “assume” a tool exists.**
   - Do not emit calls like `node tools/caf/worker_*.mjs ...` unless that file actually exists in `tools/caf/` AND is referenced by the relevant `skills/**/SKILL.md` as a preferred scripted path.
 - **No ad-hoc wrappers for workers** unless you implement them, document them, and wire them into the skill.
+- **Do not treat `tools/caf/` as a scratchpad.**
+  - If a temporary or runner-local helper is needed, keep it under the active shim folder (`.claude/scripts/`, `.codex/scripts/`, `.kiro/scripts/`, `.copilot/scripts/`, or `.agent/scripts/`).
+  - Only maintainer-vetted deterministic framework helpers belong under `tools/caf/`.
 
 ### Execution discipline (avoid hallucination)
 
@@ -88,6 +91,13 @@ Never dump the deliverables below as one whole blob:
 - If an item references other sections (IDs/refs), emit the item and its required references in the **same** batch.
 - After each batch, re-validate by re-opening the file (and/or running the relevant CAF validation gate) before proceeding.
 
+Backlog-specific rule:
+
+- Finish the semantic planning source first: `task_graph_v1.yaml` is the authoritative task structure.
+- Do **not** create ad-hoc `project_task_backlog*` or similar framework scripts just because the backlog is large.
+- If a human-readable backlog is needed, prefer the canonical `/caf backlog <instance_name>` command rather than inventing a new projector.
+- If temporary runner-local scripting is still required, keep it under the active shim folder (`.<agent>/scripts/`), not under `tools/caf/`.
+
 ## Command surface
 
 CAF is operated via a single router command:
@@ -96,11 +106,19 @@ CAF is operated via a single router command:
 
 Follow the canonical router and sub-skill procedures under `skills/**/SKILL.md`.
 
+Runner-session hard rule:
+
+- If `CAF_ACTIVE_RUNNER_SESSION=1`, you are already inside a CAF CLI runner session.
+- In that state, do **not** invoke `codex`, `codex exec`, `claude`, `kiro`, or another nested `/caf ...` shell command merely to continue the same routed workflow.
+- For `/caf build ...` and `/caf ux build ...`, `CAF_CURRENT_SESSION_DISPATCH_REQUIRED=1` means worker/reviewer dispatch must stay in the current session.
+
 ## Repo boundaries
 
 - Do not hand-edit generated artifacts under `reference_architectures/` or `companion_repositories/` except where explicitly allowed by an `ARCHITECT_EDIT_BLOCK`.
 - Prefer using the canonical skill procedures in `skills/**/SKILL.md`.
-- When adding helpers, place them under `tools/caf/` and document them in `tools/caf/README.md`.
+- Framework-owned deterministic helpers belong under `tools/caf/` **only** when they are maintainer-vetted, documented in `tools/caf/README.md`, and intended to become canonical CAF behavior.
+- Runner-local or one-off helper scripts belong under the active shim folder (`.claude/scripts/`, `.codex/scripts/`, `.kiro/scripts/`, `.copilot/scripts/`, or `.agent/scripts/`).
+- Do **not** add custom scripts under `tools/caf/` during normal routed work just because a task graph or backlog is large.
 
 ## Fail-closed behavior
 

@@ -78,6 +78,7 @@ API boundary minimum invariants (generic; no tech stack assumptions):
   - Create endpoints MUST NOT require an id in the request body; generate the id server-side (typically in the service layer).
   - Update endpoints MUST take the id from the URL/path parameter and MUST ignore any id fields in the body.
 - Do not embed persistence logic in the boundary.
+- Treat `caf/application_domain_model_v1.yaml` `api_candidates.resources[].operations` as the authoritative verb set for the resource. Implement every declared operation and do not expose extra CRUD verbs in the AP router.
 - When `platform.dependency_wiring_mode=framework_managed` and the selected TBP exposes a `dependency_provider_boundary`, route modules must consume providers from that boundary instead of constructing services/repositories inline.
 - Keep router/provider imports consistent with the resolved module convention surface; a framework-managed `dependency_provider_boundary` must be imported using the same resolved root or the preferred same-package relative-import style.
 

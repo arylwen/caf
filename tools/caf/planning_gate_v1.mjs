@@ -95,6 +95,7 @@ const planningOutputs = [
   'pattern_obligations_index_v1.tsv',
   'task_graph_v1.yaml',
   'task_graph_index_v1.tsv',
+  'interface_binding_contracts_v1.yaml',
   'task_plan_v1.md',
   'task_backlog_v1.md',
 ];

@@ -30,7 +30,7 @@ layout:
 extensions:
   obligations:
     - obligation_id: O-TBP-RAW-SQL-01-runtime-module
-      title: Materialize the shared raw-SQL runtime module (connection and execution helpers) for explicit-SQL persistence.
+      title: Materialize the role-bound shared raw-SQL runtime module (connection and execution helpers) for explicit-SQL persistence.
       required_capability: persistence_implementation
       role_binding_key: raw_sql_runtime_module
     - obligation_id: O-TBP-RAW-SQL-01-schema-bootstrap
@@ -44,10 +44,10 @@ extensions:
       attachment_scope: all_matching_tasks
       required_capability: persistence_implementation
       criteria:
-        - Raw-SQL-backed persistence realizes explicit SQL runtime surfaces through shared connection and execution helpers inside the persistence boundary.
+        - Raw-SQL-backed persistence realizes explicit SQL runtime surfaces through role-bound shared connection and execution helpers inside the persistence boundary.
         - Repository logic does not silently degrade raw_sql rails into ORM-owned runtime/bootstrap helpers in production modules.
       review_questions:
-        - Do persistence modules adopt the shared raw-SQL runtime seam rather than issuing ad hoc SQL from service or boundary layers?
+        - Do persistence modules adopt the role-bound shared raw-SQL runtime seam rather than issuing ad hoc SQL from service or boundary layers?
         - Is ORM-only runtime/bootstrap machinery absent from the selected raw_sql production persistence path?
       focus_areas:
         - correctness

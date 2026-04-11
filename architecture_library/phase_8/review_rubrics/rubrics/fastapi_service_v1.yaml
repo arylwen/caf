@@ -27,11 +27,11 @@ checks:
   - check_id: RR-FA-SCHEMA-BOOTSTRAP-01
     severity: blocker
     category: correctness
-    rule: "When resolved schema_management_strategy is code_bootstrap, the FastAPI composition root invokes the shared schema bootstrap hook before serving traffic, and repository/request paths are not the primary bootstrap owner."
+    rule: "When resolved schema_management_strategy is code_bootstrap, the FastAPI composition root invokes its plane-owned schema bootstrap entrypoint before serving traffic, and repository/request paths are not the primary bootstrap owner."
     evidence_hints:
-      - "inspect main/app factory surfaces for lifespan or startup wiring that calls the shared bootstrap hook"
+      - "inspect main/app factory surfaces for lifespan or startup wiring that calls the plane-owned bootstrap entrypoint for the plane served by that runtime"
       - "inspect repository factory / dependency-provider surfaces for request-path-first bootstrap ownership"
-      - "fail if code_bootstrap is selected but schema bootstrap remains dormant, or if repository factories own the primary schema bootstrap path at request time"
+      - "fail if code_bootstrap is selected but schema bootstrap remains dormant, or if the composition root still relies on a shared cross-plane bootstrap seam as the primary proof surface"
   - check_id: RR-FA-ARCH-01
     severity: medium
     category: architecture

@@ -2,13 +2,13 @@
 
 CAF is easiest to understand with a concrete instance story.
 
-## Canonical public sample
+## Canonical sample
 
-CAF uses one canonical public sample name across the public docs, sample walkthroughs, and ask-first UX:
+CAF uses one canonical sample name across the docs, sample walkthroughs, and ask-first UX:
 
 - `codex-saas`
 
-Use that name consistently in release-facing guidance. Do not mix it with older sample names on the same public surface.
+Use that name consistently in release-facing guidance. Do not mix it with older sample names on the same reader-facing surface.
 
 ## Starter template options
 
@@ -27,13 +27,13 @@ This split is intentional: CAF should still be able to seed a plain SaaS surface
 
 Generated instance folders under `reference_architectures/` and `companion_repositories/` are usually runtime artifacts, not source.
 
-For a public release, provide sanitized `codex-saas` sample material in one of these ways:
+For a release, provide sanitized `codex-saas` sample material in one of these ways:
 
 1. include a curated snapshot in the release bundle
 2. attach sanitized sample archives as release assets
 3. provide a separate sample bundle alongside the main CAF repo
 
-The public docs should describe `codex-saas` as the canonical sample whether it ships inline or as a companion release asset.
+The docs should describe `codex-saas` as the canonical sample whether it ships inline or as a companion release asset.
 
 ## What to sanitize
 

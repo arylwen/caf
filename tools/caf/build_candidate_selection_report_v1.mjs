@@ -19,6 +19,7 @@ import { pathToFileURL } from 'node:url';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
 import { parseYamlFile, parseYamlString } from './lib_yaml_v2.mjs';
+import { normalizeJsonlLineIngress } from './lib_text_ingress_v1.mjs';
 import { parseCandidateRecordsFromBlockText } from './lib_caf_decision_candidates_v1.mjs';
 
 const NAME_RE = /^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/;
@@ -79,7 +80,7 @@ function readJsonlIds(fileAbs) {
   const txt = readFileSync(fileAbs, 'utf8');
   const ids = new Set();
   for (const line of txt.split(/\r?\n/)) {
-    const t = line.trim();
+    const t = normalizeJsonlLineIngress(line);
     if (!t) continue;
     try {
       const obj = JSON.parse(t);

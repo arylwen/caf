@@ -127,6 +127,190 @@ function detectRepositoryFactoryLazySchemaBootstrap(text) {
     || /\bbootstrap_schema\s*\(/.test(src);
 }
 
+function detectPlaneOwnedBootstrapImport(text, plane) {
+  const src = String(text ?? '');
+  const planeName = String(plane ?? '').trim().toLowerCase();
+  if (!planeName) return false;
+  const patterns = [
+    /from\s+\.persistence(?:\.[A-Za-z_]+)?\s+import\s+[A-Za-z_,\s]*bootstrap[A-Za-z_]*/i,
+    /from\s+\.persistence\.[A-Za-z_]*bootstrap[A-Za-z_]*\s+import/i,
+    new RegExp(`from\s+\.\.?${planeName}\.persistence(?:\.[A-Za-z_]+)?\s+import\s+[A-Za-z_,\s]*bootstrap[A-Za-z_]*`, 'i'),
+    new RegExp(`from\s+\.\.?${planeName}\.persistence\.[A-Za-z_]*bootstrap[A-Za-z_]*\s+import`, 'i'),
+    new RegExp(`from\s+code\.${planeName}\.persistence(?:\.[A-Za-z_]+)?\s+import\s+[A-Za-z_,\s]*bootstrap[A-Za-z_]*`, 'i'),
+    new RegExp(`from\s+code\.${planeName}\.persistence\.[A-Za-z_]*bootstrap[A-Za-z_]*\s+import`, 'i'),
+  ];
+  return patterns.some((pattern) => pattern.test(src));
+}
+
+function detectPlanePersistenceBootstrapShimImport(text) {
+  const src = String(text ?? '');
+  const patterns = [
+    /from\s+\.\.persistence(?:\.[A-Za-z_]+)?\s+import\s+[A-Za-z_,\s]*bootstrap[A-Za-z_]*/i,
+    /from\s+\.\.persistence\.[A-Za-z_]*bootstrap[A-Za-z_]*\s+import/i,
+    /from\s+\.persistence(?:\.[A-Za-z_]+)?\s+import\s+[A-Za-z_,\s]*bootstrap[A-Za-z_]*/i,
+    /from\s+\.persistence\.[A-Za-z_]*bootstrap[A-Za-z_]*\s+import/i,
+  ];
+  return patterns.some((pattern) => pattern.test(src));
+}
+
+function detectSharedCrossPlaneBootstrapImport(text) {
+  const src = String(text ?? '');
+  return /common\.persistence\.[A-Za-z_]*bootstrap[A-Za-z_]*/i.test(src)
+    || /from\s+\.\.common\.persistence(?:\.[A-Za-z_]+)?\s+import\s+[A-Za-z_,\s]*bootstrap[A-Za-z_]*/i.test(src)
+    || /from\s+\.\.common\.persistence\.[A-Za-z_]*bootstrap[A-Za-z_]*\s+import/i.test(src)
+    || /from\s+code\.common\.persistence(?:\.[A-Za-z_]+)?\s+import\s+[A-Za-z_,\s]*bootstrap[A-Za-z_]*/i.test(src)
+    || /from\s+code\.common\.persistence\.[A-Za-z_]*bootstrap[A-Za-z_]*\s+import/i.test(src);
+}
+
+function detectCompositionRootBootstrapInvocation(text) {
+  const src = String(text ?? '');
+  return /\bbootstrap_schema_if_needed\s*\(/.test(src)
+    || /\bbootstrap_schema\s*\(/.test(src)
+    || /\bbootstrap_[A-Za-z_]*schema[A-Za-z_]*\s*\(/.test(src);
+}
+
+function escapeRegExp(text) {
+  return String(text ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function detectImportedBootstrapFunctions(text) {
+  const src = String(text ?? '');
+  const out = [];
+  for (const match of src.matchAll(/from\s+([^\n]+?)\s+import\s+([^\n]+)/g)) {
+    const moduleSpec = normalizeScalar(match[1]);
+    const imported = String(match[2] ?? '')
+      .split(',')
+      .map((part) => normalizeScalar(part.split(/\s+as\s+/i)[0]))
+      .filter(Boolean);
+    for (const name of imported) {
+      if (/^bootstrap(?:_[A-Za-z0-9_]+)?$/i.test(name)) {
+        out.push({ moduleSpec, name });
+      }
+    }
+  }
+  return out;
+}
+
+function resolveImportedBootstrapModuleCandidate(rootRel, moduleSpec, plane) {
+  const spec = normalizeScalar(moduleSpec);
+  const planeName = normalizeScalar(plane);
+  if (!spec) return null;
+  const rootDir = path.posix.dirname(normalizeRelPath(rootRel));
+  const candidates = [];
+  if (spec.startsWith('.')) {
+    const leadingDots = (spec.match(/^\.+/)?.[0] || '').length;
+    const remaining = spec.slice(leadingDots).split('.').filter(Boolean);
+    let baseDir = rootDir;
+    for (let i = 1; i < leadingDots; i += 1) baseDir = path.posix.dirname(baseDir);
+    const extless = path.posix.normalize(path.posix.join(baseDir, ...remaining));
+    candidates.push(`${extless}.py`);
+    candidates.push(path.posix.join(extless, '__init__.py'));
+  }
+  if (planeName) {
+    if (spec === `code.${planeName}.application.bootstrap`) candidates.push(`code/${planeName}/application/bootstrap.py`);
+    if (spec === `code.${planeName}.application`) candidates.push(`code/${planeName}/application/__init__.py`);
+  }
+  const deduped = candidates.map(normalizeRelPath).filter(Boolean);
+  return deduped.length > 0 ? Array.from(new Set(deduped))[0] : null;
+}
+
+async function detectPlaneOwnedBootstrapViaShim(companionRoot, rootRel, rootText, plane) {
+  const importedBootstraps = detectImportedBootstrapFunctions(rootText);
+  if (importedBootstraps.length === 0) return false;
+  for (const imported of importedBootstraps) {
+    const moduleRel = resolveImportedBootstrapModuleCandidate(rootRel, imported.moduleSpec, plane);
+    if (!moduleRel) continue;
+    const moduleAbs = path.join(companionRoot, moduleRel);
+    if (!existsSync(moduleAbs)) continue;
+    const moduleText = await readUtf8(moduleAbs);
+    if (!(detectPlaneOwnedBootstrapImport(moduleText, plane) || detectPlanePersistenceBootstrapShimImport(moduleText))) continue;
+    const fnName = escapeRegExp(imported.name);
+    const callPattern = new RegExp(String.raw`\b${fnName}\s*\(`);
+    if (callPattern.test(rootText) || callPattern.test(moduleText)) return true;
+  }
+  return false;
+}
+
+function looksLikeFastapiCompositionRoot(text) {
+  const src = String(text ?? '');
+  return /\bFastAPI\s*\(/.test(src)
+    || /\binclude_router\s*\(/.test(src)
+    || /\bdef\s+create_app\s*\(/.test(src);
+}
+
+async function resolvePlaneCompositionRootCandidates(companionRoot) {
+  const names = ['main.py', 'app.py', 'server.py', 'asgi.py'];
+  const out = [];
+  for (const plane of ['ap', 'cp']) {
+    for (const name of names) {
+      const rel = `code/${plane}/${name}`;
+      const abs = path.join(companionRoot, rel);
+      if (existsSync(abs)) out.push({ plane, rel, abs });
+    }
+  }
+  return out;
+}
+
+async function listFilesRecursive(dirAbs) {
+  const out = [];
+  if (!existsSync(dirAbs)) return out;
+  const queue = [dirAbs];
+  while (queue.length > 0) {
+    const current = queue.pop();
+    const entries = await fs.readdir(current, { withFileTypes: true });
+    for (const entry of entries) {
+      const abs = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        queue.push(abs);
+      } else if (entry.isFile()) {
+        out.push(abs);
+      }
+    }
+  }
+  return out;
+}
+
+async function resolveSchemaBootstrapRepositoryFactoryCandidates(companionRoot) {
+  const rels = new Set();
+  const bindingReportsDir = path.join(companionRoot, 'caf', 'binding_reports');
+  const allowedExtensions = new Set(['.py', '.ts', '.js', '.mjs', '.cjs']);
+  if (existsSync(bindingReportsDir)) {
+    const files = (await listFilesRecursive(bindingReportsDir)).filter((abs) => /\.ya?ml$/i.test(abs));
+    for (const abs of files) {
+      try {
+        const obj = parseYamlString(await readUtf8(abs)) || {};
+        const evidence = obj?.evidence || {};
+        const artifactPaths = [
+          ...ensureArray(evidence.consumer_artifact_paths),
+          ...ensureArray(evidence.provider_artifact_paths),
+          ...ensureArray(evidence.assembler_artifact_paths),
+        ];
+        for (const relPath of artifactPaths) {
+          const rel = normalizeRelPath(relPath);
+          if (!rel.startsWith('code/')) continue;
+          const ext = path.posix.extname(rel).toLowerCase();
+          if (!allowedExtensions.has(ext)) continue;
+          const base = path.posix.basename(rel);
+          if (base.startsWith('repository_factory.')) {
+            rels.add(rel);
+            continue;
+          }
+          if (!rel.includes('/persistence/')) continue;
+          rels.add(path.posix.join(path.posix.dirname(rel), `repository_factory${ext}`));
+        }
+      } catch {}
+    }
+  }
+  if (rels.size === 0) {
+    const codeRoot = path.join(companionRoot, 'code');
+    const files = existsSync(codeRoot) ? await listFilesRecursive(codeRoot) : [];
+    for (const abs of files) {
+      const rel = normalizeRelPath(path.relative(companionRoot, abs));
+      if (/^code\/[^/]+\/persistence\/repository_factory\.(py|ts|js|mjs|cjs)$/i.test(rel)) rels.add(rel);
+    }
+  }
+  return Array.from(rels).sort();
+}
 
 async function collectPersistenceTerminalExpectations(repoRoot, instanceName, persistenceOrm, capabilityId) {
   const expectations = [];
@@ -346,12 +530,34 @@ export async function internal_main(argv = process.argv.slice(2)) {
 
 
   if (runtimeLanguage === 'python' && runtimeFramework === 'fastapi' && persistenceOrm === 'sqlalchemy_orm' && schemaStrategy === 'code_bootstrap') {
-    for (const relPath of ['code/ap/persistence/repository_factory.py', 'code/cp/persistence/repository_factory.py']) {
+    const factoryCandidates = await resolveSchemaBootstrapRepositoryFactoryCandidates(companionRoot);
+    for (const relPath of factoryCandidates) {
       const absPath = path.join(companionRoot, relPath);
       if (!existsSync(absPath)) continue;
       const repoText = await readUtf8(absPath);
       if (detectRepositoryFactoryLazySchemaBootstrap(repoText)) {
         findings.push(`${safeRel(repoRoot, absPath)} retains lazy repository-factory schema bootstrap state. For SQLAlchemy code_bootstrap, composition-root startup must own schema materialization; request-path bootstrap can only be a secondary synchronized fallback.`);
+      }
+    }
+
+    const compositionRoots = await resolvePlaneCompositionRootCandidates(companionRoot);
+    for (const root of compositionRoots) {
+      const rootText = await readUtf8(root.abs);
+      if (!looksLikeFastapiCompositionRoot(rootText)) continue;
+      const hasBootstrapInvocation = detectCompositionRootBootstrapInvocation(rootText);
+      const hasSharedBootstrapImport = detectSharedCrossPlaneBootstrapImport(rootText);
+      const hasDirectPlaneOwnedBootstrapImport = detectPlaneOwnedBootstrapImport(rootText, root.plane);
+      const hasPlaneOwnedBootstrapShimProof = await detectPlaneOwnedBootstrapViaShim(companionRoot, root.rel, rootText, root.plane);
+      const hasPlaneOwnedBootstrapProof = hasDirectPlaneOwnedBootstrapImport || hasPlaneOwnedBootstrapShimProof;
+      if (!hasBootstrapInvocation) {
+        findings.push(`${safeRel(repoRoot, root.abs)} does not invoke a plane-owned schema bootstrap entrypoint. For SQLAlchemy code_bootstrap, each realized plane composition root must prove startup ownership before serving traffic.`);
+        continue;
+      }
+      if (hasSharedBootstrapImport) {
+        findings.push(`${safeRel(repoRoot, root.abs)} still imports a shared cross-plane bootstrap seam from code/common/persistence. For Step 3 A3, ${root.plane.toUpperCase()} runtime startup must depend on a ${root.plane.toUpperCase()}-owned bootstrap entrypoint instead.`);
+      }
+      if (!hasPlaneOwnedBootstrapProof) {
+        findings.push(`${safeRel(repoRoot, root.abs)} does not show plane-owned bootstrap proof under code/${root.plane}/persistence. For SQLAlchemy code_bootstrap, the composition root must wire its own plane bootstrap entrypoint rather than relying on shared bootstrap ownership.`);
       }
     }
   }

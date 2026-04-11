@@ -9,23 +9,34 @@
   <a href="https://x.com/conturacaf">X</a>
 </p>
 
-Most AI coding flows jump from prompt to code. CAF keeps architecture in the loop.
-
-CAF turns PRDs into architecture, project plans, and candidate code through orchestrated, governed AI generation.
-
-CAF keeps product intent, architecture decisions, implementation architecture decisions, planning, and candidate code connected through human decision gates.
-
 <p align="center">
-  <img src="docs/images/caf_prd_first_journey.svg" alt="CAF PRD-first journey from seeded instance through PRDs, architecture, planning, and candidate code." width="100%" />
+  <img src="docs/images/agents/claude.svg" alt="Claude Code" height="28" />
+  <img src="docs/images/agents/codex.svg" alt="Codex" height="28" />
+  <img src="docs/images/agents/copilot.svg" alt="GitHub Copilot" height="28" />
+  <img src="docs/images/agents/kiro.png" alt="Kiro" height="28" />
+  <img src="docs/images/agents/antigravity.svg" alt="Antigravity" height="28" />
 </p>
 
-CAF gives teams three durable answers:
+CAF is the fail-closed architecture control layer for AI-assisted software delivery.
 
-1) **Why does this decision exist?**
-2) **How much work does it imply?**
-3) **What breaks if it changes?**
+CAF helps teams move faster with coding agents while keeping the architecture in the loop.
 
-CAF supports Claude Code, Codex, and Antigravity coding agents and provides a single command surface (`/caf ...`).
+CAF turns PRDs and architecture decisions into checkpoints, evidence, plans, and candidate code so teams can move quickly without losing control, traceability, or auditability.
+
+<p align="center">
+  <img src="docs/images/caf_prd_first_journey.svg" alt="CAF end-to-end pipeline from product intent through architecture, plan, and candidate code, with durable artifacts at each step." width="100%" />
+</p>
+
+CAF is not prompt-to-code.
+
+CAF keeps product intent, architecture decisions, planning, candidate code, and the optional richer UX lane connected through durable artifacts and fail-closed gates.
+
+## What CAF does
+
+- starts from product intent rather than a one-off build prompt
+- keeps architecture active across planning and build
+- produces candidate code, not silent autopilot-to-production output
+- fails closed when required inputs or decisions are missing
 
 ## Quick start (ask-first)
 
@@ -61,7 +72,7 @@ Replace `<instance>` with your own name.
 | `/caf ux plan <instance>` | Turn the UX artifacts into the UX task graph, plan, and backlog for the separate UX realization lane. | [Skills, runners, and command surface](docs/user/07_skills_runners_and_command_surface.md), [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md) |
 | `/caf ux build <instance>` | Realize the richer UX lane against the already-built backend/runtime truth, typically in a separate `ux` namespace/service within the same stack. | [Skills, runners, and command surface](docs/user/07_skills_runners_and_command_surface.md), [PRD-first lifecycle](docs/user/15_prd_first_lifecycle.md) |
 
-The UX commands are public quick-start commands. Run `/caf ux` after the second `/caf arch`, run `/caf ux plan` after `/caf ux`, and run `/caf ux build` after the main `/caf build` for the same instance.
+The UX commands extend the main lifecycle. Run `/caf ux` after the second `/caf arch`, run `/caf ux plan` after `/caf ux`, and run `/caf ux build` after the main `/caf build` for the same instance.
 
 ## Runner CLI helpers
 
@@ -72,6 +83,8 @@ CAF itself stays runner-neutral and uses the `/caf ...` command surface inside t
   - default reasoning effort: `medium`
 - **Claude Code**: `tools/caf/cli/claude/`
   - uses Claude print mode and skips permission prompts unless you override that behavior
+- **Claude local / LM Studio**: `tools/caf/cli/claude-local/`
+  - preserves the Claude helper lifecycle but injects local-endpoint environment plus LM Studio recovery/load knobs
 - **Antigravity**: use the repo `.agent/` runner surface today; a packaged terminal wrapper is not included yet
 
 Preferred launcher examples from the repo root:
@@ -86,16 +99,17 @@ See the runner-specific READMEs for flags and resume behavior:
 
 - [Codex CLI helper](tools/caf/cli/codex/README.md)
 - [Claude CLI helper](tools/caf/cli/claude/README.md)
+- [Claude local / LM Studio helper](tools/caf/cli/claude-local/README.md)
 
 ## What you get (and what you don’t)
 
 - CAF produces **architecture, project plans, and candidate code**.
-- CAF is **not** a “ship-to-prod” generator: outputs are **candidate-only** and require human review.
+- CAF is **not** a ship-to-production generator: outputs are **candidate-only** and require human review.
 - CAF is **fail-closed**: if inputs are missing or ambiguous, it emits a feedback packet instead of guessing.
 
 ## Find out more
 
-[What is CAF?](docs/user/01_what_is_caf.md) — Get the shortest public explanation of what CAF does and why it exists.
+[What is CAF?](docs/user/01_what_is_caf.md) — Get the shortest explanation of what CAF does and why it exists.
 
 ## You might also be interested in
 
@@ -106,7 +120,9 @@ See the runner-specific READMEs for flags and resume behavior:
 ## More docs
 
 - User docs: [`docs/user/README.md`](docs/user/README.md)
-- Maintainer docs: [`docs/maintainer/README.md`](docs/maintainer/README.md)
+- Architect docs: [`docs/architect/README.md`](docs/architect/README.md)
+- Maintainer guide: [`docs/maintainer/README.md`](docs/maintainer/README.md)
+- Invariants and bounded claims: [`docs/architect/invariants/README.md`](docs/architect/invariants/README.md)
 - Pattern browsing: [`docs/patterns/README.md`](docs/patterns/README.md)
 
 ## Repo landmarks
@@ -118,6 +134,7 @@ See the runner-specific READMEs for flags and resume behavior:
 - `.claude/` — router shim discovered by runners that use `/caf` under Claude
 - `.codex/` — router shim discovered by runners that use `/caf` under Codex
 - `.copilot/` — router shim discovered by runners that use `/caf` under Copilot
+- `.kiro/` — workspace skill shim discovered by Kiro IDE for `/caf` slash-command support
 
 Generated at runtime (typically **gitignored**; may not exist until you run CAF):
 
@@ -127,6 +144,7 @@ Generated at runtime (typically **gitignored**; may not exist until you run CAF)
 ## Notes
 
 - **Review the agent permissions in `.vscode/settings.json` and `.claude/settings.local.json` and make sure they meet your security requirements before running the agent.**
+- **If you use Kiro IDE, keep `.kiro/skills/` in the repo so the workspace slash-command surface can discover CAF without copying canonical skills.**
 - **Safety rule (agents):** CAF workflows should **not** run any `git` commands (read or write). Treat the working tree as the source of truth.
 
 ## Find CAF on

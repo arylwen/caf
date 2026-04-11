@@ -104,6 +104,7 @@ If `http_client.py` is declared as an output:
 - It MUST define a callable stub:
   - `def call_contract_http(base_url: str, request: ContractRequestEnvelope) -> ContractResponseEnvelope:`
 - It MUST serialize/deserialize JSON using only Python stdlib (`json`, `urllib.request`).
+- When the resolved contract/design carrier is claim-based auth (for example `auth_claim` under `platform.auth_mode: mock`), the HTTP emitter MUST also carry the canonical Authorization/Bearer carrier on the outbound request. Envelope fields such as `tenant_id`, `principal_id`, and `correlation_id` supplement the contract; they do not replace the declared auth/context carrier.
 - It MUST NOT contain placeholders or "TODO" text.
 
 If `http_server.py` is declared as an output:

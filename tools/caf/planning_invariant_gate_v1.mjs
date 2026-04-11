@@ -22,6 +22,8 @@ import { parseYamlString } from './lib_yaml_v2.mjs';
 import { computeExpectedUiTaskIds, computeExpectedUiTaskMatches, taskIdsFromTaskGraphObj } from './lib_ui_seed_expectations_v1.mjs';
 import { resolveRepoRoot } from './lib_repo_root_v1.mjs';
 import { loadPlaneDomainModelViews } from './lib_plane_domain_models_v1.mjs';
+import { getInstanceLayout } from './lib_instance_layout_v1.mjs';
+import { readRoutedStepState, routedStepStatePath } from './lib_routed_step_state_v1.mjs';
 
 import { cafBulletStampLine } from './lib_caf_version_v1.mjs';
 import { ensureFeedbackPacketHeaderV1, resolveFeedbackPacketsBySlugSync } from './lib_feedback_packets_v1.mjs';
@@ -144,6 +146,11 @@ function extractCafManagedYaml(mdText, blockId) {
   );
   if (!block) return null;
   return extractYamlFence(block);
+}
+
+function isPlanningResetResumeState(stepState) {
+  const reason = String(stepState?.last_transition_reason || '').trim().toLowerCase();
+  return reason.includes('planning reset removed canonical planning outputs');
 }
 
 function normalizeChoiceValue(x) {
@@ -562,7 +569,9 @@ const generationPhase =
   resolved?.lifecycle?.phase ||
   null;
 
-if (generationPhase === 'architecture_scaffolding') process.exit(0);
+if (generationPhase === 'architecture_scaffolding') {
+  process.exit(0);
+}
 
 if (!fs.existsSync(obligationCompilerPath)) {
   const pkt = writeFeedbackPacket(
@@ -573,7 +582,7 @@ if (!fs.existsSync(obligationCompilerPath)) {
     'Missing required helper: tools/caf/compile_pattern_obligations_v1.mjs',
     ['Restore the deterministic obligation compiler and rerun planning invariants.'],
     ['missing: tools/caf/compile_pattern_obligations_v1.mjs'],
-    [`Restore the helper, then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+    ['Restore the helper, then rerun the planning invariant helper.', `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
   );
   process.stdout.write(pkt + '\n');
   process.exit(1);
@@ -596,6 +605,33 @@ if (!fs.existsSync(abpPbpPath)) missing.push('spec/guardrails/abp_pbp_resolution
 if (!fs.existsSync(workerCapabilityCatalogPath)) missing.push('architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml');
 
 if (missing.length) {
+  const layout = getInstanceLayout(repoRoot, instanceName);
+  const routedState = readRoutedStepState(layout);
+  const planStepState = routedState?.steps?.plan || null;
+  const routedStatePathRel = path.relative(repoRoot, routedStepStatePath(layout)).replace(/\\/g, '/');
+  const missingEvidence = missing.map((m) => `missing: reference_architectures/${instanceName}/${m}`);
+  if (isPlanningResetResumeState(planStepState)) {
+    const pkt = writeFeedbackPacket(
+      repoRoot,
+      instanceName,
+      'planning-invariant-missing-planning-outputs',
+      'blocker',
+      'Planning outputs are currently absent because planning reset invalidated the routed plan step; do not continue with post-plan helpers until /caf plan reruns the planner from the top',
+      [
+        'After planning reset, restart `/caf plan <name>` from the top so caf-application-architect re-emits task_graph_v1.yaml and the deterministic post-plan chain can run against fresh outputs.',
+        'Do not continue directly to planning_invariant_gate, post_plan_gate, validate_instance, or build while task_graph_v1.yaml is still absent after reset.',
+      ],
+      [
+        `routed_step_state: ${routedStatePathRel}`,
+        `plan_step_status: ${String(planStepState?.status || '')}`,
+        `plan_step_reason: ${String(planStepState?.last_transition_reason || '')}`,
+        ...missingEvidence,
+      ],
+      [`Rerun: /caf plan ${instanceName}`, `Then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+    );
+    process.stdout.write(pkt + '\n');
+    process.exit(1);
+  }
   const pkt = writeFeedbackPacket(
     repoRoot,
     instanceName,
@@ -603,7 +639,7 @@ if (missing.length) {
     'blocker',
     'Planning postcondition not met: missing required outputs',
     ['Rerun caf-application-architect to produce the planning artifacts.'],
-    missing.map((m) => `missing: reference_architectures/${instanceName}/${m}`),
+    missingEvidence,
     [`Rerun: /caf plan ${instanceName}`, `Then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
   );
   process.stdout.write(pkt + '\n');
@@ -624,11 +660,11 @@ try {
       'blocker',
       'Planning artifact is empty: pattern_obligations_v1.yaml has no obligations',
       [
-        'Regenerate planning outputs (caf-application-architect) so pattern obligations are materialized and traceable.',
+        'Regenerate planning outputs via /caf plan <name> so the deterministic obligation compiler materializes pattern obligations and keeps them traceable into downstream tasks.',
         'Do not emit schema-valid empty planning artifacts to bypass gates.',
       ],
       [`file: reference_architectures/${instanceName}/design/playbook/pattern_obligations_v1.yaml`],
-      [`Apply the fix, then continue the CAF workflow (rerun only if required by your runner).`]
+      ['Treat this as a planning producer/compiler defect, not a worker-local repair step.', `Then rerun: /caf plan ${instanceName}`]
     );
     process.stdout.write(pkt + '\n');
     process.exit(1);
@@ -660,7 +696,7 @@ try {
         'file: architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml',
         `error: ${String(e && e.message ? e.message : e)}`,
       ],
-      [`Fix the catalog file, then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+      ['Restore the catalog file, then rerun the planning invariant helper.', `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
     );
     process.stdout.write(pkt + '\n');
     process.exit(1);
@@ -683,14 +719,14 @@ try {
       'blocker',
       'Task Graph uses one or more required_capabilities that do not exist in the active worker capability catalog',
       [
-        'Regenerate the task graph so every required_capability matches an active capability_id in architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml.',
+        'Regenerate the planning bundle via /caf plan <name> so every required_capability emitted into task_graph_v1.yaml matches an active capability_id in architecture_library/phase_8/80_phase_8_worker_capability_catalog_v1.yaml.',
         'For plane runtime scaffold tasks, prefer plane_runtime_scaffolding; legacy runtime_scaffolding_cp/runtime_scaffolding_ap aliases are compatibility-only.',
       ],
       [
         `file: reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`,
         ...capabilityIssues.slice(0, 20),
       ],
-      [`Fix the planning producer output, then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+      ['Treat this as a planning producer/compiler defect at the named owner surface; do not patch around it in worker prompts or later build helpers.', `Then rerun: /caf plan ${instanceName}`, `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
     );
     process.stdout.write(pkt + '\n');
     process.exit(1);
@@ -724,7 +760,7 @@ try {
           `control design: reference_architectures/${instanceName}/design/playbook/control_plane_design_v1.md`,
           `error: ${String(e && e.message ? e.message : e)}`,
         ],
-        [`Rerun: /caf plan ${instanceName}`, `Then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+        [`Rerun: /caf plan ${instanceName}`, `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
       );
       process.stdout.write(pkt + '\n');
       process.exit(1);
@@ -763,7 +799,7 @@ try {
           `file: reference_architectures/${instanceName}/design/playbook/pattern_obligations_v1.yaml`,
           ...missingOptionObligations.slice(0, 20),
         ],
-        [`Fix the planning producer output, then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+        ['Treat this as a planning producer/compiler defect at the named owner surface; do not patch around it in worker prompts or later build helpers.', `Then rerun: /caf plan ${instanceName}`, `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
       );
       process.stdout.write(pkt + '\n');
       process.exit(1);
@@ -785,7 +821,7 @@ try {
           `emitted TG-10-OPTIONS-* tasks: ${optionTasks.length}`,
           ...missingOptionTaskCoverage.slice(0, 20),
         ],
-        [`Fix the planning producer output, then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+        ['Treat this as a planning producer/compiler defect at the named owner surface; do not patch around it in worker prompts or later build helpers.', `Then rerun: /caf plan ${instanceName}`, `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
       );
       process.stdout.write(pkt + '\n');
       process.exit(1);
@@ -809,7 +845,7 @@ try {
         `file: reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`,
         ...contractAnchorIssues.slice(0, 20),
       ],
-      [`Fix the planning producer output, then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+      ['Treat this as a planning producer/compiler defect at the named owner surface; do not patch around it in worker prompts or later build helpers.', `Then rerun: /caf plan ${instanceName}`, `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
     );
     process.stdout.write(pkt + '\n');
     process.exit(1);
@@ -823,11 +859,11 @@ try {
       'blocker',
       'Planning artifact is empty: task_graph_v1.yaml has no tasks',
       [
-        'Regenerate planning outputs (caf-application-architect) so a non-empty Task Graph is emitted.',
+        'Regenerate planning outputs via /caf plan <name> so caf-application-architect emits a non-empty Task Graph and the post-plan chain can attach the required semantic pressure.',
         'Do not emit schema-valid empty planning artifacts to bypass gates.',
       ],
       [`file: reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`],
-      [`Apply the fix, then continue the CAF workflow (rerun only if required by your runner).`]
+      ['Treat this as a planning producer/compiler defect, not a worker-local repair step.', `Then rerun: /caf plan ${instanceName}`]
     );
     process.stdout.write(pkt + '\n');
     process.exit(1);
@@ -884,13 +920,13 @@ try {
     'planning-invariant-empty-task-graph',
     'blocker',
     'Unable to validate planning completeness due to a parsing error',
-    ['Fix the planning YAML artifacts and rerun planning invariants.'],
+    ['Fix the planning YAML artifacts, then rerun /caf plan <name> or rerun the planning invariant helper directly if you are validating this seam in isolation.'],
     [
       `error: ${String(e && e.message ? e.message : e)}`,
       `pattern_obligations: reference_architectures/${instanceName}/design/playbook/pattern_obligations_v1.yaml`,
       `task_graph: reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`,
     ],
-    [`Apply the fix, then continue the CAF workflow (rerun only if required by your runner).`]
+    ['Treat this as a planning producer/compiler defect, not a worker-local repair step.', `Then rerun: /caf plan ${instanceName}`]
   );
   process.stdout.write(pkt + '\n');
   process.exit(1);
@@ -918,15 +954,15 @@ try {
           'blocker',
           'Resolved UI pins declare ui.present: true, but the Task Graph does not request ui_frontend_scaffolding',
           [
-            'Rerun caf-application-architect and ensure it evaluates architecture_library/phase_8/80_phase_8_ui_task_seeds_v1.yaml against profile_parameters_resolved.yaml and emits TG-15-ui-shell.',
-            'Or manually add TG-15-ui-shell (and optional per-resource UI tasks) from 80_phase_8_ui_task_seeds_v1.yaml into design/playbook/task_graph_v1.yaml.',
+            'Rerun /caf plan <name> and ensure caf-application-architect evaluates architecture_library/phase_8/80_phase_8_ui_task_seeds_v1.yaml against profile_parameters_resolved.yaml and emits TG-15-ui-shell.',
+            'Keep the planner-emitted UI task ids intact so the framework-owned UI seed semantic enrichment can target them deterministically.',
           ],
           [
             `resolved_ui: reference_architectures/${instanceName}/spec/guardrails/profile_parameters_resolved.yaml`,
             `task_graph: reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`,
             'missing_capability: ui_frontend_scaffolding',
           ],
-          [`Fix planning outputs, then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+          ['Treat this as a planner-owned UI seed structural defect, not a later build-time repair step.', `Then rerun: /caf plan ${instanceName}`, `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
         );
         process.stdout.write(pkt + '\n');
         process.exit(1);
@@ -941,13 +977,13 @@ try {
     'planning-ui-tasks-missing',
     'blocker',
     'Unable to validate UI task seed coverage due to a parsing error',
-    ['Fix the input files and rerun planning invariants.'],
+    ['Fix the input files, then rerun /caf plan <name> or rerun the planning invariant helper directly if you are validating this seam in isolation.'],
     [
       `error: ${String(e && e.message ? e.message : e)}`,
       `resolved_ui: reference_architectures/${instanceName}/spec/guardrails/profile_parameters_resolved.yaml`,
       `task_graph: reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`,
     ],
-    [`Fix the inputs, then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+    ['Treat this as a planner-owned UI seed validation seam.', `Then rerun: /caf plan ${instanceName}`, `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
   );
   process.stdout.write(pkt + '\n');
   process.exit(1);
@@ -964,7 +1000,7 @@ if (!fs.existsSync(postPlanGate)) {
     'Missing required helper: tools/caf/post_plan_gate_v1.mjs',
     ['Restore tools/caf/post_plan_gate_v1.mjs and rerun planning invariants.'],
     [`missing: tools/caf/post_plan_gate_v1.mjs`],
-    [`Restore the helper, then rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
+    ['Restore the helper, then rerun the planning invariant helper.', `For direct helper validation, rerun: node tools/caf/planning_invariant_gate_v1.mjs ${instanceName}`]
   );
   process.stdout.write(pkt + '\n');
   process.exit(1);
@@ -1001,7 +1037,7 @@ try {
           `file: reference_architectures/${instanceName}/design/playbook/task_graph_v1.yaml`,
           ...concreteOptionAttachmentIssues.slice(0, 20),
         ],
-        [`Fix the post-plan enrichment chain, then rerun: /caf plan ${instanceName}`]
+        ['Treat this as a framework-owned post-plan enrichment defect at the named consumer surface.', `Then rerun: /caf plan ${instanceName}`]
       );
       process.stdout.write(pkt + '\n');
       process.exit(1);

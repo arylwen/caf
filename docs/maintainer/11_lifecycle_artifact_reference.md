@@ -225,7 +225,7 @@ That means:
 
 - Planner-owned task structure produced by `/caf plan`.
 - Captures semantic task decomposition, dependencies, and capabilities.
-- Consumed by `/caf build`.
+- Consumed by `/caf build` and `/caf backlog`.
 
 ### `design/playbook/interface_binding_contracts_v1.yaml`
 
@@ -242,6 +242,7 @@ That means:
 ### `design/playbook/task_backlog_v1.md`
 
 - Derived backlog view over the planned task structure.
+- Produced on demand by `/caf backlog` from `task_graph_v1.yaml`.
 - Useful for execution review and release-readiness tracking.
 - Consumed mainly by humans rather than as the primary machine-readable plan surface.
 
@@ -288,7 +289,7 @@ Current command-shape implication:
 
 For the fuller lifecycle note and terminology framing, see:
 
-- `docs/dev/roadmaps/architecture_note_0_4_0_continuous_re_derivation_and_instance_evolution_v1.md`
+- `docs/dev/roadmaps/history/0_4_0/architecture_note_0_4_0_continuous_re_derivation_and_instance_evolution_v1.md`
 - `docs/dev/roadmaps/terminology_note_continuous_re_derivation_v1.md`
 
 ## You might also be interested in

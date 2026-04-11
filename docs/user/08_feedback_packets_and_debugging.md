@@ -28,7 +28,7 @@ Tips:
 - When a packet recommends strengthening a reusable framework/provider seam, prefer filing or updating the linked issue instead of keeping the fix as local operator lore.
 - `/caf arch` and `/caf plan` are not general-purpose overwrite commands. If a packet tells you to reset first, run the exact reset helper before rerunning the CAF command:
   - architecture scaffolding reset: `node tools/caf/architecture_scaffolding_reset_v1.mjs <instance> overwrite`
-  - implementation/design reset: `node tools/caf/implementation_reset_v1.mjs <instance> overwrite`
+  - implementation scaffolding reset: `node tools/caf/implementation_scaffolding_reset_v1.mjs <instance> overwrite`
   - planning reset: `node tools/caf/planning_reset_v1.mjs <instance> overwrite`
 
 ## Common packet causes
@@ -52,9 +52,9 @@ Do not treat report/mindmap regeneration as a universal fix. Some blockers, such
 
 Where a gate can deterministically prove a condition is fixed, CAF should mark the matching packet `resolved` automatically. Manual status edits are not the preferred operator workflow.
 
-## Codex troubleshooting note
+## Routed lifecycle troubleshooting note
 
-For Codex-style runs, a blocker packet does **not** always mean you must manually unwind the entire workflow.
+For routed CAF runs, a blocker packet does **not** always mean you must manually unwind the entire workflow.
 
 When routed step state is still intact, the safest next move is often to rerun the owning top-level CAF command (for example `/caf arch <instance>`, `/caf plan <instance>`, or `/caf build <instance>`), because CAF can often resume from the last incomplete checkpoint.
 

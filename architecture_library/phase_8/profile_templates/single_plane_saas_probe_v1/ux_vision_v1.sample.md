@@ -1,0 +1,31 @@
+# UX Vision / Design Brief
+
+> Seeded default design brief for the widget-domain starter.
+> Product, design, and architecture may refine this before `/caf prd` and `/caf ux`.
+
+## Product identity and brand foundation
+
+- product_name: Widget Workspace
+- logo_asset_preference: default_widget_mark
+- logo_usage_posture: Use the framework default widget mark until a product logo is supplied.
+- color_scheme: calm cobalt base with mint support accents
+- accent_preference: keep accent usage restrained and functional
+- iconography_imagery_posture: simple product glyphs and lightweight diagrams rather than decorative illustration
+
+## Architecture-shape-relevant signals
+
+- platform_scope: web-first now; native-later is desirable but not a launch requirement
+- ux_packaging_preference: separate UX service in the same stack
+- accessibility_posture: keyboard-friendly, readable, and trustworthy by default
+- session_visibility_posture: tenant, role, and save/publish consequences should stay visible in the interface
+- offline_posture: not required for the first release
+- real_time_posture: not required for the first release
+
+## Visual-system guidance
+
+- component_system_preference: shadcn
+- density_bias: medium-dense desktop workspace
+- surface_style: calm operational shell with clear hierarchy
+- data_presentation_posture: tables/lists should stay readable before becoming visually rich
+- report_readability_posture: summaries and activity/history views should feel editorial and easy to scan
+- default_domain_primitives: widget cards, collection lists, tag chips, activity timeline, admin settings forms

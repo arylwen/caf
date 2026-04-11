@@ -83,3 +83,11 @@ checks:
       - "compare imported helper symbols to the handlers bound to visible controls"
       - "fail when create/update/publish labels call the wrong helper, call a missing symbol, or rely on dead code paths"
       - "prefer one shared API/helper seam over per-control ad hoc fetch logic"
+  - check_id: RR-SPA-DOC-TRUTH-01
+    severity: high
+    category: completeness
+    rule: "UX operator notes and SPA task reports must describe only the richer-UX controls and flows that are observably present in the generated shell/pages/helpers; aspirational guidance fails closed."
+    evidence_hints:
+      - "when caf/ux_operator_notes.md or a SPA task report is touched, compare each operational claim to code/ux/src/App.jsx, code/ux/src/api.js, and the realized pages/components"
+      - "fail if notes instruct humans to use a persona selector, retry controls, membership review panel, publish confirmation, or similar control that is not visibly implemented"
+      - "prefer explicit fixed-posture wording over optimistic instructions when the current richer UX lane does not realize the claimed flow"

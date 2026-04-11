@@ -50,6 +50,8 @@ Runner adapter layer (compiled shims):
 
 - ``.agent/workflows/**`` — runner-specific adapter glue only
 - ``.agent/runtime/runtime_vocabulary.md`` — runtime command templates (never shown to users)
+- ``.kiro/skills/**`` — Kiro IDE workspace skill shims only
+- ``.kiro/runtime/runtime_vocabulary.md`` — runtime command templates (never shown to users)
 
 CAF library layer (authoritative content):
 

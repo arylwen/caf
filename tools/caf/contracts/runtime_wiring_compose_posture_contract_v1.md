@@ -65,6 +65,13 @@ Before editing compose-backed runtime surfaces, use all of the following when pr
 - Do not use placeholder service entries such as `ui: null`.
 - If a CAF marker is needed, place it under a dedicated extension key rather than inside `services:`.
 
+### Primary runtime entry topology posture
+
+- Treat the selected runtime entry topology as role-bound library ownership, not as incidental file presence.
+- When runtime entry surfaces are declared by selected TBP role bindings (for example composition roots, framework server entrypoints, or ASGI entrypoints), keep emitted companion-repo topology aligned to those declarations.
+- Do not leave undeclared repo-root runtime entry witnesses alongside declared primary runtime entry surfaces unless an owning TBP role binding explicitly declares that root witness as part of the selected topology.
+- If a selected stack needs a different entry topology, update the owning TBP role binding and its declared validator configuration rather than teaching the generic runnable post-gate new stack/file lore.
+
 ### Command override posture
 
 - Prefer the Dockerfile `CMD` for compose-built services.

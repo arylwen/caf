@@ -130,14 +130,19 @@ Rules:
 - Do **not** print the invocation.
 - If it exits non-zero, it will write a feedback packet. STOP and surface only that packet path.
 
-8) Finalize derived views:
+8) Finalize planning traceability view (non-authoritative; overwrite=true)
 
-- Invoke: `skills/caf-arch-postprocess/SKILL.md`
+- Follow: `skills/worker-traceability-mindmap/SKILL.md`
 
-Important ownership note:
+Postcondition:
+- Require `reference_architectures/<name>/design/caf_meta/plan_traceability_mindmap_v3.md` exists.
+- If missing: write a feedback packet and STOP.
+
+9) Optional human backlog projection
+
 - `task_backlog_v1.md` is **not** planner-owned output from Step 4.
-- The canonical backlog path is instruction-owned by `skills/worker-task-backlog-projector/SKILL.md`, invoked by `caf-arch-postprocess` as part of `/caf plan` finalization.
-- If a stale or wrong file already exists at `design/playbook/task_backlog_v1.md` (for example a task-plan-shaped file), the postprocess step must overwrite it with the worker-projected backlog view.
+- The human backlog view is now projected on demand by `/caf backlog <name>` from the already-emitted `task_graph_v1.yaml`.
+- Do **not** invent temporary backlog projector scripts under `tools/caf/` just because the task graph is large.
 
 STOP.
 

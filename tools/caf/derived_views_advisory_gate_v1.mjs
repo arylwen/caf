@@ -96,7 +96,7 @@ function expectedOutputs(layout, phase, instanceName) {
     rerunCommand: planningExists ? `/caf plan ${instanceName}` : `/caf arch ${instanceName}`,
     resetCommand: planningExists
       ? `node tools/caf/planning_reset_v1.mjs ${instanceName} overwrite`
-      : `node tools/caf/implementation_reset_v1.mjs ${instanceName} overwrite`,
+      : `node tools/caf/implementation_scaffolding_reset_v1.mjs ${instanceName} overwrite`,
     mindmapCommand: `node tools/caf/worker_traceability_mindmap_v3.mjs ${instanceName}`,
     selectionReportCommand: `node tools/caf/build_candidate_selection_report_v1.mjs ${instanceName} --profile=${profile}`,
     retrievalDebugCommand: `node tools/caf/build_retrieval_debug_v1.mjs ${instanceName} --profile=${profile}`,

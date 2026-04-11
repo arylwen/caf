@@ -55,6 +55,8 @@ README MUST include (minimum sections):
 - Environment variables (including `DATABASE_URL` when PostgreSQL is present)
 - How to run unit tests
 
+When the task is `UX-TG-95-ux-operator-notes`, the worker MUST write `caf/ux_operator_notes.md` instead of inventing a second README-like document. That operator-notes artifact MUST be grounded in the actually produced `code/ux/` shell/pages/helpers and MUST NOT claim controls, flows, or validation steps that are not observably present in the current richer UX lane.
+
 When the resolved auth contract indicates local/dev `platform.auth_mode = mock` or an equivalent mock-auth TBP is present, README MUST also include a **Local auth debugging** section grounded in the produced runtime/UI/auth helper surfaces. That section MUST:
 - name the happy-path carrier (for example `Authorization: Bearer ...` when claim-bearing mock auth is selected)
 - name the canonical mock claim keys actually used by the produced helper/runtime surfaces
@@ -85,9 +87,11 @@ Do not invent new vendors/tools beyond what is pinned.
 - Detect whether an env example exists (e.g., `infrastructure/postgres.env.example`).
 - Detect whether unit tests exist under `tests/`.
 - When mock auth is selected or resolved, inspect the produced auth/UI surfaces that actually carry the local auth contract (for example the shared auth helper, the UI claim builder, and the UI API helper) before writing any auth-debug guidance.
+- When the task is `UX-TG-95-ux-operator-notes`, inspect the actual richer UX shell/pages/helpers under `code/ux/` before writing each operator-note claim. If a planned control or flow is not visibly implemented, describe the current fixed posture or omit the claim; do not present aspirational controls as available runtime behavior.
 
 3) Write README.md
 - Use only file paths that actually exist in the repo.
+- For `UX-TG-95-ux-operator-notes`, only describe persona switching, membership review, retry controls, publish confirmation, or similar runtime behaviors when the current richer UX artifacts visibly implement those controls. If the shell is fixed to one demo persona, say so explicitly rather than instructing the human to switch personas.
 - Prefer explicit commands with the pinned toolchain, for example:
   - Compose-based packaging (choose the command that matches `platform.packaging`):
     - `docker compose --env-file ./.env -f docker/compose.candidate.yaml up --build` (docker_compose)

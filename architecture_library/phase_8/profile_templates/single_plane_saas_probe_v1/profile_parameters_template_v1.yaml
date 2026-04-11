@@ -1,0 +1,48 @@
+# reference_architectures/{{instance_name}}/guardrails/profile_parameters.yaml
+# Hidden alternative / negative test starter.
+# This template intentionally probes a non-split SaaS shape.
+# CAF does not yet promise full lifecycle support beyond seeding/guardrails.
+schema_version: "phase8_profile_parameters_v1"
+instance_name: "{{instance_name}}"
+
+# NOTE: `created_at` is intentionally omitted.
+# CAF runs strict placeholder hygiene before derivations; placeholders in pinned inputs
+# must never be copied into instance files.
+
+lifecycle:
+  evolution_stage: "stage_0_local_prototype"
+  generation_phase: "architecture_scaffolding"
+
+architecture:
+  architecture_style: "clean_architecture"
+
+platform:
+  infra_target: "local"
+  packaging: "docker_compose"
+  runtime_language: "python"
+  database_engine: "postgres"
+  dependency_wiring_mode: "manual_composition_root"
+  framework: "fastapi"
+  persistence_orm: "sqlalchemy_orm"
+  schema_management_strategy: "code_bootstrap"
+  auth_mode: "mock"
+  eventing_backend: "mock_in_memory"
+
+ui:
+  present: true
+  kind: "web_spa"
+  framework: "react"
+  deployment_preference: "separate_ui_service"
+  component_system: "shadcn"
+
+# Intentional probe: only the application plane runtime is pinned.
+# The absent control-plane runtime is part of the negative/alternative shape under test.
+planes:
+  ap:
+    runtime_shape: "api_service_http"
+
+meta:
+  requested_by: "caf-saas-init"
+  change_reason: "initial_instance_creation"
+  notes: "Hidden non-split SaaS probe starter. Seedable now; broader lifecycle support is deferred."
+  profile_template_id: "single_plane_saas_probe_v1"

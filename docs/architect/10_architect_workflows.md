@@ -180,7 +180,7 @@ To explain deltas without re-reading the whole playbook.
 
 ## Find out more
 
-[PRD-first lifecycle](../user/15_prd_first_lifecycle.md) — Cross-check these workflows against the default public lifecycle language.
+[PRD-first lifecycle](../user/15_prd_first_lifecycle.md) — Cross-check these workflows against the default lifecycle language.
 
 ## You might also be interested in
 

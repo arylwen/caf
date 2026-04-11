@@ -59,6 +59,7 @@ CAF’s default lifecycle is now:
 /caf next <instance> apply
 /caf arch <instance>
 /caf plan <instance>
+/caf backlog <instance>
 /caf build <instance>
 ```
 
@@ -137,7 +138,7 @@ node .\tools\caf\routed_step_state_v1.mjs codex-saas invalidate uxBuild manual r
 | `arch1` | `/caf arch <instance>` (first pass) | Deletes first-pass scaffold outputs, then invalidates `nextApply`, `arch2`, `plan`, `build`, `ux`, `uxPlan`, and `uxBuild`. | `/caf arch <instance>` |
 | `nextApply` | `/caf next <instance> apply` | Deletes `profile_parameters_resolved.yaml`, rewinds `lifecycle.generation_phase` to `architecture_scaffolding`, then invalidates `arch2`, `plan`, `build`, `ux`, `uxPlan`, and `uxBuild`. | `/caf next <instance> apply` |
 | `arch2` | `/caf arch <instance>` (second pass) | Deletes design-phase architecture outputs, then invalidates `plan`, `build`, `ux`, `uxPlan`, and `uxBuild`. | `/caf arch <instance>` |
-| `plan` | `/caf plan <instance>` | Deletes planning outputs (`pattern_obligations`, task graph, interface bindings, task plan, task backlog), then invalidates `build` and `uxBuild`. | `/caf plan <instance>` |
+| `plan` | `/caf plan <instance>` | Deletes planning outputs (`pattern_obligations`, task graph, interface bindings, task plan, and any existing task backlog view), then invalidates `build` and `uxBuild`. | `/caf plan <instance>` |
 | `build` | `/caf build <instance>` | Deletes `.caf-state/build_wave_state_v1.json`, `companion_repositories/<instance>/profile_v1/caf/task_reports/`, and `.../caf/reviews/`. The helper does **not** delete companion code folders directly. | `/caf build <instance>` |
 | `ux` | `/caf ux <instance>` | Deletes richer UX derivation outputs, then invalidates `uxPlan` and `uxBuild`. | `/caf ux <instance>` |
 | `uxPlan` | `/caf ux plan <instance>` | Deletes richer UX task graph, plan, and backlog, then invalidates `uxBuild`. | `/caf ux plan <instance>` |
@@ -196,3 +197,9 @@ node .\tools\caf\routed_step_state_v1.mjs codex-saas status
 Generated outputs are typically gitignored and should be treated as **build artifacts**, not source.
 
 If you need samples for documentation or onboarding, export sanitized snapshots under `docs/user/samples/`.
+
+## Backlog projection
+
+- `task_graph_v1.yaml` remains the authoritative planning structure.
+- `task_backlog_v1.md` is a human-facing derived view projected separately by `/caf backlog <instance>`.
+- Missing `task_backlog_v1.md` by itself does not mean the semantic planning bundle is missing.
